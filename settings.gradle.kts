@@ -3,7 +3,7 @@ rootProject.name = "Alohomora"
 pluginManagement {
     repositories {
         google {
-            content { 
+            content {
               	includeGroupByRegex("com\\.android.*")
               	includeGroupByRegex("com\\.google.*")
               	includeGroupByRegex("androidx.*")
@@ -18,7 +18,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositories {
         google {
-            content { 
+            content {
               	includeGroupByRegex("com\\.android.*")
               	includeGroupByRegex("com\\.google.*")
               	includeGroupByRegex("androidx.*")
@@ -28,7 +28,8 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-include(":sharedUI")
+include(":alohomora")
+include(":alohomora-noop")
 include(":androidApp")
 include(":desktopApp")
-
+include(":alohomora-gradle-plugin")

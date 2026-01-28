@@ -11,6 +11,24 @@ It provides a unified environment for inspecting APIs, databases, events, backgr
 The goal is not monitoring theater.
 The goal is understanding.
 
+## Release Builds: Zero-Overhead No-Op Library
+
+For **production/release builds**, Alohomora provides a **no-op (no operation) library** that:
+- ✅ Has the exact same API as the full library
+- ✅ Does absolutely nothing at runtime (zero overhead)
+- ✅ Has minimal dependencies (~50 KB vs ~2-3 MB)
+- ✅ Is automatically optimized away by ProGuard/R8
+
+**Usage:**
+```kotlin
+dependencies {
+    debugImplementation("io.github.yashkasera:alohomora:1.0.0")          // Full library
+    releaseImplementation("io.github.yashkasera:alohomora-noop:1.0.0")   // No-op library
+}
+```
+
+See [NOOP_IMPLEMENTATION_GUIDE.md](NOOP_IMPLEMENTATION_GUIDE.md) for details.
+
 Core Philosophy
 
 This project is built on a few non-negotiable principles:

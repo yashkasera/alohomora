@@ -11,3 +11,8 @@ plugins {
     alias(libs.plugins.ksp).apply(false)
     alias(libs.plugins.buildConfig).apply(false)
 }
+
+allprojects {
+    group = "io.github.yashkasera"
+    version = "1.0.0"
+}

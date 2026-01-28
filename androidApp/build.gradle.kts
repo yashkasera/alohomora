@@ -4,17 +4,18 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.android.application)
+//    id("io.github.yashkasera.alohomora")
 }
 
 android {
-    namespace = "com.fampay.alohomora.androidApp"
+    namespace = "io.github.yashkasera.alohomora.androidApp"
     compileSdk = 36
 
     defaultConfig {
         minSdk = 23
         targetSdk = 36
 
-        applicationId = "com.fampay.alohomora.androidApp"
+        applicationId = "io.github.yashkasera.alohomora.androidApp"
         versionCode = 1
         versionName = "1.0.0"
     }
@@ -30,6 +31,6 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":sharedUI"))
+    implementation(project(":alohomora"))
     implementation(libs.androidx.activityCompose)
 }

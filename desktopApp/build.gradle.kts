@@ -7,7 +7,15 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":sharedUI"))
+    implementation(project(":alohomora"))
+
+    // Ktor Server
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.websockets)
+    implementation(libs.logback.classic)
+
+    implementation("org.jetbrains.pty4j:pty4j:0.13.11")
 }
 
 compose.desktop {
@@ -27,7 +35,7 @@ compose.desktop {
             }
             macOS {
                 iconFile.set(project.file("appIcons/MacosIcon.icns"))
-                bundleID = "com.fampay.alohomora.desktopApp"
+                bundleID = "io.github.yashkasera.alohomora.desktopApp"
             }
         }
     }
