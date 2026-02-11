@@ -4,8 +4,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import io.github.yashkasera.alohomora.Alohomora
-import java.awt.Dimension
 import io.github.yashkasera.alohomora.presentation.ui.AlohomoraApp
+import java.awt.Dimension
 
 fun main() = application {
     Alohomora.init()
@@ -16,8 +16,8 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
     ) {
         window.minimumSize = Dimension(350, 600)
-//        AlohomoraApp()
-        TerminalView(terminal)
+        AlohomoraApp()
+//        TerminalView(terminal)
 
     }
 }

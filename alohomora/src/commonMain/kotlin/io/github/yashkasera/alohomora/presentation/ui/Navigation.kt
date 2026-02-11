@@ -11,6 +11,7 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -40,8 +41,18 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.preferences.Prefer
 // For true separation we should use expect/actual but WindowSizeClass is better for responsive UI.
 
 @Composable
-internal fun AlohomoraNavHost() {
+internal fun AlohomoraNavHost(
+    startDestination: Routes = Routes.Dashboard,
+) {
     val navController = rememberNavController()
+
+    LaunchedEffect(startDestination) {
+        if (startDestination != Routes.Dashboard) {
+            navController.navigate(startDestination) {
+                launchSingleTop = true
+            }
+        }
+    }
 
     // Determine layout based on platform/screen size.
     // For this task, we'll try to support both.

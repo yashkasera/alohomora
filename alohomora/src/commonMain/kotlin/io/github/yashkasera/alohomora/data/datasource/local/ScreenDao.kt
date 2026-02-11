@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 internal interface ScreenDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(item: Screen): Long
+    suspend fun insert(item: Screen): Long
 
     @Query("SELECT * FROM Screen WHERE name LIKE '%' || :query || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
     fun getAll(query: String, page: Int, pageSize: Int): Flow<List<Screen>>

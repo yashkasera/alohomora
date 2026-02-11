@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools">
 
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <application>
     <activity
       android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
@@ -17,13 +18,13 @@
     </activity>
 
     <receiver
-      android:name=".api.ClearApiRequestsReceiver"
-      android:exported="false" />
+      android:exported="false"
+      android:name=".api.ClearApiRequestsReceiver" />
 
     <provider
-      android:name="androidx.startup.InitializationProvider"
       android:authorities="${applicationId}.androidx-startup"
       android:exported="false"
+      android:name="androidx.startup.InitializationProvider"
       tools:node="merge">
       <meta-data
         android:name="io.github.yashkasera.alohomora.AlohomoraInitializer"

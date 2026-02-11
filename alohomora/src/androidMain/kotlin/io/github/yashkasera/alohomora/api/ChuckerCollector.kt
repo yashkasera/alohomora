@@ -1,5 +1,9 @@
 package io.github.yashkasera.alohomora.api
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
 import io.github.yashkasera.alohomora.data.datasource.local.ApiRequestDao
 import io.github.yashkasera.alohomora.data.entity.ApiRequest
 import kotlinx.coroutines.Dispatchers
@@ -23,10 +27,15 @@ import org.koin.core.component.inject
 
 private object NetworkInjector2 : KoinComponent {
     val dao: ApiRequestDao by inject()
+    val context: Context by inject()
 }
 
-class ChuckerCollector() {
-    //    private val notificationHelper: NotificationHelper = NotificationHelper(context)
+class ChuckerCollector(
+    private val showNotification: Boolean = true,
+) {
+    private val notificationHelper by lazy {
+        ApiLogNotificationHelper(NetworkInjector2.context)
+    }
     private val scope = MainScope()
 
     init {
@@ -43,13 +52,6 @@ class ChuckerCollector() {
             withContext(Dispatchers.IO) {
                 NetworkInjector2.dao.insert(transaction)
             }
-
-            /*if (showNotification) {
-                notificationHelper.show(transaction)
-            }
-            withContext(Dispatchers.IO) {
-                retentionManager.doMaintenance()
-            }*/
         }
     }
 
@@ -60,12 +62,24 @@ class ChuckerCollector() {
      */
     internal fun onResponseReceived(transaction: ApiRequest) {
         scope.launch {
-            val updated = withContext(Dispatchers.IO) {
-                NetworkInjector2.dao.update(transaction)
+            NetworkInjector2.dao.update(transaction)
+            val latest = withContext(Dispatchers.IO) {
+                if (showNotification) {
+                    NetworkInjector2.dao.getLatest()
+                } else {
+                    emptyList()
+                }
             }
-            /*if (showNotification && updated > 0) {
-                notificationHelper.show(transaction)
-            }*/
+            if (showNotification) {
+                if (ActivityCompat.checkSelfPermission(
+                        NetworkInjector2.context,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    return@launch
+                }
+                notificationHelper.showLatest(latest)
+            }
         }
     }
 }

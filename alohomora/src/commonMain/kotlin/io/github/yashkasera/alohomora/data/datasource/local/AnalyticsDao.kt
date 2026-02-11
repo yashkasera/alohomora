@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 internal interface AnalyticsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(item: Analytics)
+    suspend fun insert(item: Analytics)
 
     @Query("SELECT * FROM Analytics WHERE name LIKE '%' || :query || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
     fun getAll(query: String, page: Int, pageSize: Int): Flow<List<Analytics>>

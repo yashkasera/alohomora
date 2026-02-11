@@ -2,9 +2,11 @@ package io.github.yashkasera.alohomora.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.presentation.ui.screens.navigation.NavigationHistoryViewModel
+import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -12,14 +14,28 @@ import org.koin.dsl.module
 actual val platformModule = module {
     single<AlohomoraDb> {
         val context: Context = androidContext()
-        val dbFile = context.getDatabasePath("alohomora.db")
-        Room.databaseBuilder<AlohomoraDb>(
+//        val dbFile = context.getDatabasePath("alohomora.db")
+        /*Room.databaseBuilder<AlohomoraDb>(
             context = context,
             name = dbFile.absolutePath,
         )
             .setDriver(BundledSQLiteDriver())
+            .build()*/
+        getDatabaseBuilder(context)
+            .setDriver(BundledSQLiteDriver())
+            .setQueryCoroutineContext(Dispatchers.IO)
             .build()
     }
     viewModel { NavigationHistoryViewModel() }
 
+}
+
+private fun getDatabaseBuilder(context: Context): RoomDatabase.Builder<AlohomoraDb> {
+    val appContext = context.applicationContext
+    val dbFile = appContext.getDatabasePath("alohomora.db")
+
+    return Room.databaseBuilder<AlohomoraDb>(
+        context = appContext,
+        name = dbFile.absolutePath,
+    )
 }

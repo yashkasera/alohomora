@@ -5,21 +5,22 @@ import java.net.URLDecoder
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.RequestBody
 import okhttp3.Response
 import okio.Buffer
 
-class AlohomoraInterceptor : Interceptor {
+class AlohomoraInterceptor(
+    private val collector: ChuckerCollector = ChuckerCollector(),
+) : Interceptor {
 
-    val chuckerCollector by lazy { ChuckerCollector() }
+    private val maxBodyBytes = 1_000_000L
 
     @OptIn(ExperimentalUuidApi::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         try {
-            val requestBody = request.body?.toJsonString()
+            val requestBody = request.body?.toJsonStringSafe()
             val api = ApiRequest(
                 id = Uuid.random().toString(),
                 url = URLDecoder.decode(request.url.toString(), "UTF-8"),
@@ -32,21 +33,15 @@ class AlohomoraInterceptor : Interceptor {
                 time = Clock.System.now().toEpochMilliseconds(),
                 requestHeaders = request.headers.toMultimap(),
             )
-            chuckerCollector.onRequestSent(api)
+            collector.onRequestSent(api)
             val response = chain.proceed(request)
-            val responseFormatted = try {
-                val responseBody = response.body.string()
-                Json.encodeToString(responseBody)
-            } catch (e: Exception) {
-                response.peekBody(123454).string()
-            }
-            api.response = responseFormatted
+            api.response = response.peekBody(maxBodyBytes).string()
             api.status = response.code
             api.message = response.message
             api.size = response.body.contentLength()
-            api.duration = response.receivedResponseAtMillis.minus(response.sentRequestAtMillis)
+            api.duration = response.receivedResponseAtMillis - response.sentRequestAtMillis
             api.responseHeaders = response.headers.toMultimap()
-            chuckerCollector.onResponseReceived(api)
+            collector.onResponseReceived(api)
             return response
 
             /*CoroutineScope(Dispatchers.IO).launch {
@@ -72,9 +67,13 @@ class AlohomoraInterceptor : Interceptor {
         }
     }
 
-    private fun RequestBody.toJsonString(): String {
+    private fun RequestBody.toJsonStringSafe(): String {
         val buffer = Buffer()
-        this.writeTo(buffer)
-        return buffer.readUtf8()
+        return try {
+            this.writeTo(buffer)
+            buffer.readUtf8()
+        } catch (e: Exception) {
+            ApiRequest.UNABLE_PARSE_MESSAGE
+        }
     }
 }

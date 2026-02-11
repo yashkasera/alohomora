@@ -1,7 +1,9 @@
 package io.github.yashkasera.alohomora.data.db
 
+import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
 import io.github.yashkasera.alohomora.data.datasource.local.AnalyticsDao
 import io.github.yashkasera.alohomora.data.datasource.local.ApiRequestDao
@@ -22,10 +24,16 @@ import io.github.yashkasera.alohomora.data.entity.Screen
     exportSchema = false,
 )
 @TypeConverters(PropertiesConverter::class, HeadersConverter::class)
+@ConstructedBy(AlohomoraDatabaseConstructor::class)
 internal abstract class AlohomoraDb : RoomDatabase() {
     abstract fun screenDao(): ScreenDao
 
     abstract fun crashDao(): CrashDao
     abstract fun networkDao(): ApiRequestDao
     abstract fun eventDao(): AnalyticsDao
+}
+
+@Suppress("NO_ACTUAL_FOR_EXPECT")
+internal expect object AlohomoraDatabaseConstructor : RoomDatabaseConstructor<AlohomoraDb> {
+    override fun initialize(): AlohomoraDb
 }

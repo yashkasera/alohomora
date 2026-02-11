@@ -53,7 +53,7 @@ kotlin {
             implementation(libs.coil.network.ktor)
             implementation(libs.kotlinx.datetime)
 
-            implementation(libs.room.runtime)
+            implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
 
             // Koin
@@ -119,17 +119,23 @@ buildConfig {
 room {
     schemaDirectory("kspKotlinJvm", "$projectDir/schemas/kspKotlinJvm")
     schemaDirectory("kspAndroidMain", "$projectDir/schemas/kspAndroidMain")
+    schemaDirectory("kspJvm", "$projectDir/schemas/kspJvm")
 //    schemaDirectory("beta", "$projectDir/schemas/beta")
 //    schemaDirectory("release", "$projectDir/schemas/release")
     schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {
-    with(libs.room.compiler) {
+    /*with(libs.androidx.room.compiler) {
         add("kspAndroid", this)
         add("kspJvm", this)
         add("kspIosX64", this)
         add("kspIosArm64", this)
         add("kspIosSimulatorArm64", this)
-    }
+    }*/
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+    add("kspIosX64", libs.androidx.room.compiler)
+    add("kspJvm", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
 }
