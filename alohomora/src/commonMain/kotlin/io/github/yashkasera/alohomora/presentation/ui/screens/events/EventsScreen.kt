@@ -25,7 +25,7 @@ import io.github.yashkasera.alohomora.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.chartLine
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel

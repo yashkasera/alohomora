@@ -23,6 +23,9 @@ internal interface ApiRequestDao {
     @Query("SELECT id, status, host, path, `query`, method, isViewed FROM ApiRequest ORDER BY time DESC LIMIT 5")
     fun getLatest(): Flow<List<ApiRequest>>
 
+    @Query("SELECT * FROM ApiRequest ORDER BY time DESC LIMIT :limit")
+    suspend fun getLatest(limit: Int): List<ApiRequest>
+
     @Query("SELECT id from ApiRequest WHERE url = :url ORDER BY id  DESC LIMIT 1 ")
     suspend fun getIdByUrl(url: String?): String?
 

@@ -3,8 +3,12 @@ package io.github.yashkasera.alohomora.di
 import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
+import io.github.yashkasera.alohomora.devtools.AndroidAppDatabaseProvider
+import io.github.yashkasera.alohomora.devtools.DevToolsAppDatabaseProvider
+import io.github.yashkasera.alohomora.devtools.AndroidPreferencesInspector
+import io.github.yashkasera.alohomora.devtools.DevToolsPreferencesInspector
+import io.github.yashkasera.alohomora.devtools.DevToolsTcpServer
 import io.github.yashkasera.alohomora.presentation.ui.screens.navigation.NavigationHistoryViewModel
 import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.koin.androidContext
@@ -22,11 +26,13 @@ actual val platformModule = module {
             .setDriver(BundledSQLiteDriver())
             .build()*/
         getDatabaseBuilder(context)
-            .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
             .build()
     }
     viewModel { NavigationHistoryViewModel() }
+    single<DevToolsPreferencesInspector> { AndroidPreferencesInspector(androidContext()) }
+    single<DevToolsAppDatabaseProvider> { AndroidAppDatabaseProvider(androidContext()) }
+    single { DevToolsTcpServer() }
 
 }
 

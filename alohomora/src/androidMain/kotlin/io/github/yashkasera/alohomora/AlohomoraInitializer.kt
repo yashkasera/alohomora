@@ -14,6 +14,7 @@ class AlohomoraInitializer : Initializer<Unit> {
             androidLogger()
             androidContext(context)
         }
+        Alohomora.startDevToolsServer()
         Alohomora.registerPlugin(NavigationPlugin)
         val app = context.applicationContext as Application
         app.registerActivityLifecycleCallbacks(ActivityTracker)

@@ -1,7 +1,6 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.dashboard
 
 import androidx.lifecycle.ViewModel
-import io.github.yashkasera.alohomora.domain.usecase.ConnectToRemoteUseCase
 import io.github.yashkasera.alohomora.domain.usecase.GetLogsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

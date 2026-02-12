@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.ksp)
 //    id("io.github.yashkasera.alohomora")
 }
 
@@ -33,4 +35,30 @@ kotlin {
 dependencies {
     implementation(project(":alohomora"))
     implementation(libs.androidx.activityCompose)
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material3)
+
+    implementation(libs.kotlinx.coroutines.android)
+
+    // Ktor
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.json)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.koin.compose)
+    implementation(libs.koin.compose.viewmodel)
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+
+    ksp(libs.androidx.room.compiler)
 }

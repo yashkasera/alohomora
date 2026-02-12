@@ -5,6 +5,7 @@ import io.github.yashkasera.alohomora.data.repository.CrashRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.EventRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.LogRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.NetworkRepositoryImpl
+import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.domain.repository.CrashRepository
 import io.github.yashkasera.alohomora.domain.repository.EventRepository
 import io.github.yashkasera.alohomora.domain.repository.LogRepository
@@ -49,6 +50,7 @@ internal val appModule = module {
     single<CrashRepository> { CrashRepositoryImpl(get()) }
 
 //    single { SyncService(get(), get()) }
+    single { DevToolsRuntime(get(), get(), get(), get(), get(), get()) }
 
     // UseCases
     factory { GetLogsUseCase(get()) }

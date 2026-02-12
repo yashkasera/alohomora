@@ -11,7 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 
 @Composable
-internal fun AlohomoraTheme(
+fun AlohomoraTheme(
     onThemeChanged: @Composable (isDark: Boolean) -> Unit,
     content: @Composable () -> Unit
 ) {

@@ -65,7 +65,7 @@ class ChuckerCollector(
             NetworkInjector2.dao.update(transaction)
             val latest = withContext(Dispatchers.IO) {
                 if (showNotification) {
-                    NetworkInjector2.dao.getLatest()
+                    NetworkInjector2.dao.getLatest(5)
                 } else {
                     emptyList()
                 }

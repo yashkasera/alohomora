@@ -22,7 +22,7 @@ class QRScannerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val permissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
+            ActivityResultContracts.RequestPermission(),
         ) { isGranted ->
             if (isGranted) {
                 // startCamera()
@@ -39,11 +39,13 @@ class QRScannerActivity : ComponentActivity() {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 if (hasPermission) {
                     Text("Camera Scanner Placeholder\n(Requires CameraX dependency)")
-                    Button(onClick = {
-                        // Simulate Scan
-                        Alohomora.connect("ws://192.168.1.5:8080")
-                        finish()
-                    }) {
+                    Button(
+                        onClick = {
+                            // Simulate Scan
+                            Alohomora.connect("ws://192.168.1.5:8080")
+                            finish()
+                        },
+                    ) {
                         Text("Simulate Scan & Connect")
                     }
                 } else {

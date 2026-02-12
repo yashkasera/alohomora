@@ -51,7 +51,7 @@ import io.github.yashkasera.alohomora.presentation.ui.components.icons.Share
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.clock
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.refreshCw
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel

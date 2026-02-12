@@ -51,7 +51,7 @@ import io.github.yashkasera.alohomora.presentation.ui.components.icons.Search
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.clock
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.hardDrive
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.trash
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel

@@ -5,9 +5,11 @@ import io.github.yashkasera.alohomora.data.model.Commit
 import io.github.yashkasera.alohomora.di.initKoin
 import io.github.yashkasera.alohomora.domain.repository.EventRepository
 import io.github.yashkasera.alohomora.domain.repository.LogRepository
+import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
+import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
+import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
-import io.github.yashkasera.alohomora.sync.SyncService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -86,12 +88,33 @@ object Alohomora {
     }
 
     // ============================================================================
-    // Remote Connection
+    // DevTools TCP Server
     // ============================================================================
 
-    fun connect(url: String) {
-        val syncService = koin?.get<SyncService>()
-        syncService?.connect(url)
+    fun startDevToolsServer(port: Int = DevToolsDefaults.DEFAULT_PORT) {
+        val runtime = koin?.get<DevToolsRuntime>() ?: return
+        runtime.start(port)
+    }
+
+    fun stopDevToolsServer() {
+        val runtime = koin?.get<DevToolsRuntime>() ?: return
+        runtime.stop()
+    }
+
+    // ============================================================================
+    // App Database Overrides
+    // ============================================================================
+
+    fun registerAppDatabase(name: String, path: String? = null) {
+        DevToolsDatabaseOverrides.include(name, path)
+    }
+
+    fun excludeAppDatabase(name: String) {
+        DevToolsDatabaseOverrides.exclude(name)
+    }
+
+    fun clearAppDatabaseOverrides() {
+        DevToolsDatabaseOverrides.clear()
     }
 
     // ============================================================================

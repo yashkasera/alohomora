@@ -16,6 +16,9 @@ internal interface AnalyticsDao {
     @Query("SELECT * FROM Analytics WHERE name LIKE '%' || :query || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
     fun getAll(query: String, page: Int, pageSize: Int): Flow<List<Analytics>>
 
+    @Query("SELECT * FROM Analytics ORDER BY time DESC LIMIT :limit")
+    suspend fun getLatest(limit: Int): List<Analytics>
+
     @Delete
     suspend fun delete(entity: Analytics)
 

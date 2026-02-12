@@ -41,7 +41,7 @@ import io.github.yashkasera.alohomora.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Copy
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Share
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel

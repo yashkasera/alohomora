@@ -44,7 +44,7 @@ object ActivityTracker : Application.ActivityLifecycleCallbacks {
         state: ActivityState,
         includeIntent: Boolean = false,
     ) {
-        if (activity is DevToolsActivity) return
+//        if (activity is DevToolsActivity) return
 
         _events += ActivityEvent(
             activityName = activity::class.java.name,
