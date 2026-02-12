@@ -14,10 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +34,9 @@ import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.util.pickApkPath
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -80,9 +80,10 @@ fun DevicesPanel(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(text = "Connected Devices", style = MaterialTheme.typography.labelMedium)
-            Button(onClick = { devicesViewModel.refreshDevices() }) {
-                Text("Refresh")
-            }
+            AlohomoraFilledButton(
+                text = "Refresh",
+                onClick = { devicesViewModel.refreshDevices() },
+            )
         }
         Spacer(modifier = Modifier.height(8.dp))
         Column(
@@ -114,7 +115,7 @@ fun DevicesPanel(
                             }
                         }
                     )
-                    Divider()
+                    AlohomoraHorizontalDivider()
                 }
             }
         }
@@ -132,17 +133,18 @@ fun DevicesPanel(
         Text(text = "ADB Command", style = MaterialTheme.typography.labelMedium)
         Spacer(modifier = Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
+            AlohomoraOutlinedTextField(
                 value = commandText,
                 onValueChange = { commandText = it },
-                label = { Text("Command") },
+                placeholder = { Text("Command") },
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = { devicesViewModel.runCommand(selectedId, commandText) }) {
-                Text("Run")
-            }
+            AlohomoraFilledButton(
+                text = "Run",
+                onClick = { devicesViewModel.runCommand(selectedId, commandText) },
+            )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -177,40 +179,42 @@ fun DevicesPanel(
         Text(text = "Install / Uninstall", style = MaterialTheme.typography.labelMedium)
         Spacer(modifier = Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
+            AlohomoraOutlinedTextField(
                 value = apkPath,
                 onValueChange = { apkPath = it },
-                label = { Text("APK path") },
+                placeholder = { Text("APK path") },
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = {
+            AlohomoraFilledButton(
+                text = "Browse",
+                onClick = {
                 val picked = pickApkPath()
                 if (!picked.isNullOrBlank()) {
                     apkPath = picked
                 }
-            }) {
-                Text("Browse")
-            }
+            })
             Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = { devicesViewModel.installApk(selectedId, apkPath) }) {
-                Text("Install")
-            }
+            AlohomoraFilledButton(
+                text = "Install",
+                onClick = { devicesViewModel.installApk(selectedId, apkPath) },
+            )
         }
         Spacer(modifier = Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
+            AlohomoraOutlinedTextField(
                 value = packageName,
                 onValueChange = { packageName = it },
-                label = { Text("Package") },
+                placeholder = { Text("Package") },
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = { devicesViewModel.uninstallPackage(selectedId, packageName) }) {
-                Text("Uninstall")
-            }
+            AlohomoraFilledButton(
+                text = "Uninstall",
+                onClick = { devicesViewModel.uninstallPackage(selectedId, packageName) },
+            )
         }
     }
 }
@@ -262,13 +266,16 @@ private fun DeviceRow(
             }
         }
         if (isSelected) {
-            Button(onClick = onDisconnect) {
-                Text("Disconnect")
-            }
+            AlohomoraFilledButton(
+                text = "Disconnect",
+                onClick = onDisconnect,
+            )
         } else {
-            Button(onClick = onSelect, enabled = device.state == DeviceState.DEVICE) {
-                Text("Connect")
-            }
+            AlohomoraFilledButton(
+                text = "Connect",
+                onClick = onSelect,
+                enabled = device.state == DeviceState.DEVICE,
+            )
         }
     }
 }

@@ -15,12 +15,8 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +31,9 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.database
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
 
 @Composable
 internal fun PreferencesScreen(
@@ -176,7 +175,7 @@ private fun PreferencesTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(
+        AlohomoraIconButton(
             onClick = onBackClick,
             modifier = Modifier.size(48.dp)
         ) {
@@ -241,7 +240,8 @@ private fun PreferencesHeader(
             )
         }
 
-        OutlinedButton(
+        AlohomoraOutlinedButton(
+            text = "Clear All",
             onClick = onClearAllClick,
             modifier = Modifier.padding(top = 8.dp)
         ) {
@@ -264,7 +264,7 @@ private fun SearchTextField(
     query: String,
     onQueryChange: (String) -> Unit
 ) {
-    OutlinedTextField(
+    AlohomoraOutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
         modifier = Modifier.fillMaxWidth(),
@@ -334,7 +334,7 @@ private fun MemoryStoreItem(
                 modifier = Modifier.weight(1f)
             )
 
-            IconButton(
+            AlohomoraIconButton(
                 onClick = onDeleteClick,
                 modifier = Modifier.size(32.dp)
             ) {

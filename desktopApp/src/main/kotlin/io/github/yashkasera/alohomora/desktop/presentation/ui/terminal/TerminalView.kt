@@ -9,9 +9,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,6 +20,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -53,7 +53,7 @@ fun TerminalView(terminal: LocalTerminal) {
             )
         }
 
-        TextField(
+        AlohomoraTextField(
             value = input,
             onValueChange = { input = it },
             keyboardOptions = KeyboardOptions(
@@ -72,13 +72,12 @@ fun TerminalView(terminal: LocalTerminal) {
             singleLine = true,
         )
 
-        Button(
+        AlohomoraFilledButton(
+            text = "Run",
             onClick = {
                 terminal.write(input + "\n")
                 input = ""
             },
-        ) {
-            Text("Run")
-        }
+        )
     }
 }

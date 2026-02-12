@@ -9,6 +9,7 @@ plugins {
 
 dependencies {
     implementation(project(":alohomora"))
+    implementation(project(":alohomora-ui"))
     implementation(libs.kotlinx.serialization.json)
 
     // Ktor Server

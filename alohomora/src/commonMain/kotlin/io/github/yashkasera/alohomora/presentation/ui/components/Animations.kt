@@ -8,8 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import io.github.yashkasera.alohomora.presentation.theme.CanvasLightGray
-import io.github.yashkasera.alohomora.presentation.theme.CanvasWhite
 
 // --- Minimal Canvas Background ---
 

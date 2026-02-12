@@ -29,7 +29,8 @@ dependencyResolutionManagement {
     }
 }
 include(":alohomora")
+include(":alohomora-ui")
 include(":alohomora-noop")
-include(":androidApp")
+include(":showcaseApp")
 include(":desktopApp")
 include(":alohomora-gradle-plugin")

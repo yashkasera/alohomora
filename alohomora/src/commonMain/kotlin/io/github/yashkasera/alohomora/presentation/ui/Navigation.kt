@@ -23,8 +23,8 @@ import androidx.navigation.toRoute
 import io.github.yashkasera.alohomora.Platform
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
-import io.github.yashkasera.alohomora.presentation.theme.CanvasBlack
-import io.github.yashkasera.alohomora.presentation.theme.CanvasLightGray
+import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
+import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray
 import io.github.yashkasera.alohomora.presentation.ui.screens.apilog.detail.ApiLogDetailsScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.apilog.list.ApiLogsScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.commithistory.CommitHistoryScreen

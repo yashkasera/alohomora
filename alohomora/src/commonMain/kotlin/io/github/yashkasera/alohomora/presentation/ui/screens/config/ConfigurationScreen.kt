@@ -15,14 +15,9 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +29,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.data.model.AlohomoraBuildInfo
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -87,7 +87,7 @@ internal fun ConfigurationScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
-            HorizontalDivider()
+            AlohomoraHorizontalDivider()
             Spacer(modifier = Modifier.height(32.dp))
 
             // Build Information (Read-only)
@@ -96,7 +96,7 @@ internal fun ConfigurationScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
-            HorizontalDivider()
+            AlohomoraHorizontalDivider()
             Spacer(modifier = Modifier.height(32.dp))
 
             // Environment Details (Read-only)
@@ -124,7 +124,7 @@ private fun ConfigurationTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(
+        AlohomoraIconButton(
             onClick = onBackClick,
             modifier = Modifier.size(48.dp),
         ) {
@@ -212,16 +212,18 @@ private fun BackendUrlConfig(
             )
 
             if (!isEditing) {
-                TextButton(onClick = onEditClick) {
-                    Text("EDIT", style = MaterialTheme.typography.labelSmall)
-                }
+                AlohomoraTextButton(
+                    text = "Edit",
+                    onClick = onEditClick,
+                    size = io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize.SMALL,
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         if (isEditing) {
-            OutlinedTextField(
+            AlohomoraOutlinedTextField(
                 value = url,
                 onValueChange = onUrlChange,
                 modifier = Modifier.fillMaxWidth(),
@@ -241,13 +243,17 @@ private fun BackendUrlConfig(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
             ) {
-                TextButton(onClick = onCancelClick) {
-                    Text("CANCEL", style = MaterialTheme.typography.labelSmall)
-                }
+                AlohomoraTextButton(
+                    text = "Cancel",
+                    onClick = onCancelClick,
+                    size = io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize.SMALL,
+                )
 
-                Button(onClick = onSaveClick) {
-                    Text("SAVE", style = MaterialTheme.typography.labelSmall)
-                }
+                AlohomoraFilledButton(
+                    text = "Save",
+                    onClick = onSaveClick,
+                    size = io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize.SMALL,
+                )
             }
         } else {
             Box(
@@ -408,4 +414,3 @@ private fun InfoItem(
         }
     }
 }
-

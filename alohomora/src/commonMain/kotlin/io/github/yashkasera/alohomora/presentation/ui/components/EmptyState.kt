@@ -21,8 +21,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.yashkasera.alohomora.presentation.theme.CanvasBlack
-import io.github.yashkasera.alohomora.presentation.theme.CanvasDarkGray
+import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
+import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
 
 /**
  * A reusable empty state component that can be used across different screens

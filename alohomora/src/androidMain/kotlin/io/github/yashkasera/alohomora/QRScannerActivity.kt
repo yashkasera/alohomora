@@ -7,7 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 
 class QRScannerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,15 +39,14 @@ class QRScannerActivity : ComponentActivity() {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 if (hasPermission) {
                     Text("Camera Scanner Placeholder\n(Requires CameraX dependency)")
-                    Button(
+                    AlohomoraFilledButton(
                         onClick = {
                             // Simulate Scan
                             Alohomora.connect("ws://192.168.1.5:8080")
                             finish()
                         },
-                    ) {
-                        Text("Simulate Scan & Connect")
-                    }
+                        text = "Simulate Scan & Connect",
+                    )
                 } else {
                     Text("Requesting Camera Permission...")
                 }

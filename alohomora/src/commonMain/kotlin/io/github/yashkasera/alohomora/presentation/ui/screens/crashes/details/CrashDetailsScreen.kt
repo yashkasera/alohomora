@@ -14,12 +14,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,14 +29,18 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.yashkasera.alohomora.presentation.theme.CanvasAlertRed
-import io.github.yashkasera.alohomora.presentation.theme.CanvasBlack
-import io.github.yashkasera.alohomora.presentation.theme.CanvasDarkGray
-import io.github.yashkasera.alohomora.presentation.theme.CanvasLightGray
-import io.github.yashkasera.alohomora.presentation.theme.CanvasWhite
-import io.github.yashkasera.alohomora.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.theme.CanvasAlertRed
+import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
+import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
+import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray
+import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Copy
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
+import io.github.yashkasera.alohomora.presentation.ui.components.icons.ArrowLeft
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Share
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
@@ -60,7 +61,11 @@ internal fun CrashDetailsScreen(
             AlohomoraTopBar(
                 title = "BACK",
                 subtitle = "REPORT #${crashId}",
-                onNavigateUp = onBackClick,
+                navigationIcon = {
+                    AlohomoraIconButton(onClick = onBackClick) {
+                        Icon(Icons.ArrowLeft, contentDescription = "back")
+                    }
+                },
             )
         },
         containerColor = CanvasWhite,
@@ -236,13 +241,13 @@ internal fun CrashDetailsScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        OutlinedButton(
+                        AlohomoraOutlinedButton(
+                            text = "Copy Trace",
                             onClick = { /* TODO: Copy trace to clipboard */ },
                             modifier = Modifier.weight(1f),
                             shape = RectangleShape,
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = CanvasBlack,
-                            ),
+                            contentColor = CanvasBlack,
+                            borderColor = CanvasBlack,
                         ) {
                             Icon(
                                 Icons.Copy,
@@ -260,14 +265,13 @@ internal fun CrashDetailsScreen(
 
                         Spacer(modifier = Modifier.width(12.dp))
 
-                        Button(
+                        AlohomoraFilledButton(
+                            text = "Share Report",
                             onClick = { /* TODO: Share report */ },
                             modifier = Modifier.weight(1f),
                             shape = RectangleShape,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = CanvasBlack,
-                                contentColor = CanvasWhite,
-                            ),
+                            containerColor = CanvasBlack,
+                            contentColor = CanvasWhite,
                         ) {
                             Icon(
                                 Icons.Share,

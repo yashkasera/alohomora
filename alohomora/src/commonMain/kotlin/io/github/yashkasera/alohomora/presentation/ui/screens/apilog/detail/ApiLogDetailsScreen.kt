@@ -20,14 +20,9 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -43,8 +38,15 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.data.entity.ApiRequest
-import io.github.yashkasera.alohomora.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
+import io.github.yashkasera.alohomora.presentation.ui.components.icons.ArrowLeft
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Search
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Server
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Share
@@ -85,9 +87,16 @@ internal fun ApiLogDetailsScreen(callId: String, onBackClick: () -> Unit = {}) {
             AlohomoraTopBar(
                 title = "API Request",
                 subtitle = null,
-                onNavigateUp = onBackClick,
+                navigationIcon = {
+                    AlohomoraIconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.ArrowLeft,
+                            contentDescription = "back",
+                        )
+                    }
+                },
                 actions = {
-                    IconButton(
+                    AlohomoraIconButton(
                         onClick = {
                             // TODO: Implement share
                         },
@@ -107,39 +116,19 @@ internal fun ApiLogDetailsScreen(callId: String, onBackClick: () -> Unit = {}) {
                 .padding(padding),
         ) {
             // Tab Row
-            PrimaryTabRow(
+            AlohomoraPrimaryTabRow(
                 selectedTabIndex = pagerState.currentPage,
                 modifier = Modifier.fillMaxWidth(),
-                containerColor = MaterialTheme.colorScheme.surface,
-                /*indicator = { tabPositions ->
-                    if (pagerState.currentPage < tabPositions.size) {
-                        TabRowDefaults.SecondaryIndicator(
-                            modifier = Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                },*/
-                divider = {},
             ) {
                 tabs.forEachIndexed { index, title ->
-                    Tab(
+                    AlohomoraTab(
                         selected = pagerState.currentPage == index,
                         onClick = {
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(index)
                             }
                         },
-                        text = {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = if (pagerState.currentPage == index) {
-                                    MaterialTheme.colorScheme.onSurface
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                            )
-                        },
+                        text = title,
                     )
                 }
             }
@@ -197,7 +186,7 @@ private fun OverviewTab(call: ApiRequest) {
             format = "JSON", // TODO: Detect from content-type
         )
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 32.dp))
+        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 32.dp))
 
         // Info rows
         InfoRowsSection(call = call)
@@ -245,14 +234,14 @@ private fun RequestTab(call: ApiRequest) {
 
         // Action buttons
         Row(modifier = Modifier.fillMaxWidth()) {
-            OutlinedActionButton(
-                text = "COPY JSON",
+            AlohomoraOutlinedButton(
+                text = "Copy JSON",
                 onClick = { /* TODO */ },
                 modifier = Modifier.weight(1f),
             )
             Spacer(modifier = Modifier.width(16.dp))
-            OutlinedActionButton(
-                text = "SHARE",
+            AlohomoraOutlinedButton(
+                text = "Share",
                 onClick = { /* TODO */ },
                 modifier = Modifier.weight(1f),
             )
@@ -539,47 +528,25 @@ private fun CodeViewer(json: String) {
 }
 
 @Composable
-private fun OutlinedActionButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outline,
-                shape = MaterialTheme.shapes.extraSmall,
-            )
-            .clickable(onClick = onClick)
-            .padding(vertical = 14.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall,
-        )
-    }
-}
-
-@Composable
 private fun ReplayButton(onClick: () -> Unit) {
-    Button(
+    AlohomoraFilledButton(
+        text = "Replay Request",
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(24.dp)
             .height(56.dp),
         shape = RectangleShape,
-    ) {
-        // TODO: Add replay icon
-        Text(text = "↻", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = "REPLAY REQUEST",
-            style = MaterialTheme.typography.labelLarge,
-        )
-    }
+        content = {
+            // TODO: Add replay icon
+            Text(text = "↻", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "REPLAY REQUEST",
+                style = MaterialTheme.typography.labelLarge,
+            )
+        }
+    )
 }
 
 // ============================================================================
@@ -656,14 +623,14 @@ private fun SearchBar(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            IconButton(
+            AlohomoraIconButton(
                 onClick = { /* Navigate to previous match */ },
                 modifier = Modifier.size(24.dp),
             ) {
                 Text("↑", style = MaterialTheme.typography.labelMedium)
             }
 
-            IconButton(
+            AlohomoraIconButton(
                 onClick = { /* Navigate to next match */ },
                 modifier = Modifier.size(24.dp),
             ) {
@@ -889,4 +856,3 @@ private fun prettifyJson(json: String): String {
         json
     }
 }
-

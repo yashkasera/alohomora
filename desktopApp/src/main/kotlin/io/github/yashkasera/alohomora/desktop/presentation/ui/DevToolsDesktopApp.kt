@@ -1,6 +1,5 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,20 +7,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,12 +24,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.yashkasera.alohomora.presentation.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
 import io.github.yashkasera.alohomora.presentation.ui.components.CanvasBackground
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ConnectionBar
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.PanelCard
@@ -51,6 +45,9 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsVie
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.PrefsViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraLargeTopAppBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopAppBarDefaults
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,11 +62,10 @@ fun DevToolsDesktopApp(
 
     AlohomoraTheme(onThemeChanged = {}) {
         Surface(modifier = Modifier.fillMaxSize()) {
-            val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
             Scaffold(
                 topBar = {
-                    LargeTopAppBar(
+                    AlohomoraLargeTopAppBar(
                         title = {
                             Column {
                                 Text(
@@ -100,12 +96,12 @@ fun DevToolsDesktopApp(
                                 Spacer(modifier = Modifier.width(12.dp))
                             }
                             if (activeSection == DesktopSection.Devices) {
-                                Button(onClick = { devicesViewModel.refreshDevices() }) {
-                                    Text("Refresh Devices")
-                                }
+                                AlohomoraFilledButton(
+                                    text = "Refresh Devices",
+                                    onClick = { devicesViewModel.refreshDevices() },
+                                )
                             }
                         },
-                        scrollBehavior = scrollBehavior,
                     )
                 },
             ) { padding ->

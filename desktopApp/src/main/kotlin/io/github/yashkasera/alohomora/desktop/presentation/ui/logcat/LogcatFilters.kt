@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,6 +13,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.LogLevel
 import io.github.yashkasera.alohomora.desktop.presentation.model.LogcatFilterState
+import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
 
 @Composable
 fun LogcatFilters(
@@ -29,24 +29,20 @@ fun LogcatFilters(
         Row {
             LogLevel.values().forEach { level ->
                 val selected = filterState.enabledLevels.contains(level)
-                val colors = if (selected) {
-                    ButtonDefaults.buttonColors(
-                        containerColor = levelColor(level),
-                        contentColor = Color.White
-                    )
+                val containerColor = if (selected) {
+                    levelColor(level)
                 } else {
-                    ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE0E0E0),
-                        contentColor = Color.Black
-                    )
+                    Color(0xFFE0E0E0)
                 }
-                Button(
+                val contentColor = if (selected) Color.White else Color.Black
+                AlohomoraFilledButton(
+                    text = level.shortName,
                     onClick = { onToggleLevel(level) },
-                    colors = colors,
-                    contentPadding = ButtonDefaults.ContentPadding,
-                ) {
-                    Text(level.shortName)
-                }
+                    containerColor = containerColor,
+                    contentColor = contentColor,
+                    size = AlohomoraButtonSize.SMALL,
+                    uppercase = false,
+                )
                 Spacer(modifier = Modifier.width(8.dp))
             }
         }
@@ -59,10 +55,10 @@ fun LogcatFilters(
                 onSelectTag = onSelectTag,
             )
             Spacer(modifier = Modifier.width(12.dp))
-            OutlinedTextField(
+            AlohomoraOutlinedTextField(
                 value = filterState.searchQuery,
                 onValueChange = onSearch,
-                label = { Text("Search") },
+                placeholder = { Text("Search") },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
             )

@@ -18,9 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -37,8 +35,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
+import io.github.yashkasera.alohomora.presentation.ui.components.icons.ArrowLeft
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.refreshCw
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -53,9 +54,13 @@ internal fun NavigationHistoryScreen(onBackClick: () -> Unit = {}) {
             AlohomoraTopBar(
                 title = "Navigation History",
                 subtitle = null,
-                onNavigateUp = onBackClick,
+                navigationIcon = {
+                    AlohomoraIconButton(onClick = onBackClick) {
+                        Icon(Icons.ArrowLeft, contentDescription = "back")
+                    }
+                },
                 actions = {
-                    IconButton(onClick = { viewModel.refresh() }) {
+                    AlohomoraIconButton(onClick = { viewModel.refresh() }) {
                         Icon(Icons.refreshCw, contentDescription = null)
                     }
                 },
@@ -63,7 +68,7 @@ internal fun NavigationHistoryScreen(onBackClick: () -> Unit = {}) {
         },
         bottomBar = {
             // Session Summary
-            HorizontalDivider()
+            AlohomoraHorizontalDivider()
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -436,30 +441,3 @@ private fun TimelineConnector(
         }
     }
 }
-
-@Composable
-private fun OutlinedButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.onBackground,
-                shape = RectangleShape,
-            )
-            .clickable(onClick = onClick)
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-    }
-}
-
-

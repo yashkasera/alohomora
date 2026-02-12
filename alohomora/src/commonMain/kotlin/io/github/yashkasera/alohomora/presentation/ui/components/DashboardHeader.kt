@@ -11,22 +11,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.presentation.theme.CanvasBlack
-import io.github.yashkasera.alohomora.presentation.theme.CanvasWhite
-import io.github.yashkasera.alohomora.presentation.theme.CanvasDarkGray
+import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
+import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
 // We'll reuse AlertRed if we really need it, or just use Black for active state.
-import io.github.yashkasera.alohomora.presentation.theme.CanvasAlertRed
-
 
 @Composable
 fun DashboardHeader(

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.PrefsViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 
 @Composable
 fun PreferencesPanel(prefsViewModel: PrefsViewModel) {
@@ -75,7 +75,7 @@ fun PreferencesPanel(prefsViewModel: PrefsViewModel) {
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                Divider()
+                AlohomoraHorizontalDivider()
             }
         }
     }

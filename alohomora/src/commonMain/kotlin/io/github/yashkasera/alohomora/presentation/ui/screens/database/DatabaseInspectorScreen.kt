@@ -10,7 +10,13 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,10 +28,15 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.ArrowLeft
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Settings
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextFieldDefaults
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DatabaseInspectorScreen(
     onBackClick: () -> Unit,
@@ -36,21 +47,16 @@ internal fun DatabaseInspectorScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            AlohomoraTopBar(
+                title = "Database Inspector",
+                subtitle = null,
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(onClick = onBackClick) {
                         Icon(Icons.ArrowLeft, contentDescription = "Back")
                     }
                 },
-                title = {
-                    Text(
-                        text = "Database Inspector",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontStyle = FontStyle.Italic
-                    )
-                },
                 actions = {
-                    IconButton(onClick = { /* Settings */ }) {
+                    AlohomoraIconButton(onClick = { /* Settings */ }) {
                         Icon(Icons.Settings, contentDescription = "Settings")
                     }
                 }
@@ -188,7 +194,7 @@ fun TablesSection(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-        HorizontalDivider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
+        AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
     }
 }
 
@@ -309,14 +315,14 @@ fun QueryTabContent(
                 .padding(16.dp)
         ) {
             Column {
-                TextField(
+                AlohomoraTextField(
                     value = queryText,
                     onValueChange = onQueryTextChanged,
                     modifier = Modifier.fillMaxWidth().weight(1f),
                     textStyle = MaterialTheme.typography.bodyMedium.copy(
                         fontFamily = FontFamily.Monospace
                     ),
-                    colors = TextFieldDefaults.colors(
+                    colors = AlohomoraTextFieldDefaults.textFieldColors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
                         disabledContainerColor = Color.Transparent,
@@ -336,13 +342,12 @@ fun QueryTabContent(
                         color = MaterialTheme.colorScheme.tertiary
                     )
 
-                    Button(
+                    AlohomoraFilledButton(
                         onClick = onRunQuery,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.inverseSurface,
-                            contentColor = MaterialTheme.colorScheme.inverseOnSurface
-                        ),
-                        shape = RoundedCornerShape(4.dp)
+                        containerColor = MaterialTheme.colorScheme.inverseSurface,
+                        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+                        shape = RoundedCornerShape(4.dp),
+                        text = "Run",
                     ) {
                         Text("▶  RUN", style = MaterialTheme.typography.labelMedium)
                     }
@@ -637,7 +642,7 @@ fun DatabaseSelectorBottomSheet(
                 }
 
                 if (database != databases.last()) {
-                    HorizontalDivider(
+                    AlohomoraHorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
                     )

@@ -1,0 +1,60 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+
+plugins {
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.android.kmp.library)
+}
+
+kotlin {
+    android {
+        namespace = "io.github.yashkasera.alohomora.ui"
+        compileSdk = 36
+        minSdk = 23
+        androidResources.enable = true
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
+    }
+
+    jvm()
+
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
+    sourceSets {
+        commonMain.dependencies {
+            api(libs.compose.runtime)
+            api(libs.compose.ui)
+            api(libs.compose.foundation)
+            api(libs.compose.material3)
+            api(libs.compose.resources)
+            api(libs.compose.ui.tooling.preview)
+        }
+
+        androidMain.dependencies {
+            // No platform-specific UI deps yet.
+        }
+
+        jvmMain.dependencies {
+            // Desktop app provides compose.desktop.currentOs.
+        }
+
+        iosMain.dependencies {
+            // No platform-specific deps required.
+        }
+    }
+
+    targets
+        .withType<KotlinNativeTarget>()
+        .matching { it.konanTarget.family.isAppleFamily }
+        .configureEach {
+            binaries {
+                framework {
+                    baseName = "AlohomoraUi"
+                    isStatic = true
+                }
+            }
+        }
+}

@@ -22,14 +22,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.data.entity.ApiRequest
-import io.github.yashkasera.alohomora.presentation.theme.*
-import io.github.yashkasera.alohomora.presentation.ui.components.AlohomoraButton
-import io.github.yashkasera.alohomora.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextFieldDefaults
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.ArrowLeft
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Server
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.trash
+import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
+import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -45,7 +51,11 @@ internal fun ApiLogsScreen(onLogClick: (String) -> Unit) {
         topBar = {
             AlohomoraTopBar(
                 title = "Traffic Logs",
-                onNavigateUp = {},
+                navigationIcon = {
+                    AlohomoraIconButton(onClick = {}) {
+                        Icon(Icons.ArrowLeft, contentDescription = "back")
+                    }
+                },
             )
         },
         bottomBar = { ApiLogsBottomBar() },
@@ -63,7 +73,7 @@ internal fun ApiLogsScreen(onLogClick: (String) -> Unit) {
             ) {
                 items(state.calls) { call ->
                     LogItem(call = call, onClick = { onLogClick(call.id) })
-                    HorizontalDivider()
+                    AlohomoraHorizontalDivider()
                 }
                 // Spacer to avoid bottom bar overlap if scaffold padding isn't enough (usually it is)
                 item { Spacer(modifier = Modifier.height(32.dp)) }
@@ -83,7 +93,7 @@ private fun ApiLogsHeader(requestCount: Int) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = { /* TODO: Back */ }) {
+            AlohomoraIconButton(onClick = { /* TODO: Back */ }) {
                 Icon(Icons.ArrowLeft, contentDescription = "Back", tint = CanvasBlack)
             }
 
@@ -94,7 +104,7 @@ private fun ApiLogsHeader(requestCount: Int) {
                 color = CanvasBlack,
             )
 
-            IconButton(onClick = { /* TODO: Clear */ }) {
+            AlohomoraIconButton(onClick = { /* TODO: Clear */ }) {
                 // Using Delete as DeleteSweep is extended
                 Icon(Icons.trash, contentDescription = "Clear", tint = CanvasBlack)
             }
@@ -105,14 +115,14 @@ private fun ApiLogsHeader(requestCount: Int) {
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            OutlinedTextField(
+            AlohomoraOutlinedTextField(
                 value = "ewrweq",
                 onValueChange = {},
                 singleLine = true,
                 shape = RectangleShape,
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                colors = AlohomoraTextFieldDefaults.outlinedColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     focusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     cursorColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
@@ -147,7 +157,7 @@ private fun ApiLogsHeader(requestCount: Int) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        HorizontalDivider()
+        AlohomoraHorizontalDivider()
     }
 }
 
@@ -293,18 +303,16 @@ fun ApiLogsBottomBar() {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // Pause Button
-            AlohomoraButton(
+            AlohomoraFilledButton(
                 modifier = Modifier.weight(1f),
                 text = "Pause",
-                isFilled = true,
                 onClick = {
 
                 },
             )
-            AlohomoraButton(
+            AlohomoraOutlinedButton(
                 modifier = Modifier.weight(1f),
                 text = "Export Har",
-                isFilled = false,
                 onClick = {
 
                 },

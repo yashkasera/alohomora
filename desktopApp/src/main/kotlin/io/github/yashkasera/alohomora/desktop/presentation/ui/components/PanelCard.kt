@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 
 @Composable
 fun PanelCard(
@@ -37,7 +37,7 @@ fun PanelCard(
                 fontFamily = FontFamily.Monospace
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Divider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
+            AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
             Spacer(modifier = Modifier.height(12.dp))
             Box(modifier = Modifier.fillMaxSize()) {
                 content()

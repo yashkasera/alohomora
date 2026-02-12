@@ -24,15 +24,10 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -55,6 +50,10 @@ import io.github.yashkasera.alohomora.presentation.ui.components.icons.chartLine
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.database
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.gitGraph
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.hardDrive
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraLargeTopAppBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopAppBarDefaults
 import org.koin.compose.viewmodel.koinViewModel
 
 private data class DashboardModule(
@@ -144,7 +143,9 @@ internal fun DashboardScreen(
     }
 
     val lazyGridState = rememberLazyStaggeredGridState()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = AlohomoraTopAppBarDefaults.enterAlwaysScrollBehavior(
+        AlohomoraTopAppBarDefaults.rememberTopAppBarState()
+    )
     val collapsed = 28
     val expanded = 40
     val topAppBarTextSize =
@@ -152,7 +153,7 @@ internal fun DashboardScreen(
 
     Scaffold(
         topBar = {
-            LargeTopAppBar(
+            AlohomoraLargeTopAppBar(
                 title = {
                     Column {
                         Text(
@@ -172,7 +173,7 @@ internal fun DashboardScreen(
                     }
                 },
                 actions = {
-                    IconButton(
+                    AlohomoraIconButton(
                         onClick = {
 
                         },
@@ -314,7 +315,7 @@ fun ActiveTargetCard(isConnected: Boolean) {
                 modifier = Modifier.padding(top = 8.dp),
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
+            AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

@@ -1,30 +1,32 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.events
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.data.entity.Analytics
-import io.github.yashkasera.alohomora.presentation.theme.*
-import io.github.yashkasera.alohomora.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraExtendedFloatingActionButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
+import io.github.yashkasera.alohomora.presentation.ui.components.icons.ArrowLeft
 import io.github.yashkasera.alohomora.presentation.ui.components.icons.chartLine
+import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
+import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
+import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray
+import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -39,7 +41,11 @@ internal fun EventsScreen(onBackClick: () -> Unit) {
         topBar = { AlohomoraTopBar(
             title = "Event Stream",
             subtitle = "",
-            onNavigateUp = onBackClick
+            navigationIcon = {
+                AlohomoraIconButton(onClick = onBackClick) {
+                    Icon(Icons.ArrowLeft, contentDescription = "back")
+                }
+            },
         ) },
 //        floatingActionButton = { CreateJourneyFab() },
         containerColor = CanvasWhite,
@@ -146,12 +152,12 @@ fun EventItem(event: Analytics) {
             )
         }
     }
-    Divider(color = CanvasLightGray, thickness = 1.dp)
+    AlohomoraHorizontalDivider(color = CanvasLightGray, thickness = 1.dp)
 }
 
 @Composable
 fun CreateJourneyFab() {
-    ExtendedFloatingActionButton(
+    AlohomoraExtendedFloatingActionButton(
         onClick = { /* TODO */ },
         containerColor = CanvasBlack,
         contentColor = CanvasWhite,

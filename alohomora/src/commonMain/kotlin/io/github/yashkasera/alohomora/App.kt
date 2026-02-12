@@ -3,23 +3,27 @@ package io.github.yashkasera.alohomora
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.generated.resources.*
 import io.github.yashkasera.alohomora.generated.resources.Res
 import io.github.yashkasera.alohomora.generated.resources.cyclone
-import io.github.yashkasera.alohomora.presentation.theme.AppTheme
-import io.github.yashkasera.alohomora.presentation.theme.LocalThemeIsDark
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import io.github.yashkasera.alohomora.ui.theme.LocalThemeIsDark
+import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonDefaults
+import io.github.yashkasera.alohomora.ui.components.AlohomoraElevatedButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import kotlinx.coroutines.isActive
-import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
@@ -35,7 +39,6 @@ fun App(onThemeChanged: @Composable (isDark: Boolean) -> Unit = {}) = AppTheme(o
     ) {
         Text(
             text = stringResource(Res.string.cyclone),
-            fontFamily = FontFamily(Font(Res.font.IndieFlower_Regular)),
             style = MaterialTheme.typography.displayLarge
         )
 
@@ -63,14 +66,15 @@ fun App(onThemeChanged: @Composable (isDark: Boolean) -> Unit = {}) = AppTheme(o
             contentDescription = null
         )
 
-        ElevatedButton(
+        AlohomoraElevatedButton(
+            text = stringResource(if (isRotating) Res.string.stop else Res.string.run),
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 4.dp)
                 .widthIn(min = 200.dp),
             onClick = { isRotating = !isRotating },
             content = {
                 Icon(vectorResource(Res.drawable.ic_rotate_right), contentDescription = null)
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Spacer(Modifier.size(AlohomoraButtonDefaults.iconSpacing))
                 Text(
                     stringResource(if (isRotating) Res.string.stop else Res.string.run)
                 )
@@ -83,22 +87,22 @@ fun App(onThemeChanged: @Composable (isDark: Boolean) -> Unit = {}) = AppTheme(o
             else Res.drawable.ic_dark_mode
         }
 
-        ElevatedButton(
+        AlohomoraElevatedButton(
+            text = stringResource(Res.string.theme),
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
             onClick = { isDark = !isDark },
             content = {
                 Icon(vectorResource(icon), contentDescription = null)
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Spacer(Modifier.size(AlohomoraButtonDefaults.iconSpacing))
                 Text(stringResource(Res.string.theme))
             }
         )
 
         val uriHandler = LocalUriHandler.current
-        TextButton(
+        AlohomoraTextButton(
+            text = stringResource(Res.string.open_github),
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
             onClick = { uriHandler.openUri("https://github.com/terrakok") },
-        ) {
-            Text(stringResource(Res.string.open_github))
-        }
+        )
     }
 }

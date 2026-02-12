@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,6 +23,8 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
 
 @Composable
 fun ConnectionBar(viewModel: DevToolsViewModel) {
@@ -55,32 +55,33 @@ fun ConnectionBar(viewModel: DevToolsViewModel) {
                 StatusPill(state.connection)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
+                AlohomoraOutlinedTextField(
                     value = host,
                     onValueChange = { host = it },
-                    label = { Text("Host") },
+                    placeholder = { Text("Host") },
                     singleLine = true,
                     modifier = Modifier.width(200.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                OutlinedTextField(
+                AlohomoraOutlinedTextField(
                     value = port,
                     onValueChange = { port = it.filter { c -> c.isDigit() } },
-                    label = { Text("Port") },
+                    placeholder = { Text("Port") },
                     singleLine = true,
                     modifier = Modifier.width(120.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = {
+                AlohomoraFilledButton(
+                    text = "Connect",
+                    onClick = {
                     val numericPort = port.toIntOrNull() ?: 53999
                     viewModel.switchDevice(host, numericPort, deviceId = null)
-                }) {
-                    Text("Connect")
-                }
+                })
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = { viewModel.disconnect() }) {
-                    Text("Disconnect")
-                }
+                AlohomoraFilledButton(
+                    text = "Disconnect",
+                    onClick = { viewModel.disconnect() },
+                )
             }
         }
     }

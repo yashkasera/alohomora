@@ -4,7 +4,7 @@ import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
-import io.github.yashkasera.alohomora.presentation.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
 import org.koin.compose.KoinContext
 
 @Composable

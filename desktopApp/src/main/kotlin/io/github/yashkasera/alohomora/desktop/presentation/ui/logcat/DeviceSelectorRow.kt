@@ -9,11 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
 
 @Composable
 fun DeviceSelectorRow(
@@ -44,11 +44,11 @@ fun DeviceSelectorRow(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Box(modifier = Modifier.weight(1f)) {
-            OutlinedTextField(
+            AlohomoraOutlinedTextField(
                 value = selectorLabel,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Device") },
+                placeholder = { Text("Device") },
                 modifier = Modifier.fillMaxWidth().padding(end = 8.dp),
             )
             Box(
@@ -80,9 +80,10 @@ fun DeviceSelectorRow(
                 }
             }
         }
-        Button(onClick = onRefresh) {
-            Text("Refresh")
-        }
+        AlohomoraFilledButton(
+            text = "Refresh",
+            onClick = onRefresh,
+        )
     }
 }
 
