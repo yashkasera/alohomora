@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import io.github.yashkasera.alohomora.data.datasource.local.ApiRequestDao
-import io.github.yashkasera.alohomora.data.entity.ApiRequest
+import io.github.yashkasera.alohomora.common.ApiRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch

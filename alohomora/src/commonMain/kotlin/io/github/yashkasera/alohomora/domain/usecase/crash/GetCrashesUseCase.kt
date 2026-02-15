@@ -1,6 +1,6 @@
-package io.github.yashkasera.alohomora.domain.usecase
+package io.github.yashkasera.alohomora.domain.usecase.crash
 
-import io.github.yashkasera.alohomora.data.entity.Crash
+import io.github.yashkasera.alohomora.common.Crash
 import io.github.yashkasera.alohomora.domain.repository.CrashRepository
 import kotlinx.coroutines.flow.Flow
 

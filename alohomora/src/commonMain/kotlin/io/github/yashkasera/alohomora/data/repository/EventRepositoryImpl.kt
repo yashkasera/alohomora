@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.data.repository
 
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
-import io.github.yashkasera.alohomora.data.entity.Analytics
+import io.github.yashkasera.alohomora.common.Analytics
 import io.github.yashkasera.alohomora.domain.repository.EventRepository
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.Flow

@@ -1,13 +1,15 @@
-package io.github.yashkasera.alohomora.data.entity
+package io.github.yashkasera.alohomora.common
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
 import kotlin.time.Clock
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
 @Entity
+@Serializable
 data class Analytics(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

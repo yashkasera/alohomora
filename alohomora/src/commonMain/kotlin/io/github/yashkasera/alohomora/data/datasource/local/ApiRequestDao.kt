@@ -6,7 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import io.github.yashkasera.alohomora.data.entity.ApiRequest
+import io.github.yashkasera.alohomora.common.ApiRequest
 import kotlinx.coroutines.flow.Flow
 
 @Dao

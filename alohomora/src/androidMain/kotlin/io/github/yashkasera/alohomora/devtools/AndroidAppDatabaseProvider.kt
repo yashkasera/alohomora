@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.devtools
 
 import android.content.Context
+import io.github.yashkasera.alohomora.common.AppDatabaseInfo
 
 internal class AndroidAppDatabaseProvider(
     private val context: Context,

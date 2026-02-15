@@ -5,7 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import io.github.yashkasera.alohomora.data.entity.Crash
+import io.github.yashkasera.alohomora.common.Crash
 import kotlinx.coroutines.flow.Flow
 
 @Dao

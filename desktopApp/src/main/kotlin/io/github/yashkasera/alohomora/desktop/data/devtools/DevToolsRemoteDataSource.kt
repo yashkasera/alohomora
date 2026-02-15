@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.data.devtools
 
-import io.github.yashkasera.alohomora.devtools.DevToolsEnvelope
-import io.github.yashkasera.alohomora.devtools.DevToolsProtocol
+import io.github.yashkasera.alohomora.common.DevToolsEnvelope
+import io.github.yashkasera.alohomora.common.DevToolsProtocol
 
 open class DevToolsRemoteDataSource(
     private val socketFactory: DevToolsSocketFactory = DefaultDevToolsSocketFactory(),

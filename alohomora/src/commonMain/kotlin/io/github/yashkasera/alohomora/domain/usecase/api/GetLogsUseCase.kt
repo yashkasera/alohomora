@@ -1,4 +1,4 @@
-package io.github.yashkasera.alohomora.domain.usecase
+package io.github.yashkasera.alohomora.domain.usecase.api
 
 import io.github.yashkasera.alohomora.domain.repository.LogRepository
 

@@ -1,5 +1,17 @@
 package io.github.yashkasera.alohomora.devtools
 
+import io.github.yashkasera.alohomora.common.Analytics
+import io.github.yashkasera.alohomora.common.ApiRequest
+import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
+import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
+import io.github.yashkasera.alohomora.common.DevToolsEnvelope
+import io.github.yashkasera.alohomora.common.DevToolsMessageType
+import io.github.yashkasera.alohomora.common.DevToolsProtocol
+import io.github.yashkasera.alohomora.common.InitialStatePayload
+import io.github.yashkasera.alohomora.common.PrefsSnapshotPayload
+import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaPayload
+import io.github.yashkasera.alohomora.common.RequestDatabaseTablePayload
+import io.github.yashkasera.alohomora.common.RequestPrefValuePayload
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.domain.repository.EventRepository
 import io.github.yashkasera.alohomora.domain.repository.NetworkRepository
@@ -10,7 +22,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -74,8 +85,8 @@ internal class DevToolsRuntime(
             capacity = DevToolsDefaults.STREAM_BUFFER_CAPACITY,
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
         )
-        private val eventAdapter = DevToolsStreamAdapter { event: EventPayload -> event.time }
-        private val apiAdapter = DevToolsStreamAdapter { log: ApiLogPayload -> log.time }
+        private val eventAdapter = DevToolsStreamAdapter { event: Analytics -> event.time }
+        private val apiAdapter = DevToolsStreamAdapter { log: ApiRequest -> log.time ?: 0L }
 
         fun start() {
             connectionScope.launch { writerLoop() }
@@ -103,10 +114,13 @@ internal class DevToolsRuntime(
 
         private suspend fun readerLoop() {
             while (true) {
-                val envelope = DevToolsProtocol.readEnvelope(socket) ?: break
+                val envelope = readEnvelope(socket) ?: break
                 when (envelope.type) {
                     DevToolsMessageType.REQUEST_INITIAL_STATE -> sendInitialState()
-                    DevToolsMessageType.REQUEST_DATABASE_SCHEMA -> handleDatabaseSchemaRequest(envelope.payload)
+                    DevToolsMessageType.REQUEST_DATABASE_SCHEMA -> handleDatabaseSchemaRequest(
+                        envelope.payload,
+                    )
+
                     DevToolsMessageType.REQUEST_DATABASE_TABLE -> handleDatabaseRequest(envelope.payload)
                     DevToolsMessageType.REQUEST_PREF_VALUE -> handlePreferenceRequest(envelope.payload)
                     else -> Unit
@@ -115,13 +129,30 @@ internal class DevToolsRuntime(
             close()
         }
 
+        private fun readEnvelope(socket: DevToolsSocket): DevToolsEnvelope? {
+            val header = socket.readExact(9) ?: return null
+            val magic = readInt(header, 0)
+            if (magic != 0x414C4F48) return null
+            val version = header[4]
+            if (version != 1.toByte()) return null
+            val length = readInt(header, 5)
+            if (length < 0) return null
+            val jsonBytes = socket.readExact(length) ?: return null
+            return DevToolsProtocol.decodeEnvelope(jsonBytes)
+        }
+
+        private fun readInt(buffer: ByteArray, offset: Int): Int {
+            return (buffer[offset].toInt() shl 24) or
+                ((buffer[offset + 1].toInt() and 0xFF) shl 16) or
+                ((buffer[offset + 2].toInt() and 0xFF) shl 8) or
+                (buffer[offset + 3].toInt() and 0xFF)
+        }
+
         private suspend fun sendInitialState() {
             val events = database.eventDao()
                 .getLatest(DevToolsDefaults.EVENT_SNAPSHOT_LIMIT)
-                .map { EventPayload.from(it) }
             val apiLogs = database.networkDao()
                 .getLatest(DevToolsDefaults.API_LOG_SNAPSHOT_LIMIT)
-                .map { ApiLogPayload.from(it) }
             val databases = databaseInspector.listDatabases()
             val selectedDatabase = databases.firstOrNull()?.name
             defaultDatabaseName = selectedDatabase
@@ -150,8 +181,7 @@ internal class DevToolsRuntime(
 
         private suspend fun streamEvents() {
             eventRepository.getAllEvents().collect { events ->
-                val payloads = events.map { EventPayload.from(it) }
-                val newItems = eventAdapter.filterNew(payloads)
+                val newItems = eventAdapter.filterNew(events)
                 newItems.forEach { item ->
                     send(DevToolsMessageType.STREAM_EVENT, item)
                 }
@@ -160,8 +190,7 @@ internal class DevToolsRuntime(
 
         private suspend fun streamApiLogs() {
             networkRepository.getAllCalls().collect { logs ->
-                val payloads = logs.map { ApiLogPayload.from(it) }
-                val newItems = apiAdapter.filterNew(payloads)
+                val newItems = apiAdapter.filterNew(logs)
                 newItems.forEach { item ->
                     send(DevToolsMessageType.STREAM_API_LOG, item)
                 }
@@ -172,7 +201,8 @@ internal class DevToolsRuntime(
             if (payload == null) return
             val request = DevToolsProtocol.decodePayload<RequestDatabaseTablePayload>(payload)
             val databaseName = request.databaseName ?: defaultDatabaseName ?: return
-            val tableSnapshot = databaseInspector.loadTable(databaseName, request.tableName, request.limit)
+            val tableSnapshot =
+                databaseInspector.loadTable(databaseName, request.tableName, request.limit)
             val snapshotPayload = DatabaseSnapshotPayload(
                 databaseName = databaseName,
                 table = tableSnapshot,

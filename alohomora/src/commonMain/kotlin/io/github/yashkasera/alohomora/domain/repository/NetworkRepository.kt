@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.domain.repository
 
-import io.github.yashkasera.alohomora.data.entity.ApiRequest
+import io.github.yashkasera.alohomora.common.ApiRequest
 import kotlinx.coroutines.flow.Flow
 
 internal interface NetworkRepository {

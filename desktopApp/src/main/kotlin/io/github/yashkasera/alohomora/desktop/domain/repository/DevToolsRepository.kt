@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.domain.repository
 
-import io.github.yashkasera.alohomora.desktop.domain.model.ApiLog
+import io.github.yashkasera.alohomora.common.Analytics
+import io.github.yashkasera.alohomora.common.ApiRequest
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.Event
@@ -12,8 +13,8 @@ interface DevToolsRepository {
     val currentDeviceId: StateFlow<String?>
     val switching: StateFlow<Boolean>
 
-    val events: StateFlow<List<Event>>
-    val apiLogs: StateFlow<List<ApiLog>>
+    val events: StateFlow<List<Analytics>>
+    val apiLogs: StateFlow<List<ApiRequest>>
     val databaseSnapshot: StateFlow<DatabaseSnapshot>
     val prefsState: StateFlow<PrefsState>
 

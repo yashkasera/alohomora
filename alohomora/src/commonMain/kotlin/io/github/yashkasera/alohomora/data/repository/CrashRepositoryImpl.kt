@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.data.repository
 
+import io.github.yashkasera.alohomora.common.Crash
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
-import io.github.yashkasera.alohomora.data.entity.Crash
 import io.github.yashkasera.alohomora.domain.repository.CrashRepository
 import kotlinx.coroutines.flow.Flow
 

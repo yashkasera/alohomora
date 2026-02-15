@@ -1,5 +1,7 @@
 package io.github.yashkasera.alohomora.devtools
 
+import io.github.yashkasera.alohomora.common.AppDatabaseInfo
+
 interface DevToolsAppDatabaseProvider {
     fun listDatabases(): List<AppDatabaseInfo>
     fun resolvePath(name: String): String?

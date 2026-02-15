@@ -1,6 +1,6 @@
-package io.github.yashkasera.alohomora.domain.usecase
+package io.github.yashkasera.alohomora.domain.usecase.events
 
-import io.github.yashkasera.alohomora.data.entity.Analytics
+import io.github.yashkasera.alohomora.common.Analytics
 import io.github.yashkasera.alohomora.domain.repository.EventRepository
 import kotlinx.coroutines.flow.Flow
 

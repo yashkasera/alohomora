@@ -17,7 +17,7 @@ kotlin {
     android {
         namespace = "io.github.yashkasera.alohomora"
         compileSdk = 36
-        minSdk = 23
+        minSdk = 24
         androidResources.enable = true
         compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
     }
@@ -30,6 +30,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            api(project(":alohomora-common"))
             implementation(project(":alohomora-ui"))
             api(libs.compose.runtime)
             api(libs.compose.ui)

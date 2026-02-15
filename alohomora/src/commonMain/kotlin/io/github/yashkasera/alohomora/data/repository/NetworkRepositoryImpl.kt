@@ -1,8 +1,7 @@
 package io.github.yashkasera.alohomora.data.repository
 
+import io.github.yashkasera.alohomora.common.ApiRequest
 import io.github.yashkasera.alohomora.data.datasource.local.ApiRequestDao
-import io.github.yashkasera.alohomora.data.db.AlohomoraDb
-import io.github.yashkasera.alohomora.data.entity.ApiRequest
 import io.github.yashkasera.alohomora.domain.repository.NetworkRepository
 import kotlinx.coroutines.flow.Flow
 

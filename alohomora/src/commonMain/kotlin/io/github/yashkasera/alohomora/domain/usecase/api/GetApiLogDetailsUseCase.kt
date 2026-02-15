@@ -1,6 +1,6 @@
-package io.github.yashkasera.alohomora.domain.usecase
+package io.github.yashkasera.alohomora.domain.usecase.api
 
-import io.github.yashkasera.alohomora.data.entity.ApiRequest
+import io.github.yashkasera.alohomora.common.ApiRequest
 import io.github.yashkasera.alohomora.domain.repository.NetworkRepository
 import kotlinx.coroutines.flow.Flow
 

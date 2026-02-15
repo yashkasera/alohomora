@@ -29,6 +29,7 @@ dependencyResolutionManagement {
     }
 }
 include(":alohomora")
+include(":alohomora-common")
 include(":alohomora-ui")
 include(":alohomora-noop")
 include(":showcaseApp")

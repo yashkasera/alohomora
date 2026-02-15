@@ -2,8 +2,8 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.apilog.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.yashkasera.alohomora.data.entity.ApiRequest
-import io.github.yashkasera.alohomora.domain.usecase.GetNetworkCallsUseCase
+import io.github.yashkasera.alohomora.common.ApiRequest
+import io.github.yashkasera.alohomora.domain.usecase.api.GetNetworkCallsUseCase
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map

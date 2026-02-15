@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.domain.repository
 
-import io.github.yashkasera.alohomora.data.entity.Crash
+import io.github.yashkasera.alohomora.common.Crash
 import kotlinx.coroutines.flow.Flow
 
 internal interface CrashRepository {

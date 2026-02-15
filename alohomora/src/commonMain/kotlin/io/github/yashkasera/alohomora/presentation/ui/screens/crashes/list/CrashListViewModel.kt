@@ -2,9 +2,9 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.crashes.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.yashkasera.alohomora.data.entity.Crash
-import io.github.yashkasera.alohomora.domain.usecase.ClearCrashesUseCase
-import io.github.yashkasera.alohomora.domain.usecase.GetCrashesUseCase
+import io.github.yashkasera.alohomora.common.Crash
+import io.github.yashkasera.alohomora.domain.usecase.crash.ClearCrashesUseCase
+import io.github.yashkasera.alohomora.domain.usecase.crash.GetCrashesUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

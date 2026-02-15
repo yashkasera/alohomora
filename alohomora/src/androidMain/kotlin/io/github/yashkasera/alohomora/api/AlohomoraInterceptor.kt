@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.api
 
-import io.github.yashkasera.alohomora.data.entity.ApiRequest
+import io.github.yashkasera.alohomora.common.ApiRequest
 import java.net.URLDecoder
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi

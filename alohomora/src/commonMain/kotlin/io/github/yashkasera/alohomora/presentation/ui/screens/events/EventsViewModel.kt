@@ -2,8 +2,8 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.events
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.yashkasera.alohomora.data.entity.Analytics
-import io.github.yashkasera.alohomora.domain.usecase.GetEventsUseCase
+import io.github.yashkasera.alohomora.common.Analytics
+import io.github.yashkasera.alohomora.domain.usecase.events.GetEventsUseCase
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map

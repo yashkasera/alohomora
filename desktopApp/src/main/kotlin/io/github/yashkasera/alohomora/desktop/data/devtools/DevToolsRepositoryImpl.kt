@@ -1,26 +1,24 @@
 package io.github.yashkasera.alohomora.desktop.data.devtools
 
+import io.github.yashkasera.alohomora.common.Analytics
+import io.github.yashkasera.alohomora.common.ApiRequest
+import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
+import io.github.yashkasera.alohomora.common.DevToolsEnvelope
+import io.github.yashkasera.alohomora.common.DevToolsMessageType
+import io.github.yashkasera.alohomora.common.DevToolsProtocol
+import io.github.yashkasera.alohomora.common.InitialStatePayload
+import io.github.yashkasera.alohomora.common.PrefsSnapshotPayload
+import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaPayload
+import io.github.yashkasera.alohomora.common.RequestDatabaseTablePayload
+import io.github.yashkasera.alohomora.common.RequestPrefValuePayload
 import io.github.yashkasera.alohomora.desktop.data.local.ApiLogStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.PrefsStore
-import io.github.yashkasera.alohomora.desktop.domain.model.ApiLog
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
-import io.github.yashkasera.alohomora.desktop.domain.model.Event
 import io.github.yashkasera.alohomora.desktop.domain.model.PrefsState
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
-import io.github.yashkasera.alohomora.devtools.ApiLogPayload
-import io.github.yashkasera.alohomora.devtools.DatabaseSnapshotPayload
-import io.github.yashkasera.alohomora.devtools.DevToolsEnvelope
-import io.github.yashkasera.alohomora.devtools.DevToolsMessageType
-import io.github.yashkasera.alohomora.devtools.DevToolsProtocol
-import io.github.yashkasera.alohomora.devtools.EventPayload
-import io.github.yashkasera.alohomora.devtools.InitialStatePayload
-import io.github.yashkasera.alohomora.devtools.PrefsSnapshotPayload
-import io.github.yashkasera.alohomora.devtools.RequestDatabaseSchemaPayload
-import io.github.yashkasera.alohomora.devtools.RequestDatabaseTablePayload
-import io.github.yashkasera.alohomora.devtools.RequestPrefValuePayload
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,8 +45,8 @@ class DevToolsRepositoryImpl(
     private val _switching = MutableStateFlow(false)
     override val switching: StateFlow<Boolean> = _switching.asStateFlow()
 
-    override val events: StateFlow<List<Event>> = eventStore.events
-    override val apiLogs: StateFlow<List<ApiLog>> = apiLogStore.logs
+    override val events: StateFlow<List<Analytics>> = eventStore.events
+    override val apiLogs: StateFlow<List<ApiRequest>> = apiLogStore.logs
     override val databaseSnapshot: StateFlow<DatabaseSnapshot> = databaseStore.snapshot
     override val prefsState: StateFlow<PrefsState> = prefsStore.state
 
@@ -113,7 +111,7 @@ class DevToolsRepositoryImpl(
         scope.launch {
             sendRequest(
                 DevToolsMessageType.REQUEST_DATABASE_SCHEMA,
-                RequestDatabaseSchemaPayload(databaseName)
+                RequestDatabaseSchemaPayload(databaseName),
             )
         }
     }
@@ -122,7 +120,7 @@ class DevToolsRepositoryImpl(
         scope.launch {
             sendRequest(
                 DevToolsMessageType.REQUEST_DATABASE_TABLE,
-                RequestDatabaseTablePayload(databaseName, tableName, limit)
+                RequestDatabaseTablePayload(databaseName, tableName, limit),
             )
         }
     }
@@ -131,7 +129,7 @@ class DevToolsRepositoryImpl(
         scope.launch {
             sendRequest(
                 DevToolsMessageType.REQUEST_PREF_VALUE,
-                RequestPrefValuePayload(key)
+                RequestPrefValuePayload(key),
             )
         }
     }
@@ -171,43 +169,48 @@ class DevToolsRepositoryImpl(
             DevToolsMessageType.REQUEST_INITIAL_STATE -> {
                 envelope.payload?.let {
                     val payload = DevToolsProtocol.decodePayload<InitialStatePayload>(it)
-                    eventStore.replace(payload.events.map { event -> event.toDomain() })
-                    apiLogStore.replace(payload.apiLogs.map { log -> log.toDomain() })
+                    eventStore.replace(payload.events)
+                    apiLogStore.replace(payload.apiLogs)
                     databaseStore.replaceDatabases(
                         payload.databases.map { it.toDomain() },
-                        payload.selectedDatabase
+                        payload.selectedDatabase,
                     )
                     databaseStore.replaceSchema(payload.databaseSchema.toDomain())
                     prefsStore.replaceKeys(payload.preferenceKeys)
                 }
             }
+
             DevToolsMessageType.STREAM_EVENT -> {
                 envelope.payload?.let {
-                    val payload = DevToolsProtocol.decodePayload<EventPayload>(it)
-                    eventStore.append(payload.toDomain())
+                    val payload = DevToolsProtocol.decodePayload<Analytics>(it)
+                    eventStore.append(payload)
                 }
             }
+
             DevToolsMessageType.STREAM_API_LOG -> {
                 envelope.payload?.let {
-                    val payload = DevToolsProtocol.decodePayload<ApiLogPayload>(it)
-                    apiLogStore.append(payload.toDomain())
+                    val payload = DevToolsProtocol.decodePayload<ApiRequest>(it)
+                    apiLogStore.append(payload)
                 }
             }
+
             DevToolsMessageType.SNAPSHOT_DATABASE -> {
                 envelope.payload?.let {
                     val payload = DevToolsProtocol.decodePayload<DatabaseSnapshotPayload>(it)
                     databaseStore.applySnapshot(
                         payload.schema?.toDomain(),
-                        payload.table?.toDomain()
+                        payload.table?.toDomain(),
                     )
                 }
             }
+
             DevToolsMessageType.SNAPSHOT_PREFS -> {
                 envelope.payload?.let {
                     val payload = DevToolsProtocol.decodePayload<PrefsSnapshotPayload>(it)
                     prefsStore.applySnapshot(payload.keys, payload.values)
                 }
             }
+
             else -> Unit
         }
     }

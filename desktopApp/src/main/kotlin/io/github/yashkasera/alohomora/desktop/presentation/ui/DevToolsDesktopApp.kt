@@ -29,7 +29,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
-import io.github.yashkasera.alohomora.presentation.ui.components.CanvasBackground
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ConnectionBar
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.PanelCard
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.StatusPill
@@ -110,7 +109,6 @@ fun DevToolsDesktopApp(
                         .fillMaxSize()
                         .padding(padding)
                 ) {
-                    CanvasBackground()
                     Row(modifier = Modifier.fillMaxSize()) {
                         NavigationRail(
                             modifier = Modifier

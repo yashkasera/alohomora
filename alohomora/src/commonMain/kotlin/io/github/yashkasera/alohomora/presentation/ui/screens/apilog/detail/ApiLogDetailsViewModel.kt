@@ -2,8 +2,8 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.apilog.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.yashkasera.alohomora.data.entity.ApiRequest
-import io.github.yashkasera.alohomora.domain.usecase.GetApiLogDetailsUseCase
+import io.github.yashkasera.alohomora.common.ApiRequest
+import io.github.yashkasera.alohomora.domain.usecase.api.GetApiLogDetailsUseCase
 import kotlin.math.log
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

@@ -3,16 +3,16 @@ package io.github.yashkasera.alohomora.data.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import io.github.yashkasera.alohomora.common.Analytics
+import io.github.yashkasera.alohomora.common.ApiRequest
+import io.github.yashkasera.alohomora.common.Crash
+import io.github.yashkasera.alohomora.common.HeadersConverter
+import io.github.yashkasera.alohomora.common.PropertiesConverter
+import io.github.yashkasera.alohomora.common.Screen
 import io.github.yashkasera.alohomora.data.datasource.local.AnalyticsDao
 import io.github.yashkasera.alohomora.data.datasource.local.ApiRequestDao
 import io.github.yashkasera.alohomora.data.datasource.local.CrashDao
 import io.github.yashkasera.alohomora.data.datasource.local.ScreenDao
-import io.github.yashkasera.alohomora.data.entity.Analytics
-import io.github.yashkasera.alohomora.data.entity.ApiRequest
-import io.github.yashkasera.alohomora.data.entity.Crash
-import io.github.yashkasera.alohomora.data.entity.HeadersConverter
-import io.github.yashkasera.alohomora.data.entity.PropertiesConverter
-import io.github.yashkasera.alohomora.data.entity.Screen
 
 // --- Database ---
 

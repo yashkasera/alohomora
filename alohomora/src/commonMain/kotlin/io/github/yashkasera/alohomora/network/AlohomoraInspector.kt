@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.network
 
-import io.github.yashkasera.alohomora.data.entity.ApiRequest
+import io.github.yashkasera.alohomora.common.ApiRequest
 import io.github.yashkasera.alohomora.domain.repository.NetworkRepository
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.statement.bodyAsText

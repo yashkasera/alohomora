@@ -13,7 +13,7 @@ import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import io.github.yashkasera.alohomora.DevToolsActivity
-import io.github.yashkasera.alohomora.data.entity.ApiRequest
+import io.github.yashkasera.alohomora.common.ApiRequest
 
 internal class ApiLogNotificationHelper(
     private val context: Context,

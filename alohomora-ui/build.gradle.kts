@@ -12,7 +12,7 @@ kotlin {
     android {
         namespace = "io.github.yashkasera.alohomora.ui"
         compileSdk = 36
-        minSdk = 23
+        minSdk = 24
         androidResources.enable = true
         compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
     }

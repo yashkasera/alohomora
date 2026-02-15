@@ -1,12 +1,13 @@
-package io.github.yashkasera.alohomora.data.entity
+package io.github.yashkasera.alohomora.common
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
-import io.ktor.utils.io.charsets.Charsets
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 @Entity
+@Serializable
 data class ApiRequest(
     @PrimaryKey
     val id: String,

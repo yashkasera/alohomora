@@ -7,7 +7,9 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
 }
 
+
 dependencies {
+    implementation(project(":alohomora-common"))
     implementation(project(":alohomora"))
     implementation(project(":alohomora-ui"))
     implementation(libs.kotlinx.serialization.json)

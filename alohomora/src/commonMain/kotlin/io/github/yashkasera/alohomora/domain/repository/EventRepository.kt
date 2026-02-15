@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.domain.repository
 
-import io.github.yashkasera.alohomora.data.entity.Analytics
+import io.github.yashkasera.alohomora.common.Analytics
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonElement
 
