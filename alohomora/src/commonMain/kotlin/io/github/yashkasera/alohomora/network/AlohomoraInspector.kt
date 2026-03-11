@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.network
 
 import io.github.yashkasera.alohomora.Alohomora
-import io.github.yashkasera.alohomora.common.ApiRequest
+import io.github.yashkasera.alohomora.common.TraceEntry
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.encodedPath
@@ -10,7 +10,7 @@ import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-private val AlohomoraRequestKey = AttributeKey<ApiRequest>("AlohomoraRequest")
+private val AlohomoraRequestKey = AttributeKey<TraceEntry>("AlohomoraRequest")
 
 @OptIn(ExperimentalUuidApi::class)
 val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
@@ -19,7 +19,7 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
             .joinToString("&") { "${it.key}=${it.value.joinToString(",")}" }
             .takeIf { it.isNotEmpty() }
 
-        val entity = ApiRequest(
+        val entity = TraceEntry(
             id = Uuid.random().toString(),
             url = request.url.buildString(),
             method = request.method.value,

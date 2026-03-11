@@ -11,12 +11,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsControllerCompat
-import io.github.yashkasera.alohomora.api.ApiLogNotificationHelper
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.presentation.ui.AlohomoraApp
+import io.github.yashkasera.alohomora.trace.TraceNotificationHelper
 
 class DevToolsActivity : ComponentActivity() {
-    private val startDestinationState = mutableStateOf<Routes>(Routes.Dashboard)
+    private val startDestinationState = mutableStateOf<Routes>(Routes.Overview)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,10 +36,10 @@ class DevToolsActivity : ComponentActivity() {
     }
 
     private fun updateStartDestination(intent: Intent?) {
-        val destination = intent?.getStringExtra(ApiLogNotificationHelper.EXTRA_START_DESTINATION)
+        val destination = intent?.getStringExtra(TraceNotificationHelper.EXTRA_START_DESTINATION)
         startDestinationState.value = when (destination) {
-            ApiLogNotificationHelper.DESTINATION_API_LOGS -> Routes.ApiLogs
-            else -> Routes.Dashboard
+            TraceNotificationHelper.DESTINATION_TRACE -> Routes.Trace
+            else -> Routes.Overview
         }
     }
 }

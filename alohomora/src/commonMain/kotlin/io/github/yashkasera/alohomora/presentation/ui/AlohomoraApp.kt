@@ -9,7 +9,7 @@ import org.koin.compose.KoinContext
 
 @Composable
 fun AlohomoraApp(
-    startDestination: Routes = Routes.Dashboard,
+    startDestination: Routes = Routes.Overview,
     onThemeChanged: @Composable (isDark: Boolean) -> Unit = {},
 ) {
     KoinContext {

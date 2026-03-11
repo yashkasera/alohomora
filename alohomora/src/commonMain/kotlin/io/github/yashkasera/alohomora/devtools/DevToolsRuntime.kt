@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.devtools
 
-import io.github.yashkasera.alohomora.common.Analytics
-import io.github.yashkasera.alohomora.common.ApiRequest
+import io.github.yashkasera.alohomora.common.TelemetryEvent
+import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
 import io.github.yashkasera.alohomora.common.DevToolsEnvelope
@@ -13,8 +13,8 @@ import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaPayload
 import io.github.yashkasera.alohomora.common.RequestDatabaseTablePayload
 import io.github.yashkasera.alohomora.common.RequestPrefValuePayload
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
-import io.github.yashkasera.alohomora.domain.repository.EventRepository
-import io.github.yashkasera.alohomora.domain.repository.NetworkRepository
+import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
+import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -35,8 +35,8 @@ internal object DevToolsDefaults {
 }
 
 internal class DevToolsRuntime(
-    private val eventRepository: EventRepository,
-    private val networkRepository: NetworkRepository,
+    private val telemetryRepository: TelemetryRepository,
+    private val traceRepository: TraceRepository,
     private val database: AlohomoraDb,
     private val preferencesInspector: DevToolsPreferencesInspector,
     private val server: DevToolsTcpServer,
@@ -85,8 +85,8 @@ internal class DevToolsRuntime(
             capacity = DevToolsDefaults.STREAM_BUFFER_CAPACITY,
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
         )
-        private val eventAdapter = DevToolsStreamAdapter { event: Analytics -> event.time }
-        private val apiAdapter = DevToolsStreamAdapter { log: ApiRequest -> log.time ?: 0L }
+        private val eventAdapter = DevToolsStreamAdapter { event: TelemetryEvent -> event.time }
+        private val apiAdapter = DevToolsStreamAdapter { log: TraceEntry -> log.time ?: 0L }
 
         fun start() {
             connectionScope.launch { writerLoop() }
@@ -130,9 +130,9 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun sendInitialState() {
-            val events = database.eventDao()
+            val events = database.telemetryDao()
                 .getLatest(DevToolsDefaults.EVENT_SNAPSHOT_LIMIT)
-            val apiLogs = database.networkDao()
+            val apiLogs = database.traceDao()
                 .getLatest(DevToolsDefaults.API_LOG_SNAPSHOT_LIMIT)
             val databases = databaseInspector.listDatabases()
             val selectedDatabase = databases.firstOrNull()?.name
@@ -161,7 +161,7 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun streamEvents() {
-            eventRepository.getEvents("", 0, DevToolsDefaults.EVENT_SNAPSHOT_LIMIT).collect { events ->
+            telemetryRepository.getEvents("", 0, DevToolsDefaults.EVENT_SNAPSHOT_LIMIT).collect { events ->
                 val newItems = eventAdapter.filterNew(events)
                 newItems.forEach { item ->
                     send(DevToolsMessageType.STREAM_EVENT, item)
@@ -170,7 +170,7 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun streamApiLogs() {
-            /*networkRepository.getAllCalls().collect { logs ->
+            /*traceRepository.getAllCalls().collect { logs ->
                 val newItems = apiAdapter.filterNew(logs)
                 newItems.forEach { item ->
                     send(DevToolsMessageType.STREAM_API_LOG, item)

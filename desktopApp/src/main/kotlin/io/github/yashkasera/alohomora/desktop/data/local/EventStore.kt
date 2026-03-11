@@ -1,19 +1,19 @@
 package io.github.yashkasera.alohomora.desktop.data.local
 
-import io.github.yashkasera.alohomora.common.Analytics
+import io.github.yashkasera.alohomora.common.TelemetryEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class EventStore {
-    private val _events = MutableStateFlow<List<Analytics>>(emptyList())
-    val events: StateFlow<List<Analytics>> = _events.asStateFlow()
+    private val _events = MutableStateFlow<List<TelemetryEvent>>(emptyList())
+    val events: StateFlow<List<TelemetryEvent>> = _events.asStateFlow()
 
-    fun append(event: Analytics) {
+    fun append(event: TelemetryEvent) {
         _events.value = (_events.value + event).takeLast(2000)
     }
 
-    fun replace(events: List<Analytics>) {
+    fun replace(events: List<TelemetryEvent>) {
         _events.value = events
     }
 

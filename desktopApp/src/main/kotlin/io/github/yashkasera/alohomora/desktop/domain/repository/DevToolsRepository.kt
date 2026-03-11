@@ -1,10 +1,9 @@
 package io.github.yashkasera.alohomora.desktop.domain.repository
 
-import io.github.yashkasera.alohomora.common.Analytics
-import io.github.yashkasera.alohomora.common.ApiRequest
+import io.github.yashkasera.alohomora.common.TelemetryEvent
+import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
-import io.github.yashkasera.alohomora.desktop.domain.model.Event
 import io.github.yashkasera.alohomora.desktop.domain.model.PrefsState
 import kotlinx.coroutines.flow.StateFlow
 
@@ -13,8 +12,8 @@ interface DevToolsRepository {
     val currentDeviceId: StateFlow<String?>
     val switching: StateFlow<Boolean>
 
-    val events: StateFlow<List<Analytics>>
-    val apiLogs: StateFlow<List<ApiRequest>>
+    val events: StateFlow<List<TelemetryEvent>>
+    val apiLogs: StateFlow<List<TraceEntry>>
     val databaseSnapshot: StateFlow<DatabaseSnapshot>
     val prefsState: StateFlow<PrefsState>
 

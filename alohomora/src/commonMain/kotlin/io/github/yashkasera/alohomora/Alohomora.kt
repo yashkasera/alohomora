@@ -1,17 +1,16 @@
 package io.github.yashkasera.alohomora
 
 import co.touchlab.kermit.Logger
-import io.github.yashkasera.alohomora.common.ApiRequest
-import io.github.yashkasera.alohomora.data.datasource.local.ApiRequestDao
-import io.github.yashkasera.alohomora.data.model.AlohomoraBuildInfo
+import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.data.model.BuildMetadata
 import io.github.yashkasera.alohomora.data.model.Commit
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.di.initKoin
-import io.github.yashkasera.alohomora.domain.repository.EventRepository
+import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import io.github.yashkasera.alohomora.domain.repository.LogRepository
-import io.github.yashkasera.alohomora.domain.repository.NetworkRepository
+import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import kotlinx.coroutines.CoroutineScope
@@ -60,7 +59,7 @@ object Alohomora {
      */
     var commits: List<Commit> = emptyList()
 
-    var buildInfo: AlohomoraBuildInfo? = null
+    var buildInfo: BuildMetadata? = null
 
     // Initialize the library.
     // On Android, pass { androidContext(context) } in appDeclaration
@@ -85,9 +84,9 @@ object Alohomora {
     }
 
     fun log(
-        apiRequest: ApiRequest,
+        apiRequest: TraceEntry,
     ) {
-        val repo = koin?.get<NetworkRepository>() ?: return
+        val repo = koin?.get<TraceRepository>() ?: return
         scope.launch {
             try {
                 repo.insert(apiRequest)
@@ -99,8 +98,8 @@ object Alohomora {
         }
     }
 
-    fun trackEvent(name: String, properties: Map<String, String>? = null) {
-        val repo = koin?.get<EventRepository>() ?: return
+    fun recordTelemetry(name: String, properties: Map<String, String>? = null) {
+        val repo = koin?.get<TelemetryRepository>() ?: return
         scope.launch {
             repo.trackEvent(name, properties?.let { Json.encodeToJsonElement(properties) })
         }

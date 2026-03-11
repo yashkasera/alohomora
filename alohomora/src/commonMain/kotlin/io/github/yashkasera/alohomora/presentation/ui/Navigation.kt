@@ -25,16 +25,16 @@ import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
 import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray
-import io.github.yashkasera.alohomora.presentation.ui.screens.apilog.detail.ApiLogDetailsScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.apilog.list.ApiLogsScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.commithistory.CommitHistoryScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.config.ConfigurationScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.crashes.details.CrashDetailsScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.crashes.list.CrashListScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.dashboard.DashboardScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.database.DatabaseInspectorScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.events.EventsScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.preferences.PreferencesScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.trace.detail.TraceDetailsScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.trace.list.TraceScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.telemetry.TelemetryScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.incident.detail.IncidentDetailsScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.incident.list.IncidentScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.vault.VaultScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.cache.CacheScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.chronicle.ChronicleScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.config.ConfigScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.overview.OverviewScreen
 
 // Need to detect platform - minimal expect/actual or just resizing for now
 // Assuming Desktop has wide screen, Mobile has narrow.
@@ -42,12 +42,12 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.preferences.Prefer
 
 @Composable
 internal fun AlohomoraNavHost(
-    startDestination: Routes = Routes.Dashboard,
+    startDestination: Routes = Routes.Overview,
 ) {
     val navController = rememberNavController()
 
     LaunchedEffect(startDestination) {
-        if (startDestination != Routes.Dashboard) {
+        if (startDestination != Routes.Overview) {
             navController.navigate(startDestination) {
                 launchSingleTop = true
             }
@@ -59,37 +59,37 @@ internal fun AlohomoraNavHost(
     // A simple responsive split:
 
     // We will use a Row layout that shows NavigationRail on the left if it's "Desktop" (simulated by width)
-    // On Mobile, we rely on the Dashboard screen to have buttons, OR we add a BottomBar.
+    // On Mobile, we rely on the Overview screen to have buttons, OR we add a BottomBar.
     // The user specifically asked for "Sidebar navigation for desktop".
 
     // Let's create a responsive shell.
     ResponsiveNavigationShell(navController) {
-        NavHost(navController = navController, startDestination = Routes.Dashboard) {
-            composable<Routes.Dashboard> {
-                DashboardScreen(onNavigate = navController::navigate)
+        NavHost(navController = navController, startDestination = Routes.Overview) {
+            composable<Routes.Overview> {
+                OverviewScreen(onNavigate = navController::navigate)
             }
 
-            composable<Routes.ApiLogs> {
-                ApiLogsScreen(
-                    onLogClick = { id -> navController.navigate(Routes.ApiLogDetails(id)) },
+            composable<Routes.Trace> {
+                TraceScreen(
+                    onTraceClick = { id -> navController.navigate(Routes.TraceDetails(id)) },
                 )
             }
 
-            composable<Routes.Events> {
-                EventsScreen(onBackClick = navController::navigateUp)
+            composable<Routes.Telemetry> {
+                TelemetryScreen(onBackClick = navController::navigateUp)
             }
 
-            composable<Routes.ApiLogDetails> { backStackEntry ->
-                val route: Routes.ApiLogDetails = backStackEntry.toRoute()
-                ApiLogDetailsScreen(callId = route.callId)
+            composable<Routes.TraceDetails> { backStackEntry ->
+                val route: Routes.TraceDetails = backStackEntry.toRoute()
+                TraceDetailsScreen(traceId = route.traceId)
             }
 
-            composable<Routes.Preferences> { backStackEntry ->
-                PreferencesScreen(onBackClick = navController::navigateUp)
+            composable<Routes.Cache> { backStackEntry ->
+                CacheScreen(onBackClick = navController::navigateUp)
             }
 
-            composable<Routes.Configuration> { backStackEntry ->
-                ConfigurationScreen(
+            composable<Routes.Config> { backStackEntry ->
+                ConfigScreen(
                     onBackClick = navController::navigateUp,
                     onSaveConfig = { url ->
                         // TODO: Handle URL save logic
@@ -98,38 +98,38 @@ internal fun AlohomoraNavHost(
                 )
             }
 
-            composable<Routes.DatabaseInspector> {
-                DatabaseInspectorScreen(
+            composable<Routes.Vault> {
+                VaultScreen(
                     onBackClick = navController::navigateUp,
                 )
             }
 
-            composable<Routes.Crashes> {
-                CrashListScreen(
+            composable<Routes.Incident> {
+                IncidentScreen(
                     onBackClick = navController::navigateUp,
-                    onNavigateToCrash = {
-                        navController.navigate(Routes.CrashDetails(it))
+                    onNavigateToIncident = {
+                        navController.navigate(Routes.IncidentDetails(it))
                     },
                 )
             }
-            composable<Routes.CrashDetails> { backStackEntry ->
-                val route: Routes.CrashDetails = backStackEntry.toRoute()
-                CrashDetailsScreen(
-                    crashId = route.crashId,
+            composable<Routes.IncidentDetails> { backStackEntry ->
+                val route: Routes.IncidentDetails = backStackEntry.toRoute()
+                IncidentDetailsScreen(
+                    incidentId = route.incidentId,
                     onBackClick = navController::navigateUp,
                 )
             }
 
-            composable<Routes.CommitHistory> {
-                CommitHistoryScreen(
+            composable<Routes.Chronicle> {
+                ChronicleScreen(
                     onBackClick = navController::navigateUp,
                 )
             }
 
             // Dynamic route for custom plugin screens
-            composable<Routes.CustomPlugin> { backStackEntry ->
-                val route: Routes.CustomPlugin = backStackEntry.toRoute()
-                val plugin = PluginRegistry.getPlugin(route.pluginId)
+            composable<Routes.Extension> { backStackEntry ->
+                val route: Routes.Extension = backStackEntry.toRoute()
+                val plugin = PluginRegistry.getPlugin(route.extensionId)
 
                 if (plugin != null) {
                     plugin.Content(onBackClick = navController::navigateUp)
@@ -163,9 +163,9 @@ private fun ResponsiveNavigationShell(
             ) {
                 NavigationRailItem(
                     selected = true, // Simplified for now, real app would check route
-                    onClick = { navController.navigate(Routes.Dashboard) },
+                    onClick = { navController.navigate(Routes.Overview) },
                     icon = {
-//                        Icon(Icons.Default.Home, contentDescription = "Dashboard")
+//                        Icon(Icons.Default.Home, contentDescription = "Overview")
                     },
                     colors = NavigationRailItemDefaults.colors(
                         selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -174,9 +174,9 @@ private fun ResponsiveNavigationShell(
                 )
                 NavigationRailItem(
                     selected = false,
-                    onClick = { navController.navigate(Routes.ApiLogs) },
+                    onClick = { navController.navigate(Routes.Trace) },
                     icon = {
-//                        Icon(Icons.Default.List, contentDescription = "Logs")
+//                        Icon(Icons.Default.List, contentDescription = "Trace")
                     },
                     colors = NavigationRailItemDefaults.colors(
                         selectedIconColor = CanvasLightGray,
@@ -186,9 +186,9 @@ private fun ResponsiveNavigationShell(
                 )
                 NavigationRailItem(
                     selected = false,
-                    onClick = { navController.navigate(Routes.Events) },
+                    onClick = { navController.navigate(Routes.Telemetry) },
                     icon = {
-//                        Icon(Icons.Default.Notifications, contentDescription = "Events")
+//                        Icon(Icons.Default.Notifications, contentDescription = "Telemetry")
                     },
                     colors = NavigationRailItemDefaults.colors(
                         selectedIconColor = CanvasLightGray,

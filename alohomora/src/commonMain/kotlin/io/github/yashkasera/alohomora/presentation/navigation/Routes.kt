@@ -4,39 +4,39 @@ import kotlinx.serialization.Serializable
 
 sealed interface Routes {
     @Serializable
-    data object Dashboard : Routes
+    data object Overview : Routes
 
     @Serializable
-    data object ApiLogs : Routes
+    data object Trace : Routes
 
     @Serializable
-    data class ApiLogDetails(val callId: String) : Routes
+    data class TraceDetails(val traceId: String) : Routes
 
     @Serializable
-    data object Events : Routes
+    data object Telemetry : Routes
 
     @Serializable
-    data object Preferences : Routes
+    data object Cache : Routes
 
     @Serializable
-    data object Configuration : Routes
+    data object Config : Routes
 
     @Serializable
-    data object DatabaseInspector : Routes
+    data object Vault : Routes
 
     @Serializable
-    data object Crashes : Routes
+    data object Incident : Routes
 
     @Serializable
-    data class CrashDetails(val crashId: Long): Routes
+    data class IncidentDetails(val incidentId: Long): Routes
 
     @Serializable
-    data object CommitHistory : Routes
+    data object Chronicle : Routes
 
     /**
-     * Route for custom plugin screens.
-     * @param pluginId The unique identifier of the plugin
+     * Route for extension screens.
+     * @param extensionId The unique identifier of the extension
      */
     @Serializable
-    data class CustomPlugin(val pluginId: String) : Routes
+    data class Extension(val extensionId: String) : Routes
 }

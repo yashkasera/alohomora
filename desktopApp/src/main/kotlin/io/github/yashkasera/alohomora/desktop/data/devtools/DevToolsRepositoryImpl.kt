@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.data.devtools
 
-import io.github.yashkasera.alohomora.common.Analytics
-import io.github.yashkasera.alohomora.common.ApiRequest
+import io.github.yashkasera.alohomora.common.TelemetryEvent
+import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
 import io.github.yashkasera.alohomora.common.DevToolsEnvelope
 import io.github.yashkasera.alohomora.common.DevToolsMessageType
@@ -46,8 +46,8 @@ class DevToolsRepositoryImpl(
     private val _switching = MutableStateFlow(false)
     override val switching: StateFlow<Boolean> = _switching.asStateFlow()
 
-    override val events: StateFlow<List<Analytics>> = eventStore.events
-    override val apiLogs: StateFlow<List<ApiRequest>> = apiLogStore.logs
+    override val events: StateFlow<List<TelemetryEvent>> = eventStore.events
+    override val apiLogs: StateFlow<List<TraceEntry>> = apiLogStore.logs
     override val databaseSnapshot: StateFlow<DatabaseSnapshot> = databaseStore.snapshot
     override val prefsState: StateFlow<PrefsState> = prefsStore.state
 
@@ -183,14 +183,14 @@ class DevToolsRepositoryImpl(
 
             DevToolsMessageType.STREAM_EVENT -> {
                 envelope.payload?.let {
-                    val payload = DevToolsProtocol.decodePayload<Analytics>(it)
+                    val payload = DevToolsProtocol.decodePayload<TelemetryEvent>(it)
                     eventStore.append(payload)
                 }
             }
 
             DevToolsMessageType.STREAM_API_LOG -> {
                 envelope.payload?.let {
-                    val payload = DevToolsProtocol.decodePayload<ApiRequest>(it)
+                    val payload = DevToolsProtocol.decodePayload<TraceEntry>(it)
                     apiLogStore.append(payload)
                 }
             }

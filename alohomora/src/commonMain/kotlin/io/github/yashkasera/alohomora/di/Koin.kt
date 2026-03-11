@@ -1,27 +1,28 @@
 package io.github.yashkasera.alohomora.di
 
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
-import io.github.yashkasera.alohomora.data.repository.CrashRepositoryImpl
-import io.github.yashkasera.alohomora.data.repository.EventRepositoryImpl
+import io.github.yashkasera.alohomora.data.repository.IncidentRepositoryImpl
+import io.github.yashkasera.alohomora.data.repository.TelemetryRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.LogRepositoryImpl
-import io.github.yashkasera.alohomora.data.repository.NetworkRepositoryImpl
+import io.github.yashkasera.alohomora.data.repository.TraceRepositoryImpl
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
-import io.github.yashkasera.alohomora.domain.repository.CrashRepository
-import io.github.yashkasera.alohomora.domain.repository.EventRepository
+import io.github.yashkasera.alohomora.domain.repository.IncidentRepository
+import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import io.github.yashkasera.alohomora.domain.repository.LogRepository
-import io.github.yashkasera.alohomora.domain.repository.NetworkRepository
-import io.github.yashkasera.alohomora.domain.usecase.api.GetApiLogDetailsUseCase
-import io.github.yashkasera.alohomora.domain.usecase.api.GetLogsUseCase
-import io.github.yashkasera.alohomora.domain.usecase.crash.GetCrashDetailsUseCase
-import io.github.yashkasera.alohomora.domain.usecase.crash.MarkCrashAsViewedUseCase
-import io.github.yashkasera.alohomora.presentation.ui.screens.apilog.detail.ApiLogDetailsViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.apilog.list.ApiLogsViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.commithistory.CommitHistoryViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.crashes.details.CrashDetailsViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.crashes.list.CrashListViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.dashboard.DashboardViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.database.DatabaseViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.events.EventsViewModel
+import io.github.yashkasera.alohomora.domain.repository.TraceRepository
+import io.github.yashkasera.alohomora.domain.usecase.trace.GetTraceDetailsUseCase
+import io.github.yashkasera.alohomora.domain.usecase.trace.GetTracesUseCase
+import io.github.yashkasera.alohomora.domain.usecase.incident.GetIncidentDetailsUseCase
+import io.github.yashkasera.alohomora.domain.usecase.incident.MarkIncidentAsViewedUseCase
+import io.github.yashkasera.alohomora.domain.usecase.incident.ClearIncidentsUseCase
+import io.github.yashkasera.alohomora.presentation.ui.screens.trace.detail.TraceDetailsViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.trace.list.TraceViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.telemetry.TelemetryViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.incident.detail.IncidentDetailsViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.incident.list.IncidentViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.vault.VaultViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.chronicle.ChronicleViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.overview.OverviewViewModel
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.KoinAppDeclaration
@@ -35,40 +36,36 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
 // Common modules
 internal val appModule = module {
 //    single { get<AlohomoraDb>().logDao() }
-    single { get<AlohomoraDb>().networkDao() }
-    single { get<AlohomoraDb>().eventDao() }
-    single { get<AlohomoraDb>().crashDao() }
+    single { get<AlohomoraDb>().traceDao() }
+    single { get<AlohomoraDb>().telemetryDao() }
+    single { get<AlohomoraDb>().incidentDao() }
     single { get<AlohomoraDb>().screenDao() }
 
     single<LogRepository> { LogRepositoryImpl(get()) }
-    single<NetworkRepository> { NetworkRepositoryImpl(get()) }
-    single<EventRepository> { EventRepositoryImpl(get()) }
-    single<CrashRepository> { CrashRepositoryImpl(get()) }
+    single<TraceRepository> { TraceRepositoryImpl(get()) }
+    single<TelemetryRepository> { TelemetryRepositoryImpl(get()) }
+    single<IncidentRepository> { IncidentRepositoryImpl(get()) }
 
 //    single { SyncService(get(), get()) }
     single { DevToolsRuntime(get(), get(), get(), get(), get(), get()) }
 
     // UseCases
-    factory { GetLogsUseCase(get()) }
-    factory { GetCrashDetailsUseCase(get()) }
-    factory { MarkCrashAsViewedUseCase(get()) }
-    factory { GetApiLogDetailsUseCase(get()) }
+    factory { GetTracesUseCase(get()) }
+    factory { GetIncidentDetailsUseCase(get()) }
+    factory { MarkIncidentAsViewedUseCase(get()) }
+    factory { ClearIncidentsUseCase(get()) }
+    factory { GetTraceDetailsUseCase(get()) }
 //    factory { ConnectToRemoteUseCase(get()) }
 
     // ViewModels
-    viewModel {
-        DashboardViewModel(
-            get(),
-//        get()
-        )
-    }
-    viewModel { ApiLogsViewModel(get()) }
-    viewModel { (logId: String) -> ApiLogDetailsViewModel(logId, get()) }
-    viewModel { EventsViewModel(get()) }
-    viewModel { DatabaseViewModel() }
-    viewModel { CommitHistoryViewModel() }
-    viewModel { CrashListViewModel(get()) }
-    viewModel { (crashId: Long) -> CrashDetailsViewModel(crashId, get(), get()) }
+    viewModel { OverviewViewModel() }
+    viewModel { TraceViewModel(get()) }
+    viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get()) }
+    viewModel { TelemetryViewModel(get()) }
+    viewModel { VaultViewModel() }
+    viewModel { ChronicleViewModel() }
+    viewModel { IncidentViewModel(get()) }
+    viewModel { (incidentId: Long) -> IncidentDetailsViewModel(incidentId, get(), get()) }
 }
 
 

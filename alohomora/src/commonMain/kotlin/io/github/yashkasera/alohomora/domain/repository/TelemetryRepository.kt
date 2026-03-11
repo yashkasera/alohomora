@@ -1,0 +1,12 @@
+package io.github.yashkasera.alohomora.domain.repository
+
+import io.github.yashkasera.alohomora.common.TelemetryEvent
+import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.json.JsonElement
+
+internal interface TelemetryRepository {
+    fun getEvents(query: String, page: Int, pageSize: Int): Flow<List<TelemetryEvent>>
+    fun getEventsCount(query: String): Flow<Long>
+    suspend fun trackEvent(name: String, properties: JsonElement?)
+    suspend fun clear()
+}

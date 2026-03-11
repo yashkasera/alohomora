@@ -75,8 +75,8 @@ data class PrefsSnapshotPayload(
 
 @Serializable
 data class InitialStatePayload(
-    val events: List<Analytics>,
-    val apiLogs: List<ApiRequest>,
+    val events: List<TelemetryEvent>,
+    val apiLogs: List<TraceEntry>,
     val databaseSchema: DatabaseSchemaSnapshot,
     val databases: List<AppDatabaseInfo> = emptyList(),
     val selectedDatabase: String? = null,

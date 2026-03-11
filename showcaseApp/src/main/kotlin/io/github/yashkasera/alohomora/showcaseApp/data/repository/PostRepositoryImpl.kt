@@ -30,7 +30,7 @@ class PostRepositoryImpl(
     }
 
     override suspend fun refreshPosts() {
-        Alohomora.trackEvent("posts_refresh_start")
+        Alohomora.recordTelemetry("posts_refresh_start")
         try {
             val now = System.currentTimeMillis()
             val posts = api.fetchPosts().map { dto ->
@@ -44,12 +44,12 @@ class PostRepositoryImpl(
             }
             postDao.replaceAll(posts)
             preferencesRepository.updateLastRefreshEpochMillis(now)
-            Alohomora.trackEvent(
+            Alohomora.recordTelemetry(
                 "posts_refresh_success",
                 mapOf("count" to posts.size.toString())
             )
         } catch (e: Exception) {
-            Alohomora.trackEvent(
+            Alohomora.recordTelemetry(
                 "posts_refresh_failure",
                 mapOf("error" to (e.message ?: "unknown"))
             )
