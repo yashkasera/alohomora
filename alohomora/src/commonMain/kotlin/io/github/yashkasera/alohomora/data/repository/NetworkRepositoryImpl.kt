@@ -7,10 +7,20 @@ import kotlinx.coroutines.flow.Flow
 
 internal class NetworkRepositoryImpl(private val dao: ApiRequestDao) : NetworkRepository {
 
-    override fun getAllCalls(): Flow<List<ApiRequest>> =
-        dao.getAll("", "", 0, 20)
+    override fun getAll(
+        query: String,
+        method: String,
+        page: Int,
+        pageSize: Int,
+    ): Flow<List<ApiRequest>> =
+        dao.getAll(query = query, method = method, page = page, pageSize = pageSize)
 
-    override suspend fun addCall(call: ApiRequest) {
+    override fun count(
+        query: String,
+        method: String,
+    ): Flow<Long> = dao.getCount(query, method)
+
+    override suspend fun insert(call: ApiRequest) {
         dao.insert(call)
     }
 

@@ -9,6 +9,7 @@
       android:exported="true"
       android:label="Debug - Alohomora"
       android:launchMode="singleTask"
+      android:taskAffinity="io.github.yashkasera.alohomora.DevToolsActivity"
       android:name=".DevToolsActivity"
       android:windowSoftInputMode="adjustPan">
       <intent-filter>

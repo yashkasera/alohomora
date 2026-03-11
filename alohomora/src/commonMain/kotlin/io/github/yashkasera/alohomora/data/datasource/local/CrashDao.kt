@@ -19,6 +19,9 @@ internal interface CrashDao {
     @Query("SELECT * FROM Crash WHERE id = :id")
     fun getById(id: Long): Flow<Crash?>
 
+    @Query("SELECT COUNT(*) FROM Crash WHERE stackTrace LIKE '%' || :query || '%'")
+    fun getCount(query: String): Flow<Long>
+
     @Delete
     suspend fun delete(entity: Crash)
 

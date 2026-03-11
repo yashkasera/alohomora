@@ -114,7 +114,7 @@ internal class DevToolsRuntime(
 
         private suspend fun readerLoop() {
             while (true) {
-                val envelope = readEnvelope(socket) ?: break
+                val envelope = DevToolsProtocol.readEnvelope(socket) ?: break
                 when (envelope.type) {
                     DevToolsMessageType.REQUEST_INITIAL_STATE -> sendInitialState()
                     DevToolsMessageType.REQUEST_DATABASE_SCHEMA -> handleDatabaseSchemaRequest(
@@ -127,25 +127,6 @@ internal class DevToolsRuntime(
                 }
             }
             close()
-        }
-
-        private fun readEnvelope(socket: DevToolsSocket): DevToolsEnvelope? {
-            val header = socket.readExact(9) ?: return null
-            val magic = readInt(header, 0)
-            if (magic != 0x414C4F48) return null
-            val version = header[4]
-            if (version != 1.toByte()) return null
-            val length = readInt(header, 5)
-            if (length < 0) return null
-            val jsonBytes = socket.readExact(length) ?: return null
-            return DevToolsProtocol.decodeEnvelope(jsonBytes)
-        }
-
-        private fun readInt(buffer: ByteArray, offset: Int): Int {
-            return (buffer[offset].toInt() shl 24) or
-                ((buffer[offset + 1].toInt() and 0xFF) shl 16) or
-                ((buffer[offset + 2].toInt() and 0xFF) shl 8) or
-                (buffer[offset + 3].toInt() and 0xFF)
         }
 
         private suspend fun sendInitialState() {
@@ -180,7 +161,7 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun streamEvents() {
-            eventRepository.getAllEvents().collect { events ->
+            eventRepository.getEvents("", 0, DevToolsDefaults.EVENT_SNAPSHOT_LIMIT).collect { events ->
                 val newItems = eventAdapter.filterNew(events)
                 newItems.forEach { item ->
                     send(DevToolsMessageType.STREAM_EVENT, item)
@@ -189,12 +170,12 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun streamApiLogs() {
-            networkRepository.getAllCalls().collect { logs ->
+            /*networkRepository.getAllCalls().collect { logs ->
                 val newItems = apiAdapter.filterNew(logs)
                 newItems.forEach { item ->
                     send(DevToolsMessageType.STREAM_API_LOG, item)
                 }
-            }
+            }*/
         }
 
         private suspend fun handleDatabaseRequest(payload: JsonElement?) {

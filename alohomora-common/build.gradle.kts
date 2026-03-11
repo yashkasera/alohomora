@@ -24,7 +24,8 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.androidx.room.runtime)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.ktor.network)
         }
     }
 }
-

@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 internal interface CrashRepository {
     fun getAllCrashes(query: String, page: Int, pageSize: Int): Flow<List<Crash>>
+    fun getCrashesCount(query: String): Flow<Long>
     fun getCrashById(id: Long): Flow<Crash?>
     suspend fun insertCrash(crash: Crash): Long
     suspend fun deleteCrash(crash: Crash)

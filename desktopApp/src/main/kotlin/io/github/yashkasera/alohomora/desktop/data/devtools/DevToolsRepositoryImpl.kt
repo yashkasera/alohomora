@@ -19,6 +19,7 @@ import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.PrefsState
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
+import io.github.yashkasera.alohomora.devtools.DevToolsSocket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -51,7 +52,7 @@ class DevToolsRepositoryImpl(
     override val prefsState: StateFlow<PrefsState> = prefsStore.state
 
     private var connectionJobActive = false
-    private var connection: DevToolsSocketConnection? = null
+    private var connection: DevToolsSocket? = null
     private val writeMutex = Mutex()
 
     override fun connect(host: String, port: Int) {

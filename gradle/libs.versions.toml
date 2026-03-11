@@ -1,28 +1,30 @@
 [versions]
 
-kotlin = "2.3.0"
-compose-multiplatform = "1.10.0"
+kotlin = "2.3.10"
+compose-multiplatform = "1.10.2"
 material3 = "1.10.0-alpha05"
 agp = "8.13.2"
-androidx-activityCompose = "1.12.2"
-kermit = "2.0.8"
+androidx-activityCompose = "1.12.4"
+kermit = "2.1.0"
 kotlinx-coroutines = "1.10.2"
-ktor = "3.3.3"
+ktor = "3.4.1"
 androidx-nav3 = "1.1.0-alpha01"
-kotlinx-serialization = "1.9.0"
-coil = "3.3.0"
+kotlinx-serialization = "1.10.0"
+coil = "3.4.0"
 kotlinx-datetime = "0.7.1"
 room = "2.8.4"
 ksp = "2.3.4"
-buildConfig = "5.6.5"
+buildConfig = "6.0.9"
 koin = "4.1.1"
 ktor-server = "3.0.0" # alignment with client
-logback = "1.5.24"
-androidx-navigation = "2.9.1"
+logback = "1.5.32"
+androidx-navigation = "2.9.2"
 sqlite = "2.6.2"
 paging = "3.3.0-alpha02-0.5.1"
+startupRuntime = "1.2.0"
 
 [libraries]
+androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startupRuntime" }
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
@@ -50,13 +52,12 @@ ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "kto
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor" }
 ktor-client-winhttp = { module = "io.ktor:ktor-client-winhttp", version.ref = "ktor" }
+ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 coil = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-paging = { group = "app.cash.paging", name = "paging-compose-common", version.ref = "paging" }
-paging-compose = { group = "app.cash.paging", name = "paging-runtime", version.ref = "paging" }
 
 # Room
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }

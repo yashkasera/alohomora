@@ -9,6 +9,9 @@ internal class CrashRepositoryImpl(private val db: AlohomoraDb) : CrashRepositor
     override fun getAllCrashes(query: String, page: Int, pageSize: Int): Flow<List<Crash>> =
         db.crashDao().getAll(query, page, pageSize)
 
+    override fun getCrashesCount(query: String): Flow<Long> =
+        db.crashDao().getCount(query)
+
     override fun getCrashById(id: Long): Flow<Crash?> =
         db.crashDao().getById(id)
 

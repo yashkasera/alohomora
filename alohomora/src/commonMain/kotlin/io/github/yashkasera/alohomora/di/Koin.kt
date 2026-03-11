@@ -12,12 +12,8 @@ import io.github.yashkasera.alohomora.domain.repository.LogRepository
 import io.github.yashkasera.alohomora.domain.repository.NetworkRepository
 import io.github.yashkasera.alohomora.domain.usecase.api.GetApiLogDetailsUseCase
 import io.github.yashkasera.alohomora.domain.usecase.api.GetLogsUseCase
-import io.github.yashkasera.alohomora.domain.usecase.api.GetNetworkCallsUseCase
-import io.github.yashkasera.alohomora.domain.usecase.crash.ClearCrashesUseCase
 import io.github.yashkasera.alohomora.domain.usecase.crash.GetCrashDetailsUseCase
-import io.github.yashkasera.alohomora.domain.usecase.crash.GetCrashesUseCase
 import io.github.yashkasera.alohomora.domain.usecase.crash.MarkCrashAsViewedUseCase
-import io.github.yashkasera.alohomora.domain.usecase.events.GetEventsUseCase
 import io.github.yashkasera.alohomora.presentation.ui.screens.apilog.detail.ApiLogDetailsViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.apilog.list.ApiLogsViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.commithistory.CommitHistoryViewModel
@@ -54,11 +50,7 @@ internal val appModule = module {
 
     // UseCases
     factory { GetLogsUseCase(get()) }
-    factory { GetNetworkCallsUseCase(get()) }
-    factory { GetEventsUseCase(get()) }
-    factory { GetCrashesUseCase(get()) }
     factory { GetCrashDetailsUseCase(get()) }
-    factory { ClearCrashesUseCase(get()) }
     factory { MarkCrashAsViewedUseCase(get()) }
     factory { GetApiLogDetailsUseCase(get()) }
 //    factory { ConnectToRemoteUseCase(get()) }
@@ -75,7 +67,7 @@ internal val appModule = module {
     viewModel { EventsViewModel(get()) }
     viewModel { DatabaseViewModel() }
     viewModel { CommitHistoryViewModel() }
-    viewModel { CrashListViewModel(get(), get()) }
+    viewModel { CrashListViewModel(get()) }
     viewModel { (crashId: Long) -> CrashDetailsViewModel(crashId, get(), get()) }
 }
 

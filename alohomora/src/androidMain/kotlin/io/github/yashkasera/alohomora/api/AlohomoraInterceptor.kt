@@ -55,10 +55,10 @@ class AlohomoraInterceptor(
                  val id = NetworkInjector.dao.insert(api)
                  api.id = id
                  if (!api.isSuccessful) {
- //                    ApiRequestNotification.createErrorNotification(api)
+ //                    _root_ide_package_.io.github.yashkasera.alohomora.common.TraceNotification.createErrorNotification(api)
                  }
  //                dao.getLatest().let {
- //                    ApiRequestNotification.createNotification(it)
+ //                    _root_ide_package_.io.github.yashkasera.alohomora.common.TraceNotification.createNotification(it)
  //                }
              }*/
         } catch (e: Exception) {

@@ -43,6 +43,18 @@ object DevToolsProtocol {
         return decodeEnvelope(jsonBytes)
     }
 
+    suspend fun readEnvelope(socket: io.github.yashkasera.alohomora.devtools.DevToolsSocket): DevToolsEnvelope? {
+        val header = socket.readExact(HEADER_LENGTH) ?: return null
+        val magic = readInt(header, 0)
+        if (magic != MAGIC_VALUE) return null
+        val version = header[4]
+        if (version != VERSION) return null
+        val length = readInt(header, 5)
+        if (length < 0) return null
+        val jsonBytes = socket.readExact(length) ?: return null
+        return decodeEnvelope(jsonBytes)
+    }
+
     inline fun <reified T> encodePayload(value: T): JsonElement {
         return json.encodeToJsonElement(value)
     }

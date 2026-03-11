@@ -5,7 +5,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonElement
 
 internal interface EventRepository {
-    fun getAllEvents(): Flow<List<Analytics>>
+    fun getEvents(query: String, page: Int, pageSize: Int): Flow<List<Analytics>>
+    fun getEventsCount(query: String): Flow<Long>
     suspend fun trackEvent(name: String, properties: JsonElement?)
     suspend fun clear()
 }

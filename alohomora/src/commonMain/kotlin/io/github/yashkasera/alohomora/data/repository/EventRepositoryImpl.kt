@@ -8,7 +8,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonElement
 
 internal class EventRepositoryImpl(private val db: AlohomoraDb) : EventRepository {
-    override fun getAllEvents(): Flow<List<Analytics>> = db.eventDao().getAll("", 0, 20)
+    override fun getEvents(query: String, page: Int, pageSize: Int): Flow<List<Analytics>> =
+        db.eventDao().getAll(query, page, pageSize)
+
+    override fun getEventsCount(query: String): Flow<Long> =
+        db.eventDao().getCount(query)
 
     override suspend fun trackEvent(name: String, properties: JsonElement?) {
         db.eventDao().insert(

@@ -24,7 +24,6 @@ import io.github.yashkasera.alohomora.data.datasource.local.ScreenDao
 @TypeConverters(PropertiesConverter::class, HeadersConverter::class)
 internal abstract class AlohomoraDb : RoomDatabase() {
     abstract fun screenDao(): ScreenDao
-
     abstract fun crashDao(): CrashDao
     abstract fun networkDao(): ApiRequestDao
     abstract fun eventDao(): AnalyticsDao

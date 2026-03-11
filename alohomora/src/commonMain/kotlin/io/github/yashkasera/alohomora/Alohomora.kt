@@ -1,13 +1,17 @@
 package io.github.yashkasera.alohomora
 
+import co.touchlab.kermit.Logger
+import io.github.yashkasera.alohomora.common.ApiRequest
+import io.github.yashkasera.alohomora.data.datasource.local.ApiRequestDao
 import io.github.yashkasera.alohomora.data.model.AlohomoraBuildInfo
 import io.github.yashkasera.alohomora.data.model.Commit
+import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
+import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
+import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.di.initKoin
 import io.github.yashkasera.alohomora.domain.repository.EventRepository
 import io.github.yashkasera.alohomora.domain.repository.LogRepository
-import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
-import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
-import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
+import io.github.yashkasera.alohomora.domain.repository.NetworkRepository
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import kotlinx.coroutines.CoroutineScope
@@ -77,6 +81,21 @@ object Alohomora {
         val repo = koin?.get<LogRepository>() ?: return
         scope.launch {
 //            repo.addLog(level, tag, message, throwable)
+        }
+    }
+
+    fun log(
+        apiRequest: ApiRequest,
+    ) {
+        val repo = koin?.get<NetworkRepository>() ?: return
+        scope.launch {
+            try {
+                repo.insert(apiRequest)
+            } catch (e: Exception) {
+                Logger.d {
+                    "[Alohomora] Failed to log API request: ${e.message}"
+                }
+            }
         }
     }
 

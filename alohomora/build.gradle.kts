@@ -22,8 +22,6 @@ kotlin {
         compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
     }
 
-    jvm()
-
     iosX64()
     iosArm64()
     iosSimulatorArm64()
@@ -39,8 +37,6 @@ kotlin {
             api(libs.compose.ui.tooling.preview)
             api(libs.compose.material3)
 
-//            implementation(libs.paging)
-//            implementation(libs.paging.compose)
 
             implementation(libs.kermit)
             implementation(libs.kotlinx.coroutines.core)
@@ -78,14 +74,8 @@ kotlin {
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
-            implementation ("androidx.startup:startup-runtime:1.0.0")
+            implementation (libs.androidx.startup.runtime)
 
-        }
-
-        jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.ktor.client.okhttp)
         }
 
         iosMain.dependencies {
@@ -100,7 +90,7 @@ kotlin {
         .configureEach {
             binaries {
                 framework {
-                    baseName = "SharedUI"
+                    baseName = "AlohomoraKit"
                     isStatic = true
                 }
             }
@@ -117,11 +107,7 @@ buildConfig {
 }
 
 room {
-    schemaDirectory("kspKotlinJvm", "$projectDir/schemas/kspKotlinJvm")
     schemaDirectory("kspAndroidMain", "$projectDir/schemas/kspAndroidMain")
-    schemaDirectory("kspJvm", "$projectDir/schemas/kspJvm")
-//    schemaDirectory("beta", "$projectDir/schemas/beta")
-//    schemaDirectory("release", "$projectDir/schemas/release")
     schemaDirectory("$projectDir/schemas")
 }
 
@@ -129,6 +115,5 @@ dependencies {
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspIosSimulatorArm64", libs.androidx.room.compiler)
     add("kspIosX64", libs.androidx.room.compiler)
-    add("kspJvm", libs.androidx.room.compiler)
     add("kspIosArm64", libs.androidx.room.compiler)
 }

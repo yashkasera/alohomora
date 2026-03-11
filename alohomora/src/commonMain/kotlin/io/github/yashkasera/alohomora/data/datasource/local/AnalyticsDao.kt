@@ -19,6 +19,9 @@ internal interface AnalyticsDao {
     @Query("SELECT * FROM Analytics ORDER BY time DESC LIMIT :limit")
     suspend fun getLatest(limit: Int): List<Analytics>
 
+    @Query("SELECT COUNT(*) FROM Analytics WHERE name LIKE '%' || :query || '%'")
+    fun getCount(query: String): Flow<Long>
+
     @Delete
     suspend fun delete(entity: Analytics)
 

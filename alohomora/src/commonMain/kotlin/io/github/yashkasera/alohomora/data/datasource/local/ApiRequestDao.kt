@@ -18,16 +18,16 @@ internal interface ApiRequestDao {
     suspend fun update(item: ApiRequest): Int
 
     @Query("SELECT id, status, host, path, `query`, method, duration, time, isViewed  FROM ApiRequest WHERE path LIKE '%' || :query || '%' AND method LIKE '%' || :method || '%' ORDER BY time DESC  LIMIT :pageSize OFFSET :page * :pageSize")
-    fun getAll(query: String, method: String, page: Int, pageSize: Int): Flow<List<ApiRequest>>
+    fun getAll(query: String?, method: String?, page: Int, pageSize: Int): Flow<List<ApiRequest>>
+
+    @Query("SELECT COUNT(*)  FROM ApiRequest WHERE path LIKE '%' || :query || '%' AND method LIKE '%' || :method || '%'")
+    fun getCount(query: String?, method: String?): Flow<Long>
 
     @Query("SELECT id, status, host, path, `query`, method, isViewed FROM ApiRequest ORDER BY time DESC LIMIT 5")
     fun getLatest(): Flow<List<ApiRequest>>
 
     @Query("SELECT * FROM ApiRequest ORDER BY time DESC LIMIT :limit")
     suspend fun getLatest(limit: Int): List<ApiRequest>
-
-    @Query("SELECT id from ApiRequest WHERE url = :url ORDER BY id  DESC LIMIT 1 ")
-    suspend fun getIdByUrl(url: String?): String?
 
     @Query("SELECT * FROM ApiRequest WHERE id = :id")
     fun getById(id: String): Flow<ApiRequest?>
