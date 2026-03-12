@@ -119,7 +119,6 @@ private fun OverviewTab(trace: TraceEntry) {
         MethodAndEndpointSection(
             method = trace.method.orEmpty(),
             url = trace.pathWithQuery.orEmpty(),
-            requestId = "${trace.id}",
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -151,7 +150,6 @@ private fun RequestTab(trace: TraceEntry) {
         MethodAndEndpointSection(
             method = trace.method.orEmpty(),
             url = trace.url.orEmpty(),
-            requestId = "#${trace.id}",
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -264,7 +262,6 @@ private fun ResponseTab(trace: TraceEntry) {
 private fun MethodAndEndpointSection(
     method: String,
     url: String,
-    requestId: String,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -279,13 +276,6 @@ private fun MethodAndEndpointSection(
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
-
-        Text(
-            text = "ID: #$requestId",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 16.dp),
-        )
     }
 }
 

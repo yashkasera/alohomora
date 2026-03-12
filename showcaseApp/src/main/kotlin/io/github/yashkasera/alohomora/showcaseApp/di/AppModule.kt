@@ -43,7 +43,9 @@ val appModule = module {
             get(),
             AppDatabase::class.java,
             "android_sample.db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration(true)
+            .build()
     }
 
     single { get<AppDatabase>().postDao() }

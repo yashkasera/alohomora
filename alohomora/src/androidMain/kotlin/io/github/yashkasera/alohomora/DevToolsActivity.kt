@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -17,6 +18,24 @@ import io.github.yashkasera.alohomora.trace.TraceNotificationHelper
 
 class DevToolsActivity : ComponentActivity() {
     private val startDestinationState = mutableStateOf<Routes>(Routes.Overview)
+
+    companion object {
+        private const val EXTRA_TRACE_ID = "extra_trace_id"
+
+        /**
+         * Creates an intent to launch DevToolsActivity with a specific trace.
+         *
+         * @param context The context to create the intent from
+         * @param traceId The ID of the trace to display
+         * @return Intent configured to open trace details
+         */
+        fun newIntent(context: Context, traceId: String): Intent {
+            return Intent(context, DevToolsActivity::class.java).apply {
+                putExtra(EXTRA_TRACE_ID, traceId)
+                putExtra(TraceNotificationHelper.EXTRA_START_DESTINATION, TraceNotificationHelper.DESTINATION_TRACE)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,8 +56,10 @@ class DevToolsActivity : ComponentActivity() {
 
     private fun updateStartDestination(intent: Intent?) {
         val destination = intent?.getStringExtra(TraceNotificationHelper.EXTRA_START_DESTINATION)
-        startDestinationState.value = when (destination) {
-            TraceNotificationHelper.DESTINATION_TRACE -> Routes.Trace
+        val traceId = intent?.getStringExtra(EXTRA_TRACE_ID)
+        startDestinationState.value = when {
+            traceId != null -> Routes.TraceDetails(traceId)
+            destination == TraceNotificationHelper.DESTINATION_TRACE -> Routes.Trace
             else -> Routes.Overview
         }
     }

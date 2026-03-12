@@ -1,7 +1,6 @@
 package io.github.yashkasera.alohomora.trace
 
 import android.Manifest
-import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -43,7 +42,7 @@ internal class TraceNotificationHelper(
         }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.stat_sys_upload_done)
+            .setSmallIcon(android.R.drawable.stat_sys_upload_done)
             .setContentTitle("Latest network traces")
             .setContentText(summaries.firstOrNull() ?: "No recent traces")
             .setStyle(style)
@@ -54,6 +53,7 @@ internal class TraceNotificationHelper(
             .build()
 
         NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -86,7 +86,7 @@ internal class TraceNotificationHelper(
     }
 
     companion object {
-        private const val CHANNEL_ID = "alohomora_traces"
+        const val CHANNEL_ID = "alohomora_traces"
         private const val NOTIFICATION_ID = 41024
         private const val MAX_LINES = 5
         private const val REQUEST_CODE = 41025

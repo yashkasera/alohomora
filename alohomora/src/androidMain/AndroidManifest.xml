@@ -20,7 +20,7 @@
 
     <receiver
       android:exported="false"
-      android:name=".api.ClearApiRequestsReceiver" />
+      android:name=".trace.ClearTracesReceiver" />
 
     <provider
       android:authorities="${applicationId}.androidx-startup"

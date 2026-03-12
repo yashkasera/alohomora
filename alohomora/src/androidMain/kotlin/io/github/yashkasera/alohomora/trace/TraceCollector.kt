@@ -4,8 +4,10 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.data.datasource.local.TraceDao
+import io.github.yashkasera.alohomora.trace.TraceInjector.context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -14,18 +16,14 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 /**
- * The collector responsible of collecting data from a [TraceInterceptor] and
+ * The collector responsible for collecting data from a [TraceInterceptor] and
  * storing it/displaying push notification. You need to instantiate one of those and
  * provide it to
  *
  * @param context An Android Context
- * @param showNotification Control whether a notification is shown while HTTP activity
- * is recorded.
- * @param retentionPeriod Set the retention period for HTTP transaction data captured
- * by this collector. The default is one week.
  */
 
-private object NetworkInjector2 : KoinComponent {
+private object TraceInjector : KoinComponent {
     val dao: TraceDao by inject()
     val context: Context by inject()
 }
@@ -33,14 +31,23 @@ private object NetworkInjector2 : KoinComponent {
 class TraceCollector(
     private val showNotification: Boolean = true,
 ) {
-    private val notificationHelper by lazy {
-        TraceNotificationHelper(NetworkInjector2.context)
-    }
+    private val notificationHelper: TraceNotificationHelper =
+        TraceNotificationHelper(TraceInjector.context)
     private val scope = MainScope()
 
-    init {
-//        RepositoryProvider.initialize(context)
-//        Chucker.showNotifications = showNotification
+    /**
+     * Check if notification permission is granted.
+     * On Android 13+ (API 33+), this requires explicit user permission.
+     */
+    fun hasNotificationPermission(): Boolean {
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                TraceInjector.context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true // Permission not required on older Android versions
+        }
     }
 
     /**
@@ -50,7 +57,7 @@ class TraceCollector(
     internal fun onRequestSent(transaction: TraceEntry) {
         scope.launch {
             withContext(Dispatchers.IO) {
-                NetworkInjector2.dao.insert(transaction)
+                TraceInjector.dao.insert(transaction)
             }
         }
     }
@@ -62,23 +69,27 @@ class TraceCollector(
      */
     internal fun onResponseReceived(transaction: TraceEntry) {
         scope.launch {
-            NetworkInjector2.dao.update(transaction)
+            TraceInjector.dao.update(transaction)
             val latest = withContext(Dispatchers.IO) {
                 if (showNotification) {
-                    NetworkInjector2.dao.getLatest(5)
+                    TraceInjector.dao.getLatest(5)
                 } else {
                     emptyList()
                 }
             }
             if (showNotification) {
                 if (ActivityCompat.checkSelfPermission(
-                        NetworkInjector2.context,
-                        Manifest.permission.POST_NOTIFICATIONS
+                        TraceInjector.context,
+                        Manifest.permission.POST_NOTIFICATIONS,
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    return@launch
+                    if (showNotification && latest.isNotEmpty()) {
+                        if (!hasNotificationPermission()) {
+                            return@launch
+                        }
+                        notificationHelper.showLatest(latest)
+                    }
                 }
-                notificationHelper.showLatest(latest)
             }
         }
     }

@@ -45,7 +45,7 @@ internal fun TraceDetailsScreen(traceId: String, onBackClick: () -> Unit = {}) {
         topBar = {
             AlohomoraTopBar(
                 title = "API Request",
-                subtitle = null,
+                subtitle = state.trace?.path,
                 navigationIcon = {
                     AlohomoraIconButton(onClick = onBackClick) {
                         Icon(

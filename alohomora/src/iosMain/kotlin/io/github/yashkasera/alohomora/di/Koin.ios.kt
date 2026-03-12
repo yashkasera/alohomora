@@ -20,6 +20,7 @@ actual val platformModule = module {
             factory = { AlohomoraDb::class.instantiateImpl() }
         )
             .setDriver(BundledSQLiteDriver())
+            .fallbackToDestructiveMigration(true)
             .build()
     }
     single<DevToolsPreferencesInspector> { IosPreferencesInspector() }

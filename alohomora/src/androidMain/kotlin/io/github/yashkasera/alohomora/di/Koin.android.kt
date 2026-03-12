@@ -18,13 +18,6 @@ import org.koin.dsl.module
 actual val platformModule = module {
     single<AlohomoraDb> {
         val context: Context = androidContext()
-//        val dbFile = context.getDatabasePath("alohomora.db")
-        /*Room.databaseBuilder<AlohomoraDb>(
-            context = context,
-            name = dbFile.absolutePath,
-        )
-            .setDriver(BundledSQLiteDriver())
-            .build()*/
         getDatabaseBuilder(context)
             .setQueryCoroutineContext(Dispatchers.IO)
             .build()
@@ -43,5 +36,5 @@ private fun getDatabaseBuilder(context: Context): RoomDatabase.Builder<Alohomora
     return Room.databaseBuilder<AlohomoraDb>(
         context = appContext,
         name = dbFile.absolutePath,
-    )
+    ).fallbackToDestructiveMigration(true)
 }
