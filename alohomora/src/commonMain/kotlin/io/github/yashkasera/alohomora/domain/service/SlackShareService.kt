@@ -45,6 +45,19 @@ class SlackShareService(
         return postToWebhook(message)
     }
 
+    suspend fun shareContent(
+        title: String,
+        content: String,
+        recipientEmail: String,
+    ): Result<Unit> {
+        val message = buildGenericMessage(
+            title = title,
+            content = content,
+            recipientEmail = recipientEmail,
+        )
+        return postToWebhook(message)
+    }
+
     private fun buildSlackMessage(
         trace: TraceEntry,
         recipientEmail: String,
@@ -54,9 +67,22 @@ class SlackShareService(
             appendLine("🌐 API Request Shared")
             appendLine()
             appendLine("• Method: ${trace.method ?: "N/A"} ${trace.pathWithQuery}")
-            appendLine("• Status: ${trace.status ?: "N/A"} ${getStatusText(trace.status)}")
+            appendLine("• Status: ${trace.status ?: "N/A"} ${trace.statusMessage}")
             appendLine("• Duration: ${trace.duration ?: 0}ms")
             appendLine("• Time: ${trace.time ?: "N/A"}")
+            appendLine()
+            appendLine(content)
+        }
+        return Json.encodeToString(SlackMessage(text = summary))
+    }
+
+    private fun buildGenericMessage(
+        title: String,
+        content: String,
+        recipientEmail: String,
+    ): String {
+        val summary = buildString {
+            appendLine(title)
             appendLine()
             appendLine(content)
         }
@@ -79,22 +105,6 @@ class SlackShareService(
             }
         } catch (e: Exception) {
             Result.failure(e)
-        }
-    }
-
-    private fun getStatusText(status: Int?): String {
-        return when (status) {
-            200 -> "OK"
-            201 -> "Created"
-            204 -> "No Content"
-            400 -> "Bad Request"
-            401 -> "Unauthorized"
-            403 -> "Forbidden"
-            404 -> "Not Found"
-            500 -> "Internal Server Error"
-            502 -> "Bad Gateway"
-            503 -> "Service Unavailable"
-            else -> ""
         }
     }
 

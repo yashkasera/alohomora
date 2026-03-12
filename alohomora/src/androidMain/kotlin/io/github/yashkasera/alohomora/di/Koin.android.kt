@@ -4,6 +4,9 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
+import io.github.yashkasera.alohomora.data.repository.PlatformDatabaseAccessor
+import io.github.yashkasera.alohomora.data.repository.VaultRepositoryImpl
+import io.github.yashkasera.alohomora.domain.repository.VaultRepository
 import io.github.yashkasera.alohomora.devtools.AndroidAppDatabaseProvider
 import io.github.yashkasera.alohomora.devtools.DevToolsAppDatabaseProvider
 import io.github.yashkasera.alohomora.devtools.AndroidPreferencesInspector
@@ -28,7 +31,11 @@ actual val platformModule = module {
     single<DevToolsAppDatabaseProvider> { AndroidAppDatabaseProvider(androidContext()) }
     single { DevToolsTcpServer() }
     single { ShareManager(androidContext()) }
-
+    single<VaultRepository> {
+        val accessor = PlatformDatabaseAccessor()
+        accessor.setContext(androidContext())
+        VaultRepositoryImpl(accessor)
+    }
 }
 
 private fun getDatabaseBuilder(context: Context): RoomDatabase.Builder<AlohomoraDb> {

@@ -27,7 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.yashkasera.alohomora.common.AlohomoraCommit
+import io.github.yashkasera.alohomora.data.model.AlohomoraCommit
 import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
 import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
 import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray

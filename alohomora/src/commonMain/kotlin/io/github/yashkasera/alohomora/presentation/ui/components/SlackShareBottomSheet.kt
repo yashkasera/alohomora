@@ -25,17 +25,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
-import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.Share
-import io.github.yashkasera.alohomora.ui.icons.Copy
 
+/**
+ * Configuration for a share option in the Slack share sheet.
+ *
+ * @property icon The icon to display for this option
+ * @property title The title text for this share option
+ * @property subtitle The subtitle/description text
+ * @property onShare Callback when this option is selected with the recipient email
+ */
+data class SlackShareOption(
+    val icon: ImageVector,
+    val title: String,
+    val subtitle: String,
+    val onShare: (email: String) -> Unit,
+)
+
+/**
+ * A generic bottom sheet for sharing content to Slack.
+ *
+ * @param title The title to display at the top of the sheet
+ * @param isConfigured Whether Slack webhook is configured
+ * @param onDismiss Callback when the sheet is dismissed
+ * @param shareOptions List of share options to display
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SlackShareBottomSheet(
+    title: String = "Share to Slack",
     isConfigured: Boolean,
     onDismiss: () -> Unit,
-    onShareCurl: (email: String) -> Unit,
-    onShareText: (email: String) -> Unit,
+    shareOptions: List<SlackShareOption>,
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -54,7 +74,7 @@ internal fun SlackShareBottomSheet(
                 .padding(bottom = 32.dp),
         ) {
             Text(
-                text = "Share to Slack",
+                text = title,
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 16.dp),
             )
@@ -86,33 +106,23 @@ internal fun SlackShareBottomSheet(
                 )
 
                 // Share options
-                ShareOption(
-                    icon = Icons.Share,
-                    title = "Share cURL to Slack",
-                    subtitle = "Send curl command",
-                    onClick = {
-                        if (email.isNotBlank()) {
-                            onShareCurl(email)
-                            onDismiss()
-                        }
-                    },
-                    enabled = email.isNotBlank(),
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                ShareOption(
-                    icon = Icons.Copy,
-                    title = "Share Text to Slack",
-                    subtitle = "Send raw transaction text",
-                    onClick = {
-                        if (email.isNotBlank()) {
-                            onShareText(email)
-                            onDismiss()
-                        }
-                    },
-                    enabled = email.isNotBlank(),
-                )
+                shareOptions.forEachIndexed { index, option ->
+                    ShareOption(
+                        icon = option.icon,
+                        title = option.title,
+                        subtitle = option.subtitle,
+                        onClick = {
+                            if (email.isNotBlank()) {
+                                option.onShare(email)
+                                onDismiss()
+                            }
+                        },
+                        enabled = email.isNotBlank(),
+                    )
+                    if (index < shareOptions.size - 1) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
             } else {
                 // Not configured state
                 Text(

@@ -10,8 +10,15 @@ plugins {
 
 dependencies {
     implementation(project(":alohomora-common"))
-    implementation(project(":alohomora"))
     implementation(project(":alohomora-ui"))
+
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.resources)
+    implementation(libs.compose.material3)
+    implementation(libs.desktop.jvm.macos.arm64)
+
     implementation(libs.kotlinx.serialization.json)
 
     // Ktor Server

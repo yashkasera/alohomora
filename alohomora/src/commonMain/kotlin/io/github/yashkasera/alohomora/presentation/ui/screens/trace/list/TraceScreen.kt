@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.ConfirmationBottomSheet
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
@@ -45,10 +46,11 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextFieldDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.ConfirmationConfig
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Server
-import io.github.yashkasera.alohomora.ui.icons.trash
+import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
 import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
 import kotlin.time.Instant
@@ -72,15 +74,16 @@ internal fun TraceScreen(onTraceClick: (String) -> Unit) {
                     }
                 },
                 actions = {
-                    AlohomoraIconButton(
-                        onClick = {
-
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.trash,
-                            contentDescription = "Clear All",
-                        )
+                    // Clear all button (only show if there are traces)
+                    if (state.calls.isNotEmpty()) {
+                        AlohomoraIconButton(
+                            onClick = viewModel::showClearConfirmation,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Trash,
+                                contentDescription = "Clear All",
+                            )
+                        }
                     }
                 },
             )
@@ -105,6 +108,21 @@ internal fun TraceScreen(onTraceClick: (String) -> Unit) {
                 // Spacer to avoid bottom bar overlap if scaffold padding isn't enough (usually it is)
                 item { Spacer(modifier = Modifier.height(32.dp)) }
             }
+        }
+
+        // Clear all confirmation bottom sheet
+        if (state.showClearConfirmation) {
+            ConfirmationBottomSheet(
+                config = ConfirmationConfig(
+                    title = "Clear All Traces",
+                    message = "Are you sure you want to delete all network request traces? This action cannot be undone.",
+                    confirmButtonText = "Clear All",
+                    dismissButtonText = "Cancel",
+                    isDestructive = true,
+                ),
+                onConfirm = viewModel::clearAllTraces,
+                onDismiss = viewModel::hideClearConfirmation,
+            )
         }
     }
 }
@@ -133,7 +151,7 @@ private fun TraceHeader(requestCount: Int) {
 
             AlohomoraIconButton(onClick = { /* TODO: Clear */ }) {
                 // Using Delete as DeleteSweep is extended
-                Icon(Icons.trash, contentDescription = "Clear", tint = CanvasBlack)
+                Icon(Icons.Trash, contentDescription = "Clear", tint = CanvasBlack)
             }
         }
 

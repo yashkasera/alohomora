@@ -8,24 +8,36 @@ import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import io.github.yashkasera.alohomora.utils.paging.FlowPager
 import io.github.yashkasera.alohomora.utils.paging.LoadState
 import io.github.yashkasera.alohomora.utils.paging.PagingConfig
+import io.github.yashkasera.alohomora.utils.paging.PagingData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class TelemetryState(
     val events: List<TelemetryEvent> = emptyList(),
     val isLoadingMore: Boolean = false,
     val error: String? = null,
     val searchQuery: String = "",
+    val showProperties: Boolean = true,
+    val selectedEvent: TelemetryEvent? = null,
+    val showSlackSheet: Boolean = false,
+    val showClearConfirmation: Boolean = false,
+    val isClearing: Boolean = false,
 )
 
 internal class TelemetryViewModel(
-    telemetryRepository: TelemetryRepository,
+    private val telemetryRepository: TelemetryRepository,
 ) : ViewModel() {
 
     private val searchQuery = MutableStateFlow("")
+    private val showProperties = MutableStateFlow(true)
+    private val selectedEvent = MutableStateFlow<TelemetryEvent?>(null)
+    private val showSlackSheet = MutableStateFlow(false)
+    private val showClearConfirmation = MutableStateFlow(false)
+    private val isClearing = MutableStateFlow(false)
     private val pageSize = 20
 
     private val pager = FlowPager(
@@ -38,12 +50,29 @@ internal class TelemetryViewModel(
     val state: StateFlow<TelemetryState> = combine(
         pager.pagingData,
         searchQuery,
-    ) { pagingData, query ->
+        showProperties,
+        selectedEvent,
+        showSlackSheet,
+        showClearConfirmation,
+        isClearing,
+    ) { flows: Array<*> ->
+        val pagingData = flows[0] as PagingData<TelemetryEvent>
+        val query = flows[1] as String
+        val showProps = flows[2] as Boolean
+        val selected = flows[3] as TelemetryEvent?
+        val showSlack = flows[4] as Boolean
+        val showClear = flows[5] as Boolean
+        val clearing = flows[6] as Boolean
         TelemetryState(
             events = pagingData.items,
             isLoadingMore = pagingData.loadState is LoadState.Loading,
             error = (pagingData.loadState as? LoadState.Error)?.error?.message,
             searchQuery = query,
+            showProperties = showProps,
+            selectedEvent = selected,
+            showSlackSheet = showSlack,
+            showClearConfirmation = showClear,
+            isClearing = clearing,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -62,5 +91,48 @@ internal class TelemetryViewModel(
     fun onSearchQueryChange(query: String) {
         searchQuery.value = query
         pager.refresh()
+    }
+
+    fun toggleShowProperties() {
+        showProperties.value = !showProperties.value
+    }
+
+    fun onEventClick(event: TelemetryEvent) {
+        selectedEvent.value = event
+    }
+
+    fun dismissEventDetail() {
+        selectedEvent.value = null
+    }
+
+    fun showSlackSheet() {
+        showSlackSheet.value = true
+    }
+
+    fun hideSlackSheet() {
+        showSlackSheet.value = false
+    }
+
+    fun showClearConfirmation() {
+        showClearConfirmation.value = true
+    }
+
+    fun hideClearConfirmation() {
+        showClearConfirmation.value = false
+    }
+
+    fun clearAllEvents() {
+        viewModelScope.launch {
+            isClearing.value = true
+            try {
+                telemetryRepository.clearAll()
+                pager.refresh()
+            } catch (_: Exception) {
+                // Error handling could be added here
+            } finally {
+                isClearing.value = false
+                showClearConfirmation.value = false
+            }
+        }
     }
 }

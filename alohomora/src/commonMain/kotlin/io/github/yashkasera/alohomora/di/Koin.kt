@@ -1,6 +1,5 @@
 package io.github.yashkasera.alohomora.di
 
-import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.data.repository.IncidentRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.TelemetryRepositoryImpl
@@ -29,7 +28,6 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
 import io.github.yashkasera.alohomora.domain.service.SlackShareService
-import io.github.yashkasera.alohomora.utils.share.ShareManager
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
@@ -77,7 +75,7 @@ internal val appModule = module {
     viewModel { TraceViewModel(get()) }
     viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get(), get(), get()) }
     viewModel { TelemetryViewModel(get()) }
-    viewModel { VaultViewModel() }
+    viewModel { VaultViewModel(get()) }
     viewModel { ChronicleViewModel() }
     viewModel { IncidentViewModel(get()) }
     viewModel { (incidentId: Long) -> IncidentDetailsViewModel(incidentId, get(), get()) }

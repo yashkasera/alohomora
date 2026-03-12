@@ -66,6 +66,7 @@ dependencies {
 alohomora {
     enabledVariants = setOf("debug")
     maxCommits = 50
+    slackWebhookUrl = "https://hooks.slack.com/srervices/T05A6JG6Z/B05A6JG6Z/"
     versionName = project.version.toString()
     versionCode = 1
 }

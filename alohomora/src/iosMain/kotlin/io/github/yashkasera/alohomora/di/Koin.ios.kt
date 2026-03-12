@@ -5,11 +5,13 @@ import org.koin.dsl.module
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
+import io.github.yashkasera.alohomora.data.repository.VaultRepositoryImpl
 import io.github.yashkasera.alohomora.devtools.DevToolsAppDatabaseProvider
 import io.github.yashkasera.alohomora.devtools.DevToolsPreferencesInspector
 import io.github.yashkasera.alohomora.devtools.DevToolsTcpServer
 import io.github.yashkasera.alohomora.devtools.EmptyAppDatabaseProvider
 import io.github.yashkasera.alohomora.devtools.IosPreferencesInspector
+import io.github.yashkasera.alohomora.domain.repository.VaultRepository
 import io.github.yashkasera.alohomora.utils.share.ShareManager
 import platform.Foundation.NSHomeDirectory
 
@@ -28,4 +30,5 @@ actual val platformModule = module {
     single<DevToolsAppDatabaseProvider> { EmptyAppDatabaseProvider }
     single { DevToolsTcpServer() }
     single { ShareManager() }
+    single<VaultRepository> { VaultRepositoryImpl() }
 }

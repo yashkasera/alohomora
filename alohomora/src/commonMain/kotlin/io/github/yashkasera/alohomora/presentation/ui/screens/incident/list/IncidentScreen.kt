@@ -49,7 +49,7 @@ import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.clock
 import io.github.yashkasera.alohomora.ui.icons.hardDrive
-import io.github.yashkasera.alohomora.ui.icons.trash
+import io.github.yashkasera.alohomora.ui.icons.Trash
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -75,7 +75,7 @@ internal fun IncidentScreen(
                 actions = {
                     AlohomoraIconButton(onClick = { viewModel.clearAllIncidents() }) {
                         Icon(
-                            Icons.trash,
+                            Icons.Trash,
                             contentDescription = "Clear all incidents",
                             tint = CanvasBlack
                         )

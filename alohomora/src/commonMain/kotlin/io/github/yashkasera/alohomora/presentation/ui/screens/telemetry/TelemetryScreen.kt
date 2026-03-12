@@ -12,16 +12,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.TelemetryEvent
-import io.github.yashkasera.alohomora.ui.components.AlohomoraExtendedFloatingActionButton
+import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.presentation.ui.components.TelemetryEventBottomSheet
+import io.github.yashkasera.alohomora.ui.components.ConfirmationBottomSheet
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextFieldDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
-import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
-import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.components.ConfirmationConfig
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Eye
+import io.github.yashkasera.alohomora.ui.icons.EyeOff
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Search
+import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.chartLine
 import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
 import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
@@ -32,77 +42,174 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun TelemetryScreen(onBackClick: () -> Unit) {
     val viewModel = koinViewModel<TelemetryViewModel>()
     val state by viewModel.state.collectAsState()
+    val isSlackConfigured = remember { Alohomora.config?.slackWebhookUrl.isNullOrBlank().not() }
 
     Scaffold(
-        topBar = { AlohomoraTopBar(
-            title = "Telemetry",
-            subtitle = "",
-            navigationIcon = {
-                AlohomoraIconButton(onClick = onBackClick) {
-                    Icon(Icons.ArrowLeft, contentDescription = "back")
-                }
-            },
-        ) },
-//        floatingActionButton = { CreateJourneyFab() },
+        topBar = {
+            AlohomoraTopBar(
+                title = "Telemetry",
+                navigationIcon = {
+                    AlohomoraIconButton(onClick = onBackClick) {
+                        Icon(Icons.ArrowLeft, contentDescription = "back")
+                    }
+                },
+                actions = {
+                    // Property visibility toggle
+                    AlohomoraIconButton(onClick = viewModel::toggleShowProperties) {
+                        Icon(
+                            imageVector = if (state.showProperties) Icons.Eye else Icons.EyeOff,
+                            contentDescription = if (state.showProperties) "Hide properties" else "Show properties",
+                        )
+                    }
+                    // Clear all button (only show if there are events)
+                    if (state.events.isNotEmpty()) {
+                        AlohomoraIconButton(onClick = viewModel::showClearConfirmation) {
+                            Icon(
+                                imageVector = Icons.Trash,
+                                contentDescription = "Clear all events",
+                            )
+                        }
+                    }
+                },
+            )
+        },
         containerColor = CanvasWhite,
         contentColor = CanvasBlack,
     ) { padding ->
-        TelemetryList(
-            events = state.events,
-            modifier = Modifier.padding(padding),
+        Column(modifier = Modifier.padding(padding)) {
+            // Search field
+            TelemetrySearchBar(
+                query = state.searchQuery,
+                onQueryChange = viewModel::onSearchQueryChange,
+            )
+
+            // Telemetry list
+            TelemetryList(
+                events = state.events,
+                showProperties = state.showProperties,
+                onEventClick = viewModel::onEventClick,
+            )
+        }
+
+        // Event detail bottom sheet
+        state.selectedEvent?.let { event ->
+            TelemetryEventBottomSheet(
+                event = event,
+                isSlackConfigured = isSlackConfigured,
+                onDismiss = viewModel::dismissEventDetail,
+                onShareToSlack = { email ->
+                    viewModel.hideSlackSheet()
+                    // Share via Slack would be implemented here
+                },
+            )
+        }
+
+        // Clear all confirmation bottom sheet
+        if (state.showClearConfirmation) {
+            ConfirmationBottomSheet(
+                config = ConfirmationConfig(
+                    title = "Clear All Events",
+                    message = "Are you sure you want to delete all telemetry events? This action cannot be undone.",
+                    confirmButtonText = "Clear All",
+                    dismissButtonText = "Cancel",
+                    isDestructive = true,
+                ),
+                onConfirm = viewModel::clearAllEvents,
+                onDismiss = viewModel::hideClearConfirmation,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TelemetrySearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+    ) {
+        AlohomoraOutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            singleLine = true,
+            shape = RectangleShape,
+            colors = AlohomoraTextFieldDefaults.outlinedColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                focusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                cursorColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+            placeholder = {
+                Text("Search events by name")
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Search,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
 
 @Composable
-fun TelemetryList(events: List<TelemetryEvent>, modifier: Modifier = Modifier) {
+fun TelemetryList(
+    events: List<TelemetryEvent>,
+    showProperties: Boolean,
+    onEventClick: (TelemetryEvent) -> Unit,
+) {
     if (events.isEmpty()) {
         EmptyState(
             icon = Icons.chartLine,
             title = "No Telemetry Yet",
             subtitle = "Telemetry events will appear here in real-time",
-            modifier = modifier
         )
     } else {
-        LazyColumn(modifier = modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(events) { event ->
-                TelemetryItem(event = event)
+                TelemetryItem(
+                    event = event,
+                    showProperties = showProperties,
+                    onClick = { onEventClick(event) },
+                )
             }
         }
     }
 }
 
 @Composable
-fun TelemetryItem(event: TelemetryEvent) {
+fun TelemetryItem(
+    event: TelemetryEvent,
+    showProperties: Boolean,
+    onClick: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .border(width = 0.5.dp, color = CanvasLightGray) // Bottom border for items
-            .clickable { }
+            .clickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 16.dp),
     ) {
-        // Header Row: Icon + Title + Timestamp
+        // Header Row: Title + Timestamp
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically, // Baseline alignment trickier in Row
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-//                Icon(
-//                    imageVector = getEventIcon(event.name),
-//                    contentDescription = null,
-//                    modifier = Modifier.size(20.dp),
-//                    tint = if (event.name == "App.Exception") CanvasAlertRed else CanvasBlack
-//                )
-                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = event.name,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                     ),
                     color = CanvasBlack,
@@ -118,86 +225,53 @@ fun TelemetryItem(event: TelemetryEvent) {
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        // Code Block - only shown if showProperties is true
+        if (showProperties) {
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // Code Block
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 4.dp)
-                .background(CanvasLightGray.copy(alpha = 0.5f))
-                .border(1.dp, CanvasLightGray.copy(alpha = 0.8f)),
-        ) {
-            // Exceptions get a special left accent border
-            if (event.name == "App.Exception") {
-                Box(
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 4.dp)
+                    .background(CanvasLightGray.copy(alpha = 0.5f))
+                    .border(1.dp, CanvasLightGray.copy(alpha = 0.8f)),
+            ) {
+                // Exceptions get a special left accent border
+                if (event.name == "App.Exception") {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .width(2.dp)
+                            .fillMaxHeight()
+                            .background(CanvasBlack),
+                    )
+                }
+
+                Text(
+                    text = event.properties?.toString() ?: "{}",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp,
+                        color = CanvasDarkGray,
+                    ),
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .width(2.dp)
-                        .fillMaxHeight()
-                        .background(CanvasBlack),
+                        .padding(8.dp)
+                        .padding(start = if (event.name == "App.Exception") 8.dp else 0.dp),
                 )
             }
-
-            Text(
-                text = event.properties?.toString() ?: "{}",
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
-                    color = CanvasDarkGray,
-                ),
-                modifier = Modifier
-                    .padding(8.dp)
-                    .padding(start = if (event.name == "App.Exception") 8.dp else 0.dp),
-            )
         }
     }
     AlohomoraHorizontalDivider(color = CanvasLightGray, thickness = 1.dp)
 }
 
-@Composable
-fun CreateJourneyFab() {
-    AlohomoraExtendedFloatingActionButton(
-        onClick = { /* TODO */ },
-        containerColor = CanvasBlack,
-        contentColor = CanvasWhite,
-        modifier = Modifier.padding(bottom = 60.dp), // Lift above bottom bar specific styling if needed
-        shape = RectangleShape, // HTML button looks rectangular with shadow
-    ) {
-//        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = "Create Journey",
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontFamily = FontFamily.Serif,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                letterSpacing = 0.5.sp,
-            ),
-        )
-    }
-}
-
-//fun getEventIcon(eventName: String): ImageVector {
-//    return when (eventName) {
-//        "App.Launch" -> Icons.Default.RocketLaunch
-//        "Screen.View" -> Icons.Default.Visibility
-//        "Button.Click" -> Icons.Default.TouchApp
-//        "API.Sync" -> Icons.Default.CloudSync
-//        "App.Exception" -> Icons.Default.Error
-//        else -> Icons.Default.Info
-//    }
-//}
-
 fun formatTimestamp(timestamp: Long): String {
-    // Simple mock formatter for now, assuming timestamp is epoch millis
-    // Ideally use explicit date formatter
-    try {
+    return try {
         val instant = Instant.fromEpochMilliseconds(timestamp)
         val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-        return "${local.hour.toString().padStart(2, '0')}:${
+        "${local.hour.toString().padStart(2, '0')}:${
             local.minute.toString().padStart(2, '0')
         }:${local.second.toString().padStart(2, '0')}"
     } catch (e: Exception) {
-        return "00:00:00"
+        "00:00:00"
     }
 }

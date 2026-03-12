@@ -16,9 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.presentation.ui.components.ShareBottomSheet
 import io.github.yashkasera.alohomora.presentation.ui.components.SlackShareBottomSheet
+import io.github.yashkasera.alohomora.presentation.ui.components.SlackShareOption
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Share
 import io.github.yashkasera.alohomora.ui.icons.Slack
@@ -101,10 +103,23 @@ internal fun TraceDetailsScreen(traceId: String, onBackClick: () -> Unit = {}) {
     // Slack Share Bottom Sheet
     if (state.showSlackSheet) {
         SlackShareBottomSheet(
+            title = "Share to Slack",
             isConfigured = state.isSlackConfigured,
             onDismiss = viewModel::hideSlackSheet,
-            onShareCurl = viewModel::shareCurlToSlack,
-            onShareText = viewModel::shareTextToSlack,
+            shareOptions = listOf(
+                SlackShareOption(
+                    icon = Icons.Share,
+                    title = "Share cURL to Slack",
+                    subtitle = "Send curl command",
+                    onShare = viewModel::shareCurlToSlack,
+                ),
+                SlackShareOption(
+                    icon = Icons.Copy,
+                    title = "Share Text to Slack",
+                    subtitle = "Send raw transaction text",
+                    onShare = viewModel::shareTextToSlack,
+                ),
+            ),
         )
     }
 }

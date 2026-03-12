@@ -92,8 +92,8 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
         return buildString {
             appendLine("package alohomora.generated")
             appendLine()
-            appendLine("import io.github.yashkasera.alohomora.common.AlohomoraConfig")
-            appendLine("import io.github.yashkasera.alohomora.common.AlohomoraCommit")
+            appendLine("import io.github.yashkasera.alohomora.data.model.AlohomoraConfig")
+            appendLine("import io.github.yashkasera.alohomora.data.model.AlohomoraCommit")
             appendLine()
             appendLine("class AlohomoraBuildGenerationInfo : AlohomoraConfig {")
             appendLine()

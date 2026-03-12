@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora
 
 import co.touchlab.kermit.Logger
-import io.github.yashkasera.alohomora.common.AlohomoraConfig
+import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
 import io.github.yashkasera.alohomora.common.TelemetryEvent
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
@@ -61,6 +61,14 @@ object Alohomora {
 
     internal var config: AlohomoraConfig? = null
         private set
+
+    internal val json by lazy {
+        Json {
+            prettyPrint = true
+            prettyPrintIndent = "  "
+            ignoreUnknownKeys = true
+        }
+    }
 
 
     // Initialize the library.

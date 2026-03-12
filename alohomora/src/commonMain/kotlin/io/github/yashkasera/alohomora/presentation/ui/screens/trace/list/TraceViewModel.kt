@@ -13,19 +13,24 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class TraceState(
     val calls: List<TraceEntry> = emptyList(),
     val isLoadingMore: Boolean = false,
     val error: String? = null,
+    val showClearConfirmation: Boolean = false,
+    val isClearing: Boolean = false,
 )
 
 internal class TraceViewModel(
-    traceRepository: TraceRepository,
+    private val traceRepository: TraceRepository,
 ) : ViewModel() {
 
     private val query = MutableStateFlow("")
     private val method = MutableStateFlow("")
+    private val showClearConfirmation = MutableStateFlow(false)
+    private val isClearing = MutableStateFlow(false)
     private val pageSize = 20
 
     private val pager = FlowPager(
@@ -39,11 +44,15 @@ internal class TraceViewModel(
         pager.pagingData,
         query,
         method,
-    ) { pagingData, _, _ ->
+        showClearConfirmation,
+        isClearing,
+    ) { pagingData, _, _, showClear, clearing ->
         TraceState(
             calls = pagingData.items,
             isLoadingMore = pagingData.loadState is LoadState.Loading,
             error = (pagingData.loadState as? LoadState.Error)?.error?.message,
+            showClearConfirmation = showClear,
+            isClearing = clearing,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -67,5 +76,28 @@ internal class TraceViewModel(
     fun setMethod(newMethod: String?) {
         method.value = newMethod ?: ""
         pager.refresh()
+    }
+
+    fun showClearConfirmation() {
+        showClearConfirmation.value = true
+    }
+
+    fun hideClearConfirmation() {
+        showClearConfirmation.value = false
+    }
+
+    fun clearAllTraces() {
+        viewModelScope.launch {
+            isClearing.value = true
+            try {
+                traceRepository.clearAll()
+                pager.refresh()
+            } catch (_: Exception) {
+                // Error handling could be added here
+            } finally {
+                isClearing.value = false
+                showClearConfirmation.value = false
+            }
+        }
     }
 }

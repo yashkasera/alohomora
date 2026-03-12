@@ -1,7 +1,5 @@
 package io.github.yashkasera.alohomora.data.model
 
-import io.github.yashkasera.alohomora.common.AlohomoraConfig
-
 data class BuildMetadata(
     val branch: String,
     val commitSha: String,

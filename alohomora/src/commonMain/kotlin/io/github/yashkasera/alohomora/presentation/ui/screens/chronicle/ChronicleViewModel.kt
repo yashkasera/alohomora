@@ -2,7 +2,7 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.chronicle
 
 import androidx.lifecycle.ViewModel
 import io.github.yashkasera.alohomora.Alohomora
-import io.github.yashkasera.alohomora.common.AlohomoraCommit
+import io.github.yashkasera.alohomora.data.model.AlohomoraCommit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

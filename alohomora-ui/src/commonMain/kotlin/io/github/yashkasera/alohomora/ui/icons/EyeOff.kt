@@ -8,12 +8,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.Trash: ImageVector
+val Icons.EyeOff: ImageVector
     get() {
-        if (_trash != null) return _trash!!
+        if (_eyeOff != null) return _eyeOff!!
 
-        _trash = ImageVector.Builder(
-            name = "trash",
+        _eyeOff = ImageVector.Builder(
+            name = "eyeOff",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -25,12 +25,9 @@ val Icons.Trash: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(19f, 6f)
-                verticalLineToRelative(14f)
-                arcToRelative(2f, 2f, 0f, false, true, -2f, 2f)
-                horizontalLineTo(7f)
-                arcToRelative(2f, 2f, 0f, false, true, -2f, -2f)
-                verticalLineTo(6f)
+                moveTo(9.88f, 9.88f)
+                arcTo(3f, 3f, 0f, true, false, 12f, 15f)
+                arcTo(3f, 3f, 0f, true, false, 9.88f, 9.88f)
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -38,8 +35,10 @@ val Icons.Trash: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(3f, 6f)
-                horizontalLineToRelative(18f)
+                moveTo(10.73f, 5.08f)
+                arcTo(10.66f, 10.66f, 0f, false, true, 12f, 5f)
+                quadTo(19.5f, 5f, 23f, 12f)
+                quadTo(22.04f, 13.82f, 20.64f, 15.36f)
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -47,17 +46,23 @@ val Icons.Trash: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(8f, 6f)
-                verticalLineTo(4f)
-                arcToRelative(2f, 2f, 0f, false, true, 2f, -2f)
-                horizontalLineToRelative(4f)
-                arcToRelative(2f, 2f, 0f, false, true, 2f, 2f)
-                verticalLineToRelative(2f)
+                moveTo(17.94f, 17.94f)
+                arcTo(10.07f, 10.07f, 0f, false, true, 12f, 19f)
+                quadTo(4.5f, 19f, 1f, 12f)
+                quadTo(2.73f, 8.39f, 6f, 6.27f)
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 2f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(1f, 1f)
+                lineTo(23f, 23f)
             }
         }.build()
 
-        return _trash!!
+        return _eyeOff!!
     }
 
-private var _trash: ImageVector? = null
-
+private var _eyeOff: ImageVector? = null

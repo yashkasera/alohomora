@@ -27,7 +27,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.apilog.detail.ApiLogDetailsContent
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,10 +102,10 @@ fun ApiLogsPanel(devToolsViewModel: DevToolsViewModel) {
 
                             // Content
                             selectedLog?.let { log ->
-                                ApiLogDetailsContent(
+                                /*ApiLogDetailsContent(
                                     call = log,
                                     modifier = Modifier.fillMaxSize(),
-                                )
+                                )*/
                             }
                         }
                     }
