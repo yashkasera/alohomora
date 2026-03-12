@@ -31,9 +31,11 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTable
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextFieldDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TableColumn
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -530,111 +532,11 @@ fun SchemaTabContent(tableSchema: TableSchema?) {
 
 @Composable
 fun DataTableViewer(tableData: TableData) {
-    val horizontalScrollState = rememberScrollState()
-    val verticalScrollState = rememberScrollState()
-
-    // Calculate fixed column widths based on name length (with minimum)
-    val columnWidths = tableData.columns.map { column ->
-        val baseWidth = (column.name.length * 8).coerceAtLeast(60)
-        baseWidth.coerceIn(60, 180)
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
-            )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(verticalScrollState)
-                .horizontalScroll(horizontalScrollState)
-        ) {
-            // Header Row
-            Row(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .height(IntrinsicSize.Min)
-            ) {
-                tableData.columns.forEachIndexed { index, column ->
-                    val width = columnWidths[index]
-                    Box(
-                        modifier = Modifier
-                            .width(width.dp)
-                            .fillMaxHeight()
-                            .border(
-                                width = 0.5.dp,
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f)
-                            )
-                            .padding(horizontal = 6.dp, vertical = 4.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Column {
-                            Text(
-                                text = column.name,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = column.type,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.tertiary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
-
-            // Data Rows
-            tableData.rows.forEachIndexed { rowIndex, row ->
-                Row(
-                    modifier = Modifier
-                        .background(
-                            if (rowIndex % 2 == 0) Color.Transparent
-                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-                        )
-                        .height(IntrinsicSize.Min)
-                ) {
-                    tableData.columns.forEachIndexed { index, column ->
-                        val width = columnWidths[index]
-                        Box(
-                            modifier = Modifier
-                                .width(width.dp)
-                                .fillMaxHeight()
-                                .border(
-                                    width = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
-                                )
-                                .padding(horizontal = 6.dp, vertical = 3.dp),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = row[column.name] ?: "",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontFamily = FontFamily.Monospace,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-                if (rowIndex < tableData.rows.size - 1) {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f)
-                    )
-                }
-            }
-        }
-    }
+    val columns = tableData.columns.map { TableColumn(it.name, it.type) }
+    AlohomoraTable(
+        columns = columns,
+        rows = tableData.rows
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
