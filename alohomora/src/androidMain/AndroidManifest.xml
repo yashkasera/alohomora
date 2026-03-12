@@ -23,6 +23,16 @@
       android:name=".trace.ClearTracesReceiver" />
 
     <provider
+      android:authorities="${applicationId}.alohomora.fileprovider"
+      android:exported="false"
+      android:grantUriPermissions="true"
+      android:name="androidx.core.content.FileProvider">
+      <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/alohomora_file_paths" />
+    </provider>
+
+    <provider
       android:authorities="${applicationId}.androidx-startup"
       android:exported="false"
       android:name="androidx.startup.InitializationProvider"

@@ -1,6 +1,6 @@
-package io.github.yashkasera.alohomora.data.model
+package io.github.yashkasera.alohomora.common
 
-data class Commit(
+data class AlohomoraCommit(
     val sha: String,
     val author: String,
     val message: String,

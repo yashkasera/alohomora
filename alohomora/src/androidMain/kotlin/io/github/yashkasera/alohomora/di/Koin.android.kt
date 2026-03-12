@@ -10,6 +10,7 @@ import io.github.yashkasera.alohomora.devtools.AndroidPreferencesInspector
 import io.github.yashkasera.alohomora.devtools.DevToolsPreferencesInspector
 import io.github.yashkasera.alohomora.devtools.DevToolsTcpServer
 import io.github.yashkasera.alohomora.presentation.ui.screens.navigation.NavigationHistoryViewModel
+import io.github.yashkasera.alohomora.utils.share.ShareManager
 import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -26,6 +27,7 @@ actual val platformModule = module {
     single<DevToolsPreferencesInspector> { AndroidPreferencesInspector(androidContext()) }
     single<DevToolsAppDatabaseProvider> { AndroidAppDatabaseProvider(androidContext()) }
     single { DevToolsTcpServer() }
+    single { ShareManager(androidContext()) }
 
 }
 

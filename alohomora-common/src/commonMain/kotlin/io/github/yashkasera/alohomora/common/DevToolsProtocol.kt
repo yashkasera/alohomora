@@ -16,7 +16,8 @@ object DevToolsProtocol {
     }
 
     fun encodeEnvelope(envelope: DevToolsEnvelope): ByteArray {
-        val payload = json.encodeToString(DevToolsEnvelope.serializer(), envelope).encodeToByteArray()
+        val payload =
+            json.encodeToString(DevToolsEnvelope.serializer(), envelope).encodeToByteArray()
         val length = payload.size
         val frame = ByteArray(HEADER_LENGTH + length)
         writeInt(frame, 0, MAGIC_VALUE)

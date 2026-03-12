@@ -29,8 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.database
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.database
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField

@@ -21,8 +21,8 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsVie
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.PrefsViewModel
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.AlertTriangle
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
+import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
 import io.github.yashkasera.alohomora.ui.theme.CanvasSuccessGreen
 

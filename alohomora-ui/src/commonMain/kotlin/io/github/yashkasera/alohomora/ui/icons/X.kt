@@ -1,4 +1,4 @@
-package io.github.yashkasera.alohomora.presentation.ui.components.icons
+package io.github.yashkasera.alohomora.ui.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -8,12 +8,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.clock: ImageVector
+val Icons.X: ImageVector
     get() {
-        if (_clock != null) return _clock!!
+        if (_x != null) return _x!!
 
-        _clock = ImageVector.Builder(
-            name = "clock",
+        _x = ImageVector.Builder(
+            name = "x",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -25,9 +25,8 @@ val Icons.clock: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(12f, 6f)
-                verticalLineToRelative(6f)
-                lineToRelative(4f, 2f)
+                moveTo(18f, 6f)
+                lineTo(6f, 18f)
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -35,16 +34,12 @@ val Icons.clock: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(22f, 12f)
-                arcTo(10f, 10f, 0f, false, true, 12f, 22f)
-                arcTo(10f, 10f, 0f, false, true, 2f, 12f)
-                arcTo(10f, 10f, 0f, false, true, 22f, 12f)
-                close()
+                moveTo(6f, 6f)
+                lineTo(18f, 18f)
             }
         }.build()
 
-        return _clock!!
+        return _x!!
     }
 
-private var _clock: ImageVector? = null
-
+private var _x: ImageVector? = null

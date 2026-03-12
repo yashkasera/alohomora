@@ -1,8 +1,8 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.AlertTriangle
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
+import io.github.yashkasera.alohomora.ui.icons.Icons
 
 enum class DesktopSection(
     val title: String,

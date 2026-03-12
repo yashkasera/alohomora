@@ -11,7 +11,7 @@ class AlohomoraPlugin : Plugin<Project> {
 
         val extension = project.extensions.create(
             "alohomora",
-            GitHistoryExtension::class.java,
+            AlohomoraExtension::class.java,
         )
         project.pluginManager.withPlugin("com.android.application") {
             configureAndroid(project, extension)
@@ -25,7 +25,7 @@ class AlohomoraPlugin : Plugin<Project> {
 
     private fun configureAndroid(
         project: Project,
-        extension: GitHistoryExtension,
+        extension: AlohomoraExtension,
     ) {
         val androidComponents =
             project.extensions.getByType(AndroidComponentsExtension::class.java)
@@ -35,29 +35,42 @@ class AlohomoraPlugin : Plugin<Project> {
                 println("Skipping Alohomora for ${variant.name}")
                 return@onVariants
             }
-
             println("Generating Alohomora for ${variant.name}")
 
             val task = project.tasks.register(
-                "generateAlohomoraGitHistory${variant.name.replaceFirstChar { it.uppercase() }}",
-                GenerateGitHistoryTask::class.java,
+                "generateAlohomora${variant.name.replaceFirstChar { it.uppercase() }}Config",
+                GenerateAlohomoraConfigTask::class.java,
             ) {
                 maxCommits.set(extension.maxCommits)
-                outputDir.set(
-                    project.layout.buildDirectory.dir(
-                        "generated/alohomora/${variant.name}")
+                slackWebhookUrl.set(extension.slackWebhookUrl)
+                variantName.set(variant.name)
+                flavorName.set(variant.flavorName)
+                buildType.set(variant.buildType)
+                versionName.set(extension.versionName)
+                versionCode.set(extension.versionCode)
+                val outputDirectory = project.layout.buildDirectory.dir(
+                    "generated/alohomora/${variant.name}",
                 )
+                outputDir.set(outputDirectory)
+                resourcesDir.set(outputDirectory.map { it.dir("resources") })
             }
+
 
             variant.sources.java?.addGeneratedSourceDirectory(
                 task,
-                GenerateGitHistoryTask::outputDir
+                GenerateAlohomoraConfigTask::outputDir,
             )
 
             variant.sources.kotlin?.addGeneratedSourceDirectory(
                 task,
-                GenerateGitHistoryTask::outputDir
+                GenerateAlohomoraConfigTask::outputDir,
             )
+
+            variant.sources.resources?.addGeneratedSourceDirectory(
+                task,
+                GenerateAlohomoraConfigTask::resourcesDir,
+            )
+
         }
     }
 

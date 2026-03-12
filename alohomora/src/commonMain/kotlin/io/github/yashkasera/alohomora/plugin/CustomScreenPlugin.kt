@@ -2,8 +2,8 @@ package io.github.yashkasera.alohomora.plugin
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Server
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Server
 
 /**
  * Interface for custom screens that can be added to Alohomora by library users.

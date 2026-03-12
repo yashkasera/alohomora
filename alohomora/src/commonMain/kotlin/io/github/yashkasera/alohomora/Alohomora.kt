@@ -1,16 +1,15 @@
 package io.github.yashkasera.alohomora
 
 import co.touchlab.kermit.Logger
+import io.github.yashkasera.alohomora.common.AlohomoraConfig
 import io.github.yashkasera.alohomora.common.TelemetryEvent
 import io.github.yashkasera.alohomora.common.TraceEntry
-import io.github.yashkasera.alohomora.data.model.BuildMetadata
-import io.github.yashkasera.alohomora.data.model.Commit
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.di.initKoin
-import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import io.github.yashkasera.alohomora.domain.repository.LogRepository
+import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
@@ -59,13 +58,15 @@ object Alohomora {
      * - Debug / staging (if enabled via plugin): populated
      * - Release / unsupported platforms: empty
      */
-    var commits: List<Commit> = emptyList()
 
-    var buildInfo: BuildMetadata? = null
+    internal var config: AlohomoraConfig? = null
+        private set
+
 
     // Initialize the library.
     // On Android, pass { androidContext(context) } in appDeclaration
-    fun init(appDeclaration: KoinAppDeclaration = {}) {
+    fun init(config: AlohomoraConfig? = null, appDeclaration: KoinAppDeclaration = {}) {
+        this.config = config
         if (koin != null) return
         koin = initKoin(appDeclaration).koin
     }

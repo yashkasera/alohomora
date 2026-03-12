@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.ksp)
-//    id("io.github.yashkasera.alohomora")
+    id("io.github.yashkasera.alohomora")
 }
 
 android {
@@ -61,4 +61,11 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     ksp(libs.androidx.room.compiler)
+}
+
+alohomora {
+    enabledVariants = setOf("debug")
+    maxCommits = 50
+    versionName = project.version.toString()
+    versionCode = 1
 }

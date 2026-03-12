@@ -1,4 +1,4 @@
-package io.github.yashkasera.alohomora.presentation.ui.components.icons
+package io.github.yashkasera.alohomora.ui.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor

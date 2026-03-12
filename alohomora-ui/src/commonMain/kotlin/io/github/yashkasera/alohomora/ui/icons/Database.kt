@@ -1,4 +1,4 @@
-package io.github.yashkasera.alohomora.presentation.ui.components.icons
+package io.github.yashkasera.alohomora.ui.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -8,12 +8,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.Download: ImageVector
+val Icons.database: ImageVector
     get() {
-        if (_download != null) return _download!!
+        if (_database != null) return _database!!
 
-        _download = ImageVector.Builder(
-            name = "download",
+        _database = ImageVector.Builder(
+            name = "database",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -25,8 +25,11 @@ val Icons.Download: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(12f, 3f)
-                verticalLineToRelative(12f)
+                moveTo(21f, 5f)
+                arcTo(9f, 3f, 0f, false, true, 12f, 8f)
+                arcTo(9f, 3f, 0f, false, true, 3f, 5f)
+                arcTo(9f, 3f, 0f, false, true, 21f, 5f)
+                close()
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -34,9 +37,10 @@ val Icons.Download: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveToRelative(8f, 11f)
-                lineToRelative(4f, 4f)
-                lineToRelative(4f, -4f)
+                moveTo(3f, 5f)
+                verticalLineTo(19f)
+                arcTo(9f, 3f, 0f, false, false, 21f, 19f)
+                verticalLineTo(5f)
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -44,16 +48,13 @@ val Icons.Download: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(3f, 17f)
-                verticalLineToRelative(2f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, 2f)
-                horizontalLineToRelative(14f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, -2f)
-                verticalLineToRelative(-2f)
+                moveTo(3f, 12f)
+                arcTo(9f, 3f, 0f, false, false, 21f, 12f)
             }
         }.build()
 
-        return _download!!
+        return _database!!
     }
 
-private var _download: ImageVector? = null
+private var _database: ImageVector? = null
+

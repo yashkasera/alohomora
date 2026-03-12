@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,17 +35,18 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TraceEntry
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Search
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Server
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.clock
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.refreshCw
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Search
+import io.github.yashkasera.alohomora.ui.icons.Server
+import io.github.yashkasera.alohomora.ui.icons.clock
+import io.github.yashkasera.alohomora.ui.icons.refreshCw
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
+import kotlin.math.pow
 import kotlin.time.Instant
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
@@ -60,17 +62,25 @@ fun TraceDetailsContent(
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
 
+    // Hoist scroll states to persist across tab switches
+    val overviewScrollState = rememberScrollState()
+    val requestScrollState = rememberScrollState()
+    val responseScrollState = rememberScrollState()
+
+    // Use derivedStateOf to batch tab selection updates and reduce recompositions
+    val currentPage by remember { derivedStateOf { pagerState.currentPage } }
+
     Column(
         modifier = modifier.fillMaxSize(),
     ) {
         // Tab Row
         AlohomoraPrimaryTabRow(
-            selectedTabIndex = pagerState.currentPage,
+            selectedTabIndex = currentPage,
             modifier = Modifier.fillMaxWidth(),
         ) {
             tabs.forEachIndexed { index, title ->
                 AlohomoraTab(
-                    selected = pagerState.currentPage == index,
+                    selected = currentPage == index,
                     onClick = {
                         coroutineScope.launch {
                             pagerState.animateScrollToPage(index)
@@ -85,11 +95,18 @@ fun TraceDetailsContent(
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.weight(1f),
+            beyondViewportPageCount = 1,
         ) { page ->
+            val scrollState = when (page) {
+                0 -> overviewScrollState
+                1 -> requestScrollState
+                2 -> responseScrollState
+                else -> rememberScrollState()
+            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(horizontal = 24.dp)
                     .padding(top = 24.dp),
             ) {
@@ -114,29 +131,36 @@ fun TraceDetailsContent(
 
 @Composable
 private fun OverviewTab(trace: TraceEntry) {
-    Column {
-        // Method badge and endpoint
-        MethodAndEndpointSection(
-            method = trace.method.orEmpty(),
-            url = trace.pathWithQuery.orEmpty(),
-        )
+    // Method badge and endpoint
+    MethodAndEndpointSection(
+        method = trace.method.orEmpty(),
+        url = trace.pathWithQuery,
+    )
 
-        Spacer(modifier = Modifier.height(32.dp))
+    Spacer(modifier = Modifier.height(32.dp))
 
-        // Hero stats (STATUS, LATENCY, FORMAT)
-        HeroStatsSection(
-            statusCode = trace.status ?: 0,
-            latencyMs = trace.duration ?: 0,
-            format = "JSON", // TODO: Detect from content-type
-        )
+    // Calculate sizes from content
+    val requestSize = trace.request?.length?.toLong() ?: 0L
+    val responseSize = trace.response?.length?.toLong() ?: 0L
+    
+    // Detect format from Content-Type header
+    val responseFormat = detectFormatFromContentType(trace.responseHeaders)
 
-        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 32.dp))
+    // Hero stats (STATUS, LATENCY, SIZE, FORMAT)
+    HeroStatsSection(
+        statusCode = trace.status ?: 0,
+        latencyMs = trace.duration ?: 0,
+        responseSize = responseSize,
+        requestSize = requestSize,
+        format = responseFormat,
+    )
 
-        // Info rows
-        InfoRowsSection(trace = trace)
+    AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 32.dp))
 
-        Spacer(modifier = Modifier.height(48.dp))
-    }
+    // Info rows with all TraceEntry fields
+    InfoRowsSection(trace = trace)
+
+    Spacer(modifier = Modifier.height(48.dp))
 }
 
 // ============================================================================
@@ -154,20 +178,47 @@ private fun RequestTab(trace: TraceEntry) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Request headers section
-        trace.requestHeaders?.let {
-            SectionHeader(title = "REQUEST HEADERS")
+        // Request headers section with formatted display
+        trace.requestHeaders?.let { headers ->
+            val formattedHeaders = formatHeaders(headers)
+            val headerCount = headers.values.sumOf { it.size }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SectionHeader(title = "REQUEST HEADERS")
+                Spacer(modifier = Modifier.width(8.dp))
+                CountBadge(count = headerCount)
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
-            CodeViewer(json = it.toString())
+
+            // Display formatted headers
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.small)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(16.dp),
+            ) {
+                formattedHeaders.forEach { headerLine ->
+                    Text(
+                        text = headerLine,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
 
         // Request body section
+        val requestFormat = detectFormatFromContentType(trace.requestHeaders)
+        
         Row(verticalAlignment = Alignment.CenterVertically) {
             SectionHeader(title = "REQUEST BODY")
             Spacer(modifier = Modifier.width(8.dp))
-            FormatBadge(format = "RAW")
+            FormatBadge(format = requestFormat.uppercase())
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -202,6 +253,10 @@ private fun RequestTab(trace: TraceEntry) {
 private fun ResponseTab(trace: TraceEntry) {
     var prettifyJson by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
+    
+    // Calculate size and detect format
+    val responseSize = trace.response?.length?.toLong() ?: 0L
+    val responseFormat = detectFormatFromContentType(trace.responseHeaders)
 
     Column {
         // Prettify JSON toggle
@@ -237,11 +292,45 @@ private fun ResponseTab(trace: TraceEntry) {
         // Response metadata (status, format, size)
         ResponseMetadata(
             statusCode = trace.status ?: 0,
-            format = "JSON",
-            sizeKb = calculateJsonSize(trace.response ?: "{}"),
+            format = responseFormat,
+            sizeBytes = responseSize,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Response Headers section
+        trace.responseHeaders?.let { headers ->
+            val formattedHeaders = formatHeaders(headers)
+            val headerCount = headers.values.sumOf { it.size }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SectionHeader(title = "RESPONSE HEADERS")
+                Spacer(modifier = Modifier.width(8.dp))
+                CountBadge(count = headerCount)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Display formatted headers
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.small)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(16.dp),
+            ) {
+                formattedHeaders.forEach { headerLine ->
+                    Text(
+                        text = headerLine,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
 
         // JSON viewer with syntax highlighting
         JsonViewer(
@@ -299,6 +388,8 @@ private fun MethodBadgeDetails(method: String) {
 private fun HeroStatsSection(
     statusCode: Int,
     latencyMs: Long,
+    responseSize: Long,
+    requestSize: Long,
     format: String,
 ) {
     Column {
@@ -325,7 +416,7 @@ private fun HeroStatsSection(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Latency and Format row
+        // Latency, Size, and Format row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -352,7 +443,25 @@ private fun HeroStatsSection(
                 }
             }
 
-            Column {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "SIZE",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = formatBytes(responseSize),
+                    style = MaterialTheme.typography.displaySmall,
+                )
+                Text(
+                    text = "(${formatBytes(requestSize)} up)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "FORMAT",
                     style = MaterialTheme.typography.labelSmall,
@@ -385,9 +494,26 @@ private fun InfoRowsSection(trace: TraceEntry) {
 
         InfoRow(
             icon = Icons.refreshCw,
+            label = "SCHEME",
+            value = trace.scheme?.uppercase() ?: "HTTPS",
+        )
+
+        InfoRow(
+            icon = Icons.refreshCw,
             label = "CLIENT",
             value = "android-v33 (1.0.4)", // TODO: Get from user agent
         )
+
+        // Additional TraceEntry fields
+        trace.query?.let { query ->
+            if (query.isNotEmpty()) {
+                InfoRow(
+                    icon = Icons.Search,
+                    label = "QUERY PARAMS",
+                    value = query,
+                )
+            }
+        }
     }
 }
 
@@ -446,6 +572,22 @@ private fun FormatBadge(format: String) {
 }
 
 @Composable
+private fun CountBadge(count: Int) {
+    Box(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(color = MaterialTheme.colorScheme.secondaryContainer)
+            .padding(horizontal = 8.dp, vertical = 2.dp),
+    ) {
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+    }
+}
+
+@Composable
 private fun CodeViewer(json: String) {
     Box(
         modifier = Modifier
@@ -458,7 +600,7 @@ private fun CodeViewer(json: String) {
             text = json,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.fillMaxWidth(), // Ensure text wraps or scrolls
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -474,14 +616,13 @@ private fun ReplayButton(onClick: () -> Unit) {
             .height(56.dp),
         shape = RectangleShape,
         content = {
-            // TODO: Add replay icon
             Text(text = "↻", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "REPLAY REQUEST",
                 style = MaterialTheme.typography.labelLarge,
             )
-        }
+        },
     )
 }
 
@@ -536,7 +677,6 @@ private fun SearchBar(
             contentDescription = "back",
         )
 
-        // Search input (simplified - in production use TextField)
         Text(
             text = query.ifEmpty { "Search..." },
             style = MaterialTheme.typography.bodyMedium,
@@ -548,7 +688,6 @@ private fun SearchBar(
             modifier = Modifier.weight(1f),
         )
 
-        // Match counter and navigation
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -580,7 +719,7 @@ private fun SearchBar(
 private fun ResponseMetadata(
     statusCode: Int,
     format: String,
-    sizeKb: Double,
+    sizeBytes: Long,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -591,7 +730,6 @@ private fun ResponseMetadata(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Status badge
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.extraSmall)
@@ -605,7 +743,6 @@ private fun ResponseMetadata(
                 )
             }
 
-            // Format badge
             Text(
                 text = format,
                 style = MaterialTheme.typography.labelSmall,
@@ -613,9 +750,8 @@ private fun ResponseMetadata(
             )
         }
 
-        // Size
         Text(
-            text = "${formatSize(sizeKb)} KB",
+            text = formatBytes(sizeBytes),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -628,7 +764,9 @@ private fun JsonViewer(
     prettify: Boolean,
     searchQuery: String,
 ) {
-    val displayJson = if (prettify) prettifyJson(json) else json
+    val displayJson = remember(json, prettify) {
+        if (prettify) prettifyJson(json) else json
+    }
 
     Box(
         modifier = Modifier
@@ -656,12 +794,16 @@ private fun JsonText(
             color = MaterialTheme.colorScheme.onSurface,
         )
     } else {
-        // Split text and highlight matches
-        val parts = json.split(searchQuery, ignoreCase = true)
-        val matches = Regex(Regex.escape(searchQuery), RegexOption.IGNORE_CASE)
-            .findAll(json)
-            .map { it.value }
-            .toList()
+        val highlightedParts = remember(json, searchQuery) {
+            val parts = json.split(searchQuery, ignoreCase = true)
+            val matches = Regex(Regex.escape(searchQuery), RegexOption.IGNORE_CASE)
+                .findAll(json)
+                .map { it.value }
+                .toList()
+            parts to matches
+        }
+
+        val (parts, matches) = highlightedParts
 
         Row(modifier = Modifier.fillMaxWidth()) {
             Column {
@@ -711,24 +853,64 @@ private fun formatTimestamp(timestamp: Long): String {
     return try {
         val instant = Instant.fromEpochMilliseconds(timestamp)
         val dateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-        "${dateTime.year}-${dateTime.monthNumber.toString().padStart(2, '0')}-${
-            dateTime.dayOfMonth.toString().padStart(2, '0')
-        } ${dateTime.hour.toString().padStart(2, '0')}:${
-            dateTime.minute.toString().padStart(2, '0')
-        }:${dateTime.second.toString().padStart(2, '0')}.${
-            dateTime.nanosecond.toString().take(3)
-        }"
+        "${dateTime.year}-${(dateTime.month.ordinal + 1).toString().padStart(2, '0')}-${dateTime.dayOfMonth.toString().padStart(2, '0')} ${dateTime.hour.toString().padStart(2, '0')}:${dateTime.minute.toString().padStart(2, '0')}:${dateTime.second.toString().padStart(2, '0')}.${dateTime.nanosecond.toString().take(3)}"
     } catch (e: Exception) {
         "Invalid timestamp"
     }
 }
 
-private fun extractHost(url: String): String {
-    return try {
-        val hostPattern = Regex("(?:https?://)?([^/]+)")
-        hostPattern.find(url)?.groupValues?.get(1) ?: url
-    } catch (e: Exception) {
-        url
+/**
+ * Formats bytes to human-readable format (B, KB, MB, GB)
+ */
+private fun formatBytes(bytes: Long): String {
+    if (bytes < 0) return "0 B"
+    if (bytes == 0L) return "0 B"
+
+    val units = arrayOf("B", "KB", "MB", "GB", "TB")
+    val unitIndex = (kotlin.math.log10(bytes.toDouble()) / kotlin.math.log10(1024.0)).toInt()
+        .coerceAtMost(units.size - 1)
+
+    val value = bytes / 1024.0.pow(unitIndex)
+
+    return when {
+        unitIndex == 0 -> "$bytes ${units[unitIndex]}"
+        value >= 100 -> "${value.toInt()} ${units[unitIndex]}"
+        value >= 10 -> "${kotlin.math.round(value * 10) / 10} ${units[unitIndex]}"
+        else -> "${kotlin.math.round(value * 100) / 100} ${units[unitIndex]}"
+    }
+}
+
+/**
+ * Formats headers map into a list of formatted key-value strings
+ */
+private fun formatHeaders(headers: Map<String, List<String>>?): List<String> {
+    if (headers == null) return emptyList()
+
+    return headers.flatMap { (key, values) ->
+        values.map { value ->
+            "$key: $value"
+        }
+    }
+}
+
+/**
+ * Detects content format from Content-Type header
+ */
+private fun detectFormatFromContentType(headers: Map<String, List<String>>?): String {
+    val contentType = headers?.get("Content-Type")?.firstOrNull()
+        ?: headers?.get("content-type")?.firstOrNull()
+        ?: return "TEXT"
+    
+    return when {
+        contentType.contains("application/json", ignoreCase = true) -> "JSON"
+        contentType.contains("application/xml", ignoreCase = true) || 
+        contentType.contains("text/xml", ignoreCase = true) -> "XML"
+        contentType.contains("text/html", ignoreCase = true) -> "HTML"
+        contentType.contains("application/x-www-form-urlencoded", ignoreCase = true) -> "FORM"
+        contentType.contains("multipart/form-data", ignoreCase = true) -> "MULTIPART"
+        contentType.startsWith("text/", ignoreCase = true) -> "TEXT"
+        contentType.contains("application/octet-stream", ignoreCase = true) -> "BINARY"
+        else -> "TEXT"
     }
 }
 
@@ -743,7 +925,6 @@ private fun formatSize(sizeKb: Double): String {
 
 private fun prettifyJson(json: String): String {
     return try {
-        // Simple JSON prettifier - indents nested structures
         var result = ""
         var indent = 0
         var inString = false

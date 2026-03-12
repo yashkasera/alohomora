@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.di
 
+import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.data.repository.IncidentRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.TelemetryRepositoryImpl
@@ -27,7 +28,12 @@ import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
-
+import io.github.yashkasera.alohomora.domain.service.SlackShareService
+import io.github.yashkasera.alohomora.utils.share.ShareManager
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json as KJson
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
     appDeclaration()
     modules(appModule, platformModule)
@@ -35,7 +41,6 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
 
 // Common modules
 internal val appModule = module {
-//    single { get<AlohomoraDb>().logDao() }
     single { get<AlohomoraDb>().traceDao() }
     single { get<AlohomoraDb>().telemetryDao() }
     single { get<AlohomoraDb>().incidentDao() }
@@ -46,8 +51,8 @@ internal val appModule = module {
     single<TelemetryRepository> { TelemetryRepositoryImpl(get()) }
     single<IncidentRepository> { IncidentRepositoryImpl(get()) }
 
-//    single { SyncService(get(), get()) }
     single { DevToolsRuntime(get(), get(), get(), get(), get(), get()) }
+
 
     // UseCases
     factory { GetTracesUseCase(get()) }
@@ -55,12 +60,22 @@ internal val appModule = module {
     factory { MarkIncidentAsViewedUseCase(get()) }
     factory { ClearIncidentsUseCase(get()) }
     factory { GetTraceDetailsUseCase(get()) }
-//    factory { ConnectToRemoteUseCase(get()) }
+
+    single {
+        HttpClient {
+            install(ContentNegotiation) {
+                json(KJson { ignoreUnknownKeys = true })
+            }
+        }
+    }
+    single {
+        SlackShareService(httpClient = get())
+    }
 
     // ViewModels
     viewModel { OverviewViewModel() }
     viewModel { TraceViewModel(get()) }
-    viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get()) }
+    viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get(), get(), get()) }
     viewModel { TelemetryViewModel(get()) }
     viewModel { VaultViewModel() }
     viewModel { ChronicleViewModel() }

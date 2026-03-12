@@ -25,7 +25,6 @@ data class TraceEntry(
     var duration: Long? = null,
     var requestHeaders: Map<String, List<String>>? = null,
     var responseHeaders: Map<String, List<String>>? = null,
-    var curl: String? = null,
     var size: Long? = null,
     var isViewed: Boolean = false,
 ) {
@@ -46,35 +45,99 @@ data class TraceEntry(
     val schemeHostPath: String
         get() = url?.split("?")?.get(0) ?: ""
 
-    private fun getCurlCommand(): String {
-        var command = buildString {
-            append("curl -X $method")
-            requestHeaders?.let {
-                append(" -H \"$it\"")
+    val curlCommand: String
+        get() = generateCurlCommand()
+
+    private fun generateCurlCommand(): String {
+        return buildString {
+            append("curl -X ${method ?: "GET"}")
+
+            // Add headers
+            requestHeaders?.forEach { (key, values) ->
+                values.forEach { value ->
+                    append(" -H \"$key: $value\"")
+                }
             }
 
-        }
-
-        /*StringBuffer("curl -X ${this.method}")
-
-        this.headers.names().forEach { element ->
-            command.append(" -H \"$element: ${this.header(element)}\"")
-        }
-
-        val body = this.body
-        if (body != null) {
-            if (body.contentType() != null) {
-                command.append(" -H \"Content-Type: ${body.contentType()}\"")
+            // Add request body if present
+            request?.takeIf { it.isNotBlank() && it != UNABLE_PARSE_MESSAGE }?.let { body ->
+                // Escape single quotes in the body
+                val escapedBody = body.replace("'", "'\"'\"'")
+                append(" --data '$escapedBody'")
             }
-            if (body.contentLength() != (-1).toLong()) {
-                command.append(" -H \"Content-Length: ${body.contentLength()}\"")
+
+            // Add URL
+            url?.let {
+                append(" \"$it\"")
             }
-            command.append(" --data $'${body.toJsonString().replace("\n", "\\n")}'")
         }
-        command =
-            command.append(" ${URLDecoder.decode(this.url.toString(), Charsets.UTF_8.name())}")
-*/
-        return command.toString()
+    }
+
+    fun generateTransactionText(): String {
+        return buildString {
+            appendLine("URL: ${url ?: "N/A"}")
+            appendLine("Method: ${method ?: "N/A"}")
+            appendLine("Protocol: ${scheme ?: "https"}")
+            appendLine("Status: ${status ?: "N/A"}")
+            appendLine("SSL: Yes")
+            appendLine()
+
+            time?.let {
+                appendLine("Request time: $it")
+            }
+            appendLine("Response time: ${time?.plus(duration ?: 0)}")
+            appendLine("Duration: ${duration ?: 0} ms")
+            appendLine()
+
+            val requestSize = request?.length ?: 0
+            val responseSize = response?.length ?: 0
+            val totalSize = requestSize + responseSize
+
+            appendLine("Request size: ${formatBytes(requestSize.toLong())}")
+            appendLine("Response size: ${formatBytes(responseSize.toLong())}")
+            appendLine("Total size: ${formatBytes(totalSize.toLong())}")
+            appendLine()
+
+            // Request section
+            appendLine("---------- Request ----------")
+            appendLine()
+
+            requestHeaders?.forEach { (key, values) ->
+                values.forEach { value ->
+                    appendLine("$key: $value")
+                }
+            }
+            appendLine()
+
+            request?.takeIf { it.isNotBlank() }?.let {
+                appendLine(it)
+                appendLine()
+            }
+
+            // Response section
+            appendLine("---------- Response ----------")
+            appendLine()
+
+            responseHeaders?.forEach { (key, values) ->
+                values.forEach { value ->
+                    appendLine("$key: $value")
+                }
+            }
+            appendLine()
+
+            response?.takeIf { it.isNotBlank() }?.let {
+                appendLine(it)
+                appendLine()
+            }
+        }
+    }
+
+    private fun formatBytes(bytes: Long): String {
+        return when {
+            bytes < 1024 -> "$bytes B"
+            bytes < 1024 * 1024 -> "${bytes / 1024} KB"
+            else -> "${bytes / (1024 * 1024)} MB"
+        }
     }
 
     /*val overview

@@ -20,9 +20,9 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.ArrowLeft
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.chartLine
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.chartLine
 import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
 import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
 import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray

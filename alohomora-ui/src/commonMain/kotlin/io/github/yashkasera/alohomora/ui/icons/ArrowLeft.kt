@@ -1,4 +1,4 @@
-package io.github.yashkasera.alohomora.presentation.ui.components.icons
+package io.github.yashkasera.alohomora.ui.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -8,12 +8,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.Search: ImageVector
+val Icons.ArrowLeft: ImageVector
     get() {
-        if (_search != null) return _search!!
+        if (_arrowLeft != null) return _arrowLeft!!
 
-        _search = ImageVector.Builder(
-            name = "search",
+        _arrowLeft = ImageVector.Builder(
+            name = "arrowLeft",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -25,8 +25,9 @@ val Icons.Search: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveToRelative(21f, 21f)
-                lineToRelative(-4.34f, -4.34f)
+                moveToRelative(12f, 19f)
+                lineToRelative(-7f, -7f)
+                lineToRelative(7f, -7f)
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -34,16 +35,13 @@ val Icons.Search: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(19f, 11f)
-                arcTo(8f, 8f, 0f, false, true, 11f, 19f)
-                arcTo(8f, 8f, 0f, false, true, 3f, 11f)
-                arcTo(8f, 8f, 0f, false, true, 19f, 11f)
-                close()
+                moveTo(19f, 12f)
+                horizontalLineTo(5f)
             }
         }.build()
 
-        return _search!!
+        return _arrowLeft!!
     }
 
-private var _search: ImageVector? = null
+private var _arrowLeft: ImageVector? = null
 

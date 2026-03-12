@@ -1,4 +1,4 @@
-package io.github.yashkasera.alohomora.presentation.ui.components.icons
+package io.github.yashkasera.alohomora.ui.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -8,12 +8,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.trash: ImageVector
+val Icons.AlertTriangle: ImageVector
     get() {
-        if (_trash != null) return _trash!!
+        if (_alertTriangle != null) return _alertTriangle!!
 
-        _trash = ImageVector.Builder(
-            name = "trash",
+        _alertTriangle = ImageVector.Builder(
+            name = "alertTriangle",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -25,12 +25,14 @@ val Icons.trash: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(19f, 6f)
-                verticalLineToRelative(14f)
-                arcToRelative(2f, 2f, 0f, false, true, -2f, 2f)
-                horizontalLineTo(7f)
-                arcToRelative(2f, 2f, 0f, false, true, -2f, -2f)
-                verticalLineTo(6f)
+                moveTo(10.29f, 3.86f)
+                lineTo(1.82f, 18f)
+                arcToRelative(2f, 2f, 0f, false, false, 1.71f, 3f)
+                horizontalLineToRelative(16.94f)
+                arcToRelative(2f, 2f, 0f, false, false, 1.71f, -3f)
+                lineTo(13.71f, 3.86f)
+                arcToRelative(2f, 2f, 0f, false, false, -3.42f, 0f)
+                close()
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -38,8 +40,8 @@ val Icons.trash: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(3f, 6f)
-                horizontalLineToRelative(18f)
+                moveTo(12f, 9f)
+                verticalLineToRelative(4f)
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -47,17 +49,12 @@ val Icons.trash: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(8f, 6f)
-                verticalLineTo(4f)
-                arcToRelative(2f, 2f, 0f, false, true, 2f, -2f)
-                horizontalLineToRelative(4f)
-                arcToRelative(2f, 2f, 0f, false, true, 2f, 2f)
-                verticalLineToRelative(2f)
+                moveTo(12f, 17f)
+                horizontalLineToRelative(0.01f)
             }
         }.build()
 
-        return _trash!!
+        return _alertTriangle!!
     }
 
-private var _trash: ImageVector? = null
-
+private var _alertTriangle: ImageVector? = null

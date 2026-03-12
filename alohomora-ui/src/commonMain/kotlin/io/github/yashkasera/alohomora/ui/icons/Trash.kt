@@ -1,4 +1,4 @@
-package io.github.yashkasera.alohomora.presentation.ui.components.icons
+package io.github.yashkasera.alohomora.ui.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -8,12 +8,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.Copy: ImageVector
+val Icons.trash: ImageVector
     get() {
-        if (_copy != null) return _copy!!
+        if (_trash != null) return _trash!!
 
-        _copy = ImageVector.Builder(
-            name = "copy",
+        _trash = ImageVector.Builder(
+            name = "trash",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -25,16 +25,12 @@ val Icons.Copy: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(8f, 4f)
-                horizontalLineToRelative(8f)
-                arcToRelative(2f, 2f, 0f, false, true, 2f, 2f)
-                verticalLineToRelative(12f)
+                moveTo(19f, 6f)
+                verticalLineToRelative(14f)
                 arcToRelative(2f, 2f, 0f, false, true, -2f, 2f)
-                horizontalLineToRelative(-8f)
+                horizontalLineTo(7f)
                 arcToRelative(2f, 2f, 0f, false, true, -2f, -2f)
-                verticalLineToRelative(-12f)
-                arcToRelative(2f, 2f, 0f, false, true, 2f, -2f)
-                close()
+                verticalLineTo(6f)
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -42,16 +38,26 @@ val Icons.Copy: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(16f, 20f)
-                horizontalLineToRelative(2f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, -2f)
-                verticalLineToRelative(-12f)
-                arcToRelative(2f, 2f, 0f, false, false, -2f, -2f)
-                horizontalLineToRelative(-2f)
+                moveTo(3f, 6f)
+                horizontalLineToRelative(18f)
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 2f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(8f, 6f)
+                verticalLineTo(4f)
+                arcToRelative(2f, 2f, 0f, false, true, 2f, -2f)
+                horizontalLineToRelative(4f)
+                arcToRelative(2f, 2f, 0f, false, true, 2f, 2f)
+                verticalLineToRelative(2f)
             }
         }.build()
 
-        return _copy!!
+        return _trash!!
     }
 
-private var _copy: ImageVector? = null
+private var _trash: ImageVector? = null
+

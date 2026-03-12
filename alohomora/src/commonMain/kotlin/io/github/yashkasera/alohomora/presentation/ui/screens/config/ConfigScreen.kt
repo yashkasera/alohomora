@@ -15,25 +15,23 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.data.model.BuildMetadata
-import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.data.model.toBuildMetadata
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Icons
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -46,14 +44,19 @@ internal fun ConfigScreen(
     onBackClick: () -> Unit = {},
     onSaveConfig: (String) -> Unit = {},
 ) {
-    var beUrl by remember { mutableStateOf("https://api.production.example.com") }
-    var isEditing by remember { mutableStateOf(false) }
-
     Scaffold(
         modifier = Modifier.systemBarsPadding(),
         topBar = {
-            ConfigurationTopBar(
-                onBackClick = onBackClick,
+            AlohomoraTopBar(
+                title = "Config",
+                navigationIcon = {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.size(48.dp),
+                    ) {
+                        Icon(imageVector = Icons.ArrowLeft, contentDescription = "back")
+                    }
+                },
             )
         },
     ) { padding ->
@@ -64,35 +67,11 @@ internal fun ConfigScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Header
-            ConfigurationHeader()
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Backend URL Configuration (Editable)
-            ConfigSection(title = "BACKEND CONFIGURATION") {
-                BackendUrlConfig(
-                    url = beUrl,
-                    isEditing = isEditing,
-                    onUrlChange = { beUrl = it },
-                    onEditClick = { isEditing = true },
-                    onSaveClick = {
-                        isEditing = false
-                        onSaveConfig(beUrl)
-                    },
-                    onCancelClick = { isEditing = false },
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-            AlohomoraHorizontalDivider()
             Spacer(modifier = Modifier.height(32.dp))
 
             // Build Information (Read-only)
             ConfigSection(title = "BUILD INFORMATION") {
-                BuildInfoGrid(buildConfig = Alohomora.buildInfo)
+                BuildInfoGrid(buildConfig = Alohomora.config?.toBuildMetadata())
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -100,64 +79,25 @@ internal fun ConfigScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Environment Details (Read-only)
-            ConfigSection(title = "ENVIRONMENT") {
-                EnvironmentDetails("debug")
+            Alohomora.config?.let {
+                ConfigSection(title = "ENVIRONMENT") {
+                    EnvironmentDetails(
+                        environment = buildString {
+                            if (it.flavorName.isNullOrBlank().not()) {
+                                append("${it.flavorName?.lowercase()}")
+                                append(
+                                    it.variantName.lowercase().replaceFirstChar { it.uppercase() },
+                                )
+                            } else {
+                                append(it.variantName)
+                            }
+                        },
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(48.dp))
         }
-    }
-}
-
-// ============================================================================
-// Top Bar
-// ============================================================================
-
-@Composable
-private fun ConfigurationTopBar(
-    onBackClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        AlohomoraIconButton(
-            onClick = onBackClick,
-            modifier = Modifier.size(48.dp),
-        ) {
-            Text("←", style = MaterialTheme.typography.headlineMedium)
-        }
-
-        Text(
-            text = "Configuration",
-            style = MaterialTheme.typography.titleLarge,
-        )
-
-        // Empty space for symmetry
-        Spacer(modifier = Modifier.width(48.dp))
-    }
-}
-
-// ============================================================================
-// Header Section
-// ============================================================================
-
-@Composable
-private fun ConfigurationHeader() {
-    Column {
-        Text(
-            text = "Settings",
-            style = MaterialTheme.typography.displaySmall,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "DEVELOPER CONFIGURATION",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
@@ -173,103 +113,11 @@ private fun ConfigSection(
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(16.dp))
         content()
-    }
-}
-
-// ============================================================================
-// Backend URL Configuration
-// ============================================================================
-
-@Composable
-private fun BackendUrlConfig(
-    url: String,
-    isEditing: Boolean,
-    onUrlChange: (String) -> Unit,
-    onEditClick: () -> Unit,
-    onSaveClick: () -> Unit,
-    onCancelClick: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "Base URL",
-                style = MaterialTheme.typography.titleMedium,
-            )
-
-            if (!isEditing) {
-                AlohomoraTextButton(
-                    text = "Edit",
-                    onClick = onEditClick,
-                    size = io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize.SMALL,
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (isEditing) {
-            AlohomoraOutlinedTextField(
-                value = url,
-                onValueChange = onUrlChange,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = MaterialTheme.typography.bodyMedium,
-                placeholder = {
-                    Text(
-                        text = "Enter backend URL...",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                },
-                singleLine = true,
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-            ) {
-                AlohomoraTextButton(
-                    text = "Cancel",
-                    onClick = onCancelClick,
-                    size = io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize.SMALL,
-                )
-
-                AlohomoraFilledButton(
-                    text = "Save",
-                    onClick = onSaveClick,
-                    size = io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize.SMALL,
-                )
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(12.dp),
-            ) {
-                Text(
-                    text = url,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
     }
 }
 
@@ -295,7 +143,7 @@ private fun BuildInfoGrid(buildConfig: BuildMetadata?) {
             Spacer(modifier = Modifier.width(16.dp))
             InfoItem(
                 label = "Build Variant",
-                value = buildConfig?.buildVariant,
+                value = buildConfig?.variantName,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -366,7 +214,7 @@ private fun EnvironmentDetails(environment: String) {
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = environment.uppercase(),
+                text = environment,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )

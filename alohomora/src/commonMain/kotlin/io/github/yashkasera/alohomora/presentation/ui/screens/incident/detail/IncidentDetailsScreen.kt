@@ -38,10 +38,10 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Copy
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.ArrowLeft
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Share
+import io.github.yashkasera.alohomora.ui.icons.Copy
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Share
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime

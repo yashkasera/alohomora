@@ -10,15 +10,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.ArrowLeft
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Share
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.yashkasera.alohomora.presentation.ui.components.ShareBottomSheet
+import io.github.yashkasera.alohomora.presentation.ui.components.SlackShareBottomSheet
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Share
+import io.github.yashkasera.alohomora.ui.icons.Slack
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -26,14 +29,14 @@ import org.koin.core.parameter.parametersOf
 @Composable
 internal fun TraceDetailsScreen(traceId: String, onBackClick: () -> Unit = {}) {
     val viewModel = koinViewModel<TraceDetailsViewModel> { parametersOf(traceId) }
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val trace = state.trace
 
     if (trace == null) {
         Box(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = "Trace not found.",
-                color = MaterialTheme.colorScheme.error,
+                text = if (state.isLoading) "Loading trace..." else "Trace not found.",
+                color = if (state.isLoading) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
                 modifier = Modifier.align(Alignment.Center),
             )
         }
@@ -55,23 +58,53 @@ internal fun TraceDetailsScreen(traceId: String, onBackClick: () -> Unit = {}) {
                     }
                 },
                 actions = {
-                    AlohomoraIconButton(
-                        onClick = {
-                            // TODO: Implement share
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Share,
-                            contentDescription = "Share",
+                    if (state.isSlackConfigured) {
+                        AlohomoraIconButton(
+                            onClick = viewModel::showSlackSheet,
+                            content = {
+                                Icon(
+                                    imageVector = Icons.Slack,
+                                    contentDescription = "Slack",
+                                )
+                            },
                         )
                     }
+                    AlohomoraIconButton(
+                        onClick = viewModel::showShareSheet,
+                        content = {
+                            Icon(
+                                imageVector = Icons.Share,
+                                contentDescription = "Share",
+                            )
+                        },
+                    )
                 },
             )
         },
     ) { padding ->
         TraceDetailsContent(
-            trace = trace,
+            trace = trace!!,
             modifier = Modifier.padding(padding),
+        )
+    }
+
+    // Share Bottom Sheet
+    if (state.showShareSheet) {
+        ShareBottomSheet(
+            onDismiss = viewModel::hideShareSheet,
+            onShareCurl = viewModel::shareCurlViaSystem,
+            onShareText = viewModel::shareTextViaSystem,
+            onShareFile = viewModel::shareFileViaSystem,
+        )
+    }
+
+    // Slack Share Bottom Sheet
+    if (state.showSlackSheet) {
+        SlackShareBottomSheet(
+            isConfigured = state.isSlackConfigured,
+            onDismiss = viewModel::hideSlackSheet,
+            onShareCurl = viewModel::shareCurlToSlack,
+            onShareText = viewModel::shareTextToSlack,
         )
     }
 }

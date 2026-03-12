@@ -1,4 +1,4 @@
-package io.github.yashkasera.alohomora.presentation.ui.components.icons
+package io.github.yashkasera.alohomora.ui.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -8,12 +8,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.chartLine: ImageVector
+val Icons.Search: ImageVector
     get() {
-        if (_chartLine != null) return _chartLine!!
+        if (_search != null) return _search!!
 
-        _chartLine = ImageVector.Builder(
-            name = "chartLine",
+        _search = ImageVector.Builder(
+            name = "search",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -25,10 +25,8 @@ val Icons.chartLine: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(3f, 3f)
-                verticalLineToRelative(16f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, 2f)
-                horizontalLineToRelative(16f)
+                moveToRelative(21f, 21f)
+                lineToRelative(-4.34f, -4.34f)
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -36,15 +34,16 @@ val Icons.chartLine: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveToRelative(19f, 9f)
-                lineToRelative(-5f, 5f)
-                lineToRelative(-4f, -4f)
-                lineToRelative(-3f, 3f)
+                moveTo(19f, 11f)
+                arcTo(8f, 8f, 0f, false, true, 11f, 19f)
+                arcTo(8f, 8f, 0f, false, true, 3f, 11f)
+                arcTo(8f, 8f, 0f, false, true, 19f, 11f)
+                close()
             }
         }.build()
 
-        return _chartLine!!
+        return _search!!
     }
 
-private var _chartLine: ImageVector? = null
+private var _search: ImageVector? = null
 

@@ -12,6 +12,7 @@ pluginManagement {
         }
         gradlePluginPortal()
         mavenCentral()
+        includeBuild("alohomora-gradle-plugin")
     }
 }
 
@@ -34,4 +35,4 @@ include(":alohomora-ui")
 include(":alohomora-noop")
 include(":showcaseApp")
 include(":desktopApp")
-include(":alohomora-gradle-plugin")
+//include(":alohomora-gradle-plugin")

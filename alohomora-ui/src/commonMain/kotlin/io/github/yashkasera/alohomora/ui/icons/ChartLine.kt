@@ -1,4 +1,4 @@
-package io.github.yashkasera.alohomora.presentation.ui.components.icons
+package io.github.yashkasera.alohomora.ui.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -8,12 +8,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.ArrowLeft: ImageVector
+val Icons.chartLine: ImageVector
     get() {
-        if (_arrowLeft != null) return _arrowLeft!!
+        if (_chartLine != null) return _chartLine!!
 
-        _arrowLeft = ImageVector.Builder(
-            name = "arrowLeft",
+        _chartLine = ImageVector.Builder(
+            name = "chartLine",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -25,9 +25,10 @@ val Icons.ArrowLeft: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveToRelative(12f, 19f)
-                lineToRelative(-7f, -7f)
-                lineToRelative(7f, -7f)
+                moveTo(3f, 3f)
+                verticalLineToRelative(16f)
+                arcToRelative(2f, 2f, 0f, false, false, 2f, 2f)
+                horizontalLineToRelative(16f)
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -35,13 +36,15 @@ val Icons.ArrowLeft: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(19f, 12f)
-                horizontalLineTo(5f)
+                moveToRelative(19f, 9f)
+                lineToRelative(-5f, 5f)
+                lineToRelative(-4f, -4f)
+                lineToRelative(-3f, 3f)
             }
         }.build()
 
-        return _arrowLeft!!
+        return _chartLine!!
     }
 
-private var _arrowLeft: ImageVector? = null
+private var _chartLine: ImageVector? = null
 

@@ -1,4 +1,4 @@
-package io.github.yashkasera.alohomora.presentation.ui.components.icons
+package io.github.yashkasera.alohomora.ui.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -8,12 +8,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.AlertTriangle: ImageVector
+val Icons.Share: ImageVector
     get() {
-        if (_alertTriangle != null) return _alertTriangle!!
+        if (_share != null) return _share!!
 
-        _alertTriangle = ImageVector.Builder(
-            name = "alertTriangle",
+        _share = ImageVector.Builder(
+            name = "share",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -25,14 +25,8 @@ val Icons.AlertTriangle: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(10.29f, 3.86f)
-                lineTo(1.82f, 18f)
-                arcToRelative(2f, 2f, 0f, false, false, 1.71f, 3f)
-                horizontalLineToRelative(16.94f)
-                arcToRelative(2f, 2f, 0f, false, false, 1.71f, -3f)
-                lineTo(13.71f, 3.86f)
-                arcToRelative(2f, 2f, 0f, false, false, -3.42f, 0f)
-                close()
+                moveTo(12f, 2f)
+                verticalLineToRelative(13f)
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -40,8 +34,9 @@ val Icons.AlertTriangle: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(12f, 9f)
-                verticalLineToRelative(4f)
+                moveToRelative(16f, 6f)
+                lineToRelative(-4f, -4f)
+                lineToRelative(-4f, 4f)
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -49,12 +44,17 @@ val Icons.AlertTriangle: ImageVector
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(12f, 17f)
-                horizontalLineToRelative(0.01f)
+                moveTo(4f, 12f)
+                verticalLineToRelative(8f)
+                arcToRelative(2f, 2f, 0f, false, false, 2f, 2f)
+                horizontalLineToRelative(12f)
+                arcToRelative(2f, 2f, 0f, false, false, 2f, -2f)
+                verticalLineToRelative(-8f)
             }
         }.build()
 
-        return _alertTriangle!!
+        return _share!!
     }
 
-private var _alertTriangle: ImageVector? = null
+private var _share: ImageVector? = null
+

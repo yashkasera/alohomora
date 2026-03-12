@@ -27,7 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.yashkasera.alohomora.data.model.Commit
+import io.github.yashkasera.alohomora.common.AlohomoraCommit
 import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
 import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
 import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray
@@ -35,9 +35,9 @@ import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.ArrowLeft
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.gitGraph
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.gitGraph
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -94,7 +94,7 @@ internal fun ChronicleScreen(
 
 @Composable
 private fun CommitListItem(
-    commit: Commit,
+    commit: AlohomoraCommit,
 ) {
     Column(
         modifier = Modifier

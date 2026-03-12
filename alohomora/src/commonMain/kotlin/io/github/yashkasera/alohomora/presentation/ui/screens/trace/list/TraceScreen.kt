@@ -3,12 +3,27 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.trace.list
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,6 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
@@ -29,11 +45,10 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextFieldDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
-import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.ArrowLeft
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Icons
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.Server
-import io.github.yashkasera.alohomora.presentation.ui.components.icons.trash
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Server
+import io.github.yashkasera.alohomora.ui.icons.trash
 import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
 import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
 import kotlin.time.Instant
@@ -56,6 +71,18 @@ internal fun TraceScreen(onTraceClick: (String) -> Unit) {
                         Icon(Icons.ArrowLeft, contentDescription = "back")
                     }
                 },
+                actions = {
+                    AlohomoraIconButton(
+                        onClick = {
+
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.trash,
+                            contentDescription = "Clear All",
+                        )
+                    }
+                },
             )
         },
         bottomBar = { TraceBottomBar() },
@@ -65,7 +92,7 @@ internal fun TraceScreen(onTraceClick: (String) -> Unit) {
                 icon = Icons.Server,
                 title = "No Network Requests",
                 subtitle = "Network requests will appear here as your app makes API calls",
-                modifier = Modifier.padding(padding)
+                modifier = Modifier.padding(padding),
             )
         } else {
             LazyColumn(
@@ -185,7 +212,7 @@ fun FilterButton(label: String, icon: ImageVector) {
 
 @Composable
 fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         println(call)
     }
     val containerColor = if (call.isSuccessful.not()) MaterialTheme.colorScheme.errorContainer
@@ -221,7 +248,7 @@ fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
                 Text(
                     text = "${call.duration}ms",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
                 )
 
                 val statusColor = when {
@@ -263,7 +290,7 @@ fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
 }
 
 @Composable
-fun MethodBadge(method: String) {
+private fun MethodBadge(method: String) {
     // Design: POST/PUT/PATCH -> Black bg + White text. GET -> Border + Black text.
     val isWrite = method in listOf("POST", "PUT", "PATCH", "DELETE")
 
@@ -286,7 +313,7 @@ fun MethodBadge(method: String) {
         Text(
             text = method,
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Medium,
             color = contentColor,
         )
     }

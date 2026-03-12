@@ -10,6 +10,7 @@ import io.github.yashkasera.alohomora.devtools.DevToolsPreferencesInspector
 import io.github.yashkasera.alohomora.devtools.DevToolsTcpServer
 import io.github.yashkasera.alohomora.devtools.EmptyAppDatabaseProvider
 import io.github.yashkasera.alohomora.devtools.IosPreferencesInspector
+import io.github.yashkasera.alohomora.utils.share.ShareManager
 import platform.Foundation.NSHomeDirectory
 
 actual val platformModule = module {
@@ -26,4 +27,5 @@ actual val platformModule = module {
     single<DevToolsPreferencesInspector> { IosPreferencesInspector() }
     single<DevToolsAppDatabaseProvider> { EmptyAppDatabaseProvider }
     single { DevToolsTcpServer() }
+    single { ShareManager() }
 }
