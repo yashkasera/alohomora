@@ -6,12 +6,12 @@ import androidx.room.RoomDatabase
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.data.repository.PlatformDatabaseAccessor
 import io.github.yashkasera.alohomora.data.repository.VaultRepositoryImpl
-import io.github.yashkasera.alohomora.domain.repository.VaultRepository
 import io.github.yashkasera.alohomora.devtools.AndroidAppDatabaseProvider
 import io.github.yashkasera.alohomora.devtools.DevToolsAppDatabaseProvider
 import io.github.yashkasera.alohomora.devtools.AndroidPreferencesInspector
 import io.github.yashkasera.alohomora.devtools.DevToolsPreferencesInspector
 import io.github.yashkasera.alohomora.devtools.DevToolsTcpServer
+import io.github.yashkasera.alohomora.domain.repository.VaultRepository
 import io.github.yashkasera.alohomora.presentation.ui.screens.navigation.NavigationHistoryViewModel
 import io.github.yashkasera.alohomora.utils.share.ShareManager
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +35,9 @@ actual val platformModule = module {
         val accessor = PlatformDatabaseAccessor()
         accessor.setContext(androidContext())
         VaultRepositoryImpl(accessor)
+    }
+    single<io.github.yashkasera.alohomora.domain.repository.PreferenceRepository> {
+        io.github.yashkasera.alohomora.data.repository.PreferenceRepositoryImpl(androidContext())
     }
 }
 

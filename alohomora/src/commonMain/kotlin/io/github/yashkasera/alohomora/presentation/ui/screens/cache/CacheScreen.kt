@@ -1,8 +1,6 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.cache
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,416 +9,243 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.yashkasera.alohomora.domain.model.PreferenceEntry
+import io.github.yashkasera.alohomora.domain.model.PreferenceType
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
-import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.database
+import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Search
+import io.github.yashkasera.alohomora.ui.icons.database
+import io.github.yashkasera.alohomora.ui.theme.CanvasSuccessGreen
+import org.koin.compose.viewmodel.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CacheScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit,
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-
-    // Mock data - replace with actual data source
-    val memoryStores = remember {
-        listOf(
-            MemoryStore(
-                key = "UserSessionToken",
-                value = "eyJhbGciOiJIUzI1NiIsI...",
-                type = MemoryStoreType.STRING
-            ),
-            MemoryStore(
-                key = "FeatureFlag_NewNav",
-                value = "true",
-                type = MemoryStoreType.BOOLEAN
-            ),
-            MemoryStore(
-                key = "AppConfig_CacheTTL",
-                value = "3600",
-                type = MemoryStoreType.INT
-            ),
-            MemoryStore(
-                key = "LastSyncTimestamp",
-                value = "1699452000",
-                type = MemoryStoreType.LONG
-            ),
-            MemoryStore(
-                key = "UserProfile_LocalBuffer",
-                value = """{ "id": "u_992", "role"…""",
-                type = MemoryStoreType.JSON
-            ),
-            MemoryStore(
-                key = "Theme_Preference",
-                value = "dark_mode_system",
-                type = MemoryStoreType.STRING
-            )
-        )
-    }
-
-    val filteredStores = if (searchQuery.isEmpty()) {
-        memoryStores
-    } else {
-        memoryStores.filter { it.key.contains(searchQuery, ignoreCase = true) }
-    }
-
-    val totalSize = calculateTotalSize(memoryStores)
+    val viewModel: CacheViewModel = koinViewModel()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val totalSize = remember(state.entries) { viewModel.getTotalSize() }
 
     Scaffold(
-        modifier = Modifier.systemBarsPadding(),
         topBar = {
-            CacheTopBar(
-                onBackClick = onBackClick,
-                isLive = true
+            AlohomoraTopBar(
+                title = "Cache",
+                subtitle = "key-value store",
+                navigationIcon = {
+                    AlohomoraIconButton(onClick = onBackClick) {
+                        Icon(Icons.ArrowLeft, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    /*AlohomoraIconButton(onClick = { *//* Clear Cache *//* }) {
+                        Icon(Icons.Trash, contentDescription = "Clear Cache")
+                    }*/
+                }
             )
-        }
+        },
+        bottomBar = {
+            CacheFooter(
+                modifier = Modifier.padding(16.dp),
+                totalEntries = state.totalEntries,
+                filteredCount = state.filteredCount,
+                totalSize = totalSize,
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground,
     ) { padding ->
-        if (memoryStores.isEmpty()) {
-            EmptyState(
-                icon = Icons.database,
-                title = "No Memory Stores",
-                subtitle = "Cached data and preferences will appear here",
-                modifier = Modifier.padding(padding)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 20.dp)
+        ) {
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Search Bar
+            SearchTextField(
+                query = state.searchQuery,
+                onQueryChange = viewModel::onSearchQueryChange,
             )
-        } else if (filteredStores.isEmpty()) {
-            EmptyState(
-                icon = Icons.database,
-                title = "No Results Found",
-                subtitle = "Try adjusting your search query",
-                modifier = Modifier.padding(padding)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 24.dp)
-            ) {
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
 
-                    // Header with title and clear button
-                    CacheHeader(
-                        onClearAllClick = { /* TODO: Clear all */ }
-                    )
+            Spacer(modifier = Modifier.height(16.dp))
 
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Search bar
-                    SearchTextField(
-                        query = searchQuery,
-                        onQueryChange = { searchQuery = it }
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Active keys header
-                    ActiveKeysHeader(
-                        count = filteredStores.size,
-                        totalSize = totalSize
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-
-                // Memory store items
-                items(filteredStores) { store ->
-                    MemoryStoreItem(
-                        store = store,
-                        onDeleteClick = { /* TODO: Delete item */ }
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(80.dp))
-                }
+            // Content
+            if (state.entries.isEmpty()) {
+                EmptyState(
+                    icon = Icons.database,
+                    title = "No Preferences Found",
+                    subtitle = "Preference stores from your app will appear here",
+                )
+            } else if (state.filteredEntries.isEmpty()) {
+                EmptyState(
+                    icon = Icons.Search,
+                    title = "No Results",
+                    subtitle = "Try adjusting your search query",
+                )
+            } else {
+                PreferencesList(entries = state.filteredEntries)
             }
         }
     }
 }
 
-// ============================================================================
-// Top Bar
-// ============================================================================
-
-@Composable
-private fun CacheTopBar(
-    onBackClick: () -> Unit,
-    isLive: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AlohomoraIconButton(
-            onClick = onBackClick,
-            modifier = Modifier.size(48.dp)
-        ) {
-            Text("←", style = MaterialTheme.typography.headlineMedium)
-        }
-
-        if (isLive) {
-            LiveIndicator()
-        } else {
-            Spacer(modifier = Modifier.width(48.dp))
-        }
-    }
-}
-
-@Composable
-private fun LiveIndicator() {
-    Row(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.tertiary)
-        )
-        Text(
-            text = "LIVE",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-// ============================================================================
-// Header Section
-// ============================================================================
-
-@Composable
-private fun CacheHeader(
-    onClearAllClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
-    ) {
-        Column {
-            Text(
-                text = "Memory Stores",
-                style = MaterialTheme.typography.displaySmall
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "HEAP INSPECTOR",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        AlohomoraOutlinedButton(
-            text = "Clear All",
-            onClick = onClearAllClick,
-            modifier = Modifier.padding(top = 8.dp)
-        ) {
-            Text("🗑", style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = "CLEAR ALL",
-                style = MaterialTheme.typography.labelSmall
-            )
-        }
-    }
-}
-
-// ============================================================================
-// Search Bar
-// ============================================================================
-
 @Composable
 private fun SearchTextField(
     query: String,
-    onQueryChange: (String) -> Unit
+    onQueryChange: (String) -> Unit,
 ) {
     AlohomoraOutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
         modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
         placeholder = {
             Text(
-                text = "Filter keys by name...",
+                text = "Filter keys or values...",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
         leadingIcon = {
-            Text("🔍", style = MaterialTheme.typography.bodyMedium)
+            Icon(
+                imageVector = Icons.Search,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         },
-        textStyle = MaterialTheme.typography.bodyMedium,
-        singleLine = true
     )
 }
 
-// ============================================================================
-// Active Keys Header
-// ============================================================================
-
 @Composable
-private fun ActiveKeysHeader(
-    count: Int,
-    totalSize: String
+private fun PreferencesList(
+    entries: List<PreferenceEntry>,
 ) {
-    Row(
+    LazyColumn(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
-        Text(
-            text = "ACTIVE KEYS",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Text(
-            text = "SIZE: $totalSize",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        items(
+            items = entries,
+            key = { "${it.source.name}_${it.key}" },
+        ) { entry ->
+            PreferenceItem(entry = entry)
+            AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.outline,)
+        }
     }
 }
 
-// ============================================================================
-// Memory Store Item
-// ============================================================================
-
 @Composable
-private fun MemoryStoreItem(
-    store: MemoryStore,
-    onDeleteClick: () -> Unit
+private fun PreferenceItem(
+    entry: PreferenceEntry,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
     ) {
+        // Key row with type chip
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = store.key,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f)
+                text = entry.key,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Normal,
+                ),
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
             )
 
-            AlohomoraIconButton(
-                onClick = onDeleteClick,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Text("🗑", style = MaterialTheme.typography.bodySmall)
-            }
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Type chip
+            AlohomoraChip(label = entry.type.name)
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-        // Value display with type badge
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ValueBadge(
-                value = store.value,
-                type = store.type
-            )
+        // Value display with type-specific styling
+        val valueColor = when (entry.type) {
+            PreferenceType.BOOLEAN -> CanvasSuccessGreen
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
         }
-    }
-}
 
-@Composable
-private fun ValueBadge(
-    value: String,
-    type: MemoryStoreType
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.extraSmall)
-                .background(getTypeColor(type))
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-        ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        val displayValue = if (entry.isEncrypted) {
+            "[encrypted]"
+        } else {
+            entry.value
         }
 
         Text(
-            text = type.name,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = displayValue,
+            style = MaterialTheme.typography.bodySmall,
+            color = valueColor,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
 @Composable
-private fun getTypeColor(type: MemoryStoreType) = when (type) {
-    MemoryStoreType.BOOLEAN -> MaterialTheme.colorScheme.tertiaryContainer
-    MemoryStoreType.INT, MemoryStoreType.LONG -> MaterialTheme.colorScheme.secondaryContainer
-    MemoryStoreType.JSON -> MaterialTheme.colorScheme.primaryContainer
-    MemoryStoreType.STRING -> MaterialTheme.colorScheme.surfaceVariant
-}
-
-// ============================================================================
-// Data Models
-// ============================================================================
-
-data class MemoryStore(
-    val key: String,
-    val value: String,
-    val type: MemoryStoreType
-)
-
-enum class MemoryStoreType {
-    STRING,
-    BOOLEAN,
-    INT,
-    LONG,
-    JSON
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-private fun calculateTotalSize(stores: List<MemoryStore>): String {
-    val totalBytes = stores.sumOf { store ->
-        store.key.encodeToByteArray().size + store.value.encodeToByteArray().size
+private fun CacheFooter(
+    modifier:Modifier = Modifier,
+    totalEntries: Int,
+    filteredCount: Int,
+    totalSize: String,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column {
+            Text(
+                text = "TOTAL ENTRIES",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            val entriesText = if (filteredCount != totalEntries) {
+                "$filteredCount of $totalEntries Keys Found ($totalSize)"
+            } else {
+                "$totalEntries Keys Found ($totalSize)"
+            }
+            Text(
+                text = entriesText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+        }
     }
-    return "${totalBytes / 1024}KB"
 }
+

@@ -10,11 +10,13 @@ import io.github.yashkasera.alohomora.domain.repository.IncidentRepository
 import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import io.github.yashkasera.alohomora.domain.repository.LogRepository
 import io.github.yashkasera.alohomora.domain.repository.TraceRepository
+import io.github.yashkasera.alohomora.domain.usecase.cache.GetPreferencesUseCase
 import io.github.yashkasera.alohomora.domain.usecase.trace.GetTraceDetailsUseCase
 import io.github.yashkasera.alohomora.domain.usecase.trace.GetTracesUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.GetIncidentDetailsUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.MarkIncidentAsViewedUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.ClearIncidentsUseCase
+import io.github.yashkasera.alohomora.presentation.ui.screens.cache.CacheViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.trace.detail.TraceDetailsViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.trace.list.TraceViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.telemetry.TelemetryViewModel
@@ -48,6 +50,7 @@ internal val appModule = module {
     single<TraceRepository> { TraceRepositoryImpl(get()) }
     single<TelemetryRepository> { TelemetryRepositoryImpl(get()) }
     single<IncidentRepository> { IncidentRepositoryImpl(get()) }
+    // PreferenceRepository is provided in platformModule
 
     single { DevToolsRuntime(get(), get(), get(), get(), get(), get()) }
 
@@ -58,6 +61,7 @@ internal val appModule = module {
     factory { MarkIncidentAsViewedUseCase(get()) }
     factory { ClearIncidentsUseCase(get()) }
     factory { GetTraceDetailsUseCase(get()) }
+    factory { GetPreferencesUseCase(get()) }
 
     single {
         HttpClient {
@@ -76,6 +80,7 @@ internal val appModule = module {
     viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get(), get(), get()) }
     viewModel { TelemetryViewModel(get()) }
     viewModel { VaultViewModel(get()) }
+    viewModel { CacheViewModel(get()) }
     viewModel { ChronicleViewModel() }
     viewModel { IncidentViewModel(get()) }
     viewModel { (incidentId: Long) -> IncidentDetailsViewModel(incidentId, get(), get()) }

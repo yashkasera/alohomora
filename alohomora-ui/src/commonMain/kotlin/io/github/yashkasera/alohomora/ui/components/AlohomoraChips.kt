@@ -1,5 +1,7 @@
 package io.github.yashkasera.alohomora.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.FilterChip
@@ -7,6 +9,8 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 
 object AlohomoraChipDefaults {
     val shape @Composable get() = MaterialTheme.shapes.extraSmall
@@ -65,5 +69,27 @@ fun AlohomoraFilterChip(
             labelColor = MaterialTheme.colorScheme.onSurface,
             iconColor = MaterialTheme.colorScheme.onSurface,
         ),
+    )
+}
+
+@Composable
+fun AlohomoraChip(
+    label: String,
+    uppercase: Boolean = AlohomoraChipDefaults.uppercase,
+) {
+    val text = if (uppercase) label.uppercase() else label
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onPrimaryContainer,
+        modifier = Modifier
+            .background(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = AlohomoraChipDefaults.shape
+            )
+            .padding(
+                horizontal = 6.dp,
+                vertical = 2.dp
+            )
     )
 }

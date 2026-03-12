@@ -31,4 +31,7 @@ actual val platformModule = module {
     single { DevToolsTcpServer() }
     single { ShareManager() }
     single<VaultRepository> { VaultRepositoryImpl() }
+    single<io.github.yashkasera.alohomora.domain.repository.PreferenceRepository> {
+        io.github.yashkasera.alohomora.data.repository.PreferenceRepositoryImpl()
+    }
 }
