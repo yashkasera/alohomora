@@ -57,6 +57,6 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
             "<binary or unreadable body: ${e.message}>"
         }
 
-        Alohomora.log(apiRequest = entity)
+        Alohomora.log(trace = entity)
     }
 }

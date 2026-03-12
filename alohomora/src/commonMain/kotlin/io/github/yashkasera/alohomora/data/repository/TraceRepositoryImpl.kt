@@ -7,24 +7,27 @@ import kotlinx.coroutines.flow.Flow
 
 internal class TraceRepositoryImpl(private val dao: TraceDao) : TraceRepository {
 
-    override fun getAll(
+    // Base Repository implementation - delegates to list with empty method filter
+    override fun list(query: String, page: Int, pageSize: Int): Flow<List<TraceEntry>> =
+        list(query = query, method = "", page = page, pageSize = pageSize)
+
+    // Trace-specific list with method filtering
+    override fun list(
         query: String,
         method: String,
         page: Int,
         pageSize: Int,
     ): Flow<List<TraceEntry>> =
-        dao.getAll(query = query, method = method, page = page, pageSize = pageSize)
-
-    override fun count(
-        query: String,
-        method: String,
-    ): Flow<Long> = dao.getCount(query, method)
-
-    override suspend fun insert(call: TraceEntry) {
-        dao.insert(call)
-    }
-
-    override suspend fun clear() = dao.clear()
+        dao.list(query = query, method = method, page = page, pageSize = pageSize)
 
     override fun getById(id: String): Flow<TraceEntry?> = dao.getById(id)
+
+    override suspend fun save(item: TraceEntry): String {
+        dao.insert(item)
+        return item.id
+    }
+
+    override suspend fun clearAll() = dao.clearAll()
+
+    override suspend fun markAsViewed(id: String) = dao.markAsViewed(id)
 }

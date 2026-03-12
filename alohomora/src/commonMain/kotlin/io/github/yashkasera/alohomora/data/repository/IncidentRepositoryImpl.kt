@@ -6,20 +6,23 @@ import io.github.yashkasera.alohomora.domain.repository.IncidentRepository
 import kotlinx.coroutines.flow.Flow
 
 internal class IncidentRepositoryImpl(private val db: AlohomoraDb) : IncidentRepository {
-    override fun getAll(query: String, page: Int, pageSize: Int): Flow<List<Incident>> =
-        db.incidentDao().getAll(query, page, pageSize)
+
+    override fun list(query: String, page: Int, pageSize: Int): Flow<List<Incident>> =
+        db.incidentDao().list(query, page, pageSize)
 
     override fun getById(id: Long): Flow<Incident?> =
         db.incidentDao().getById(id)
 
-    override suspend fun insert(incident: Incident): Long =
-        db.incidentDao().insert(incident)
+    override suspend fun save(item: Incident): Long {
+        db.incidentDao().insert(item)
+        return item.id
+    }
 
     override suspend fun delete(incident: Incident) =
         db.incidentDao().delete(incident)
 
     override suspend fun clearAll() =
-        db.incidentDao().clear()
+        db.incidentDao().clearAll()
 
     override suspend fun markAsViewed(id: Long) =
         db.incidentDao().markAsViewed(id)

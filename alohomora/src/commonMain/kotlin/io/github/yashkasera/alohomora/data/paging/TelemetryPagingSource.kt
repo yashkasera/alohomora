@@ -14,7 +14,7 @@ internal class TelemetryPagingSource(
 ) : FlowPagingSource<Int, TelemetryEvent> {
 
     override fun load(params: LoadParams<Int>): Flow<LoadResult<Int, TelemetryEvent>> {
-        return eventRepository.getEvents(
+        return eventRepository.list(
             query = query,
             page = params.key,
             pageSize = params.pageSize,

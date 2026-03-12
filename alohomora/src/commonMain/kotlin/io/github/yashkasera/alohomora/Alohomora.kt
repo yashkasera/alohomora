@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora
 
 import co.touchlab.kermit.Logger
+import io.github.yashkasera.alohomora.common.TelemetryEvent
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.data.model.BuildMetadata
 import io.github.yashkasera.alohomora.data.model.Commit
@@ -13,6 +14,7 @@ import io.github.yashkasera.alohomora.domain.repository.LogRepository
 import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
+import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -84,12 +86,12 @@ object Alohomora {
     }
 
     fun log(
-        apiRequest: TraceEntry,
+        trace: TraceEntry,
     ) {
         val repo = koin?.get<TraceRepository>() ?: return
         scope.launch {
             try {
-                repo.insert(apiRequest)
+                repo.save(trace)
             } catch (e: Exception) {
                 Logger.d {
                     "[Alohomora] Failed to log API request: ${e.message}"
@@ -101,7 +103,13 @@ object Alohomora {
     fun recordTelemetry(name: String, properties: Map<String, String>? = null) {
         val repo = koin?.get<TelemetryRepository>() ?: return
         scope.launch {
-            repo.trackEvent(name, properties?.let { Json.encodeToJsonElement(properties) })
+            repo.save(
+                TelemetryEvent(
+                    time = Clock.System.now().toEpochMilliseconds(),
+                    name = name,
+                    properties = Json.encodeToJsonElement(properties),
+                ),
+            )
         }
     }
 

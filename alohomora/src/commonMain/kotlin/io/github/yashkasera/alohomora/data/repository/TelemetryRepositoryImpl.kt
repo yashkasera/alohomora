@@ -5,14 +5,31 @@ import io.github.yashkasera.alohomora.common.TelemetryEvent
 import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.serialization.json.JsonElement
 
 internal class TelemetryRepositoryImpl(private val db: AlohomoraDb) : TelemetryRepository {
-    override fun getEvents(query: String, page: Int, pageSize: Int): Flow<List<TelemetryEvent>> =
-        db.telemetryDao().getAll(query, page, pageSize)
 
-    override fun getEventsCount(query: String): Flow<Long> =
-        db.telemetryDao().getCount(query)
+    // Base Repository implementations
+    override fun list(query: String, page: Int, pageSize: Int): Flow<List<TelemetryEvent>> =
+        db.telemetryDao().list(query, page, pageSize)
+
+    override fun getById(id: Long): Flow<TelemetryEvent?> = flowOf(null)
+
+    override suspend fun save(item: TelemetryEvent): Long {
+        db.telemetryDao().insert(item)
+        return item.id
+    }
+
+    override suspend fun clearAll() = db.telemetryDao().clearAll()
+
+    override suspend fun markAsViewed(id: Long) {
+        // No-op: Telemetry events are not marked as viewed
+    }
+
+    // Telemetry-specific implementations
+    override fun count(query: String): Flow<Long> =
+        db.telemetryDao().count(query)
 
     override suspend fun trackEvent(name: String, properties: JsonElement?) {
         db.telemetryDao().insert(
@@ -23,6 +40,4 @@ internal class TelemetryRepositoryImpl(private val db: AlohomoraDb) : TelemetryR
             ),
         )
     }
-
-    override suspend fun clear() = db.telemetryDao().clear()
 }

@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 internal class GetIncidentDetailsUseCase(private val incidentRepository: IncidentRepository) {
     operator fun invoke(incidentId: Long): Flow<Incident?> {
-        return incidentRepository.getCrashById(incidentId)
+        return incidentRepository.getById(incidentId)
     }
 }

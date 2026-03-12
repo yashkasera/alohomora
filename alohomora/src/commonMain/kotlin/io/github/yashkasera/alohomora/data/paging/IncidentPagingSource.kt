@@ -9,12 +9,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 internal class IncidentPagingSource(
-    private val crashRepository: IncidentRepository,
+    private val incidentRepository: IncidentRepository,
     private val query: String,
 ) : FlowPagingSource<Int, Incident> {
 
     override fun load(params: LoadParams<Int>): Flow<LoadResult<Int, Incident>> {
-        return crashRepository.getAllCrashes(
+        return incidentRepository.list(
             query = query,
             page = params.key,
             pageSize = params.pageSize,

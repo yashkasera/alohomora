@@ -9,13 +9,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 internal class TracePagingSource(
-    private val networkRepository: TraceRepository,
+    private val traceRepository: TraceRepository,
     private val query: String,
     private val method: String,
 ) : FlowPagingSource<Int, TraceEntry> {
 
     override fun load(params: LoadParams<Int>): Flow<LoadResult<Int, TraceEntry>> {
-        return networkRepository.getAll(
+        return traceRepository.list(
             query = query,
             method = method,
             page = params.key,

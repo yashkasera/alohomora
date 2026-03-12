@@ -21,7 +21,7 @@ data class TraceState(
 )
 
 internal class TraceViewModel(
-    networkRepository: TraceRepository,
+    traceRepository: TraceRepository,
 ) : ViewModel() {
 
     private val query = MutableStateFlow("")
@@ -32,7 +32,7 @@ internal class TraceViewModel(
         config = PagingConfig(pageSize = pageSize),
         initialKey = 0,
         getNextKey = { it + 1 },
-        pagingSourceFactory = { TracePagingSource(networkRepository, query.value, method.value) },
+        pagingSourceFactory = { TracePagingSource(traceRepository, query.value, method.value) },
     ).cachedIn(viewModelScope)
 
     val state: StateFlow<TraceState> = combine(

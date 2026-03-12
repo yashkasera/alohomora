@@ -1,13 +1,17 @@
 package io.github.yashkasera.alohomora.domain.repository
 
 import io.github.yashkasera.alohomora.common.Incident
-import kotlinx.coroutines.flow.Flow
 
-internal interface IncidentRepository {
-    fun getAll(query: String, page: Int, pageSize: Int): Flow<List<Incident>>
-    fun getById(id: Long): Flow<Incident?>
-    suspend fun insert(incident: Incident): Long
+/**
+ * Repository for incidents (crashes/errors).
+ * Extends base [Repository] with incident-specific delete capability.
+ */
+internal interface IncidentRepository : Repository<Incident, Long> {
+
+    /**
+     * Deletes a specific incident.
+     *
+     * @param incident Incident to delete
+     */
     suspend fun delete(incident: Incident)
-    suspend fun clearAll()
-    suspend fun markAsViewed(id: Long)
 }

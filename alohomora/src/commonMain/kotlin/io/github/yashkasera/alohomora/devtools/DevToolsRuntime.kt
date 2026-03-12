@@ -161,7 +161,7 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun streamEvents() {
-            telemetryRepository.getEvents("", 0, DevToolsDefaults.EVENT_SNAPSHOT_LIMIT).collect { events ->
+            telemetryRepository.list("", 0, DevToolsDefaults.EVENT_SNAPSHOT_LIMIT).collect { events ->
                 val newItems = eventAdapter.filterNew(events)
                 newItems.forEach { item ->
                     send(DevToolsMessageType.STREAM_EVENT, item)
