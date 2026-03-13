@@ -33,7 +33,6 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTable
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTextFieldDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.TableColumn
 import kotlinx.coroutines.launch
@@ -326,13 +325,10 @@ fun QueryTabContent(
                     textStyle = MaterialTheme.typography.bodySmall.copy(
                         fontFamily = FontFamily.Monospace
                     ),
-                    colors = AlohomoraTextFieldDefaults.textFieldColors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    )
+                    singleLine = false,
+                    containerColor = Color.Transparent,
+                    borderColor = Color.Transparent,
+                    focusedBorderColor = Color.Transparent,
                 )
 
                 Row(

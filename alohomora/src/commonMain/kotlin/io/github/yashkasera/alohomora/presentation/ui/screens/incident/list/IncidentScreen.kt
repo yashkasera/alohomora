@@ -39,14 +39,13 @@ import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFloatingActionButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.Download
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
-import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.clock
 import io.github.yashkasera.alohomora.ui.icons.hardDrive
 import io.github.yashkasera.alohomora.ui.icons.Trash
@@ -129,25 +128,11 @@ internal fun IncidentScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 // Search Bar
-                AlohomoraOutlinedTextField(
-                    value = state.searchQuery,
-                    onValueChange = { viewModel.onSearchQueryChange(it) },
+                AlohomoraSearchTextField(
+                    query = state.searchQuery,
+                    onQueryChange = { viewModel.onSearchQueryChange(it) },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            "Search exceptions or packages...",
-                            color = CanvasDarkGray.copy(alpha = 0.5f)
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Search,
-                            contentDescription = "Search",
-                            tint = CanvasDarkGray.copy(alpha = 0.5f)
-                        )
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(8.dp)
+                    placeholder = "Search exceptions or packages...",
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))

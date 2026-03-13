@@ -36,7 +36,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesView
 import io.github.yashkasera.alohomora.desktop.util.pickApkPath
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -133,10 +133,10 @@ fun DevicesPanel(
         Text(text = "ADB Command", style = MaterialTheme.typography.labelMedium)
         Spacer(modifier = Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AlohomoraOutlinedTextField(
+            AlohomoraTextField(
                 value = commandText,
                 onValueChange = { commandText = it },
-                placeholder = { Text("Command") },
+                placeholder = "Command",
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )
@@ -179,10 +179,10 @@ fun DevicesPanel(
         Text(text = "Install / Uninstall", style = MaterialTheme.typography.labelMedium)
         Spacer(modifier = Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AlohomoraOutlinedTextField(
+            AlohomoraTextField(
                 value = apkPath,
                 onValueChange = { apkPath = it },
-                placeholder = { Text("APK path") },
+                placeholder = "APK path",
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )
@@ -203,10 +203,10 @@ fun DevicesPanel(
         }
         Spacer(modifier = Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AlohomoraOutlinedTextField(
+            AlohomoraTextField(
                 value = packageName,
                 onValueChange = { packageName = it },
-                placeholder = { Text("Package") },
+                placeholder = "Package",
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )

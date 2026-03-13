@@ -8,7 +8,6 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
 class SlackShareService(
     private val httpClient: HttpClient,
@@ -62,7 +61,7 @@ class SlackShareService(
         trace: TraceEntry,
         recipientEmail: String,
         content: String,
-    ): String {
+    ): SlackMessage {
         val summary = buildString {
             appendLine("🌐 API Request Shared")
             appendLine()
@@ -73,23 +72,31 @@ class SlackShareService(
             appendLine()
             appendLine(content)
         }
-        return Json.encodeToString(SlackMessage(text = summary))
+        return SlackMessage(
+            content = summary,
+            recipientEmail = recipientEmail,
+            buildIdentifier = Alohomora.identifier,
+        )
     }
 
     private fun buildGenericMessage(
         title: String,
         content: String,
         recipientEmail: String,
-    ): String {
+    ): SlackMessage {
         val summary = buildString {
             appendLine(title)
             appendLine()
             appendLine(content)
         }
-        return Json.encodeToString(SlackMessage(text = summary))
+        return SlackMessage(
+            content = summary,
+            recipientEmail = recipientEmail,
+            buildIdentifier = Alohomora.identifier,
+        )
     }
 
-    private suspend fun postToWebhook(message: String): Result<Unit> {
+    private suspend fun postToWebhook(message: SlackMessage): Result<Unit> {
         return try {
             val url = requireNotNull(webhookUrl) {
                 return Result.failure(Exception("Slack webhook URL is not configured"))
@@ -110,6 +117,8 @@ class SlackShareService(
 
     @Serializable
     private data class SlackMessage(
-        val text: String,
+        val content: String,
+        val recipientEmail: String,
+        val buildIdentifier: String? = null,
     )
 }

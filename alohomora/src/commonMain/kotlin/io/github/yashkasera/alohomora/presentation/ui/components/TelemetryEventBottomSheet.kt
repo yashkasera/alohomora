@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.TelemetryEvent
+import io.github.yashkasera.alohomora.ui.components.AlohomoraBottomSheetModal
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Share
@@ -82,17 +83,11 @@ internal fun TelemetryEventBottomSheet(
         }
     }
 
-    ModalBottomSheet(
+    AlohomoraBottomSheetModal(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             // Header with event name and actions
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -181,8 +176,6 @@ internal fun TelemetryEventBottomSheet(
                         .verticalScroll(rememberScrollState()),
                 )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             // Slack sharing option (if configured)
             if (isSlackConfigured) {

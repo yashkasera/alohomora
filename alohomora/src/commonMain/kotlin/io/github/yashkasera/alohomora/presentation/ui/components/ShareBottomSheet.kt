@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.components.AlohomoraBottomSheetModal
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Download
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -27,26 +28,21 @@ import io.github.yashkasera.alohomora.ui.icons.Share
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShareBottomSheet(
+internal fun ShareBottomSheet(
     onDismiss: () -> Unit,
     onShareCurl: () -> Unit,
     onShareText: () -> Unit,
     onShareFile: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    ModalBottomSheet(
+    AlohomoraBottomSheetModal(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
         ) {
             Text(
                 text = "Share",

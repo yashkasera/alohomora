@@ -24,6 +24,9 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
     abstract val slackWebhookUrl: Property<String>
 
     @get:Input
+    abstract val projectName: Property<String>
+
+    @get:Input
     abstract val versionName: Property<String>
 
     @get:Input
@@ -70,7 +73,7 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
         // Write the service file to resources
         val serviceFile = resourcesDir.get()
             .dir("META-INF/services")
-            .file("io.github.yashkasera.alohomora.common.AlohomoraConfig")
+            .file("io.github.yashkasera.alohomora.data.model.AlohomoraConfig")
             .asFile
 
         serviceFile.parentFile.mkdirs()
@@ -83,6 +86,7 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
         val dirty = git(listOf("git", "status", "--porcelain")).isNotEmpty()
         val timestamp = System.currentTimeMillis() / 1000
         val slackUrl = slackWebhookUrl.orNull
+        val projectName = projectName.get()
         val versionName = versionName.get()
         val versionCode = versionCode.get()
         val variantName = variantName.get()
@@ -103,6 +107,8 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
             appendLine()
             appendLine()
             appendLine("    override val slackWebhookUrl: String? = ${escape(slackUrl)}")
+            appendLine()
+            appendLine("    override val projectName: String = ${escape(projectName)}")
             appendLine()
             appendLine("    override val versionName: String = ${escape(versionName)}")
             appendLine()

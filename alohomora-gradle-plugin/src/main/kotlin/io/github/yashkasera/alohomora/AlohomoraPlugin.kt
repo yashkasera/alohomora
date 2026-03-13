@@ -41,6 +41,7 @@ class AlohomoraPlugin : Plugin<Project> {
                 "generateAlohomora${variant.name.replaceFirstChar { it.uppercase() }}Config",
                 GenerateAlohomoraConfigTask::class.java,
             ) {
+                projectName.set(project.name)
                 maxCommits.set(extension.maxCommits)
                 slackWebhookUrl.set(extension.slackWebhookUrl)
                 variantName.set(variant.name)

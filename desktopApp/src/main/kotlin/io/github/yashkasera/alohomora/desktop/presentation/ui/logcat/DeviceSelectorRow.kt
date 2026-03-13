@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 
 @Composable
 fun DeviceSelectorRow(
@@ -44,11 +44,11 @@ fun DeviceSelectorRow(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Box(modifier = Modifier.weight(1f)) {
-            AlohomoraOutlinedTextField(
+            AlohomoraTextField(
                 value = selectorLabel,
                 onValueChange = {},
                 readOnly = true,
-                placeholder = { Text("Device") },
+                placeholder = "Device",
                 modifier = Modifier.fillMaxWidth().padding(end = 8.dp),
             )
             Box(

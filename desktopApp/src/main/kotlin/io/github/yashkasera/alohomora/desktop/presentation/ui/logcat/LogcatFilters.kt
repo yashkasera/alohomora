@@ -15,7 +15,7 @@ import io.github.yashkasera.alohomora.desktop.domain.model.LogLevel
 import io.github.yashkasera.alohomora.desktop.presentation.model.LogcatFilterState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 
 @Composable
 fun LogcatFilters(
@@ -55,10 +55,10 @@ fun LogcatFilters(
                 onSelectTag = onSelectTag,
             )
             Spacer(modifier = Modifier.width(12.dp))
-            AlohomoraOutlinedTextField(
+            AlohomoraTextField(
                 value = filterState.searchQuery,
                 onValueChange = onSearch,
-                placeholder = { Text("Search") },
+                placeholder = "Search",
                 singleLine = true,
                 modifier = Modifier.weight(1f),
             )

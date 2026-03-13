@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 
 @Composable
 fun ConnectionBar(viewModel: DevToolsViewModel) {
@@ -55,18 +55,18 @@ fun ConnectionBar(viewModel: DevToolsViewModel) {
                 StatusPill(state.connection)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                AlohomoraOutlinedTextField(
+                AlohomoraTextField(
                     value = host,
                     onValueChange = { host = it },
-                    placeholder = { Text("Host") },
+                    placeholder = "Host",
                     singleLine = true,
                     modifier = Modifier.width(200.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                AlohomoraOutlinedTextField(
+                AlohomoraTextField(
                     value = port,
                     onValueChange = { port = it.filter { c -> c.isDigit() } },
-                    placeholder = { Text("Port") },
+                    placeholder = "Port",
                     singleLine = true,
                     modifier = Modifier.width(120.dp)
                 )

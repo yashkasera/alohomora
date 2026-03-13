@@ -22,15 +22,13 @@ import io.github.yashkasera.alohomora.presentation.ui.components.TelemetryEventB
 import io.github.yashkasera.alohomora.ui.components.ConfirmationBottomSheet
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTextFieldDefaults
+import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.ConfirmationConfig
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Eye
 import io.github.yashkasera.alohomora.ui.icons.EyeOff
 import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.chartLine
 import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
@@ -131,35 +129,14 @@ private fun TelemetrySearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
 ) {
-    Column(
+    AlohomoraSearchTextField(
+        query = query,
+        onQueryChange = onQueryChange,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 12.dp),
-    ) {
-        AlohomoraOutlinedTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            singleLine = true,
-            shape = RectangleShape,
-            colors = AlohomoraTextFieldDefaults.outlinedColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                focusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                cursorColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            ),
-            placeholder = {
-                Text("Search events by name")
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Search,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                )
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
+        placeholder = "Search events by name",
+    )
 }
 
 @Composable

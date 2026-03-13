@@ -61,7 +61,7 @@ object Alohomora {
 
     internal var config: AlohomoraConfig? = null
         private set
-
+    
     internal val json by lazy {
         Json {
             prettyPrint = true
@@ -70,6 +70,11 @@ object Alohomora {
         }
     }
 
+    internal val identifier by lazy {
+        config?.let {
+            "${it.projectName}-${it.variantName}-${it.versionName}-${it.commitSha}"
+        }
+    }
 
     // Initialize the library.
     // On Android, pass { androidContext(context) } in appDeclaration

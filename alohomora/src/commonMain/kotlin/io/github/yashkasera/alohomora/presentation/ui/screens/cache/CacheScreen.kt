@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,7 +31,7 @@ import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -120,26 +119,11 @@ private fun SearchTextField(
     query: String,
     onQueryChange: (String) -> Unit,
 ) {
-    AlohomoraOutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
+    AlohomoraSearchTextField(
+        query = query,
+        onQueryChange = onQueryChange,
         modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        placeholder = {
-            Text(
-                text = "Filter keys or values...",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Search,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
+        placeholder = "Filter keys or values...",
     )
 }
 
@@ -156,7 +140,7 @@ private fun PreferencesList(
             key = { "${it.source.name}_${it.key}" },
         ) { entry ->
             PreferenceItem(entry = entry)
-            AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.outline,)
+            AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.outline)
         }
     }
 }

@@ -24,7 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraBottomSheetModal
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 
 /**
  * Configuration for a share option in the Slack share sheet.
@@ -62,16 +63,12 @@ internal fun SlackShareBottomSheet(
     )
     var email by remember { mutableStateOf("") }
 
-    ModalBottomSheet(
+    AlohomoraBottomSheetModal(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = title,
@@ -88,12 +85,11 @@ internal fun SlackShareBottomSheet(
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
 
-                AlohomoraOutlinedTextField(
+                AlohomoraTextField(
                     value = email,
                     onValueChange = { email = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("abc.xyz@example.org") },
-                    singleLine = true,
+                    placeholder = "abc.xyz@example.org",
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))

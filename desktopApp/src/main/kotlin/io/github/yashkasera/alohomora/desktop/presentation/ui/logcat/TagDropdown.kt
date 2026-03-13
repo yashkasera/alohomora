@@ -17,7 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 
 @Composable
 fun TagDropdown(
@@ -29,11 +29,11 @@ fun TagDropdown(
     val label = selectedTag ?: "All tags"
 
     Box(modifier = Modifier.width(240.dp)) {
-        AlohomoraOutlinedTextField(
+        AlohomoraTextField(
             value = label,
             onValueChange = {},
             readOnly = true,
-            placeholder = { Text("Tag") },
+            placeholder = "Tag",
             modifier = Modifier.fillMaxWidth(),
         )
         Box(
@@ -41,7 +41,7 @@ fun TagDropdown(
                 .fillMaxWidth()
                 .height(56.dp)
                 .background(Color.Transparent)
-                .clickable { expanded = true }
+                .clickable { expanded = true },
         )
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             DropdownMenuItem(
@@ -49,7 +49,7 @@ fun TagDropdown(
                 onClick = {
                     expanded = false
                     onSelectTag(null)
-                }
+                },
             )
             availableTags.forEach { tag ->
                 DropdownMenuItem(
@@ -57,7 +57,7 @@ fun TagDropdown(
                     onClick = {
                         expanded = false
                         onSelectTag(tag)
-                    }
+                    },
                 )
             }
         }

@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.data.model
 
 interface AlohomoraConfig {
+    val projectName: String
     val versionName: String
     val versionCode: Int
     val variantName: String

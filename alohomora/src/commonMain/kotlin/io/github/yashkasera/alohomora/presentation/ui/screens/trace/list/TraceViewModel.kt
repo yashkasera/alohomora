@@ -11,6 +11,7 @@ import io.github.yashkasera.alohomora.utils.paging.PagingConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -27,8 +28,11 @@ internal class TraceViewModel(
     private val traceRepository: TraceRepository,
 ) : ViewModel() {
 
-    private val query = MutableStateFlow("")
-    private val method = MutableStateFlow("")
+    private val _query = MutableStateFlow("")
+    val query = _query.asStateFlow()
+
+    private val _method = MutableStateFlow("")
+    val method = _method.asStateFlow()
     private val showClearConfirmation = MutableStateFlow(false)
     private val isClearing = MutableStateFlow(false)
     private val pageSize = 20
@@ -37,7 +41,9 @@ internal class TraceViewModel(
         config = PagingConfig(pageSize = pageSize),
         initialKey = 0,
         getNextKey = { it + 1 },
-        pagingSourceFactory = { TracePagingSource(traceRepository, query.value, method.value) },
+        pagingSourceFactory = {
+            TracePagingSource(traceRepository, query.value, method.value)
+        },
     ).cachedIn(viewModelScope)
 
     val state: StateFlow<TraceState> = combine(
@@ -69,12 +75,12 @@ internal class TraceViewModel(
     }
 
     fun setQuery(newQuery: String?) {
-        query.value = newQuery ?: ""
+        _query.value = newQuery ?: ""
         pager.refresh()
     }
 
     fun setMethod(newMethod: String?) {
-        method.value = newMethod ?: ""
+        _method.value = newMethod ?: ""
         pager.refresh()
     }
 

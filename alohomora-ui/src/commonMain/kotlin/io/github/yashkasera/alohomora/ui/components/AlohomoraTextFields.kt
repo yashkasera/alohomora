@@ -1,134 +1,208 @@
 package io.github.yashkasera.alohomora.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Search
+import io.github.yashkasera.alohomora.ui.icons.X
 
-object AlohomoraTextFieldDefaults {
-    @Composable
-    fun outlinedColors(
-        focusedBorderColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-        unfocusedBorderColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-        cursorColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-        containerColor: Color = MaterialTheme.colorScheme.surface,
-        placeholderColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    ): TextFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = focusedBorderColor,
-        unfocusedBorderColor = unfocusedBorderColor,
-        focusedContainerColor = containerColor,
-        unfocusedContainerColor = containerColor,
-        cursorColor = cursorColor,
-        focusedPlaceholderColor = placeholderColor,
-        unfocusedPlaceholderColor = placeholderColor,
-    )
-
-    @Composable
-    fun textFieldColors(
-        focusedContainerColor: Color = MaterialTheme.colorScheme.surface,
-        unfocusedContainerColor: Color = MaterialTheme.colorScheme.surface,
-        disabledContainerColor: Color = MaterialTheme.colorScheme.surface,
-        focusedIndicatorColor: Color = Color.Transparent,
-        unfocusedIndicatorColor: Color = Color.Transparent,
-        cursorColor: Color = MaterialTheme.colorScheme.onSurface,
-    ): TextFieldColors = TextFieldDefaults.colors(
-        focusedContainerColor = focusedContainerColor,
-        unfocusedContainerColor = unfocusedContainerColor,
-        disabledContainerColor = disabledContainerColor,
-        focusedIndicatorColor = focusedIndicatorColor,
-        unfocusedIndicatorColor = unfocusedIndicatorColor,
-        cursorColor = cursorColor,
-    )
-}
-
-@Composable
-fun AlohomoraOutlinedTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    singleLine: Boolean = false,
-    textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
-    placeholder: (@Composable () -> Unit)? = null,
-    leadingIcon: (@Composable () -> Unit)? = null,
-    trailingIcon: (@Composable () -> Unit)? = null,
-    supportingText: (@Composable () -> Unit)? = null,
-    isError: Boolean = false,
-    shape: Shape? = null,
-    readOnly: Boolean = false,
-    colors: TextFieldColors = AlohomoraTextFieldDefaults.outlinedColors(),
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    keyboardActions: KeyboardActions = KeyboardActions.Default,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-) {
-    val resolvedShape = shape ?: MaterialTheme.shapes.extraSmall
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier,
-        enabled = enabled,
-        singleLine = singleLine,
-        textStyle = textStyle,
-        placeholder = placeholder,
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        supportingText = supportingText,
-        isError = isError,
-        readOnly = readOnly,
-        shape = resolvedShape,
-        colors = colors,
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions,
-        visualTransformation = visualTransformation,
-    )
-}
-
+/**
+ * A compact custom text field built on BasicTextField for full control.
+ *
+ * @param value The current text value
+ * @param onValueChange Callback when the text changes
+ * @param modifier Modifier for the text field
+ * @param placeholder Placeholder text to display when empty
+ * @param leadingIcon Optional leading icon composable
+ * @param trailingIcon Optional trailing icon composable
+ * @param singleLine Whether the field is single line (default: true)
+ * @param enabled Whether the field is enabled
+ * @param readOnly Whether the field is read-only
+ * @param keyboardOptions Keyboard configuration options
+ * @param keyboardActions Keyboard action handlers
+ * @param visualTransformation Visual transformation for the text
+ * @param shape The shape of the text field
+ * @param textStyle The text style for the input text
+ * @param containerColor Background color of the text field
+ * @param borderColor Border color when unfocused
+ * @param focusedBorderColor Border color when focused
+ * @param cursorColor Cursor color
+ */
 @Composable
 fun AlohomoraTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    singleLine: Boolean = false,
-    textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
-    placeholder: (@Composable () -> Unit)? = null,
+    placeholder: String? = null,
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
-    supportingText: (@Composable () -> Unit)? = null,
-    isError: Boolean = false,
-    shape: Shape? = null,
-    colors: TextFieldColors = AlohomoraTextFieldDefaults.textFieldColors(),
+    singleLine: Boolean = true,
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    shape: Shape = MaterialTheme.shapes.extraSmall,
+    textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    borderColor: Color = MaterialTheme.colorScheme.outline,
+    focusedBorderColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    cursorColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
-    val resolvedShape = shape ?: MaterialTheme.shapes.extraSmall
-    TextField(
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    val currentBorderColor = if (isFocused) focusedBorderColor else borderColor
+
+    BasicTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier,
         enabled = enabled,
+        readOnly = readOnly,
         singleLine = singleLine,
-        textStyle = textStyle,
-        placeholder = placeholder,
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        supportingText = supportingText,
-        isError = isError,
-        shape = resolvedShape,
-        colors = colors,
+        textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSurface),
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         visualTransformation = visualTransformation,
+        interactionSource = interactionSource,
+        cursorBrush = SolidColor(cursorColor),
+        decorationBox = { innerTextField ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(36.dp)
+                    .clip(shape)
+                    .background(containerColor)
+                    .border(1.dp, currentBorderColor, shape)
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (leadingIcon != null) {
+                    Box(modifier = Modifier.size(16.dp)) {
+                        leadingIcon()
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    if (value.isEmpty() && placeholder != null) {
+                        Text(
+                            text = placeholder,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    innerTextField()
+                }
+
+                if (trailingIcon != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(modifier = Modifier.size(20.dp)) {
+                        trailingIcon()
+                    }
+                }
+            }
+        },
+    )
+}
+
+/**
+ * A compact search text field with built-in search icon and clear button.
+ *
+ * @param query The current search query
+ * @param onQueryChange Callback when the query changes
+ * @param modifier Modifier for the text field
+ * @param placeholder Placeholder text (default: "Search...")
+ * @param onSearch Callback when search action is triggered (e.g., keyboard search button)
+ * @param onClear Callback when clear button is clicked (defaults to clearing the query)
+ * @param enabled Whether the field is enabled
+ */
+@Composable
+fun AlohomoraSearchTextField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String = "Search...",
+    onSearch: (() -> Unit)? = null,
+    onClear: (() -> Unit)? = null,
+    enabled: Boolean = true,
+) {
+    AlohomoraTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier,
+        placeholder = placeholder,
+        enabled = enabled,
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Search,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        trailingIcon = if (query.isNotEmpty()) {
+            {
+                IconButton(
+                    onClick = {
+                        if (onClear != null) {
+                            onClear()
+                        } else {
+                            onQueryChange("")
+                        }
+                    },
+                    modifier = Modifier.size(20.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.X,
+                        contentDescription = "Clear search",
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        } else null,
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Search,
+        ),
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                onSearch?.invoke()
+            },
+        ),
     )
 }

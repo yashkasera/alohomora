@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -8,8 +10,11 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
 object AlohomoraChipDefaults {
@@ -76,15 +81,22 @@ fun AlohomoraFilterChip(
 fun AlohomoraChip(
     label: String,
     uppercase: Boolean = AlohomoraChipDefaults.uppercase,
+    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    contentColor: Color = contentColorFor(containerColor),
+    shape: Shape = AlohomoraChipDefaults.shape,
+    borderStroke: BorderStroke? = null
 ) {
     val text = if (uppercase) label.uppercase() else label
+    val modifier = if (borderStroke != null){
+        Modifier.border(borderStroke, shape = shape)
+    } else Modifier
     Text(
         text = text,
         style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onPrimaryContainer,
-        modifier = Modifier
+        color = contentColor,
+        modifier = modifier
             .background(
-                color = MaterialTheme.colorScheme.primaryContainer,
+                color = containerColor,
                 shape = AlohomoraChipDefaults.shape
             )
             .padding(

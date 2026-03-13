@@ -45,6 +45,7 @@ internal fun AlohomoraNavHost(
         composable<Routes.Trace> {
             TraceScreen(
                 onTraceClick = { id -> navController.navigate(Routes.TraceDetails(id)) },
+                onBackClick = navController::navigateUp
             )
         }
 
