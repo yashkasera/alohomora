@@ -118,10 +118,6 @@ fun TraceDetailsContent(
             }
         }
 
-        // Replay button (sticky bottom)
-        ReplayButton(
-            onClick = { /* TODO: Implement replay */ },
-        )
     }
 }
 
@@ -140,9 +136,9 @@ private fun OverviewTab(trace: TraceEntry) {
     Spacer(modifier = Modifier.height(32.dp))
 
     // Calculate sizes from content
-    val requestSize = trace.request?.length?.toLong() ?: 0L
-    val responseSize = trace.response?.length?.toLong() ?: 0L
-    
+    val requestSize = trace.requestSize ?: 0
+    val responseSize = trace.responseSize ?: 0L
+
     // Detect format from Content-Type header
     val responseFormat = detectFormatFromContentType(trace.responseHeaders)
 
@@ -252,10 +248,9 @@ private fun RequestTab(trace: TraceEntry) {
 @Composable
 private fun ResponseTab(trace: TraceEntry) {
     var prettifyJson by remember { mutableStateOf(true) }
-    var searchQuery by remember { mutableStateOf("") }
-    
+
     // Calculate size and detect format
-    val responseSize = trace.response?.length?.toLong() ?: 0L
+    val responseSize = trace.responseSize ?: 0L
     val responseFormat = detectFormatFromContentType(trace.responseHeaders)
 
     Column {
@@ -278,16 +273,6 @@ private fun ResponseTab(trace: TraceEntry) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        // Search bar
-        SearchBar(
-            query = searchQuery,
-            onQueryChange = { searchQuery = it },
-            currentMatch = 1,
-            totalMatches = 3,
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
 
         // Response metadata (status, format, size)
         ResponseMetadata(
@@ -654,64 +639,6 @@ private fun PrettifyToggle(
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.surface),
         )
-    }
-}
-
-@Composable
-private fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    currentMatch: Int,
-    totalMatches: Int,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = Icons.Search,
-            contentDescription = "back",
-        )
-
-        Text(
-            text = query.ifEmpty { "Search..." },
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (query.isEmpty()) {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            },
-            modifier = Modifier.weight(1f),
-        )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = "$currentMatch of $totalMatches",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            AlohomoraIconButton(
-                onClick = { /* Navigate to previous match */ },
-                modifier = Modifier.size(24.dp),
-            ) {
-                Text("↑", style = MaterialTheme.typography.labelMedium)
-            }
-
-            AlohomoraIconButton(
-                onClick = { /* Navigate to next match */ },
-                modifier = Modifier.size(24.dp),
-            ) {
-                Text("↓", style = MaterialTheme.typography.labelMedium)
-            }
-        }
     }
 }
 

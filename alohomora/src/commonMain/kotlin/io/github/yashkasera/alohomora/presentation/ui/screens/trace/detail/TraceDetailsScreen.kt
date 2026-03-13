@@ -85,7 +85,7 @@ internal fun TraceDetailsScreen(traceId: String, onBackClick: () -> Unit = {}) {
         },
     ) { padding ->
         TraceDetailsContent(
-            trace = trace!!,
+            trace = trace,
             modifier = Modifier.padding(padding),
         )
     }

@@ -29,18 +29,21 @@ class TraceInterceptor(
                 host = request.url.host,
                 path = request.url.encodedPath,
                 query = request.url.query,
-                request = requestBody,
+                requestBody = requestBody,
                 time = Clock.System.now().toEpochMilliseconds(),
                 requestHeaders = request.headers.toMultimap(),
+                requestContentType = request.body?.contentType()?.toString(),
+                requestSize = request.body?.contentLength()
             )
             collector.onRequestSent(trace)
             val response = chain.proceed(request)
-            trace.response = response.peekBody(maxBodyBytes).string()
+            trace.responseBody = response.peekBody(maxBodyBytes).string()
             trace.status = response.code
             trace.message = response.message
-            trace.size = response.body.contentLength()
             trace.duration = response.receivedResponseAtMillis - response.sentRequestAtMillis
             trace.responseHeaders = response.headers.toMultimap()
+            trace.responseContentType = response.body.contentType()?.toString()
+            trace.responseSize = response.body.contentLength()
             collector.onResponseReceived(trace)
             return response
         } catch (e: Exception) {

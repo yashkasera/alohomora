@@ -19,19 +19,22 @@ data class TraceEntry(
     var host: String? = null,
     var path: String? = null,
     var query: String? = null,
-    var request: String? = null,
-    var response: String? = null,
+    var requestBody: String? = null,
+    var responseBody: String? = null,
     var time: Long? = null,
     var duration: Long? = null,
     var requestHeaders: Map<String, List<String>>? = null,
+    var requestContentType: String? = null,
+    var responseContentType: String? = null,
     var responseHeaders: Map<String, List<String>>? = null,
-    var size: Long? = null,
+    var requestSize: Long? = null,
+    var responseSize: Long? = null,
     var isViewed: Boolean = false,
 ) {
 
     val isShareable: Boolean
         get() =
-            request != UNABLE_PARSE_MESSAGE
+            requestBody != UNABLE_PARSE_MESSAGE
 
     val isSuccessful: Boolean
         get() = status in 200..299
@@ -50,20 +53,34 @@ data class TraceEntry(
 
     private fun generateCurlCommand(): String {
         return buildString {
-            append("curl -X ${method ?: "GET"}")
 
-            // Add headers
-            requestHeaders?.forEach { (key, values) ->
-                values.forEach { value ->
-                    append(" -H \"$key: $value\"")
+            val contentType = requestContentType
+
+            val defaultMethod =
+                when {
+                    requestBody != null -> "POST"
+                    else -> "GET"
                 }
+
+            append("curl ${url.toString().shellEscape()}")
+
+            if (method != defaultMethod) {
+                append(" \\\n  -X ${method?.shellEscape()}")
+            }
+
+            requestHeaders?.forEach { (name, value) ->
+                if (contentType == null || !name.equals("Content-Type", ignoreCase = true))
+                    append(" \\\n  -H ${"$name: $value".shellEscape()}")
+            }
+
+            if (contentType != null) {
+                append(" \\\n  -H ${"Content-Type: $contentType".shellEscape()}")
             }
 
             // Add request body if present
-            request?.takeIf { it.isNotBlank() && it != UNABLE_PARSE_MESSAGE }?.let { body ->
+            requestBody?.takeIf { it.isNotBlank() && it != UNABLE_PARSE_MESSAGE }?.let { body ->
                 // Escape single quotes in the body
-                val escapedBody = body.replace("'", "'\"'\"'")
-                append(" --data '$escapedBody'")
+                append(" --data '${body.shellEscape()}'")
             }
 
             // Add URL
@@ -72,6 +89,9 @@ data class TraceEntry(
             }
         }
     }
+
+    private fun String.shellEscape(): String = "'${replace("'", "'\\''")}'"
+
 
     val statusMessage: String
         get() {
@@ -106,13 +126,13 @@ data class TraceEntry(
             appendLine("Duration: ${duration ?: 0} ms")
             appendLine()
 
-            val requestSize = request?.length ?: 0
-            val responseSize = response?.length ?: 0
+            val requestSize = requestSize ?: 0
+            val responseSize = responseSize ?: 0
             val totalSize = requestSize + responseSize
 
-            appendLine("Request size: ${formatBytes(requestSize.toLong())}")
-            appendLine("Response size: ${formatBytes(responseSize.toLong())}")
-            appendLine("Total size: ${formatBytes(totalSize.toLong())}")
+            appendLine("Request size: ${formatBytes(requestSize)}")
+            appendLine("Response size: ${formatBytes(responseSize)}")
+            appendLine("Total size: ${formatBytes(totalSize)}")
             appendLine()
 
             // Request section
@@ -126,7 +146,7 @@ data class TraceEntry(
             }
             appendLine()
 
-            request?.takeIf { it.isNotBlank() }?.let {
+            requestBody?.takeIf { it.isNotBlank() }?.let {
                 appendLine(it)
                 appendLine()
             }
@@ -142,7 +162,7 @@ data class TraceEntry(
             }
             appendLine()
 
-            response?.takeIf { it.isNotBlank() }?.let {
+            responseBody?.takeIf { it.isNotBlank() }?.let {
                 appendLine(it)
                 appendLine()
             }

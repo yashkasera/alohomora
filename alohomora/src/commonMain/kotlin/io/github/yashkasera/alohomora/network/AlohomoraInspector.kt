@@ -4,6 +4,8 @@ import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.contentLength
+import io.ktor.http.contentType
 import io.ktor.http.encodedPath
 import io.ktor.util.AttributeKey
 import kotlin.time.Clock
@@ -29,9 +31,11 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
             query = query,
             requestHeaders = request.headers.entries().associate { it.toPair() },
             time = Clock.System.now().toEpochMilliseconds(),
+            requestContentType = request.contentType()?.toString(),
+            requestSize = request.contentLength()
         )
 
-        entity.request = when (content) {
+        entity.requestBody = when (content) {
             is String -> content
             is ByteArray -> content.decodeToString()
             else -> content.toString()
@@ -51,7 +55,9 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
         entity.message = response.status.description
         entity.responseHeaders = response.headers.entries().associate { it.toPair() }
         entity.duration = (endTime - startTime).takeUnless { it <= 0 }
-        entity.response = try {
+        entity.responseSize = response.contentLength()
+        entity.responseContentType = response.contentType().toString()
+        entity.responseBody = try {
             response.bodyAsText()
         } catch (e: Exception) {
             "<binary or unreadable body: ${e.message}>"
