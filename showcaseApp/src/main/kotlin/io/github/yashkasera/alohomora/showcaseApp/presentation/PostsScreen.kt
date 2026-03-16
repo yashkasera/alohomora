@@ -70,7 +70,6 @@ fun PostsScreen(
                     onAutoRefreshToggle = viewModel::updateAutoRefresh,
                 )
             }
-
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

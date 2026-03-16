@@ -40,7 +40,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
-import io.github.yashkasera.alohomora.ui.icons.refreshCw
+import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -61,7 +61,7 @@ internal fun NavigationHistoryScreen(onBackClick: () -> Unit = {}) {
                 },
                 actions = {
                     AlohomoraIconButton(onClick = { viewModel.refresh() }) {
-                        Icon(Icons.refreshCw, contentDescription = null)
+                        Icon(Icons.RefreshCw, contentDescription = null)
                     }
                 },
             )

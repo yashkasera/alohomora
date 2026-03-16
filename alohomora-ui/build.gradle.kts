@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.android.kmp.library)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
@@ -31,6 +32,7 @@ kotlin {
             api(libs.compose.material3)
             api(libs.compose.resources)
             api(libs.compose.ui.tooling.preview)
+            api(libs.kotlinx.serialization.json)
         }
 
         androidMain.dependencies {

@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.refreshCw: ImageVector
+val Icons.RefreshCw: ImageVector
     get() {
         if (_refreshCw != null) return _refreshCw!!
 

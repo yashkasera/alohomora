@@ -41,10 +41,8 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.ui.icons.Share
-import kotlin.time.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -175,7 +173,7 @@ internal fun IncidentDetailsScreen(
                             Spacer(modifier = Modifier.width(16.dp))
                             MetadataItem(
                                 label = "TIMESTAMP",
-                                value = formatDetailTimestamp(incident.time * 1000),
+                                value = DateUtils.format(incident.time * 1000, DateUtils.Format.MONTH_DAY_TIME),
                                 modifier = Modifier.weight(1f),
                             )
                         }
@@ -321,19 +319,5 @@ private fun MetadataItem(
             ),
             color = CanvasBlack,
         )
-    }
-}
-
-private fun formatDetailTimestamp(timestamp: Long): String {
-    return try {
-        val instant = Instant.fromEpochMilliseconds(timestamp)
-        val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-        val month = local.month.name.substring(0, 3).lowercase()
-            .replaceFirstChar { it.uppercase() }
-        "${month} ${local.dayOfMonth}, ${local.hour.toString().padStart(2, '0')}:${
-            local.minute.toString().padStart(2, '0')
-        }:${local.second.toString().padStart(2, '0')}"
-    } catch (e: Exception) {
-        "Unknown"
     }
 }

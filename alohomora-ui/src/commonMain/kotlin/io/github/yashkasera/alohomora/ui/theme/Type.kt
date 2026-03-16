@@ -51,8 +51,8 @@ internal fun AlohomoraTypography() = Typography().run {
         bodyLarge = bodyLarge.copy(fontFamily = jetbrainsMonoFontFamily),
         bodyMedium = bodyMedium.copy(fontFamily = jetbrainsMonoFontFamily),
         bodySmall = bodySmall.copy(fontFamily = jetbrainsMonoFontFamily),
-        labelLarge = labelLarge.copy(fontFamily = interFontFamily),
-        labelMedium = labelMedium.copy(fontFamily = interFontFamily),
+        labelLarge = labelLarge.copy(fontFamily = jetbrainsMonoFontFamily),
+        labelMedium = labelMedium.copy(fontFamily = jetbrainsMonoFontFamily),
         labelSmall = labelSmall.copy(fontFamily = jetbrainsMonoFontFamily)
     )
 }

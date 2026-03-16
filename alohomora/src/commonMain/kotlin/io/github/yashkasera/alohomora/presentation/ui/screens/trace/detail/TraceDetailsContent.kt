@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -31,32 +33,35 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TraceEntry
-import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.Search
-import io.github.yashkasera.alohomora.ui.icons.Server
-import io.github.yashkasera.alohomora.ui.icons.clock
-import io.github.yashkasera.alohomora.ui.icons.refreshCw
-import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
-import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
+import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
+import io.github.yashkasera.alohomora.ui.icons.Download
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Search
+import io.github.yashkasera.alohomora.ui.icons.Server
+import io.github.yashkasera.alohomora.ui.icons.Clock
+import io.github.yashkasera.alohomora.ui.icons.RefreshCw
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import kotlin.math.log10
 import kotlin.math.pow
-import kotlin.time.Instant
+import kotlin.math.round
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TraceDetailsContent(
-    trace: TraceEntry,
     modifier: Modifier = Modifier,
+    trace: TraceEntry,
 ) {
     val tabs = listOf("OVERVIEW", "REQUEST", "RESPONSE")
     val pagerState = rememberPagerState(pageCount = { tabs.size })
@@ -65,7 +70,7 @@ fun TraceDetailsContent(
     // Hoist scroll states to persist across tab switches
     val overviewScrollState = rememberScrollState()
     val requestScrollState = rememberScrollState()
-    val responseScrollState = rememberScrollState()
+    val responseListState = rememberLazyListState()
 
     // Use derivedStateOf to batch tab selection updates and reduce recompositions
     val currentPage by remember { derivedStateOf { pagerState.currentPage } }
@@ -97,23 +102,37 @@ fun TraceDetailsContent(
             modifier = Modifier.weight(1f),
             beyondViewportPageCount = 1,
         ) { page ->
-            val scrollState = when (page) {
-                0 -> overviewScrollState
-                1 -> requestScrollState
-                2 -> responseScrollState
-                else -> rememberScrollState()
-            }
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 24.dp),
-            ) {
-                when (page) {
-                    0 -> OverviewTab(trace = trace)
-                    1 -> RequestTab(trace = trace)
-                    2 -> ResponseTab(trace = trace)
+            when (page) {
+                0 -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(overviewScrollState)
+                            .padding(horizontal = 24.dp)
+                            .padding(top = 24.dp),
+                    ) {
+                        OverviewTab(trace = trace)
+                    }
+                }
+
+                1 -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(requestScrollState)
+                            .padding(horizontal = 24.dp)
+                            .padding(top = 24.dp),
+                    ) {
+                        RequestTab(trace = trace)
+                    }
+                }
+
+                2 -> {
+                    ResponseTab(
+                        trace = trace,
+                        listState = responseListState,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
             }
         }
@@ -140,7 +159,7 @@ private fun OverviewTab(trace: TraceEntry) {
     val responseSize = trace.responseSize ?: 0L
 
     // Detect format from Content-Type header
-    val responseFormat = detectFormatFromContentType(trace.responseHeaders)
+    val responseFormat = detectFormatFromContentType(trace.responseContentType)
 
     // Hero stats (STATUS, LATENCY, SIZE, FORMAT)
     HeroStatsSection(
@@ -209,8 +228,8 @@ private fun RequestTab(trace: TraceEntry) {
         }
 
         // Request body section
-        val requestFormat = detectFormatFromContentType(trace.requestHeaders)
-        
+        val requestFormat = detectFormatFromContentType(trace.requestContentType)
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             SectionHeader(title = "REQUEST BODY")
             Spacer(modifier = Modifier.width(8.dp))
@@ -218,7 +237,11 @@ private fun RequestTab(trace: TraceEntry) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        CodeViewer(json = trace.request ?: "{}")
+        AlohomoraCodeBlock(
+            content = trace.requestBody ?: "{}",
+            isScrollable = false,
+            modifier = Modifier.fillMaxWidth(),
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -246,86 +269,67 @@ private fun RequestTab(trace: TraceEntry) {
 // ============================================================================
 
 @Composable
-private fun ResponseTab(trace: TraceEntry) {
-    var prettifyJson by remember { mutableStateOf(true) }
-
+private fun ResponseTab(
+    trace: TraceEntry,
+    listState: LazyListState,
+    modifier: Modifier = Modifier,
+) {
     // Calculate size and detect format
     val responseSize = trace.responseSize ?: 0L
-    val responseFormat = detectFormatFromContentType(trace.responseHeaders)
+    val responseFormat = detectFormatFromContentType(trace.responseContentType)
 
-    Column {
-        // Prettify JSON toggle
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "PRETTIFY JSON",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            PrettifyToggle(
-                checked = prettifyJson,
-                onCheckedChange = { prettifyJson = it },
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Response metadata (status, format, size)
-        ResponseMetadata(
-            statusCode = trace.status ?: 0,
-            format = responseFormat,
-            sizeBytes = responseSize,
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Response Headers section
-        trace.responseHeaders?.let { headers ->
-            val formattedHeaders = formatHeaders(headers)
-            val headerCount = headers.values.sumOf { it.size }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                SectionHeader(title = "RESPONSE HEADERS")
-                Spacer(modifier = Modifier.width(8.dp))
-                CountBadge(count = headerCount)
+    JsonTreeView(
+        json = trace.responseBody ?: "{}",
+        listState,
+        parentContent = {
+            item {
+                ResponseMetadata(
+                    statusCode = trace.status ?: 0,
+                    format = responseFormat,
+                    sizeBytes = responseSize,
+                )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Display formatted headers
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(16.dp),
-            ) {
-                formattedHeaders.forEach { headerLine ->
-                    Text(
-                        text = headerLine,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
+            trace.responseHeaders?.let { headers ->
+                val formattedHeaders = formatHeaders(headers)
+                val headerCount = headers.values.sumOf { it.size }
+                item(
+                    key = "response_headers",
+                ) {
+                    var expanded by remember { mutableStateOf(false) }
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(
+                                horizontal = 24.dp,
+                                vertical = 16.dp,
+                            )
+                            .clickable {
+                                expanded = !expanded
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        SectionHeader(
+                            modifier = Modifier.weight(1f),
+                            title = "RESPONSE HEADERS",
+                        )
+                        CountBadge(count = headerCount)
+                        Icon(
+                            imageVector = Icons.Download,
+                            contentDescription = "Download",
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                    if (expanded) {
+                        AlohomoraCodeBlock(
+                            modifier = Modifier.animateItem(),
+                            isScrollable = false,
+                            accentBorder = !trace.isSuccessful,
+                            content = formattedHeaders.joinToString("\n"),
+                        )
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        // JSON viewer with syntax highlighting
-        JsonViewer(
-            json = trace.response ?: "{}",
-            prettify = prettifyJson,
-            searchQuery = searchQuery,
-        )
-
-        Spacer(modifier = Modifier.height(48.dp))
-    }
+        },
+    )
 }
 
 // ============================================================================
@@ -466,9 +470,9 @@ private fun HeroStatsSection(
 private fun InfoRowsSection(trace: TraceEntry) {
     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
         InfoRow(
-            icon = Icons.clock,
+            icon = Icons.Clock,
             label = "TIMESTAMP",
-            value = formatTimestamp(trace.time ?: 0),
+            value = DateUtils.format(trace.time ?: 0, DateUtils.Format.ISO_DATE_TIME),
         )
 
         InfoRow(
@@ -478,13 +482,13 @@ private fun InfoRowsSection(trace: TraceEntry) {
         )
 
         InfoRow(
-            icon = Icons.refreshCw,
+            icon = Icons.RefreshCw,
             label = "SCHEME",
             value = trace.scheme?.uppercase() ?: "HTTPS",
         )
 
         InfoRow(
-            icon = Icons.refreshCw,
+            icon = Icons.RefreshCw,
             label = "CLIENT",
             value = "android-v33 (1.0.4)", // TODO: Get from user agent
         )
@@ -533,8 +537,12 @@ private fun InfoRow(
 }
 
 @Composable
-private fun SectionHeader(title: String) {
+private fun SectionHeader(
+    modifier: Modifier = Modifier,
+    title: String,
+) {
     Text(
+        modifier = modifier,
         text = title,
         style = MaterialTheme.typography.labelMedium,
     )
@@ -570,45 +578,6 @@ private fun CountBadge(count: Int) {
             color = MaterialTheme.colorScheme.onSecondaryContainer,
         )
     }
-}
-
-@Composable
-private fun CodeViewer(json: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.small)
-            .background(color = MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp),
-    ) {
-        Text(
-            text = json,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
-}
-
-@Composable
-private fun ReplayButton(onClick: () -> Unit) {
-    AlohomoraFilledButton(
-        text = "Replay Request",
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(24.dp)
-            .height(56.dp),
-        shape = RectangleShape,
-        content = {
-            Text(text = "↻", style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "REPLAY REQUEST",
-                style = MaterialTheme.typography.labelLarge,
-            )
-        },
-    )
 }
 
 // ============================================================================
@@ -649,11 +618,13 @@ private fun ResponseMetadata(
     sizeBytes: Long,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
+            modifier = Modifier.weight(1f),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -664,14 +635,16 @@ private fun ResponseMetadata(
                     .padding(horizontal = 12.dp, vertical = 6.dp),
             ) {
                 Text(
-                    text = "$statusCode ${getStatusText(statusCode)}",
+                    text = HttpStatusCode.fromValue(statusCode).toString(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 
             Text(
-                text = format,
+                text = format.uppercase(),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -685,76 +658,6 @@ private fun ResponseMetadata(
     }
 }
 
-@Composable
-private fun JsonViewer(
-    json: String,
-    prettify: Boolean,
-    searchQuery: String,
-) {
-    val displayJson = remember(json, prettify) {
-        if (prettify) prettifyJson(json) else json
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(16.dp),
-    ) {
-        JsonText(
-            json = displayJson,
-            searchQuery = searchQuery,
-        )
-    }
-}
-
-@Composable
-private fun JsonText(
-    json: String,
-    searchQuery: String,
-) {
-    if (searchQuery.isEmpty()) {
-        Text(
-            text = json,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-    } else {
-        val highlightedParts = remember(json, searchQuery) {
-            val parts = json.split(searchQuery, ignoreCase = true)
-            val matches = Regex(Regex.escape(searchQuery), RegexOption.IGNORE_CASE)
-                .findAll(json)
-                .map { it.value }
-                .toList()
-            parts to matches
-        }
-
-        val (parts, matches) = highlightedParts
-
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Column {
-                parts.forEachIndexed { index, part ->
-                    Text(
-                        text = part,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-
-                    if (index < matches.size) {
-                        Text(
-                            text = matches[index],
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier
-                                .background(MaterialTheme.colorScheme.primary),
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
 
 // ============================================================================
 // Helper Functions
@@ -776,16 +679,6 @@ private fun getStatusText(statusCode: Int): String {
     }
 }
 
-private fun formatTimestamp(timestamp: Long): String {
-    return try {
-        val instant = Instant.fromEpochMilliseconds(timestamp)
-        val dateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-        "${dateTime.year}-${(dateTime.month.ordinal + 1).toString().padStart(2, '0')}-${dateTime.dayOfMonth.toString().padStart(2, '0')} ${dateTime.hour.toString().padStart(2, '0')}:${dateTime.minute.toString().padStart(2, '0')}:${dateTime.second.toString().padStart(2, '0')}.${dateTime.nanosecond.toString().take(3)}"
-    } catch (e: Exception) {
-        "Invalid timestamp"
-    }
-}
-
 /**
  * Formats bytes to human-readable format (B, KB, MB, GB)
  */
@@ -794,7 +687,7 @@ private fun formatBytes(bytes: Long): String {
     if (bytes == 0L) return "0 B"
 
     val units = arrayOf("B", "KB", "MB", "GB", "TB")
-    val unitIndex = (kotlin.math.log10(bytes.toDouble()) / kotlin.math.log10(1024.0)).toInt()
+    val unitIndex = (log10(bytes.toDouble()) / log10(1024.0)).toInt()
         .coerceAtMost(units.size - 1)
 
     val value = bytes / 1024.0.pow(unitIndex)
@@ -802,8 +695,8 @@ private fun formatBytes(bytes: Long): String {
     return when {
         unitIndex == 0 -> "$bytes ${units[unitIndex]}"
         value >= 100 -> "${value.toInt()} ${units[unitIndex]}"
-        value >= 10 -> "${kotlin.math.round(value * 10) / 10} ${units[unitIndex]}"
-        else -> "${kotlin.math.round(value * 100) / 100} ${units[unitIndex]}"
+        value >= 10 -> "${round(value * 10) / 10} ${units[unitIndex]}"
+        else -> "${round(value * 100) / 100} ${units[unitIndex]}"
     }
 }
 
@@ -823,80 +716,5 @@ private fun formatHeaders(headers: Map<String, List<String>>?): List<String> {
 /**
  * Detects content format from Content-Type header
  */
-private fun detectFormatFromContentType(headers: Map<String, List<String>>?): String {
-    val contentType = headers?.get("Content-Type")?.firstOrNull()
-        ?: headers?.get("content-type")?.firstOrNull()
-        ?: return "TEXT"
-    
-    return when {
-        contentType.contains("application/json", ignoreCase = true) -> "JSON"
-        contentType.contains("application/xml", ignoreCase = true) || 
-        contentType.contains("text/xml", ignoreCase = true) -> "XML"
-        contentType.contains("text/html", ignoreCase = true) -> "HTML"
-        contentType.contains("application/x-www-form-urlencoded", ignoreCase = true) -> "FORM"
-        contentType.contains("multipart/form-data", ignoreCase = true) -> "MULTIPART"
-        contentType.startsWith("text/", ignoreCase = true) -> "TEXT"
-        contentType.contains("application/octet-stream", ignoreCase = true) -> "BINARY"
-        else -> "TEXT"
-    }
-}
-
-private fun calculateJsonSize(json: String): Double {
-    return json.encodeToByteArray().size.toDouble() / 1024.0
-}
-
-private fun formatSize(sizeKb: Double): String {
-    val rounded = (sizeKb * 10).toInt() / 10.0
-    return "$rounded"
-}
-
-private fun prettifyJson(json: String): String {
-    return try {
-        var result = ""
-        var indent = 0
-        var inString = false
-
-        json.forEach { char ->
-            when {
-                char == '"' && result.lastOrNull() != '\\' -> {
-                    inString = !inString
-                    result += char
-                }
-
-                !inString && char == '{' || char == '[' -> {
-                    result += char
-                    result += "\n"
-                    indent++
-                    result += "  ".repeat(indent)
-                }
-
-                !inString && char == '}' || char == ']' -> {
-                    result += "\n"
-                    indent--
-                    result += "  ".repeat(indent)
-                    result += char
-                }
-
-                !inString && char == ',' -> {
-                    result += char
-                    result += "\n"
-                    result += "  ".repeat(indent)
-                }
-
-                !inString && char == ':' -> {
-                    result += char
-                    result += " "
-                }
-
-                char == ' ' && !inString -> {
-                    // Skip spaces outside strings
-                }
-
-                else -> result += char
-            }
-        }
-        result
-    } catch (e: Exception) {
-        json
-    }
-}
+private fun detectFormatFromContentType(contentType: String?): String =
+    ContentType.parse(contentType ?: "").contentSubtype

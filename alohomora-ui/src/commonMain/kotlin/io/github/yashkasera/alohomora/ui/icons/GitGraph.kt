@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.gitGraph: ImageVector
+val Icons.GitGraph: ImageVector
     get() {
         if (_gitGraph != null) return _gitGraph!!
 

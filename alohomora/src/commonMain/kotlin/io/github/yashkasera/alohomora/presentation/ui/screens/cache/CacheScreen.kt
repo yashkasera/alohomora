@@ -36,7 +36,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Search
-import io.github.yashkasera.alohomora.ui.icons.database
+import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.theme.CanvasSuccessGreen
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -97,7 +97,7 @@ internal fun CacheScreen(
             // Content
             if (state.entries.isEmpty()) {
                 EmptyState(
-                    icon = Icons.database,
+                    icon = Icons.Database,
                     title = "No Preferences Found",
                     subtitle = "Preference stores from your app will appear here",
                 )

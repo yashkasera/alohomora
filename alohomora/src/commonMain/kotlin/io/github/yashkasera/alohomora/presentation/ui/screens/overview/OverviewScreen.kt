@@ -46,10 +46,10 @@ import io.github.yashkasera.alohomora.presentation.ui.components.CanvasBackgroun
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Settings
-import io.github.yashkasera.alohomora.ui.icons.chartLine
-import io.github.yashkasera.alohomora.ui.icons.database
-import io.github.yashkasera.alohomora.ui.icons.gitGraph
-import io.github.yashkasera.alohomora.ui.icons.hardDrive
+import io.github.yashkasera.alohomora.ui.icons.ChartLine
+import io.github.yashkasera.alohomora.ui.icons.Database
+import io.github.yashkasera.alohomora.ui.icons.GitGraph
+import io.github.yashkasera.alohomora.ui.icons.HardDrive
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraLargeTopAppBar
@@ -75,28 +75,28 @@ private fun getModules() = listOf(
     OverviewModule(
         title = "Telemetry",
         subtitle = "SYSTEM TRIGGERS",
-        icon = Icons.chartLine,
+        icon = Icons.ChartLine,
         isInverse = false,
         route = Routes.Telemetry,
     ),
     OverviewModule(
         title = "Vault",
         subtitle = "Inspector",
-        icon = Icons.database,
+        icon = Icons.Database,
         isInverse = false,
         route = Routes.Vault,
     ),
     OverviewModule(
         title = "Incidents",
         subtitle = "critical logs",
-        icon = Icons.hardDrive,
+        icon = Icons.HardDrive,
         isInverse = false,
         route = Routes.Incident,
     ),
     OverviewModule(
         title = "Cache",
         subtitle = "key-value store",
-        icon = Icons.hardDrive,
+        icon = Icons.HardDrive,
         isInverse = false,
         route = Routes.Cache,
     ),
@@ -110,7 +110,7 @@ private fun getModules() = listOf(
     OverviewModule(
         title = "Chronicle",
         subtitle = "commit history",
-        icon = Icons.gitGraph,
+        icon = Icons.GitGraph,
         isInverse = false,
         route = Routes.Chronicle,
     ),

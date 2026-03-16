@@ -26,6 +26,7 @@ kotlin {
             implementation(libs.androidx.room.runtime)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.ktor.network)
+            implementation(libs.kotlinx.datetime)
         }
     }
 }

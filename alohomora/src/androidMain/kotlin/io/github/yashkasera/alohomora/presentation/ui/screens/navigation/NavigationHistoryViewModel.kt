@@ -1,17 +1,15 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.navigation
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlin.time.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.number
-import kotlinx.datetime.toLocalDateTime
 import io.github.yashkasera.alohomora.ActivityEvent
 import io.github.yashkasera.alohomora.ActivityState
 import io.github.yashkasera.alohomora.ActivityTracker
 import io.github.yashkasera.alohomora.IntentSnapshot
+import io.github.yashkasera.alohomora.common.DateUtils
+import io.github.yashkasera.alohomora.common.DateUtils.Format
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 data class ActivityTimelineItem(
     val title: String,
@@ -120,7 +118,7 @@ internal class NavigationHistoryViewModel : ViewModel() {
             ActivityTimelineItem(
                 title = simpleName(session.activityName),
                 subtitle = session.intentSummary,
-                timestamp = formatTimestamp(session.startTime),
+                timestamp = DateUtils.format(session.startTime, Format.HH_MM_SS),
                 duration = formatDuration(
                     (session.endTime ?: now) - session.startTime
                 ),
@@ -214,20 +212,6 @@ internal class NavigationHistoryViewModel : ViewModel() {
             String.format("%02d:%02d.%02d", hours, minutes, seconds)
         } else {
             String.format("%02d:%02d.%02d", minutes, seconds, (ms % 1000) / 10)
-        }
-    }
-
-    private fun formatTimestamp(timestamp: Long): String {
-        return try {
-            val instant = Instant.fromEpochMilliseconds(timestamp)
-            val dateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-            "${dateTime.hour.toString().padStart(2, '0')}:${
-                dateTime.minute.toString().padStart(2, '0')
-            }:${dateTime.second.toString().padStart(2, '0')}.${
-                dateTime.nanosecond.toString().take(3)
-            }"
-        } catch (e: Exception) {
-            "Invalid timestamp"
         }
     }
 

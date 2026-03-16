@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Icons.chartLine: ImageVector
+val Icons.ChartLine: ImageVector
     get() {
         if (_chartLine != null) return _chartLine!!
 

@@ -3,7 +3,6 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.trace.list
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -32,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -46,9 +45,6 @@ import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Trash
-import kotlin.time.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -137,7 +133,7 @@ private fun TraceTopBar(
                 query = searchQuery,
                 onQueryChange = viewModel::setQuery,
                 modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = 24.dp,),
+                    .padding(horizontal = 24.dp),
                 placeholder = "Search endpoints",
             )
             Spacer(modifier = Modifier.size(8.dp))
@@ -188,7 +184,7 @@ private fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
             ) {
                 MethodBadge(call.method.orEmpty())
                 Text(
-                    text = formatTime(call.time ?: 0),
+                    text = DateUtils.format(call.time ?: 0, DateUtils.Format.HH_MM_SS_2MS),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -266,17 +262,3 @@ private fun MethodBadge(method: String) {
     )
 }
 
-fun formatTime(timestamp: Long): String {
-    try {
-        val instant = Instant.fromEpochMilliseconds(timestamp)
-        val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-        // HH:mm:ss.SS
-        val h = local.hour.toString().padStart(2, '0')
-        val m = local.minute.toString().padStart(2, '0')
-        val s = local.second.toString().padStart(2, '0')
-        val ms = (local.nanosecond / 1_000_000).toString().padStart(2, '0').take(2)
-        return "$h:$m:$s.$ms"
-    } catch (e: Exception) {
-        return "00:00:00.00"
-    }
-}
