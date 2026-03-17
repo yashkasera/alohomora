@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.data.model
 
 interface AlohomoraConfig {
     val projectName: String
+    val packageName: String?
     val versionName: String
     val versionCode: Int
     val variantName: String
@@ -14,4 +15,3 @@ interface AlohomoraConfig {
     val slackWebhookUrl: String?
     val commits: List<AlohomoraCommit>
 }
-

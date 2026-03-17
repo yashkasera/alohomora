@@ -66,4 +66,6 @@ class DevToolsViewModel(
     val apiLogs = repository.apiLogs
     val databaseSnapshot = repository.databaseSnapshot
     val prefsState = repository.prefsState
+    val buildInfo = repository.buildInfo
+    val chronicle = repository.chronicle
 }

@@ -68,6 +68,29 @@ data class DatabaseSnapshotPayload(
 )
 
 @Serializable
+data class BuildInfoPayload(
+    val projectName: String,
+    val packageName: String? = null,
+    val versionName: String,
+    val versionCode: Int,
+    val variantName: String,
+    val flavorName: String? = null,
+    val buildType: String? = null,
+    val branch: String,
+    val commitSha: String,
+    val isDirty: Boolean,
+    val buildTimestampUtc: Long,
+)
+
+@Serializable
+data class ChronicleCommitPayload(
+    val sha: String,
+    val author: String,
+    val message: String,
+    val timestamp: Long,
+)
+
+@Serializable
 data class PrefsSnapshotPayload(
     val keys: List<String> = emptyList(),
     val values: Map<String, String?> = emptyMap(),
@@ -81,6 +104,8 @@ data class InitialStatePayload(
     val databases: List<AppDatabaseInfo> = emptyList(),
     val selectedDatabase: String? = null,
     val preferenceKeys: List<String>,
+    val buildInfo: BuildInfoPayload? = null,
+    val chronicle: List<ChronicleCommitPayload> = emptyList(),
 )
 
 @Serializable

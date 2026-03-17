@@ -1,10 +1,14 @@
 package io.github.yashkasera.alohomora.desktop.data.devtools
 
 import io.github.yashkasera.alohomora.common.AppDatabaseInfo
+import io.github.yashkasera.alohomora.common.BuildInfoPayload
+import io.github.yashkasera.alohomora.common.ChronicleCommitPayload
 import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
 import io.github.yashkasera.alohomora.common.DatabaseTableColumnPayload
 import io.github.yashkasera.alohomora.common.DatabaseTableSchemaPayload
 import io.github.yashkasera.alohomora.common.DatabaseTableSnapshot
+import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
+import io.github.yashkasera.alohomora.desktop.domain.model.ChronicleCommit
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseInfo
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSchema
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseTable
@@ -42,4 +46,25 @@ internal fun DatabaseTableSnapshot.toDomain(): DatabaseTable = DatabaseTable(
     name = name,
     columns = columns,
     rows = rows,
+)
+
+internal fun BuildInfoPayload.toDomain(): BuildInfo = BuildInfo(
+    projectName = projectName,
+    packageName = packageName,
+    versionName = versionName,
+    versionCode = versionCode,
+    variantName = variantName,
+    flavorName = flavorName,
+    buildType = buildType,
+    branch = branch,
+    commitSha = commitSha,
+    isDirty = isDirty,
+    buildTimestampUtc = buildTimestampUtc,
+)
+
+internal fun ChronicleCommitPayload.toDomain(): ChronicleCommit = ChronicleCommit(
+    sha = sha,
+    author = author,
+    message = message,
+    timestamp = timestamp,
 )

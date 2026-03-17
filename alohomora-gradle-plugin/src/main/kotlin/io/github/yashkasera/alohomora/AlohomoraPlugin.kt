@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora
 
 import com.android.build.api.variant.AndroidComponentsExtension
+import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.LibraryVariant
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -42,6 +44,14 @@ class AlohomoraPlugin : Plugin<Project> {
                 GenerateAlohomoraConfigTask::class.java,
             ) {
                 projectName.set(project.name)
+                val resolvedPackageName = when (variant) {
+                    is ApplicationVariant -> variant.applicationId.orNull
+                    is LibraryVariant -> variant.namespace.orNull
+                    else -> null
+                }
+                if (!resolvedPackageName.isNullOrBlank()) {
+                    packageName.set(resolvedPackageName)
+                }
                 maxCommits.set(extension.maxCommits)
                 slackWebhookUrl.set(extension.slackWebhookUrl)
                 variantName.set(variant.name)

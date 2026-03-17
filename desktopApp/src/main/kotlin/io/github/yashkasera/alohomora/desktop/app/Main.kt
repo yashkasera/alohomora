@@ -1,11 +1,19 @@
 package io.github.yashkasera.alohomora.desktop.app
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
+import io.github.yashkasera.alohomora.desktop.presentation.ui.DeviceSelectionScreen
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DevToolsDesktopApp
+import io.github.yashkasera.alohomora.desktop.util.DevicePortRegistry
+import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
 import java.awt.Dimension
 
 fun main() = application {
@@ -16,12 +24,33 @@ fun main() = application {
     ) {
         window.minimumSize = Dimension(350, 600)
         val composition = remember { DesktopAppComposition() }
-        DevToolsDesktopApp(
-            devToolsViewModel = composition.devToolsViewModel,
-            devicesViewModel = composition.devicesViewModel,
-            logcatViewModel = composition.logcatViewModel,
-            databaseViewModel = composition.databaseViewModel,
-            prefsViewModel = composition.prefsViewModel,
-        )
+        val portRegistry = remember { DevicePortRegistry() }
+        var host by remember { mutableStateOf("127.0.0.1") }
+        var port by remember { mutableStateOf("53999") }
+        val devToolsState by composition.devToolsViewModel.uiState.collectAsState()
+
+        AlohomoraTheme(onThemeChanged = {}) {
+            if (devToolsState.connection is DevToolsConnection.Connected) {
+                DevToolsDesktopApp(
+                    devToolsViewModel = composition.devToolsViewModel,
+                    devicesViewModel = composition.devicesViewModel,
+                    logcatViewModel = composition.logcatViewModel,
+                    databaseViewModel = composition.databaseViewModel,
+                    prefsViewModel = composition.prefsViewModel,
+                    host = host,
+                    port = port,
+                )
+            } else {
+                DeviceSelectionScreen(
+                    devicesViewModel = composition.devicesViewModel,
+                    devToolsViewModel = composition.devToolsViewModel,
+                    portRegistry = portRegistry,
+                    host = host,
+                    port = port,
+                    onHostChange = { host = it },
+                    onPortChange = { port = it.filter(Char::isDigit) },
+                )
+            }
+        }
     }
 }

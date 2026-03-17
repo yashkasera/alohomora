@@ -14,19 +14,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -43,17 +42,19 @@ import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.presentation.ui.components.CanvasBackground
-import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.Server
-import io.github.yashkasera.alohomora.ui.icons.Settings
-import io.github.yashkasera.alohomora.ui.icons.ChartLine
-import io.github.yashkasera.alohomora.ui.icons.Database
-import io.github.yashkasera.alohomora.ui.icons.GitGraph
-import io.github.yashkasera.alohomora.ui.icons.HardDrive
+import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
+import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraLargeTopAppBar
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopAppBarDefaults
+import io.github.yashkasera.alohomora.ui.icons.ChartLine
+import io.github.yashkasera.alohomora.ui.icons.Database
+import io.github.yashkasera.alohomora.ui.icons.GitGraph
+import io.github.yashkasera.alohomora.ui.icons.HardDrive
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Server
+import io.github.yashkasera.alohomora.ui.icons.Settings
 import org.koin.compose.viewmodel.koinViewModel
 
 private data class OverviewModule(
@@ -224,7 +225,11 @@ internal fun OverviewScreen(
             state = lazyGridState,
         ) {
             item(span = StaggeredGridItemSpan.FullLine) {
-                ActiveTargetCard(isConnected = state.isConnected)
+                DevToolsStatusCard(
+                    state = state,
+                    onToggle = { viewModel.onEvent(OverviewEvent.ToggleServer(it)) },
+                    onPortChange = { viewModel.onEvent(OverviewEvent.PortChanged(it)) },
+                )
             }
             item(span = StaggeredGridItemSpan.FullLine) {
                 Text(
@@ -255,7 +260,11 @@ internal fun OverviewScreen(
 }
 
 @Composable
-fun ActiveTargetCard(isConnected: Boolean) {
+fun DevToolsStatusCard(
+    state: OverviewState,
+    onToggle: (Boolean) -> Unit,
+    onPortChange: (String) -> Unit,
+) {
     Box(
         modifier = Modifier.fillMaxWidth().border(
             1.dp, MaterialTheme.colorScheme.onBackground, RectangleShape,
@@ -267,47 +276,31 @@ fun ActiveTargetCard(isConnected: Boolean) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top,
             ) {
-                Text(
-                    "ACTIVE TARGET",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.tertiary,
-                )
-
-                // Status Badge
-                Box(
-                    modifier = Modifier.background(
-                        MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(50),
-                    ).padding(horizontal = 12.dp, vertical = 6.dp),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.error,
-                                    shape = CircleShape,
-                                ),
-                        ) // Status Dot
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            if (isConnected) "CONNECTED" else "DISCONNECTED",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val dotState = when {
+                        state.serverEnabled && state.deviceConnectionStatus == "CONNECTED" -> ConnectionDotState.Connected
+                        state.serverEnabled -> ConnectionDotState.Reconnecting
+                        else -> ConnectionDotState.Disconnected
                     }
+                    ConnectionStatusDot(state = dotState)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Switch(
+                        checked = state.serverEnabled,
+                        onCheckedChange = onToggle,
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Pixel 7 Pro",
+                text = "Server Status",
                 style = MaterialTheme.typography.displaySmall,
                 color = MaterialTheme.colorScheme.onBackground,
             )
 
             Text(
-                "ID: 8A:2F:91:00",
+                "Port: ${state.serverPort}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(top = 8.dp),
@@ -321,17 +314,16 @@ fun ActiveTargetCard(isConnected: Boolean) {
             ) {
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Icon placeholder for wifi/network
                         Text("◎", color = MaterialTheme.colorScheme.onSecondaryContainer)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "LOCAL HOST",
+                            "DEVICE CONNECTION",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
                     }
                     Text(
-                        "192.168.1.42",
+                        state.deviceConnectionStatus,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.padding(
@@ -342,17 +334,26 @@ fun ActiveTargetCard(isConnected: Boolean) {
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        "LATENCY",
+                        "SERVER PORT",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
-                    Text(
-                        "12ms",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(top = 8.dp),
+                    OutlinedTextField(
+                        value = state.serverPort,
+                        onValueChange = onPortChange,
+                        singleLine = true,
+                        enabled = !state.serverEnabled,
+                        modifier = Modifier.width(140.dp),
                     )
                 }
+            }
+            if (!state.serverError.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = state.serverError ?: "",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
             }
         }
     }
@@ -414,4 +415,3 @@ private fun ModuleCard(
         }
     }
 }
-

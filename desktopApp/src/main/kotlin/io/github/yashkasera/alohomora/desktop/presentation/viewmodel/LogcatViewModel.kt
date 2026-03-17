@@ -80,6 +80,10 @@ class LogcatViewModel(
         _filterState.value = _filterState.value.copy(selectedTag = tag)
     }
 
+    fun updatePackageName(packageName: String) {
+        _filterState.value = _filterState.value.copy(packageName = packageName)
+    }
+
     fun toggleLevel(level: LogLevel) {
         val current = _filterState.value.enabledLevels
         val updated = if (current.contains(level)) current - level else current + level
@@ -122,9 +126,15 @@ class LogcatViewModel(
     private fun applyFilters(entries: List<LogEntry>, filter: LogcatFilterState): List<LogEntry> {
         if (entries.isEmpty()) return emptyList()
         val query = filter.searchQuery.trim().lowercase()
+        val packageQuery = filter.packageName.trim().lowercase()
         return entries.asSequence()
             .filter { filter.enabledLevels.contains(it.level) }
             .filter { filter.selectedTag == null || it.tag == filter.selectedTag }
+            .filter { entry ->
+                if (packageQuery.isEmpty()) return@filter true
+                val haystack = "${entry.tag} ${entry.message} ${entry.raw}".lowercase()
+                haystack.contains(packageQuery)
+            }
             .filter { entry ->
                 if (query.isEmpty()) return@filter true
                 val haystack = "${entry.tag} ${entry.message} ${entry.pid} ${entry.tid}".lowercase()

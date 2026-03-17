@@ -22,6 +22,32 @@ internal class AdbServiceImpl(
         runRequired(deviceId, listOf("forward", "--remove", "tcp:$hostPort"))
     }
 
+    override suspend fun enableTcpMode(deviceId: String, tcpPort: Int) {
+        runRequired(deviceId, listOf("tcpip", tcpPort.toString()))
+    }
+
+    override suspend fun connect(host: String, port: Int): AdbCommandResult {
+        return withContext(Dispatchers.IO) {
+            runner.run(listOf("connect", "$host:$port"))
+        }
+    }
+
+    override suspend fun disconnect(host: String, port: Int): AdbCommandResult {
+        return withContext(Dispatchers.IO) {
+            runner.run(listOf("disconnect", "$host:$port"))
+        }
+    }
+
+    override suspend fun restartServer(): AdbCommandResult {
+        return withContext(Dispatchers.IO) {
+            val kill = runner.run(listOf("kill-server"))
+            if (kill.exitCode != 0) {
+                return@withContext kill
+            }
+            runner.run(listOf("start-server"))
+        }
+    }
+
     override suspend fun runCommand(deviceId: String?, args: List<String>): AdbCommandResult =
         withContext(Dispatchers.IO) {
             val command = if (deviceId.isNullOrBlank()) {

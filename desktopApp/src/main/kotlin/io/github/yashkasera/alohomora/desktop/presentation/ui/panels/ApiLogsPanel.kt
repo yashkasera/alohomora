@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 
@@ -34,12 +38,26 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 fun ApiLogsPanel(devToolsViewModel: DevToolsViewModel) {
     val logs by devToolsViewModel.apiLogs.collectAsState()
     var selectedLog by remember { mutableStateOf<TraceEntry?>(null) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize(),
+    val lazyListState = rememberLazyListState()
+    Scaffold(
+        topBar = {
+            AlohomoraTopBar(
+                title = "Traces",
+                subtitle = "Live trace entries from connected app",
+                showDivider = lazyListState.canScrollBackward,
+            )
+        },
     ) {
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            state = lazyListState,
+            contentPadding = PaddingValues(
+                vertical = 20.dp,
+                horizontal = 40.dp
+            ),
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize(),
+        ) {
             items(logs) { log ->
                 Column(
                     modifier = Modifier
@@ -117,6 +135,5 @@ fun ApiLogsPanel(devToolsViewModel: DevToolsViewModel) {
 //                )
 //            }
         }
-
     }
 }

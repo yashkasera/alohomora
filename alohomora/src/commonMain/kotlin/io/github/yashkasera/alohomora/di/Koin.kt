@@ -75,7 +75,7 @@ internal val appModule = module {
     }
 
     // ViewModels
-    viewModel { OverviewViewModel() }
+    viewModel { OverviewViewModel(get()) }
     viewModel { TraceViewModel(get()) }
     viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get(), get(), get()) }
     viewModel { TelemetryViewModel(get()) }

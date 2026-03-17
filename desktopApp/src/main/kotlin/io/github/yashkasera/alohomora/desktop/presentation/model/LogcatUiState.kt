@@ -4,8 +4,9 @@ import io.github.yashkasera.alohomora.desktop.domain.model.LogEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.LogLevel
 
 data class LogcatFilterState(
-    val enabledLevels: Set<LogLevel> = LogLevel.values().toSet(),
+    val enabledLevels: Set<LogLevel> = LogLevel.entries.toSet(),
     val selectedTag: String? = null,
+    val packageName: String = "",
     val searchQuery: String = "",
 )
 

@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.devtools
 
 import io.github.yashkasera.alohomora.common.TelemetryEvent
 import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
 import io.github.yashkasera.alohomora.common.DevToolsEnvelope
@@ -23,6 +24,9 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonElement
@@ -48,26 +52,40 @@ internal class DevToolsRuntime(
     private var activeConnection: DevToolsConnection? = null
     private val databaseInspector = DevToolsDatabaseInspector(database, appDatabaseProvider)
     private var defaultDatabaseName: String? = null
+    private val _serverState = MutableStateFlow(DevToolsServerState())
+    val serverState: StateFlow<DevToolsServerState> = _serverState.asStateFlow()
 
-    fun start(port: Int = DevToolsDefaults.DEFAULT_PORT) {
-        if (!isDebugBuild) return
-        server.start(port) { socket ->
+    fun start(port: Int = DevToolsDefaults.DEFAULT_PORT): Boolean {
+        if (!isDebugBuild) return false
+        val started = server.start(port) { socket ->
             scope.launch {
                 attachClient(socket)
             }
         }
+        _serverState.value = _serverState.value.copy(
+            isRunning = started,
+            port = if (started) port else null,
+            lastError = if (started) null else "Failed to start server",
+        )
+        return started
     }
 
     fun stop() {
         activeConnection?.close()
         activeConnection = null
         server.stop()
+        _serverState.value = _serverState.value.copy(
+            isRunning = false,
+            hasClient = false,
+            port = null,
+        )
     }
 
     private suspend fun attachClient(socket: DevToolsSocket) {
         activeConnection?.close()
         val connection = DevToolsConnection(socket)
         activeConnection = connection
+        _serverState.value = _serverState.value.copy(hasClient = true, lastError = null)
         connection.start()
     }
 
@@ -102,6 +120,7 @@ internal class DevToolsRuntime(
             connectionScope.coroutineContext.cancel()
             if (activeConnection === this) {
                 activeConnection = null
+                _serverState.value = _serverState.value.copy(hasClient = false)
             }
         }
 
@@ -154,6 +173,8 @@ internal class DevToolsRuntime(
                 databases = databases,
                 selectedDatabase = selectedDatabase,
                 preferenceKeys = preferenceKeys,
+                buildInfo = Alohomora.config?.toBuildInfoPayload(),
+                chronicle = Alohomora.config?.commits?.map { it.toChronicleCommitPayload() }.orEmpty(),
             )
             eventAdapter.seed(events)
             apiAdapter.seed(apiLogs)
@@ -170,12 +191,12 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun streamApiLogs() {
-            /*traceRepository.getAllCalls().collect { logs ->
+            traceRepository.list("", "", 0, DevToolsDefaults.API_LOG_SNAPSHOT_LIMIT).collect { logs ->
                 val newItems = apiAdapter.filterNew(logs)
                 newItems.forEach { item ->
                     send(DevToolsMessageType.STREAM_API_LOG, item)
                 }
-            }*/
+            }
         }
 
         private suspend fun handleDatabaseRequest(payload: JsonElement?) {

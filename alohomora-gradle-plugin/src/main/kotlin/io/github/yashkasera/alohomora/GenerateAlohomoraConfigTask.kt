@@ -27,6 +27,10 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
     abstract val projectName: Property<String>
 
     @get:Input
+    @get:Optional
+    abstract val packageName: Property<String>
+
+    @get:Input
     abstract val versionName: Property<String>
 
     @get:Input
@@ -87,6 +91,7 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
         val timestamp = System.currentTimeMillis() / 1000
         val slackUrl = slackWebhookUrl.orNull
         val projectName = projectName.get()
+        val packageName = packageName.orNull
         val versionName = versionName.get()
         val versionCode = versionCode.get()
         val variantName = variantName.get()
@@ -109,6 +114,8 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
             appendLine("    override val slackWebhookUrl: String? = ${escape(slackUrl)}")
             appendLine()
             appendLine("    override val projectName: String = ${escape(projectName)}")
+            appendLine()
+            appendLine("    override val packageName: String? = ${escape(packageName)}")
             appendLine()
             appendLine("    override val versionName: String = ${escape(versionName)}")
             appendLine()

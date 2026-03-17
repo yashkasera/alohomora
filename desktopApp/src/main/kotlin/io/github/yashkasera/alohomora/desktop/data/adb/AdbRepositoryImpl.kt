@@ -81,6 +81,72 @@ class AdbRepositoryImpl(
         }
     }
 
+    override suspend fun enableTcpAndConnect(
+        deviceId: String,
+        host: String,
+        tcpPort: Int,
+    ): String? {
+        return deviceMutex.withLock {
+            return@withLock try {
+                dataSource.enableTcpMode(deviceId, tcpPort)
+                val result = dataSource.connect(host, tcpPort)
+                if (result.exitCode != 0) {
+                    val message =
+                        result.stderr.ifBlank { result.stdout.ifBlank { "adb connect failed" } }
+                    _error.value = message
+                    return@withLock message
+                }
+                _error.value = null
+                null
+            } catch (e: Exception) {
+                _error.value = e.message
+                e.message ?: "Failed to enable tcp and connect"
+            }
+        }
+    }
+
+    override suspend fun disconnectHost(host: String, port: Int): String? {
+        return try {
+            val result = dataSource.disconnect(host, port)
+            if (result.exitCode != 0) {
+                val message =
+                    result.stderr.ifBlank { result.stdout.ifBlank { "adb disconnect failed" } }
+                _error.value = message
+                message
+            } else {
+                _error.value = null
+                null
+            }
+        } catch (e: Exception) {
+            _error.value = e.message
+            e.message ?: "Failed to disconnect host"
+        }
+    }
+
+    override suspend fun restartServer(): String? {
+        return try {
+            val result = dataSource.restartServer()
+            if (result.exitCode != 0) {
+                val message =
+                    result.stderr.ifBlank { result.stdout.ifBlank { "adb restart failed" } }
+                _error.value = message
+                message
+            } else {
+                _error.value = null
+                null
+            }
+        } catch (e: Exception) {
+            _error.value = e.message
+            e.message ?: "Failed to restart adb"
+        }
+    }
+
+    override suspend fun runCommandBlocking(deviceId: String?, args: List<String>): CommandResult {
+        val result = dataSource.runCommand(deviceId, args).toDomain()
+        _lastCommandResult.value = result
+        return result
+    }
+
     override fun runCommand(deviceId: String?, rawCommand: String) {
         scope.launch {
             val args = rawCommand.trim().split(Regex("\\s+")).filter { it.isNotBlank() }

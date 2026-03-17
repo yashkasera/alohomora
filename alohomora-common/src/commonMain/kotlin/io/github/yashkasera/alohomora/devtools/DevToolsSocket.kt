@@ -60,8 +60,8 @@ class DevToolsTcpServer(
     private var serverSocket: ServerSocket? = null
     private var acceptJob: Job? = null
 
-    fun start(port: Int, onClient: (DevToolsSocket) -> Unit) {
-        if (serverSocket != null) return
+    fun start(port: Int, onClient: (DevToolsSocket) -> Unit): Boolean {
+        if (serverSocket != null) return true
         val server = try {
             runBlocking {
                 aSocket(selector).tcp().bind(InetSocketAddress("0.0.0.0", port))
@@ -75,7 +75,7 @@ class DevToolsTcpServer(
             } else {
                 println("Alohomora DevTools server failed to start on port $port: ${e.message}")
             }
-            return
+            return false
         }
         serverSocket = server
         acceptJob = scope.launch {
@@ -88,6 +88,7 @@ class DevToolsTcpServer(
                 onClient(DevToolsSocket(socket))
             }
         }
+        return true
     }
 
     fun stop() {

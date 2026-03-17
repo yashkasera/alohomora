@@ -3,9 +3,9 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.logcat
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,14 +20,14 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 @Composable
 fun LogcatFilters(
     filterState: LogcatFilterState,
-    availableTags: List<String>,
     onToggleLevel: (LogLevel) -> Unit,
     onSelectTag: (String?) -> Unit,
+    onPackageChange: (String) -> Unit,
     onSearch: (String) -> Unit,
 ) {
     Column {
         Row {
-            LogLevel.values().forEach { level ->
+            LogLevel.entries.forEach { level ->
                 val selected = filterState.enabledLevels.contains(level)
                 val containerColor = if (selected) {
                     levelColor(level)
@@ -49,20 +49,31 @@ fun LogcatFilters(
 
         Spacer(modifier = Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            TagDropdown(
-                selectedTag = filterState.selectedTag,
-                availableTags = availableTags,
-                onSelectTag = onSelectTag,
+            AlohomoraTextField(
+                value = filterState.selectedTag.orEmpty(),
+                onValueChange = { onSelectTag(it.ifBlank { null }) },
+                placeholder = "Tag",
+                singleLine = true,
+                modifier = Modifier.weight(1f),
             )
             Spacer(modifier = Modifier.width(12.dp))
             AlohomoraTextField(
-                value = filterState.searchQuery,
-                onValueChange = onSearch,
-                placeholder = "Search",
+                value = filterState.packageName,
+                onValueChange = onPackageChange,
+                placeholder = "Package name",
                 singleLine = true,
                 modifier = Modifier.weight(1f),
             )
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        AlohomoraTextField(
+            value = filterState.searchQuery,
+            onValueChange = onSearch,
+            placeholder = "Search",
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 

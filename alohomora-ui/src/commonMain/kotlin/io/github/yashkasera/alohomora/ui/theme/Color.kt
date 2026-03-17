@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora.ui.theme
 
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
@@ -61,3 +63,6 @@ val CanvasDarkColorScheme = darkColorScheme(
     onSurfaceVariant = CanvasWhite,
     outline = CanvasWhite
 )
+
+val ColorScheme.success: Color
+    get() = CanvasSuccessGreen

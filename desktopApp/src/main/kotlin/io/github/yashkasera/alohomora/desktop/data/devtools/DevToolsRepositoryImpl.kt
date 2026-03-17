@@ -12,9 +12,13 @@ import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaPayload
 import io.github.yashkasera.alohomora.common.RequestDatabaseTablePayload
 import io.github.yashkasera.alohomora.common.RequestPrefValuePayload
 import io.github.yashkasera.alohomora.desktop.data.local.ApiLogStore
+import io.github.yashkasera.alohomora.desktop.data.local.BuildInfoStore
+import io.github.yashkasera.alohomora.desktop.data.local.ChronicleStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.PrefsStore
+import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
+import io.github.yashkasera.alohomora.desktop.domain.model.ChronicleCommit
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.PrefsState
@@ -23,7 +27,6 @@ import io.github.yashkasera.alohomora.devtools.DevToolsSocket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,6 +40,8 @@ class DevToolsRepositoryImpl(
     private val apiLogStore: ApiLogStore = ApiLogStore(),
     private val databaseStore: DatabaseSnapshotStore = DatabaseSnapshotStore(),
     private val prefsStore: PrefsStore = PrefsStore(),
+    private val buildInfoStore: BuildInfoStore = BuildInfoStore(),
+    private val chronicleStore: ChronicleStore = ChronicleStore(),
 ) : DevToolsRepository {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val _state = MutableStateFlow<DevToolsConnection>(DevToolsConnection.Disconnected)
@@ -50,6 +55,8 @@ class DevToolsRepositoryImpl(
     override val apiLogs: StateFlow<List<TraceEntry>> = apiLogStore.logs
     override val databaseSnapshot: StateFlow<DatabaseSnapshot> = databaseStore.snapshot
     override val prefsState: StateFlow<PrefsState> = prefsStore.state
+    override val buildInfo: StateFlow<BuildInfo?> = buildInfoStore.buildInfo
+    override val chronicle: StateFlow<List<ChronicleCommit>> = chronicleStore.commits
 
     private var connectionJobActive = false
     private var connection: DevToolsSocket? = null
@@ -61,24 +68,26 @@ class DevToolsRepositoryImpl(
         _switching.value = true
         _state.value = DevToolsConnection.Connecting(host, port)
         scope.launch {
-            while (connectionJobActive) {
-                try {
-                    val socket = remoteDataSource.connect(host, port)
-                    connection = socket
-                    _state.value = DevToolsConnection.Connected(host, port)
-                    _switching.value = false
-                    remoteDataSource.processConnection(socket, ::handleEnvelope)
-                } catch (e: Exception) {
-                    _state.value = DevToolsConnection.Failed(e.message ?: "Connection failed")
-                    _switching.value = false
-                } finally {
-                    connection?.close()
-                    connection = null
-                    if (connectionJobActive) {
-                        _state.value = DevToolsConnection.Connecting(host, port)
-                        delay(2000)
-                    }
+            try {
+                val socket = remoteDataSource.connect(host, port)
+                connection = socket
+                _state.value = DevToolsConnection.Connected(host, port)
+                _switching.value = false
+                sendRequest(DevToolsMessageType.REQUEST_INITIAL_STATE)
+                remoteDataSource.processConnection(socket, ::handleEnvelope)
+            } catch (e: Exception) {
+                _state.value = DevToolsConnection.Failed(e.message ?: "Connection failed")
+                _switching.value = false
+            } finally {
+                connection?.close()
+                connection = null
+                if (_state.value is DevToolsConnection.Connecting ||
+                    _state.value is DevToolsConnection.Connected
+                ) {
+                    _state.value = DevToolsConnection.Disconnected
                 }
+                _switching.value = false
+                connectionJobActive = false
             }
         }
     }
@@ -178,6 +187,8 @@ class DevToolsRepositoryImpl(
                     )
                     databaseStore.replaceSchema(payload.databaseSchema.toDomain())
                     prefsStore.replaceKeys(payload.preferenceKeys)
+                    buildInfoStore.replace(payload.buildInfo?.toDomain())
+                    chronicleStore.replace(payload.chronicle.map { it.toDomain() })
                 }
             }
 
@@ -221,5 +232,7 @@ class DevToolsRepositoryImpl(
         apiLogStore.clear()
         databaseStore.clear()
         prefsStore.clear()
+        buildInfoStore.clear()
+        chronicleStore.clear()
     }
 }

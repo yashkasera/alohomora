@@ -23,7 +23,10 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.LogEntry
 
 @Composable
-fun LogcatList(entries: List<LogEntry>) {
+fun LogcatList(
+    entries: List<LogEntry>,
+    modifier: Modifier = Modifier,
+) {
     val listState = rememberLazyListState()
     val atBottom by remember {
         derivedStateOf {
@@ -45,7 +48,7 @@ fun LogcatList(entries: List<LogEntry>) {
 
     if (entries.isEmpty()) {
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .height(180.dp)
                 .border(1.dp, Color(0xFFE0D7CC))
@@ -57,7 +60,7 @@ fun LogcatList(entries: List<LogEntry>) {
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .fillMaxHeight()
             .border(1.dp, Color(0xFFE0D7CC))

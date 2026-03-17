@@ -4,6 +4,8 @@ import io.github.yashkasera.alohomora.desktop.data.adb.AdbRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.devtools.DevToolsRemoteDataSource
 import io.github.yashkasera.alohomora.desktop.data.devtools.DevToolsRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.local.ApiLogStore
+import io.github.yashkasera.alohomora.desktop.data.local.BuildInfoStore
+import io.github.yashkasera.alohomora.desktop.data.local.ChronicleStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
@@ -45,6 +47,8 @@ class DesktopAppComposition {
         val apiLogStore = ApiLogStore()
         val databaseSnapshotStore = DatabaseSnapshotStore()
         val prefsStore = PrefsStore()
+        val buildInfoStore = BuildInfoStore()
+        val chronicleStore = ChronicleStore()
 
         val devToolsRepository = DevToolsRepositoryImpl(
             remoteDataSource = DevToolsRemoteDataSource(),
@@ -52,6 +56,8 @@ class DesktopAppComposition {
             apiLogStore = apiLogStore,
             databaseStore = databaseSnapshotStore,
             prefsStore = prefsStore,
+            buildInfoStore = buildInfoStore,
+            chronicleStore = chronicleStore,
         )
 
         val adbRepository = AdbRepositoryImpl()

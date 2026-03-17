@@ -131,9 +131,9 @@ object Alohomora {
     // DevTools TCP Server
     // ============================================================================
 
-    fun startDevToolsServer(port: Int = DevToolsDefaults.DEFAULT_PORT) {
-        val runtime = koin?.get<DevToolsRuntime>() ?: return
-        runtime.start(port)
+    fun startDevToolsServer(port: Int = DevToolsDefaults.DEFAULT_PORT): Boolean {
+        val runtime = koin?.get<DevToolsRuntime>() ?: return false
+        return runtime.start(port)
     }
 
     fun stopDevToolsServer() {
