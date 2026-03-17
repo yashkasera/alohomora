@@ -1,9 +1,9 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.logcat
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 
@@ -14,15 +14,12 @@ fun LogcatControls(
     onStop: () -> Unit,
     onClear: () -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        if (running) {
-            AlohomoraFilledButton(text = "Stop", onClick = onStop)
-        } else {
-            AlohomoraFilledButton(text = "Start", onClick = onStart)
-        }
-        AlohomoraFilledButton(text = "Clear", onClick = onClear)
+
+    if (running) {
+        AlohomoraFilledButton(text = "Stop", onClick = onStop)
+    } else {
+        AlohomoraFilledButton(text = "Start", onClick = onStart)
     }
+    Spacer(modifier = Modifier.width(8.dp))
+    AlohomoraFilledButton(text = "Clear", onClick = onClear)
 }

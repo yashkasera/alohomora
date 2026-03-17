@@ -72,11 +72,11 @@ fun AlohomoraTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    shape: Shape = MaterialTheme.shapes.extraSmall,
+    shape: Shape = MaterialTheme.shapes.small,
     textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
     containerColor: Color = MaterialTheme.colorScheme.surface,
-    borderColor: Color = MaterialTheme.colorScheme.outline,
-    focusedBorderColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    borderColor: Color = MaterialTheme.colorScheme.outlineVariant,
+    focusedBorderColor: Color = MaterialTheme.colorScheme.outline,
     cursorColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -123,7 +123,7 @@ fun AlohomoraTextField(
                         Text(
                             text = placeholder,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.outlineVariant,
                         )
                     }
                     innerTextField()

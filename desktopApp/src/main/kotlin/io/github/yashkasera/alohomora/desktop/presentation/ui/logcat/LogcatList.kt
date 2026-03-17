@@ -18,9 +18,9 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.LogEntry
+import io.github.yashkasera.alohomora.ui.theme.panelBorder
 
 @Composable
 fun LogcatList(
@@ -51,7 +51,7 @@ fun LogcatList(
             modifier = modifier
                 .fillMaxWidth()
                 .height(180.dp)
-                .border(1.dp, Color(0xFFE0D7CC))
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
                 .padding(12.dp)
         ) {
             Text(text = "Logcat output will appear here.", style = MaterialTheme.typography.bodySmall)
@@ -63,7 +63,7 @@ fun LogcatList(
         modifier = modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .border(1.dp, Color(0xFFE0D7CC))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
             .padding(8.dp)
     ) {
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {

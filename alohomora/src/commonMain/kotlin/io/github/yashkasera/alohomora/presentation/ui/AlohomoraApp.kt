@@ -16,7 +16,7 @@ fun AlohomoraApp(
         CompositionLocalProvider(
             LocalRippleConfiguration provides null
         ) {
-            AlohomoraTheme(onThemeChanged = onThemeChanged) {
+            AlohomoraTheme() {
                 AlohomoraNavHost(startDestination = startDestination)
             }
         }

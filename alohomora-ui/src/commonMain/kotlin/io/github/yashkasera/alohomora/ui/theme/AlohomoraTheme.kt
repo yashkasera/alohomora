@@ -12,7 +12,6 @@ import androidx.compose.runtime.remember
 
 @Composable
 fun AlohomoraTheme(
-    onThemeChanged: @Composable (isDark: Boolean) -> Unit,
     content: @Composable () -> Unit
 ) {
     val systemIsDark = isSystemInDarkTheme()
@@ -21,7 +20,6 @@ fun AlohomoraTheme(
         LocalThemeIsDark provides isDarkState
     ) {
         val isDark by isDarkState
-        onThemeChanged(!isDark)
         MaterialTheme(
             colorScheme = if (isDark) CanvasDarkColorScheme else CanvasLightColorScheme,
             typography = AlohomoraTypography(),

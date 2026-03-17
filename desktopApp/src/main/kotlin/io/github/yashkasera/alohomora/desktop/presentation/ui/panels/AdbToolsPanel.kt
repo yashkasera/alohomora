@@ -20,6 +20,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,7 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,7 +46,10 @@ import io.github.yashkasera.alohomora.desktop.util.pickSavePath
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
-import io.github.yashkasera.alohomora.ui.theme.CanvasSuccessGreen
+import io.github.yashkasera.alohomora.ui.theme.brand
+import io.github.yashkasera.alohomora.ui.theme.logError
+import io.github.yashkasera.alohomora.ui.theme.muted
+import io.github.yashkasera.alohomora.ui.theme.success
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -57,8 +61,6 @@ fun AdbToolsPanel(
     selectedDeviceId: String?,
     adbCommandHistory: List<AdbCommandLogEntry>,
     buildInfo: BuildInfo?,
-    actionMessage: String?,
-    actionError: String?,
 ) {
     val isDeviceSelected = !selectedDeviceId.isNullOrBlank()
     val wifiEnabled by devicesViewModel.wifiEnabled.collectAsState()
@@ -89,12 +91,17 @@ fun AdbToolsPanel(
             AlohomoraTopBar(
                 title = "ADB Shortcuts",
                 subtitle = "Common device actions for developers and QA",
-                showDivider = scrollState.canScrollBackward
+                showDivider = scrollState.canScrollBackward,
+            )
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = devicesViewModel.snackbarHostState,
             )
         },
         bottomBar = {
             Column(
-                modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 AlohomoraHorizontalDivider()
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -116,7 +123,7 @@ fun AdbToolsPanel(
                             Text(
                                 if (consoleExpanded) "Hide" else "Show",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFF1A56DB),
+                                color = MaterialTheme.colorScheme.brand,
                                 fontWeight = FontWeight.Bold,
                             )
                         }
@@ -128,12 +135,15 @@ fun AdbToolsPanel(
                             Text(
                                 "No commands yet.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray,
+                                color = MaterialTheme.colorScheme.secondary,
                             )
                         } else {
                             LazyColumn(
                                 modifier = Modifier.fillMaxWidth().height(220.dp)
-                                    .background(Color(0xFFF9FAFB), RoundedCornerShape(6.dp))
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceContainerLow,
+                                        RoundedCornerShape(6.dp),
+                                    )
                                     .padding(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
@@ -142,6 +152,7 @@ fun AdbToolsPanel(
                                         text = formatLogEntry(entry),
                                         style = MaterialTheme.typography.bodySmall,
                                         fontFamily = FontFamily.Monospace,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             }
@@ -150,6 +161,7 @@ fun AdbToolsPanel(
                 }
             }
         },
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
         Column(
             modifier = Modifier
@@ -335,7 +347,7 @@ fun AdbToolsPanel(
                         }
                     },
                     enabled = isDeviceSelected,
-                    containerColor = if (isRecording) Color(0xFFC62828) else MaterialTheme.colorScheme.onBackground,
+                    containerColor = if (isRecording) MaterialTheme.colorScheme.logError else MaterialTheme.colorScheme.onBackground,
                     contentColor = MaterialTheme.colorScheme.background,
                 )
             }
@@ -365,7 +377,9 @@ fun AdbToolsPanel(
                 SwitchRow(
                     checked = wifiEnabled == true,
                     enabled = isDeviceSelected && wifiEnabled != null,
-                    onCheckedChange = { devicesViewModel.toggleWifi(selectedDeviceId) },
+                    onCheckedChange = {
+                        devicesViewModel.toggleWifi(selectedDeviceId)
+                    },
                 )
             }
             AdbRow(
@@ -410,15 +424,6 @@ fun AdbToolsPanel(
                     onClick = { devicesViewModel.restartAdb() },
                 )
             }
-
-            if (!actionMessage.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(actionMessage, color = CanvasSuccessGreen)
-            }
-            if (!actionError.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(actionError, color = Color(0xFFC62828))
-            }
         }
     }
 }
@@ -453,7 +458,11 @@ private fun AdbRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             if (!subtitle.isNullOrBlank()) {
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
             }
         }
         Spacer(modifier = Modifier.width(16.dp))
@@ -469,7 +478,7 @@ private fun SectionHeader(title: String) {
     Text(
         title,
         style = MaterialTheme.typography.labelSmall,
-        color = Color.Gray,
+        color = MaterialTheme.colorScheme.secondary,
         fontWeight = FontWeight.Bold,
     )
 }
@@ -484,7 +493,7 @@ private fun SwitchRow(
         Text(
             if (checked) "On" else "Off",
             style = MaterialTheme.typography.bodySmall,
-            color = if (enabled) Color.DarkGray else Color.LightGray,
+            color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.muted,
         )
         Spacer(modifier = Modifier.width(8.dp))
         Switch(

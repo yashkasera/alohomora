@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
+import androidx.compose.material3.SnackbarHostState
 import io.github.yashkasera.alohomora.desktop.domain.model.CommandResult
 import io.github.yashkasera.alohomora.desktop.domain.model.Device
 import io.github.yashkasera.alohomora.desktop.domain.repository.AdbRepository
@@ -9,9 +10,10 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.RefreshDevicesUseCa
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RunAdbCommandUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.SelectDeviceUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.UninstallPackageUseCase
+import io.github.yashkasera.alohomora.desktop.presentation.model.AdbCommandLogEntry
 import io.github.yashkasera.alohomora.desktop.presentation.model.DashboardUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
-import io.github.yashkasera.alohomora.desktop.presentation.model.AdbCommandLogEntry
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -23,7 +25,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 class DevicesViewModel(
     private val repository: AdbRepository,
@@ -35,6 +36,7 @@ class DevicesViewModel(
     private val uninstallPackageUseCase: UninstallPackageUseCase,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    val snackbarHostState = SnackbarHostState()
 
     val devices: StateFlow<List<DeviceUi>> = repository.devices
         .map { devices -> devices.map { it.toUi() } }
@@ -63,7 +65,12 @@ class DevicesViewModel(
 
     fun refreshDevices() = refreshDevicesUseCase()
 
-    fun selectDevice(deviceId: String, hostPort: Int, devicePort: Int, onError: (String?) -> Unit = {}) {
+    fun selectDevice(
+        deviceId: String,
+        hostPort: Int,
+        devicePort: Int,
+        onError: (String?) -> Unit = {},
+    ) {
         scope.launch {
             _activating.value = true
             val error = selectDeviceUseCase(deviceId, hostPort, devicePort)
@@ -114,20 +121,41 @@ class DevicesViewModel(
         dashboardPollingJob?.cancel()
         dashboardPollingJob = scope.launch {
             while (true) {
-                _dashboardState.value = _dashboardState.value.copy(loadingMetrics = true, actionError = null)
-                val release = repository.runCommandBlocking(deviceId, listOf("shell", "getprop", "ro.build.version.release")).stdout.trim()
-                val api = repository.runCommandBlocking(deviceId, listOf("shell", "getprop", "ro.build.version.sdk")).stdout.trim()
-                val batteryDump = repository.runCommandBlocking(deviceId, listOf("shell", "dumpsys", "battery")).stdout
-                val memDump = repository.runCommandBlocking(deviceId, listOf("shell", "cat", "/proc/meminfo")).stdout
-                val cpuDump = repository.runCommandBlocking(deviceId, listOf("shell", "dumpsys", "cpuinfo")).stdout
+                _dashboardState.value =
+                    _dashboardState.value.copy(loadingMetrics = true)
+                val release = repository.runCommandBlocking(
+                    deviceId,
+                    listOf("shell", "getprop", "ro.build.version.release"),
+                ).stdout.trim()
+                val api = repository.runCommandBlocking(
+                    deviceId,
+                    listOf("shell", "getprop", "ro.build.version.sdk"),
+                ).stdout.trim()
+                val batteryDump = repository.runCommandBlocking(
+                    deviceId,
+                    listOf("shell", "dumpsys", "battery"),
+                ).stdout
+                val memDump = repository.runCommandBlocking(
+                    deviceId,
+                    listOf("shell", "cat", "/proc/meminfo"),
+                ).stdout
+                val cpuDump = repository.runCommandBlocking(
+                    deviceId,
+                    listOf("shell", "dumpsys", "cpuinfo"),
+                ).stdout
                 val gfxDump = if (!packageName.isNullOrBlank()) {
-                    repository.runCommandBlocking(deviceId, listOf("shell", "dumpsys", "gfxinfo", packageName)).stdout
+                    repository.runCommandBlocking(
+                        deviceId,
+                        listOf("shell", "dumpsys", "gfxinfo", packageName),
+                    ).stdout
                 } else {
                     ""
                 }
 
-                val batteryLevel = Regex("level:\\s*(\\d+)").find(batteryDump)?.groupValues?.get(1) ?: "-"
-                val batteryStatusCode = Regex("status:\\s*(\\d+)").find(batteryDump)?.groupValues?.get(1)
+                val batteryLevel =
+                    Regex("level:\\s*(\\d+)").find(batteryDump)?.groupValues?.get(1) ?: "-"
+                val batteryStatusCode =
+                    Regex("status:\\s*(\\d+)").find(batteryDump)?.groupValues?.get(1)
                 val batteryStatus = when (batteryStatusCode) {
                     "2" -> "Charging"
                     "3" -> "Discharging"
@@ -135,8 +163,10 @@ class DevicesViewModel(
                     else -> "Unknown"
                 }
 
-                val memTotalKb = Regex("MemTotal:\\s*(\\d+)").find(memDump)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
-                val memAvailKb = Regex("MemAvailable:\\s*(\\d+)").find(memDump)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
+                val memTotalKb = Regex("MemTotal:\\s*(\\d+)").find(memDump)?.groupValues?.get(1)
+                    ?.toDoubleOrNull() ?: 0.0
+                val memAvailKb = Regex("MemAvailable:\\s*(\\d+)").find(memDump)?.groupValues?.get(1)
+                    ?.toDoubleOrNull() ?: 0.0
                 val usedGb = ((memTotalKb - memAvailKb) / 1024.0 / 1024.0).coerceAtLeast(0.0)
                 val totalGb = (memTotalKb / 1024.0 / 1024.0).coerceAtLeast(0.0)
 
@@ -145,8 +175,10 @@ class DevicesViewModel(
                     ?: Regex("(\\d+)%").find(cpuDump)?.groupValues?.get(1)
                     ?: "-"
 
-                val jankyFrames = Regex("Janky frames:\\s*(\\d+)").find(gfxDump)?.groupValues?.get(1) ?: "-"
-                val frameTime = Regex("50th percentile:\\s*([0-9.]+)ms").find(gfxDump)?.groupValues?.get(1)
+                val jankyFrames =
+                    Regex("Janky frames:\\s*(\\d+)").find(gfxDump)?.groupValues?.get(1) ?: "-"
+                val frameTime =
+                    Regex("50th percentile:\\s*([0-9.]+)ms").find(gfxDump)?.groupValues?.get(1)
                 val frameRate = frameTime?.toDoubleOrNull()?.let { ms ->
                     if (ms > 0) (1000.0 / ms).roundToInt().toString() else "-"
                 } ?: "-"
@@ -172,17 +204,17 @@ class DevicesViewModel(
     }
 
     fun setActionMessage(message: String) {
-        _dashboardState.value = _dashboardState.value.copy(actionMessage = message, actionError = null)
+        scope.launch { snackbarHostState.showSnackbar(message) }
     }
 
     fun setActionError(message: String) {
-        _dashboardState.value = _dashboardState.value.copy(actionMessage = null, actionError = message)
+        scope.launch { snackbarHostState.showSnackbar(message) }
     }
 
     private suspend fun estimateLatencyMs(deviceId: String): String {
         val output = repository.runCommandBlocking(
             deviceId,
-            listOf("shell", "ping", "-c", "1", "8.8.8.8")
+            listOf("shell", "ping", "-c", "1", "8.8.8.8"),
         ).stdout
         val ms = Regex("time=([0-9.]+)").find(output)?.groupValues?.get(1)?.toDoubleOrNull()
         return if (ms != null) "${ms.roundToInt()}" else "-"
@@ -229,10 +261,12 @@ class DevicesViewModel(
                     runLoggedBlocking(deviceId, listOf("shell", "svc", "wifi", "disable"))
                     setActionMessage("Wi-Fi disabled")
                 }
+
                 stateLine.contains("disabled", ignoreCase = true) -> {
                     runLoggedBlocking(deviceId, listOf("shell", "svc", "wifi", "enable"))
                     setActionMessage("Wi-Fi enabled")
                 }
+
                 else -> setActionError("Unable to determine Wi-Fi state")
             }
             refreshConnectivityState(deviceId)
@@ -245,8 +279,10 @@ class DevicesViewModel(
             return
         }
         scope.launch {
-            val stateResult = runLoggedBlocking(deviceId, listOf("shell", "dumpsys", "telephony.registry"))
-            val stateLine = stateResult.stdout.lines().firstOrNull { it.contains("mDataConnectionState") }
+            val stateResult =
+                runLoggedBlocking(deviceId, listOf("shell", "dumpsys", "telephony.registry"))
+            val stateLine =
+                stateResult.stdout.lines().firstOrNull { it.contains("mDataConnectionState") }
             if (stateLine == null) {
                 setActionError("Unable to determine mobile data state")
                 return@launch
@@ -279,8 +315,10 @@ class DevicesViewModel(
                 else -> null
             }
 
-            val dataResult = runLoggedBlocking(deviceId, listOf("shell", "dumpsys", "telephony.registry"))
-            val dataLine = dataResult.stdout.lines().firstOrNull { it.contains("mDataConnectionState") }
+            val dataResult =
+                runLoggedBlocking(deviceId, listOf("shell", "dumpsys", "telephony.registry"))
+            val dataLine =
+                dataResult.stdout.lines().firstOrNull { it.contains("mDataConnectionState") }
             _dataEnabled.value = when {
                 dataLine == null -> null
                 dataLine.contains("CONNECTED", ignoreCase = true) -> true

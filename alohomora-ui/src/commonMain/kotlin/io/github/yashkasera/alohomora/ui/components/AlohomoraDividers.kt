@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 fun AlohomoraHorizontalDivider(
     modifier: Modifier = Modifier,
     thickness: Dp = 1.dp,
-    color: Color = MaterialTheme.colorScheme.outline,
+    color: Color = MaterialTheme.colorScheme.outlineVariant,
 ) {
     HorizontalDivider(
         modifier = modifier,

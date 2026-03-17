@@ -13,7 +13,5 @@ data class DashboardUiState(
     val frameRateFps: String = "-",
     val frameTimeMs: String = "-",
     val jankFrames: String = "-",
-    val actionMessage: String? = null,
-    val actionError: String? = null,
     val loadingMetrics: Boolean = false,
 )

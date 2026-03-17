@@ -29,6 +29,9 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Settings
+import io.github.yashkasera.alohomora.ui.theme.queryErrorContainer
+import io.github.yashkasera.alohomora.ui.theme.querySuccessContainer
+import io.github.yashkasera.alohomora.ui.theme.success
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTable
@@ -373,9 +376,9 @@ fun QueryTabContent(
                 queryStatus?.let { status ->
                     Surface(
                         color = if (status.success) {
-                            Color(0xFF4CAF50).copy(alpha = 0.1f)
+                            MaterialTheme.colorScheme.querySuccessContainer
                         } else {
-                            Color(0xFFF44336).copy(alpha = 0.1f)
+                            MaterialTheme.colorScheme.queryErrorContainer
                         },
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -387,9 +390,9 @@ fun QueryTabContent(
                                 text = if (status.success) "✓" else "✗",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = if (status.success) {
-                                    Color(0xFF4CAF50)
+                                    MaterialTheme.colorScheme.success
                                 } else {
-                                    Color(0xFFF44336)
+                                    MaterialTheme.colorScheme.error
                                 }
                             )
                             Text(

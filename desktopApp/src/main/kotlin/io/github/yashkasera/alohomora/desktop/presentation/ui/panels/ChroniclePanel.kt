@@ -1,16 +1,19 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,43 +24,116 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
+import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.github.yashkasera.alohomora.desktop.domain.model.ChronicleCommit
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.icons.GitGraph
+import io.github.yashkasera.alohomora.ui.icons.Icons
 
 @Composable
 fun ChroniclePanel(devToolsViewModel: DevToolsViewModel) {
     val commits by devToolsViewModel.chronicle.collectAsState()
+    val buildInfo by devToolsViewModel.buildInfo.collectAsState()
     val lazyListState = rememberLazyListState()
 
     Scaffold(
         topBar = {
             AlohomoraTopBar(
-                title = "Traces",
-                subtitle = "Live trace entries from connected app",
+                title = "Chronicle",
+                subtitle = "Build info generated using the Alohomora Plugin",
                 showDivider = lazyListState.canScrollBackward,
             )
         },
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
-        if (commits.isEmpty()) {
-            Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                Text(
-                    text = "No commits available. Connect a device to load commit history.",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize(),
+        ) {
+            stickyHeader {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                        .padding(12.dp),
+                ) {
+                    Text(
+                        text = "Build Info",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
             }
-        } else {
-            LazyColumn(
-                state = lazyListState,
-                contentPadding = PaddingValues(
-                    vertical = 20.dp,
-                    horizontal = 40.dp,
-                ),
-                modifier = Modifier
-                    .padding(it)
-                    .fillMaxSize(),
-            ) {
+            item {
+                OutlinedCard(
+                    modifier = Modifier.padding(24.dp),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        if (buildInfo == null) {
+                            Text(
+                                text = "No build config available. Connect a device to load build metadata.",
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            return@Column
+                        }
+
+                        val info = buildInfo ?: return@Column
+                        InfoRow(label = "Project", value = info.projectName)
+                        InfoRow(
+                            label = "Version",
+                            value = "${info.versionName} (${info.versionCode})",
+                        )
+                        InfoRow(label = "Variant", value = info.variantName)
+                        InfoRow(label = "Environment", value = buildEnvironment(info))
+                        InfoRow(label = "Branch", value = info.branch)
+                        InfoRow(label = "Commit", value = info.commitSha)
+                        InfoRow(label = "Dirty", value = if (info.isDirty) "Yes" else "No")
+                        InfoRow(
+                            label = "Build Time",
+                            value = DateUtils.format(
+                                info.buildTimestampUtc,
+                                DateUtils.Format.READABLE_DATE_TIME,
+                                DateUtils.TimeUnit.SECONDS,
+                            ),
+                        )
+                    }
+                }
+            }
+            stickyHeader {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                        .padding(12.dp),
+                ) {
+                    Text(
+                        text = "Commit History",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = "Showing last ${commits.size} commits",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
+            }
+
+            if (commits.isEmpty()) {
+                item {
+                    EmptyState(
+                        modifier = Modifier
+                            .padding(it),
+                        icon = Icons.GitGraph,
+                        title = "No Git Commits",
+                        subtitle = "No commits available. Connect a device to load commit history.",
+                    )
+                }
+            } else {
                 items(commits) { commit ->
                     ChronicleRow(commit = commit)
                     AlohomoraHorizontalDivider()
@@ -106,4 +182,37 @@ private fun ChronicleRow(commit: ChronicleCommit) {
             color = MaterialTheme.colorScheme.secondary,
         )
     }
+}
+
+@Composable
+private fun InfoRow(label: String, value: String?) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Medium,
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = value ?: "-",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+}
+
+private fun buildEnvironment(info: BuildInfo): String {
+    val parts = mutableListOf<String>()
+    if (!info.flavorName.isNullOrBlank()) {
+        parts.add(info.flavorName)
+    }
+    if (info.variantName.isNotBlank()) {
+        parts.add(info.variantName)
+    }
+    if (!info.buildType.isNullOrBlank()) {
+        parts.add(info.buildType)
+    }
+    return if (parts.isEmpty()) "-" else parts.joinToString(" • ")
 }

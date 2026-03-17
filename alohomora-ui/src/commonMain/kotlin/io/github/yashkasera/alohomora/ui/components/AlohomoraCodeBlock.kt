@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -63,8 +64,9 @@ fun AlohomoraCodeBlock(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(CanvasLightGray)
-            .border(1.dp, CanvasLightGray),
+            .clip(MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.small),
     ) {
         // Left accent border for errors/exceptions
         if (accentBorder) {
@@ -99,7 +101,7 @@ fun AlohomoraCodeBlock(
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
                     lineHeight = 18.sp,
-                    color = CanvasDarkGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
                 modifier = textModifier,
             )

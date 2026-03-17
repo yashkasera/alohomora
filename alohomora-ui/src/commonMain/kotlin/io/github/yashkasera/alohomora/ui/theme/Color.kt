@@ -2,7 +2,6 @@ package io.github.yashkasera.alohomora.ui.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
@@ -15,54 +14,146 @@ val CanvasError = Color(0xFF000000)
 val CanvasAlertRed = Color(0xFFD00000)
 val CanvasSuccessGreen = Color(0xFF059669)
 
+private val CanvasBrandBlueLight = Color(0xFF1A56DB)
+private val CanvasBrandBlueDark = Color(0xFF7AA2FF)
+private val CanvasWarningLight = Color(0xFFB27A00)
+private val CanvasWarningDark = Color(0xFFFFC857)
+private val CanvasMutedLight = Color(0xFF8A8A8A)
+private val CanvasMutedDark = Color(0xFFB0B0B0)
+private val CanvasMutedContainerLight = Color(0xFFE0E0E0)
+private val CanvasMutedContainerDark = Color(0xFF2D2D2D)
+private val CanvasSubtleSurfaceLight = Color(0xFFF9FAFB)
+private val CanvasSubtleSurfaceDark = Color(0xFF1A1A1A)
+private val CanvasSubtleSurfaceAltLight = Color(0xFFF3F4F6)
+private val CanvasSubtleSurfaceAltDark = Color(0xFF242424)
+private val CanvasPanelBorderLight = Color(0xFFE0D7CC)
+private val CanvasPanelBorderDark = Color(0xFF3A332B)
+
+private val CanvasLogVerboseLight = Color(0xFF9E9E9E)
+private val CanvasLogVerboseDark = Color(0xFFBDBDBD)
+private val CanvasLogDebugLight = Color(0xFF1976D2)
+private val CanvasLogDebugDark = Color(0xFF64B5F6)
+private val CanvasLogInfoLight = Color(0xFF2E7D32)
+private val CanvasLogInfoDark = Color(0xFF81C784)
+private val CanvasLogWarnLight = Color(0xFFEF6C00)
+private val CanvasLogWarnDark = Color(0xFFFFB74D)
+private val CanvasLogErrorLight = Color(0xFFC62828)
+private val CanvasLogErrorDark = Color(0xFFEF5350)
+private val CanvasLogFatalLight = Color(0xFF9C27B0)
+private val CanvasLogFatalDark = Color(0xFFCE93D8)
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 val CanvasLightColorScheme = lightColorScheme(
-    primary = CanvasBlack,
-    onPrimary = CanvasWhite,
-    primaryContainer = CanvasLightGray,
-    onPrimaryContainer = CanvasBlack,
-    secondary = CanvasBlack,
-    onSecondary = CanvasWhite,
-    secondaryContainer = CanvasLightGray,
-    onSecondaryContainer = CanvasBlack,
-    tertiary = CanvasDarkGray,
-    onTertiary = CanvasWhite,
-    tertiaryContainer = CanvasLightGray,
-    onTertiaryContainer = CanvasBlack,
-    error = CanvasAlertRed,
-    onError = CanvasWhite,
-    background = CanvasWhite,
-    onBackground = CanvasBlack,
-    surface = CanvasWhite,
-    onSurface = CanvasBlack,
-    surfaceVariant = CanvasLightGray,
-    onSurfaceVariant = CanvasBlack,
-    outline = CanvasBlack,
+
+    primary = Color(0xFF111111),              // strong text / emphasis
+    onPrimary = Color(0xFFFFFFFF),
+
+    secondary = Color(0xFF6B6B6B),            // subtle text / metadata
+    onSecondary = Color(0xFFFFFFFF),
+
+    tertiary = Color(0xFF1DB954),             // success / active state
+    onTertiary = Color(0xFF000000),
+
+    background = Color(0xFFF9FAFB),
+    onBackground = Color(0xFF111111),
+
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF111111),
+
+    surfaceVariant = Color(0xFFEDEDE9),
+    onSurfaceVariant = Color(0xFF6B6B6B),
+
+    outline = Color(0xFFE5E5E2),              // borders (very important in your UI)
+    outlineVariant = Color(0xFFD6D6D2),
+
+    error = Color(0xFFE5484D),
+    onError = Color(0xFFFFFFFF),
+
+    inverseSurface = Color(0xFF1A1A1A),
+    inverseOnSurface = Color(0xFFF5F5F5),
+
+    scrim = Color(0x66000000)
 )
 
 val CanvasDarkColorScheme = darkColorScheme(
-    primary = CanvasWhite,
-    onPrimary = CanvasBlack,
-    primaryContainer = CanvasDarkGray,
-    onPrimaryContainer = CanvasWhite,
-    secondary = CanvasWhite,
-    onSecondary = CanvasBlack,
-    secondaryContainer = CanvasDarkGray,
-    onSecondaryContainer = CanvasWhite,
-    tertiary = CanvasDarkGray,
-    onTertiary = CanvasBlack,
-    tertiaryContainer = CanvasDarkGray,
-    onTertiaryContainer = CanvasWhite,
-    error = CanvasAlertRed,
-    onError = CanvasBlack,
-    background = CanvasBlack,
-    onBackground = CanvasWhite,
-    surface = CanvasBlack,
-    onSurface = CanvasWhite,
-    surfaceVariant = CanvasDarkGray,
-    onSurfaceVariant = CanvasWhite,
-    outline = CanvasWhite
+
+    primary = Color(0xFFF5F5F5),
+    onPrimary = Color(0xFF111111),
+
+    secondary = Color(0xFFA1A1A1),
+    onSecondary = Color(0xFF000000),
+
+    tertiary = Color(0xFF1DB954),             // keep semantic consistency
+    onTertiary = Color(0xFF000000),
+
+    background = Color(0xFF0E0E0E),
+    onBackground = Color(0xFFF5F5F5),
+
+    surface = Color(0xFF161616),
+    onSurface = Color(0xFFF5F5F5),
+
+    surfaceVariant = Color(0xFF1F1F1F),
+    onSurfaceVariant = Color(0xFFA1A1A1),
+
+    outline = Color(0xFF2A2A2A),
+    outlineVariant = Color(0xFF3A3A3A),
+
+    error = Color(0xFFE5484D),
+    onError = Color(0xFF000000),
+
+    inverseSurface = Color(0xFFEDEDE9),
+    inverseOnSurface = Color(0xFF111111),
+
+    scrim = Color(0x99000000)
 )
+
+private val ColorScheme.isDarkPalette: Boolean
+    get() = background == CanvasDarkColorScheme.background
 
 val ColorScheme.success: Color
     get() = CanvasSuccessGreen
+
+val ColorScheme.brand: Color
+    get() = if (isDarkPalette) CanvasBrandBlueDark else CanvasBrandBlueLight
+
+val ColorScheme.warning: Color
+    get() = if (isDarkPalette) CanvasWarningDark else CanvasWarningLight
+
+val ColorScheme.muted: Color
+    get() = if (isDarkPalette) CanvasMutedDark else CanvasMutedLight
+
+val ColorScheme.mutedContainer: Color
+    get() = if (isDarkPalette) CanvasMutedContainerDark else CanvasMutedContainerLight
+
+val ColorScheme.subtleSurface: Color
+    get() = if (isDarkPalette) CanvasSubtleSurfaceDark else CanvasSubtleSurfaceLight
+
+val ColorScheme.subtleSurfaceAlt: Color
+    get() = if (isDarkPalette) CanvasSubtleSurfaceAltDark else CanvasSubtleSurfaceAltLight
+
+val ColorScheme.panelBorder: Color
+    get() = if (isDarkPalette) CanvasPanelBorderDark else CanvasPanelBorderLight
+
+val ColorScheme.logVerbose: Color
+    get() = if (isDarkPalette) CanvasLogVerboseDark else CanvasLogVerboseLight
+
+val ColorScheme.logDebug: Color
+    get() = if (isDarkPalette) CanvasLogDebugDark else CanvasLogDebugLight
+
+val ColorScheme.logInfo: Color
+    get() = if (isDarkPalette) CanvasLogInfoDark else CanvasLogInfoLight
+
+val ColorScheme.logWarn: Color
+    get() = if (isDarkPalette) CanvasLogWarnDark else CanvasLogWarnLight
+
+val ColorScheme.logError: Color
+    get() = if (isDarkPalette) CanvasLogErrorDark else CanvasLogErrorLight
+
+val ColorScheme.logFatal: Color
+    get() = if (isDarkPalette) CanvasLogFatalDark else CanvasLogFatalLight
+
+val ColorScheme.querySuccessContainer: Color
+    get() = success.copy(alpha = 0.12f)
+
+val ColorScheme.queryErrorContainer: Color
+    get() = error.copy(alpha = 0.12f)

@@ -120,6 +120,7 @@ class LogcatViewModel(
     }
 
     fun clear() {
+        _error.value = null
         clearLogcatUseCase()
     }
 

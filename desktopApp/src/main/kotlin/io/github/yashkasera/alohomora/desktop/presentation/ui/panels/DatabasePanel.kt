@@ -1,115 +1,133 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTable
+import io.github.yashkasera.alohomora.ui.components.TableColumn
 
 @Composable
 fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
     val uiState by databaseViewModel.uiState.collectAsState()
     val snapshot = uiState.snapshot
     val schema = snapshot.schema
-    val tableSnapshot = snapshot.table?.takeIf { it.databaseName == snapshot.selectedDatabase?.name }
+    val tableSnapshot =
+        snapshot.table?.takeIf { it.databaseName == snapshot.selectedDatabase?.name }
     val databases = snapshot.databases
     val selectedDatabase = snapshot.selectedDatabase
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text(text = "Databases", style = MaterialTheme.typography.labelMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-        if (databases.isEmpty()) {
-            Text(text = "No app databases detected.")
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                databases.forEach { database ->
-                    val isSelected = database == selectedDatabase
-                    Text(
-                        text = database.name,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                databaseViewModel.selectDatabase(database.name)
-                            }
-                            .padding(vertical = 4.dp),
-                        style = if (isSelected) {
-                            MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.primary)
-                        } else {
-                            MaterialTheme.typography.bodyMedium
-                        }
-                    )
-                }
-            }
+    val columns by remember {
+        derivedStateOf {
+            snapshot.schema?.schemas?.firstOrNull { it.name == tableSnapshot?.name }?.columns?.map { tableColumn ->
+                TableColumn(
+                    name = tableColumn.name,
+                    type = tableColumn.type,
+                )
+            }.orEmpty()
         }
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(text = "Tables", style = MaterialTheme.typography.labelMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-        val tables = if (schema?.databaseName == selectedDatabase?.name) schema?.tables.orEmpty() else emptyList()
+    }
+    Scaffold(
+        topBar = {
+            AlohomoraTopBar(
+                title = "Databases",
+                subtitle = "Manage your app databases",
+                showDivider = false,
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+    ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .verticalScroll(rememberScrollState())
+                .padding(it)
+                .padding(horizontal = 24.dp, vertical = 12.dp)
+                .fillMaxSize(),
         ) {
-            tables.forEach { table ->
-                Text(
-                    text = table,
+            Text(text = "Databases", style = MaterialTheme.typography.titleLarge)
+            if (databases.isEmpty()) {
+                Text(text = "No app databases detected.")
+            } else {
+                FlowRow(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            val dbName = selectedDatabase?.name ?: return@clickable
-                            databaseViewModel.requestTable(dbName, table)
-                        }
-                        .padding(vertical = 4.dp),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(text = "Rows", style = MaterialTheme.typography.labelMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-        if (tableSnapshot == null) {
-            Text(text = "Select a table to load rows.")
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                tableSnapshot.rows.forEach { row ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .border(1.dp, Color(0xFFE0D7CC))
-                            .padding(6.dp)
-                    ) {
-                        row.forEach { (key, value) ->
-                            Text(
-                                text = "$key: ${value ?: "null"}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    databases.forEach { database ->
+                        AlohomoraFilterChip(
+                            label = database.name,
+                            selected = database == selectedDatabase,
+                            onClick = {
+                                databaseViewModel.selectDatabase(database.name)
+                            },
+                        )
                     }
                 }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            if (selectedDatabase == null) {
+                Text(
+                    text = "No database selected",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                return@Column
+            }
+            val tables =
+                if (schema?.databaseName == selectedDatabase?.name) schema?.tables.orEmpty() else emptyList()
+            Text(text = "Tables", style = MaterialTheme.typography.titleLarge)
+            if (tables.isEmpty()) {
+                Text(
+                    text = "No tables found in this database.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                return@Column
+            } else {
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    tables.forEach { table ->
+                        AlohomoraFilterChip(
+                            label = table,
+                            selected = table == snapshot.table?.name,
+                            onClick = onClick@{
+                                val dbName = selectedDatabase.name ?: return@onClick
+                                databaseViewModel.requestTable(dbName, table)
+                            },
+                        )
+
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = "Rows", style = MaterialTheme.typography.labelMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            if (tableSnapshot == null) {
+                Text(text = "Select a table to load rows.")
+            } else {
+                AlohomoraTable(
+                    columns = columns,
+                    rows = tableSnapshot.rows,
+                )
             }
         }
     }

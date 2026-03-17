@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,7 +34,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AlohomoraTable(
     columns: List<TableColumn>,
-    rows: List<Map<String, String>>,
+    rows: List<Map<String, String?>>,
     modifier: Modifier = Modifier
 ) {
     if (columns.isEmpty()) {
@@ -62,8 +63,10 @@ fun AlohomoraTable(
         modifier = modifier
             .border(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = MaterialTheme.shapes.small
             )
+            .clip(MaterialTheme.shapes.small)
             .verticalScroll(verticalScrollState)
             .horizontalScroll(horizontalScrollState)
     ) {
@@ -80,10 +83,6 @@ fun AlohomoraTable(
                 isHeader = true
             )
 
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
-            )
-
             // Data rows
             rows.forEachIndexed { index, rowData ->
                 TableRow(
@@ -96,12 +95,6 @@ fun AlohomoraTable(
                     isHeader = false,
                     rowIndex = index
                 )
-
-                if (index < rows.size - 1) {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f)
-                    )
-                }
             }
         }
     }
@@ -147,15 +140,13 @@ private fun TableCell(
     width: Int
 ) {
     val isHeader = content is CellContent.Header
-    
+
     Box(
         modifier = Modifier
             .width(width.dp)
             .border(
                 width = 0.5.dp,
-                color = MaterialTheme.colorScheme.onBackground.copy(
-                    alpha = if (isHeader) 0.15f else 0.1f
-                )
+                color = MaterialTheme.colorScheme.outlineVariant
             )
             .padding(horizontal = 8.dp, vertical = 6.dp),
         contentAlignment = Alignment.CenterStart
@@ -198,7 +189,7 @@ private fun TableCell(
  */
 private fun calculateColumnWidths(
     columns: List<TableColumn>,
-    rows: List<Map<String, String>>
+    rows: List<Map<String, String?>>
 ): List<Int> {
     // Base widths on header name length (in dp, approx 8dp per char + padding)
     val baseWidths = columns.map { column ->
