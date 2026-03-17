@@ -16,14 +16,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Scaffold
@@ -38,10 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import io.github.yashkasera.alohomora.ui.theme.brand
-import io.github.yashkasera.alohomora.ui.theme.muted
-import io.github.yashkasera.alohomora.ui.theme.success
-import io.github.yashkasera.alohomora.ui.theme.warning
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
@@ -51,8 +45,13 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.Alohomo
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.util.DevicePortRegistry
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
+import io.github.yashkasera.alohomora.ui.theme.brand
+import io.github.yashkasera.alohomora.ui.theme.muted
+import io.github.yashkasera.alohomora.ui.theme.success
+import io.github.yashkasera.alohomora.ui.theme.warning
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -101,36 +100,40 @@ fun DeviceSelectionScreen(
     PermanentNavigationDrawer(
         drawerContent = {
             PermanentDrawerSheet(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                modifier = Modifier,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(MaterialTheme.colorScheme.brand, CircleShape),
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .background(MaterialTheme.colorScheme.brand, CircleShape),
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            "Alohomora.",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
                     Text(
-                        "Alohomora.",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                        "CONNECT",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 12.dp),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Select a device and connect to DevTools.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.padding(start = 12.dp, end = 12.dp),
                     )
                 }
-                Spacer(modifier = Modifier.height(24.dp))
-                Text(
-                    "CONNECT",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 12.dp),
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    "Select a device and connect to DevTools.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.padding(start = 12.dp, end = 12.dp),
-                )
             }
         },
     ) {
@@ -142,6 +145,7 @@ fun DeviceSelectionScreen(
                     showDivider = false,
                 )
             },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         ) {
 
             Column(
@@ -153,7 +157,7 @@ fun DeviceSelectionScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
 
-                Card(
+                OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -166,7 +170,7 @@ fun DeviceSelectionScreen(
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedButton(
                                     onClick = { devicesViewModel.refreshDevices() },
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = MaterialTheme.shapes.small,
                                     contentPadding = PaddingValues(
                                         horizontal = 16.dp,
                                         vertical = 8.dp,
@@ -206,7 +210,7 @@ fun DeviceSelectionScreen(
                     }
                 }
 
-                Card(
+                OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(
@@ -215,23 +219,23 @@ fun DeviceSelectionScreen(
                     ) {
                         Text("Connection", style = MaterialTheme.typography.titleSmall)
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            OutlinedTextField(
+                            AlohomoraTextField(
                                 value = host,
                                 onValueChange = onHostChange,
-                                label = { Text("Host") },
+                                label = "Host",
                                 singleLine = true,
                                 modifier = Modifier.width(180.dp),
                             )
                             Spacer(modifier = Modifier.width(12.dp))
-                            OutlinedTextField(
+                            AlohomoraTextField(
                                 value = port,
                                 onValueChange = onPortChange,
-                                label = { Text("Host Port") },
+                                label = "Host Port",
                                 singleLine = true,
                                 modifier = Modifier.width(120.dp),
                             )
                             Spacer(modifier = Modifier.width(12.dp))
-                            OutlinedTextField(
+                            AlohomoraTextField(
                                 value = devicePort,
                                 onValueChange = {
                                     val sanitized = it.filter(Char::isDigit)
@@ -239,12 +243,12 @@ fun DeviceSelectionScreen(
                                     val selectedId = selectedDeviceId
                                     if (!selectedId.isNullOrBlank()) {
                                         val newPort =
-                                            sanitized.toIntOrNull() ?: return@OutlinedTextField
+                                            sanitized.toIntOrNull() ?: return@AlohomoraTextField
                                         portRegistry.setPort(selectedId, newPort)
                                         onPortChange(newPort.toString())
                                     }
                                 },
-                                label = { Text("Device Port") },
+                                label = "Device Port",
                                 singleLine = true,
                                 modifier = Modifier.width(120.dp),
                             )
@@ -313,7 +317,7 @@ fun DeviceSelectionScreen(
                                     }
                                 },
                                 enabled = canConnect && !isConnecting,
-                                shape = RoundedCornerShape(8.dp),
+                                shape = MaterialTheme.shapes.small,
                                 contentPadding = PaddingValues(
                                     horizontal = 20.dp,
                                     vertical = 10.dp,
@@ -371,22 +375,25 @@ private fun DeviceRow(
             append(")")
         }
     }
-    val background =
-        if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
+    val containerColor =
+        if (selected) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceContainer
+    val contentColor =
+        if (selected) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurface
+
     val enabled = device.state == DeviceState.DEVICE
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(background, RoundedCornerShape(8.dp))
-            .clip(RoundedCornerShape(8.dp))
+            .background(containerColor, MaterialTheme.shapes.small)
+            .clip(MaterialTheme.shapes.small)
             .clickable(enabled = enabled) { onSelect() }
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyMedium)
+            Text(text = title, style = MaterialTheme.typography.bodyMedium, color = contentColor)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -397,13 +404,13 @@ private fun DeviceRow(
                 Text(
                     text = device.state.name.lowercase(),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = contentColor.copy(alpha = 0.6f),
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "forwarded ${assignedPort ?: "-"}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = contentColor.copy(alpha = 0.6f),
                 )
             }
         }

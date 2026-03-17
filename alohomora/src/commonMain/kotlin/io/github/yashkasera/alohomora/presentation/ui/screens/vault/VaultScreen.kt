@@ -380,7 +380,7 @@ fun QueryTabContent(
                         } else {
                             MaterialTheme.colorScheme.queryErrorContainer
                         },
-                        shape = RoundedCornerShape(8.dp)
+                        shape = MaterialTheme.shapes.small
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),

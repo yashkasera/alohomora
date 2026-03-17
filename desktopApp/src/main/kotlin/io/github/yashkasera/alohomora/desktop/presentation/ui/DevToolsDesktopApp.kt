@@ -140,7 +140,6 @@ fun DevToolsDesktopApp(
                                 devicesViewModel.disconnectHost(host, numericPort)
                                 devicesViewModel.deactivateDevice(numericPort)
                                 devToolsViewModel.disconnect()
-                                devicesViewModel.setActionMessage("Disconnected")
                             }
                         },
                         onSectionClick = { activeSection = it },

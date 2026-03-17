@@ -14,7 +14,6 @@ import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DevToolsDesktopApp
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DeviceSelectionScreen
 import io.github.yashkasera.alohomora.desktop.util.DevicePortRegistry
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.LocalThemeIsDark
 import java.awt.Dimension

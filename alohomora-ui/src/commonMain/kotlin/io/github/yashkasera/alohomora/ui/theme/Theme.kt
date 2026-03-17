@@ -184,7 +184,7 @@ fun AppTheme(
 
 
         MaterialTheme(
-            colorScheme = if (isDark) darkColorScheme() else lightColorScheme(),
+            colorScheme = if (isDark) darkScheme else lightScheme,
             typography = AlohomoraTypography(),
             content = content,
         )

@@ -437,7 +437,7 @@ private fun AdbActionButton(
     OutlinedButton(
         onClick = onClick,
         enabled = enabled,
-        shape = RoundedCornerShape(8.dp),
+        shape = MaterialTheme.shapes.small,
         border = CardDefaults.outlinedCardBorder(),
     ) {
         Text(text, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)

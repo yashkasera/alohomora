@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -64,6 +65,7 @@ fun AlohomoraTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String? = null,
+    label: String? = null,
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     singleLine: Boolean = true,
@@ -84,60 +86,70 @@ fun AlohomoraTextField(
 
     val currentBorderColor = if (isFocused) focusedBorderColor else borderColor
 
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier,
-        enabled = enabled,
-        readOnly = readOnly,
-        singleLine = singleLine,
-        textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSurface),
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions,
-        visualTransformation = visualTransformation,
-        interactionSource = interactionSource,
-        cursorBrush = SolidColor(cursorColor),
-        decorationBox = { innerTextField ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(36.dp)
-                    .clip(shape)
-                    .background(containerColor)
-                    .border(1.dp, currentBorderColor, shape)
-                    .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (leadingIcon != null) {
-                    Box(modifier = Modifier.size(16.dp)) {
-                        leadingIcon()
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.CenterStart,
+    Column{
+        label?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(bottom = 4.dp),
+            )
+        }
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = modifier,
+            enabled = enabled,
+            readOnly = readOnly,
+            singleLine = singleLine,
+            textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSurface),
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            visualTransformation = visualTransformation,
+            interactionSource = interactionSource,
+            cursorBrush = SolidColor(cursorColor),
+            decorationBox = { innerTextField ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp)
+                        .clip(shape)
+                        .background(containerColor)
+                        .border(1.dp, currentBorderColor, shape)
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (value.isEmpty() && placeholder != null) {
-                        Text(
-                            text = placeholder,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                        )
+                    if (leadingIcon != null) {
+                        Box(modifier = Modifier.size(16.dp)) {
+                            leadingIcon()
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
-                    innerTextField()
-                }
 
-                if (trailingIcon != null) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Box(modifier = Modifier.size(20.dp)) {
-                        trailingIcon()
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        if (value.isEmpty() && placeholder != null) {
+                            Text(
+                                text = placeholder,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                            )
+                        }
+                        innerTextField()
+                    }
+
+                    if (trailingIcon != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(modifier = Modifier.size(20.dp)) {
+                            trailingIcon()
+                        }
                     }
                 }
-            }
-        },
-    )
+            },
+        )
+    }
 }
 
 /**
