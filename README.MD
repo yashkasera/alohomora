@@ -1,4 +1,4 @@
-Overview
+## Overview
 
 This project is a developer observability and introspection toolkit designed to make software systems legible while they are running.
 
@@ -11,96 +11,98 @@ It provides a unified environment for inspecting APIs, databases, events, backgr
 The goal is not monitoring theater.
 The goal is understanding.
 
-## Release Builds: Zero-Overhead No-Op Library
+## Installation & Gradle Setup (`build.gradle.kts`)
 
-For **production/release builds**, Alohomora provides a **no-op (no operation) library** that:
-- ✅ Has the exact same API as the full library
-- ✅ Does absolutely nothing at runtime (zero overhead)
-- ✅ Has minimal dependencies (~50 KB vs ~2-3 MB)
-- ✅ Is automatically optimized away by ProGuard/R8
+Alohomora is designed for **full observability in debug builds** and **zero-overhead behavior in release builds**.
 
-**Usage:**
+### 1) Apply the Gradle plugin
+
+In your app module `build.gradle.kts`:
+
 ```kotlin
-dependencies {
-    debugImplementation("io.github.yashkasera:alohomora:1.0.0")          // Full library
-    releaseImplementation("io.github.yashkasera:alohomora-noop:1.0.0")   // No-op library
+plugins {
+    id("com.android.application")
+    kotlin("android")
+    id("io.github.yashkasera.alohomora")
 }
 ```
 
-See [NOOP_IMPLEMENTATION_GUIDE.md](NOOP_IMPLEMENTATION_GUIDE.md) for details.
+### 2) Add variant-specific dependencies
 
-Core Philosophy
+```kotlin
+dependencies {
+    // Full Alohomora runtime for local development and debugging
+    debugImplementation("io.github.yashkasera:alohomora:1.0.0")
+
+    // No-op implementation for production builds (same public API)
+    releaseImplementation("io.github.yashkasera:alohomora-noop:1.0.0")
+}
+```
+
+### 3) Library selection guide
+
+- **`build.gradle.kts`**: declare the plugin and dependencies at module level.
+- **`alohomora`**: use in `debug` variants for full inspection and tooling.
+- **`alohomora-noop`**: use in `release` variants to keep source compatibility with no runtime instrumentation.
+
+For deeper implementation details, see `NOOP_IMPLEMENTATION_GUIDE.md` (if present in your checkout).
+
+## Core Philosophy
 
 This project is built on a few non-negotiable principles:
 
-Nothing important should be invisible
-
-Observability should be interactive, not forensic
-
-Errors are signals, not crimes
-
-Developers should be able to answer “what just happened?” in seconds, not hours
+- Nothing important should be invisible
+- Observability should be interactive, not forensic
+- Errors are signals, not crimes
+- Developers should be able to answer “what just happened?” in seconds, not hours
 
 The tool favors explanation over aggregation, structure over noise, and developer agency over automation magic.
 
-Key Features
-API Logging & Inspection
+## Key Features
+
+### API Logging & Inspection
 
 All inbound and outbound API activity is captured as structured, queryable data.
 
 This includes:
 
-Request and response bodies (with configurable redaction)
-
-Headers and metadata
-
-Timing and latency breakdowns
-
-Error states and retries
-
-Correlation IDs across services
+- Request and response bodies (with configurable redaction)
+- Headers and metadata
+- Timing and latency breakdowns
+- Error states and retries
+- Correlation IDs across services
 
 Instead of scrolling through text logs, developers can:
 
-Inspect individual requests as first-class objects
-
-Compare multiple requests side by side
-
-Trace a single request across internal boundaries
-
-Replay requests in a controlled environment
+- Inspect individual requests as first-class objects
+- Compare multiple requests side by side
+- Trace a single request across internal boundaries
+- Replay requests in a controlled environment
 
 The system treats API calls as events with context, not lines of text.
 
-Database Inspection & State Diffing
+### Database Inspection & State Diffing
 
 Databases are not black boxes here.
 
 The tool provides:
 
-Live inspection of database state
-
-Query-level visibility (including generated ORM queries)
-
-Before/after snapshots for writes
-
-Visual diffs of record mutations
-
-Relationship-aware navigation between entities
+- Live inspection of database state
+- Query-level visibility (including generated ORM queries)
+- Before/after snapshots for writes
+- Visual diffs of record mutations
+- Relationship-aware navigation between entities
 
 Rather than asking “what query ran?”, developers can ask:
 
-What changed?
-
-When did it change?
-
-What triggered the change?
-
-What else changed as a result?
+- What changed?
+- When did it change?
+- What triggered the change?
+- What else changed as a result?
 
 This is especially useful for debugging cascading updates, background jobs, and race conditions.
 
-Event Visualizer
+### Event Visualizer
 
 At the heart of the project is an event-first mental model.
 
@@ -108,169 +110,128 @@ Everything—API calls, database writes, background jobs, cache updates, message
 
 The event visualizer provides:
 
-A timeline view of system activity
-
-Causal chains between events
-
-Grouping by request, user action, or workflow
-
-Zoomable, filterable views from milliseconds to minutes
-
-The ability to “scrub” through execution history
+- A timeline view of system activity
+- Causal chains between events
+- Grouping by request, user action, or workflow
+- Zoomable, filterable views from milliseconds to minutes
+- The ability to “scrub” through execution history
 
 This makes asynchronous systems understandable as stories, not mysteries.
 
-Request & Workflow Tracing
+### Request & Workflow Tracing
 
 The tool automatically builds traces that follow execution across:
 
-Services
-
-Queues
-
-Workers
-
-Scheduled jobs
-
-External integrations
+- Services
+- Queues
+- Workers
+- Scheduled jobs
+- External integrations
 
 Traces are not just performance metrics. They are narratives:
 
-What started the workflow
-
-What steps occurred
-
-Where decisions were made
-
-Where things slowed down or failed
+- What started the workflow
+- What steps occurred
+- Where decisions were made
+- Where things slowed down or failed
 
 This is particularly useful for systems built around events, queues, or serverless functions where traditional stack traces fall apart.
 
-Structured Logging (Without the Pain)
+### Structured Logging (Without the Pain)
 
 Logs are treated as structured data by default.
 
 Features include:
 
-Schema-aware log entries
-
-Automatic correlation with requests and events
-
-Log levels that actually mean something
-
-Filtering without regex spelunking
-
-Context propagation without manual plumbing
+- Schema-aware log entries
+- Automatic correlation with requests and events
+- Log levels that actually mean something
+- Filtering without regex spelunking
+- Context propagation without manual plumbing
 
 Plain text logs are supported, but they are not the primary interface. The system assumes logs should be queryable artifacts, not prose.
 
-Error & Anomaly Exploration
+### Error & Anomaly Exploration
 
 Errors are elevated to first-class citizens.
 
 The tool provides:
 
-Grouping of related failures
-
-Visibility into surrounding system state
-
-The ability to jump from an error to the exact events that caused it
-
-Detection of “weird but not broken” behavior (unexpected but valid states)
+- Grouping of related failures
+- Visibility into surrounding system state
+- The ability to jump from an error to the exact events that caused it
+- Detection of “weird but not broken” behavior (unexpected but valid states)
 
 Instead of asking “why did this crash?”, developers can ask:
 
-Why did the system think this was reasonable?
+- Why did the system think this was reasonable?
+- What assumptions were violated?
+- Where did reality diverge from expectation?
 
-What assumptions were violated?
-
-Where did reality diverge from expectation?
-
-Replay & Simulation (Planned / Optional)
+### Replay & Simulation (Planned / Optional)
 
 For supported environments, the system can:
 
-Replay API requests or events
-
-Simulate workflows using recorded inputs
-
-Test fixes against real historical scenarios
+- Replay API requests or events
+- Simulate workflows using recorded inputs
+- Test fixes against real historical scenarios
 
 This is not about load testing. It’s about time travel for debugging.
 
-Developer-Centric UI
+### Developer-Centric UI
 
 The interface is built for developers, not executives.
 
 Design priorities:
 
-Fast navigation
-
-Keyboard-first workflows
-
-Dense but readable information
-
-Minimal dashboards, maximal drill-down
-
-No charts without underlying data access
+- Fast navigation
+- Keyboard-first workflows
+- Dense but readable information
+- Minimal dashboards, maximal drill-down
+- No charts without underlying data access
 
 The UI assumes curiosity and rewards exploration.
 
-Typical Use Cases
+## Typical Use Cases
 
-Debugging “it only happens sometimes” bugs
+- Debugging “it only happens sometimes” bugs
+- Understanding unfamiliar legacy systems
+- Tracing data corruption or phantom updates
+- Inspecting third-party API behavior
+- Making asynchronous workflows comprehensible
+- Teaching junior developers how the system actually behaves
 
-Understanding unfamiliar legacy systems
-
-Tracing data corruption or phantom updates
-
-Inspecting third-party API behavior
-
-Making asynchronous workflows comprehensible
-
-Teaching junior developers how the system actually behaves
-
-What This Tool Is Not
+## What This Tool Is Not
 
 This project is deliberately not:
 
-A vanity metrics dashboard
-
-A replacement for application logic
-
-A black-box AI that hides reasoning
-
-A logging service that sells storage
-
-A monitoring tool that only alerts after damage is done
+- A vanity metrics dashboard
+- A replacement for application logic
+- A black-box AI that hides reasoning
+- A logging service that sells storage
+- A monitoring tool that only alerts after damage is done
 
 It is a thinking aid, not a crutch.
 
-Intended Audience
+## Intended Audience
 
 This tool is for:
 
-Developers who debug systems, not just code
+- Developers who debug systems, not just code
+- Teams working with distributed or event-driven architectures
+- People who care about correctness, causality, and clarity
+- Engineers who want to understand why, not just what
 
-Teams working with distributed or event-driven architectures
-
-People who care about correctness, causality, and clarity
-
-Engineers who want to understand why, not just what
-
-Design Assumptions
+## Design Assumptions
 
 Unless explicitly configured otherwise, the system assumes:
 
-Debuggability matters more than micro-optimizations
+- Debuggability matters more than micro-optimizations
+- Visibility is worth a small amount of overhead
+- Defaults should be safe, reversible, and inspectable
+- Tooling should respect developer intelligence
 
-Visibility is worth a small amount of overhead
-
-Defaults should be safe, reversible, and inspectable
-
-Tooling should respect developer intelligence
-
-Status
+## Status
 
 This project is evolving. Features are added carefully, not hurriedly.
 Every new capability must make the system more understandable, not just more powerful.
