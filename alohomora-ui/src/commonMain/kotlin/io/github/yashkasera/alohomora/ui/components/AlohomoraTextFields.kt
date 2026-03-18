@@ -36,29 +36,8 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.X
+import io.github.yashkasera.alohomora.ui.theme.dimens
 
-/**
- * A compact custom text field built on BasicTextField for full control.
- *
- * @param value The current text value
- * @param onValueChange Callback when the text changes
- * @param modifier Modifier for the text field
- * @param placeholder Placeholder text to display when empty
- * @param leadingIcon Optional leading icon composable
- * @param trailingIcon Optional trailing icon composable
- * @param singleLine Whether the field is single line (default: true)
- * @param enabled Whether the field is enabled
- * @param readOnly Whether the field is read-only
- * @param keyboardOptions Keyboard configuration options
- * @param keyboardActions Keyboard action handlers
- * @param visualTransformation Visual transformation for the text
- * @param shape The shape of the text field
- * @param textStyle The text style for the input text
- * @param containerColor Background color of the text field
- * @param borderColor Border color when unfocused
- * @param focusedBorderColor Border color when focused
- * @param cursorColor Cursor color
- */
 @Composable
 fun AlohomoraTextField(
     value: String,
@@ -83,7 +62,6 @@ fun AlohomoraTextField(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
-
     val currentBorderColor = if (isFocused) focusedBorderColor else borderColor
 
     Column(modifier = modifier) {
@@ -92,7 +70,7 @@ fun AlohomoraTextField(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.padding(bottom = 4.dp),
+                modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.xs),
             )
         }
         BasicTextField(
@@ -114,15 +92,15 @@ fun AlohomoraTextField(
                         .height(36.dp)
                         .clip(shape)
                         .background(containerColor)
-                        .border(1.dp, currentBorderColor, shape)
-                        .padding(horizontal = 12.dp),
+                        .border(MaterialTheme.dimens.stroke.small, currentBorderColor, shape)
+                        .padding(horizontal = MaterialTheme.dimens.margin.md),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (leadingIcon != null) {
-                        Box(modifier = Modifier.size(16.dp)) {
+                        Box(modifier = Modifier.size(MaterialTheme.dimens.icon.md)) {
                             leadingIcon()
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                     }
 
                     Box(
@@ -140,8 +118,8 @@ fun AlohomoraTextField(
                     }
 
                     if (trailingIcon != null) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Box(modifier = Modifier.size(20.dp)) {
+                        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+                        Box(modifier = Modifier.size(MaterialTheme.dimens.icon.lg)) {
                             trailingIcon()
                         }
                     }
@@ -151,17 +129,6 @@ fun AlohomoraTextField(
     }
 }
 
-/**
- * A compact search text field with built-in search icon and clear button.
- *
- * @param query The current search query
- * @param onQueryChange Callback when the query changes
- * @param modifier Modifier for the text field
- * @param placeholder Placeholder text (default: "Search...")
- * @param onSearch Callback when search action is triggered (e.g., keyboard search button)
- * @param onClear Callback when clear button is clicked (defaults to clearing the query)
- * @param enabled Whether the field is enabled
- */
 @Composable
 fun AlohomoraSearchTextField(
     query: String,
@@ -182,7 +149,7 @@ fun AlohomoraSearchTextField(
             Icon(
                 imageVector = Icons.Search,
                 contentDescription = null,
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(MaterialTheme.dimens.icon.md),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
@@ -190,30 +157,20 @@ fun AlohomoraSearchTextField(
             {
                 IconButton(
                     onClick = {
-                        if (onClear != null) {
-                            onClear()
-                        } else {
-                            onQueryChange("")
-                        }
+                        if (onClear != null) onClear() else onQueryChange("")
                     },
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
                 ) {
                     Icon(
                         imageVector = Icons.X,
                         contentDescription = "Clear search",
-                        modifier = Modifier.size(14.dp),
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
         } else null,
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Search,
-        ),
-        keyboardActions = KeyboardActions(
-            onSearch = {
-                onSearch?.invoke()
-            },
-        ),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onSearch?.invoke() }),
     )
 }

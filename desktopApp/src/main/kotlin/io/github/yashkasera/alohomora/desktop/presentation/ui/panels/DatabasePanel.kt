@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
@@ -56,7 +57,7 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
         Column(
             modifier = Modifier
                 .padding(it)
-                .padding(horizontal = 24.dp, vertical = 12.dp)
+                .padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.md)
                 .fillMaxSize(),
         ) {
             Text(text = "Databases", style = MaterialTheme.typography.titleLarge)
@@ -66,7 +67,7 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
                 FlowRow(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
                 ) {
                     databases.forEach { database ->
                         AlohomoraFilterChip(
@@ -79,7 +80,7 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
             if (selectedDatabase == null) {
                 Text(
                     text = "No database selected",
@@ -102,7 +103,7 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
                 FlowRow(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     tables.forEach { table ->
@@ -118,9 +119,9 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
             Text(text = "Rows", style = MaterialTheme.typography.labelMedium)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
             if (tableSnapshot == null) {
                 Text(text = "Select a table to load rows.")
             } else {

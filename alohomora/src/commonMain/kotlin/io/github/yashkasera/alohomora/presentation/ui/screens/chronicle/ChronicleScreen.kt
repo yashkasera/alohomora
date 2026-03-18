@@ -18,14 +18,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.data.model.AlohomoraCommit
@@ -35,10 +34,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
-import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
-import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
-import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray
-import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -46,7 +42,7 @@ internal fun ChronicleScreen(
     onBackClick: () -> Unit,
 ) {
     val viewModel = koinViewModel<ChronicleViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -60,16 +56,14 @@ internal fun ChronicleScreen(
                 },
             )
         },
-        containerColor = CanvasWhite,
-        contentColor = CanvasBlack,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize(),
         ) {
-
-            // Commit List
             if (state.commits.isEmpty() && !state.isLoading) {
                 EmptyState(
                     icon = Icons.GitGraph,
@@ -78,10 +72,8 @@ internal fun ChronicleScreen(
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    items(state.commits) { commit ->
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(state.commits, key = { it.sha }) { commit ->
                         CommitListItem(commit = commit)
                     }
                 }
@@ -97,9 +89,9 @@ private fun CommitListItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .border(width = 0.5.dp, color = CanvasLightGray, shape = RectangleShape)
-            .background(CanvasWhite)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .border(width = MaterialTheme.dimens.stroke.thin, color = MaterialTheme.colorScheme.outlineVariant, shape = RectangleShape)
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -107,63 +99,51 @@ private fun CommitListItem(
             verticalAlignment = Alignment.Top,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                // Commit SHA
                 Text(
                     text = commit.sha.take(7),
                     style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 11.sp,
                         letterSpacing = 1.sp,
                         fontWeight = FontWeight.Medium,
                     ),
-                    color = CanvasDarkGray.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
-                // Commit Message
                 Text(
                     text = commit.message,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 16.sp,
-                        lineHeight = 24.sp,
-                        fontWeight = FontWeight.Normal,
-                    ),
-                    color = CanvasBlack,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
-                // Timestamp
                 Text(
                     text = DateUtils.format(
                         commit.timestamp,
                         DateUtils.Format.READABLE_DATE_TIME,
                         DateUtils.TimeUnit.MILLISECONDS,
                     ),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.sp,
-                    ),
-                    color = CanvasDarkGray.copy(alpha = 0.6f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
 
-            // Author Section
             Column(
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
             ) {
                 Text(
                     text = commit.author.uppercase(),
                     style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp,
                     ),
-                    color = CanvasBlack,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )

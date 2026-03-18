@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.chronicle
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.data.model.AlohomoraCommit
@@ -7,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+@Immutable
 internal data class ChronicleState(
     val commits: List<AlohomoraCommit> = emptyList(),
     val isLoading: Boolean = false,

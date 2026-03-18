@@ -12,6 +12,8 @@ import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
+import kotlin.jvm.JvmOverloads
+import kotlin.jvm.JvmStatic
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -95,6 +97,7 @@ object Alohomora {
 
 
     @OptIn(ExperimentalUuidApi::class)
+    @JvmStatic
     fun recordTrace(
         id: String = Uuid.random().toString(),
         status: Int? = null,

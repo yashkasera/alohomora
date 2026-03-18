@@ -5,10 +5,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.LocalThemeIsDark
 import org.koin.compose.KoinContext
 
 @Composable
-fun AlohomoraApp(
+internal fun AlohomoraApp(
     startDestination: Routes = Routes.Overview,
     onThemeChanged: @Composable (isDark: Boolean) -> Unit = {},
 ) {
@@ -16,7 +17,8 @@ fun AlohomoraApp(
         CompositionLocalProvider(
             LocalRippleConfiguration provides null
         ) {
-            AlohomoraTheme() {
+            AlohomoraTheme {
+                onThemeChanged(LocalThemeIsDark.current.value)
                 AlohomoraNavHost(startDestination = startDestination)
             }
         }

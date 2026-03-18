@@ -1,8 +1,8 @@
 package io.github.yashkasera.alohomora.domain.repository
 
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.DatabaseInfo
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.TableData
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.TableSchema
+import io.github.yashkasera.alohomora.common.DatabaseInfo
+import io.github.yashkasera.alohomora.common.TableData
+import io.github.yashkasera.alohomora.common.TableSchema
 import kotlinx.coroutines.flow.Flow
 
 /**

@@ -22,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +44,7 @@ import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Trash
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -53,7 +53,7 @@ internal fun TraceScreen(
     onBackClick: () -> Unit,
 ) {
     val viewModel = koinViewModel<TraceViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier.systemBarsPadding(),
@@ -72,12 +72,12 @@ internal fun TraceScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
             ) {
-                items(state.calls) { call ->
+                items(state.calls, key = { it.id }) { call ->
                     TraceItem(call = call, onClick = { onTraceClick(call.id) })
                     AlohomoraHorizontalDivider()
                 }
                 // Spacer to avoid bottom bar overlap if scaffold padding isn't enough (usually it is)
-                item { Spacer(modifier = Modifier.height(32.dp)) }
+                item { Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl)) }
             }
         }
 
@@ -133,14 +133,14 @@ private fun TraceTopBar(
                 query = searchQuery,
                 onQueryChange = viewModel::setQuery,
                 modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = MaterialTheme.dimens.margin.xxl),
                 placeholder = "Search endpoints",
             )
-            Spacer(modifier = Modifier.size(8.dp))
+            Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                contentPadding = PaddingValues(horizontal = MaterialTheme.dimens.margin.xxl),
             ) {
                 items(listOf("GET", "POST", "PUT", "PATCH", "DELETE")) { method ->
                     val isSelected = method.equals(selectedMethod, ignoreCase = true)
@@ -171,7 +171,7 @@ private fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth()
             .background(containerColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.lg),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
@@ -180,7 +180,7 @@ private fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
             ) {
                 MethodBadge(call.method.orEmpty())
                 Text(
@@ -192,7 +192,7 @@ private fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
             ) {
                 Text(
                     text = "${call.duration}ms",
@@ -225,7 +225,7 @@ private fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(end = 32.dp),
+            modifier = Modifier.padding(end = MaterialTheme.dimens.margin.xxxl),
         )
 
         Text(
@@ -256,7 +256,7 @@ private fun MethodBadge(method: String) {
         containerColor = backgroundColor,
         contentColor = contentColor,
         borderStroke = BorderStroke(
-            width = 1.dp,
+            width = MaterialTheme.dimens.stroke.small,
             color = contentColor,
         ).takeIf { !isWrite },
     )

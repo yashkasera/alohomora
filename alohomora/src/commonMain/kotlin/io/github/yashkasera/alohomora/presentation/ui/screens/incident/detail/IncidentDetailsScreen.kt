@@ -20,20 +20,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.yashkasera.alohomora.ui.theme.CanvasAlertRed
-import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
-import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
-import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray
-import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
@@ -43,6 +37,7 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.ui.icons.Share
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -52,7 +47,7 @@ internal fun IncidentDetailsScreen(
     onBackClick: () -> Unit,
 ) {
     val viewModel = koinViewModel<IncidentDetailsViewModel> { parametersOf(incidentId) }
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -66,8 +61,8 @@ internal fun IncidentDetailsScreen(
                 },
             )
         },
-        containerColor = CanvasWhite,
-        contentColor = CanvasBlack,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) { padding ->
         if (state.isLoading || state.incident == null) {
             Box(
@@ -76,10 +71,10 @@ internal fun IncidentDetailsScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(color = CanvasBlack)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onSurface)
             }
         } else {
-            val incident = state.incident!!
+            val incident = state.incident ?: return@Scaffold
 
             Column(
                 modifier = Modifier
@@ -91,68 +86,55 @@ internal fun IncidentDetailsScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(CanvasWhite)
-                        .padding(horizontal = 20.dp, vertical = 24.dp),
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.xxl),
                 ) {
-                    // Fatal Exception Badge
                     Box(
                         modifier = Modifier
-                            .background(CanvasAlertRed.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                            .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(MaterialTheme.dimens.corner.small))
+                            .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = 6.dp),
                     ) {
                         Text(
                             text = "FATAL EXCEPTION",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp,
                             ),
-                            color = CanvasAlertRed,
+                            color = MaterialTheme.colorScheme.error,
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
-                    // Exception Name
                     Text(
                         text = incident.reason?.substringAfterLast(".")?.substringBefore(":")
                             ?: "Unknown Exception",
                         style = MaterialTheme.typography.displaySmall.copy(
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 40.sp,
                             fontStyle = FontStyle.Italic,
                         ),
-                        color = CanvasBlack,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
-                    // Exception Message
                     Text(
                         text = incident.reason ?: "No additional information available",
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp,
                             fontStyle = FontStyle.Italic,
-                            lineHeight = 20.sp,
                         ),
-                        color = CanvasDarkGray.copy(alpha = 0.8f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
-                    // Metadata Grid
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.fillMaxWidth()) {
                             MetadataItem(
                                 label = "DEVICE",
                                 value = "Unknown",
                                 modifier = Modifier.weight(1f),
                             )
-                            Spacer(modifier = Modifier.width(16.dp))
+                            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
                             MetadataItem(
                                 label = "ANDROID VERSION",
                                 value = "API 34\n(UpsideDownCake)",
@@ -160,17 +142,15 @@ internal fun IncidentDetailsScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
+                        Row(modifier = Modifier.fillMaxWidth()) {
                             MetadataItem(
                                 label = "APP VERSION",
                                 value = "Unknown",
                                 modifier = Modifier.weight(1f),
                             )
-                            Spacer(modifier = Modifier.width(16.dp))
+                            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
                             MetadataItem(
                                 label = "TIMESTAMP",
                                 value = DateUtils.format(incident.time * 1000, DateUtils.Format.MONTH_DAY_TIME),
@@ -184,10 +164,10 @@ internal fun IncidentDetailsScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(CanvasWhite)
-                        .padding(horizontal = 20.dp),
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = MaterialTheme.dimens.margin.xl),
                 ) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -196,61 +176,50 @@ internal fun IncidentDetailsScreen(
                         Text(
                             text = "FULL STACKTRACE",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.5.sp,
                             ),
-                            color = CanvasDarkGray.copy(alpha = 0.6f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
                             text = "${incident.stackTrace?.lines()?.size ?: 0} lines",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 11.sp,
-                            ),
-                            color = CanvasDarkGray.copy(alpha = 0.5f),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
-                    // Stack Trace Box
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(CanvasLightGray.copy(alpha = 0.3f))
-                            .border(1.dp, CanvasLightGray)
-                            .padding(16.dp),
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(MaterialTheme.dimens.stroke.small, MaterialTheme.colorScheme.outline)
+                            .padding(MaterialTheme.dimens.margin.lg),
                     ) {
                         Text(
                             text = incident.stackTrace ?: "No stack trace available",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 11.sp,
-                                lineHeight = 16.sp,
-                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                            ),
-                            color = CanvasBlack.copy(alpha = 0.8f),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
-                    // Action Buttons
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
                         AlohomoraOutlinedButton(
                             text = "Copy Trace",
                             onClick = { /* TODO: Copy trace to clipboard */ },
                             modifier = Modifier.weight(1f),
                             shape = RectangleShape,
-                            contentColor = CanvasBlack,
-                            borderColor = CanvasBlack,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            borderColor = MaterialTheme.colorScheme.onSurface,
                         ) {
                             Icon(
                                 Icons.Copy,
                                 contentDescription = null,
-                                modifier = Modifier.padding(end = 8.dp),
+                                modifier = Modifier.padding(end = MaterialTheme.dimens.margin.sm),
                             )
                             Text(
                                 "COPY TRACE",
@@ -261,20 +230,20 @@ internal fun IncidentDetailsScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
 
                         AlohomoraFilledButton(
                             text = "Share Report",
                             onClick = { /* TODO: Share report */ },
                             modifier = Modifier.weight(1f),
                             shape = RectangleShape,
-                            containerColor = CanvasBlack,
-                            contentColor = CanvasWhite,
+                            containerColor = MaterialTheme.colorScheme.inverseSurface,
+                            contentColor = MaterialTheme.colorScheme.inverseOnSurface,
                         ) {
                             Icon(
                                 Icons.Share,
                                 contentDescription = null,
-                                modifier = Modifier.padding(end = 8.dp),
+                                modifier = Modifier.padding(end = MaterialTheme.dimens.margin.sm),
                             )
                             Text(
                                 "SHARE REPORT",
@@ -303,21 +272,18 @@ private fun MetadataItem(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp,
             ),
-            color = CanvasDarkGray.copy(alpha = 0.5f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium.copy(
-                fontSize = 18.sp,
                 fontStyle = FontStyle.Italic,
-                lineHeight = 22.sp,
             ),
-            color = CanvasBlack,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }

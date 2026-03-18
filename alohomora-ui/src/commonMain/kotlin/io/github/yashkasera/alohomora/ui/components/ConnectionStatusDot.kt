@@ -19,6 +19,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.CanvasAlertRed
+import io.github.yashkasera.alohomora.ui.theme.CanvasSuccessGreen
 
 enum class ConnectionDotState {
     Connected,
@@ -32,9 +34,9 @@ fun ConnectionStatusDot(
     size: Dp = 10.dp,
 ) {
     val color = when (state) {
-        ConnectionDotState.Connected -> Color(0xFF2E7D32)
-        ConnectionDotState.Disconnected -> Color(0xFFC62828)
-        ConnectionDotState.Reconnecting -> Color(0xFF8A8A8A)
+        ConnectionDotState.Connected -> CanvasSuccessGreen
+        ConnectionDotState.Disconnected -> CanvasAlertRed
+        ConnectionDotState.Reconnecting -> Color(0xFFD97706)
     }
 
     Box {

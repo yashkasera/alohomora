@@ -32,6 +32,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -65,18 +66,18 @@ internal fun ConfigScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = MaterialTheme.dimens.margin.xxl),
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
 
             // Build Information (Read-only)
             ConfigSection(title = "BUILD INFORMATION") {
                 BuildInfoGrid(buildConfig = Alohomora.config?.toBuildMetadata())
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
             AlohomoraHorizontalDivider()
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
 
             // Environment Details (Read-only)
             Alohomora.config?.let {
@@ -96,7 +97,7 @@ internal fun ConfigScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.huge))
         }
     }
 }
@@ -116,7 +117,7 @@ private fun ConfigSection(
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
         content()
     }
 }
@@ -129,7 +130,7 @@ private fun ConfigSection(
 private fun BuildInfoGrid(buildConfig: BuildMetadata?) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -140,7 +141,7 @@ private fun BuildInfoGrid(buildConfig: BuildMetadata?) {
                 value = buildConfig?.branch,
                 modifier = Modifier.weight(1f),
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
             InfoItem(
                 label = "Build Variant",
                 value = buildConfig?.variantName,
@@ -157,7 +158,7 @@ private fun BuildInfoGrid(buildConfig: BuildMetadata?) {
                 value = buildConfig?.versionName,
                 modifier = Modifier.weight(1f),
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
             InfoItem(
                 label = "Version Code",
                 value = buildConfig?.versionCode?.toString(),
@@ -201,7 +202,7 @@ private fun EnvironmentDetails(environment: String) {
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(16.dp),
+            .padding(MaterialTheme.dimens.margin.lg),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -212,7 +213,7 @@ private fun EnvironmentDetails(environment: String) {
                     .clip(MaterialTheme.shapes.extraLarge)
                     .background(MaterialTheme.colorScheme.primary),
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
             Text(
                 text = environment,
                 style = MaterialTheme.typography.titleMedium,
@@ -220,7 +221,7 @@ private fun EnvironmentDetails(environment: String) {
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
         Text(
             text = "Current environment configuration",
@@ -246,13 +247,13 @@ private fun InfoItem(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(MaterialTheme.shapes.extraSmall)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = MaterialTheme.dimens.margin.sm),
         ) {
             Text(
                 text = value ?: "--not-set--",

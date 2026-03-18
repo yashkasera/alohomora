@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -41,11 +42,11 @@ fun AlohomoraTopBar(
             },
             subtitle = {
                 subtitle?.let {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(MaterialTheme.dimens.margin.sm))
                     Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
                 }
             },
-            contentPadding = PaddingValues(vertical = 12.dp, horizontal = 16.dp),
+            contentPadding = PaddingValues(vertical = MaterialTheme.dimens.margin.md, horizontal = MaterialTheme.dimens.margin.lg),
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer
             ),

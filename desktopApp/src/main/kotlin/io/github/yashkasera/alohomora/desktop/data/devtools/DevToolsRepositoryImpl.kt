@@ -1,16 +1,21 @@
 package io.github.yashkasera.alohomora.desktop.data.devtools
 
+import io.github.yashkasera.alohomora.common.AuthFailureMessage
+import io.github.yashkasera.alohomora.common.AuthResponseMessage
+import io.github.yashkasera.alohomora.common.AuthSuccessMessage
+import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
+import io.github.yashkasera.alohomora.common.DevToolsMessage
+import io.github.yashkasera.alohomora.common.DevToolsProtocol
+import io.github.yashkasera.alohomora.common.InitialStateMessage
+import io.github.yashkasera.alohomora.common.PrefsSnapshotMessage
+import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
+import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
+import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
+import io.github.yashkasera.alohomora.common.RequestPrefValueMessage
+import io.github.yashkasera.alohomora.common.StreamApiLogMessage
+import io.github.yashkasera.alohomora.common.StreamEventMessage
 import io.github.yashkasera.alohomora.common.TelemetryEvent
 import io.github.yashkasera.alohomora.common.TraceEntry
-import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
-import io.github.yashkasera.alohomora.common.DevToolsEnvelope
-import io.github.yashkasera.alohomora.common.DevToolsMessageType
-import io.github.yashkasera.alohomora.common.DevToolsProtocol
-import io.github.yashkasera.alohomora.common.InitialStatePayload
-import io.github.yashkasera.alohomora.common.PrefsSnapshotPayload
-import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaPayload
-import io.github.yashkasera.alohomora.common.RequestDatabaseTablePayload
-import io.github.yashkasera.alohomora.common.RequestPrefValuePayload
 import io.github.yashkasera.alohomora.desktop.data.local.ApiLogStore
 import io.github.yashkasera.alohomora.desktop.data.local.BuildInfoStore
 import io.github.yashkasera.alohomora.desktop.data.local.ChronicleStore
@@ -35,13 +40,13 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 class DevToolsRepositoryImpl(
-    private val remoteDataSource: DevToolsRemoteDataSource = DevToolsRemoteDataSource(),
-    private val eventStore: EventStore = EventStore(),
-    private val apiLogStore: ApiLogStore = ApiLogStore(),
-    private val databaseStore: DatabaseSnapshotStore = DatabaseSnapshotStore(),
-    private val prefsStore: PrefsStore = PrefsStore(),
-    private val buildInfoStore: BuildInfoStore = BuildInfoStore(),
-    private val chronicleStore: ChronicleStore = ChronicleStore(),
+    private val remoteDataSource: DevToolsRemoteDataSource,
+    private val eventStore: EventStore,
+    private val apiLogStore: ApiLogStore,
+    private val databaseStore: DatabaseSnapshotStore,
+    private val prefsStore: PrefsStore,
+    private val buildInfoStore: BuildInfoStore,
+    private val chronicleStore: ChronicleStore,
 ) : DevToolsRepository {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val _state = MutableStateFlow<DevToolsConnection>(DevToolsConnection.Disconnected)
@@ -71,10 +76,9 @@ class DevToolsRepositoryImpl(
             try {
                 val socket = remoteDataSource.connect(host, port)
                 connection = socket
-                _state.value = DevToolsConnection.Connected(host, port)
+                _state.value = DevToolsConnection.AwaitingAuth(host, port)
                 _switching.value = false
-                sendRequest(DevToolsMessageType.REQUEST_INITIAL_STATE)
-                remoteDataSource.processConnection(socket, ::handleEnvelope)
+                remoteDataSource.processConnection(socket, ::handleMessage)
             } catch (e: Exception) {
                 _state.value = DevToolsConnection.Failed(e.message ?: "Connection failed")
                 _switching.value = false
@@ -82,6 +86,7 @@ class DevToolsRepositoryImpl(
                 connection?.close()
                 connection = null
                 if (_state.value is DevToolsConnection.Connecting ||
+                    _state.value is DevToolsConnection.AwaitingAuth ||
                     _state.value is DevToolsConnection.Connected
                 ) {
                     _state.value = DevToolsConnection.Disconnected
@@ -118,109 +123,75 @@ class DevToolsRepositoryImpl(
     }
 
     override fun requestDatabaseSchema(databaseName: String) {
-        scope.launch {
-            sendRequest(
-                DevToolsMessageType.REQUEST_DATABASE_SCHEMA,
-                RequestDatabaseSchemaPayload(databaseName),
-            )
-        }
+        scope.launch { sendMessage(RequestDatabaseSchemaMessage(databaseName = databaseName)) }
     }
 
     override fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int) {
         scope.launch {
-            sendRequest(
-                DevToolsMessageType.REQUEST_DATABASE_TABLE,
-                RequestDatabaseTablePayload(databaseName, tableName, limit),
-            )
+            sendMessage(RequestDatabaseTableMessage(databaseName = databaseName, tableName = tableName, limit = limit))
         }
     }
 
     override fun requestPrefValue(key: String) {
-        scope.launch {
-            sendRequest(
-                DevToolsMessageType.REQUEST_PREF_VALUE,
-                RequestPrefValuePayload(key),
-            )
-        }
+        scope.launch { sendMessage(RequestPrefValueMessage(key = key)) }
     }
 
     override fun requestInitialState() {
-        scope.launch {
-            sendRequest(DevToolsMessageType.REQUEST_INITIAL_STATE)
-        }
+        scope.launch { sendMessage(RequestInitialStateMessage()) }
     }
 
-    private suspend inline fun <reified T> sendRequest(type: DevToolsMessageType, payload: T) {
-        val envelope = DevToolsEnvelope(
-            type = type,
-            sequence = 0,
-            payload = DevToolsProtocol.encodePayload(payload),
-        )
-        val frame = DevToolsProtocol.encodeEnvelope(envelope)
+    override fun submitOtp(otp: String) {
+        scope.launch { sendMessage(AuthResponseMessage(otp = otp)) }
+    }
+
+    private suspend fun sendMessage(message: DevToolsMessage) {
+        val frame = DevToolsProtocol.encodeEnvelope(message)
         writeMutex.withLock {
             connection?.write(frame)
         }
     }
 
-    private suspend fun sendRequest(type: DevToolsMessageType) {
-        val envelope = DevToolsEnvelope(
-            type = type,
-            sequence = 0,
-            payload = null,
-        )
-        val frame = DevToolsProtocol.encodeEnvelope(envelope)
-        writeMutex.withLock {
-            connection?.write(frame)
-        }
-    }
-
-    private fun handleEnvelope(envelope: DevToolsEnvelope) {
-        when (envelope.type) {
-            DevToolsMessageType.REQUEST_INITIAL_STATE -> {
-                envelope.payload?.let {
-                    val payload = DevToolsProtocol.decodePayload<InitialStatePayload>(it)
-                    eventStore.replace(payload.events)
-                    apiLogStore.replace(payload.apiLogs)
-                    databaseStore.replaceDatabases(
-                        payload.databases.map { it.toDomain() },
-                        payload.selectedDatabase,
-                    )
-                    databaseStore.replaceSchema(payload.databaseSchema.toDomain())
-                    prefsStore.replaceKeys(payload.preferenceKeys)
-                    buildInfoStore.replace(payload.buildInfo?.toDomain())
-                    chronicleStore.replace(payload.chronicle.map { it.toDomain() })
+    private fun handleMessage(message: DevToolsMessage) {
+        when (message) {
+            is AuthSuccessMessage -> {
+                val current = _state.value
+                if (current is DevToolsConnection.AwaitingAuth) {
+                    _state.value = DevToolsConnection.Connected(current.host, current.port)
+                    scope.launch { sendMessage(RequestInitialStateMessage()) }
                 }
             }
 
-            DevToolsMessageType.STREAM_EVENT -> {
-                envelope.payload?.let {
-                    val payload = DevToolsProtocol.decodePayload<TelemetryEvent>(it)
-                    eventStore.append(payload)
-                }
+            is AuthFailureMessage -> {
+                _state.value = DevToolsConnection.Failed(message.reason)
             }
 
-            DevToolsMessageType.STREAM_API_LOG -> {
-                envelope.payload?.let {
-                    val payload = DevToolsProtocol.decodePayload<TraceEntry>(it)
-                    apiLogStore.append(payload)
-                }
+            is InitialStateMessage -> {
+                val payload = message.payload
+                eventStore.replace(payload.events)
+                apiLogStore.replace(payload.apiLogs)
+                databaseStore.replaceDatabases(
+                    payload.databases.map { it.toDomain() },
+                    payload.selectedDatabase,
+                )
+                databaseStore.replaceSchema(payload.databaseSchema.toDomain())
+                prefsStore.replaceKeys(payload.preferenceKeys)
+                buildInfoStore.replace(payload.buildInfo?.toDomain())
+                chronicleStore.replace(payload.chronicle.map { it.toDomain() })
             }
 
-            DevToolsMessageType.SNAPSHOT_DATABASE -> {
-                envelope.payload?.let {
-                    val payload = DevToolsProtocol.decodePayload<DatabaseSnapshotPayload>(it)
-                    databaseStore.applySnapshot(
-                        payload.schema?.toDomain(),
-                        payload.table?.toDomain(),
-                    )
-                }
+            is StreamEventMessage -> eventStore.append(message.event)
+
+            is StreamApiLogMessage -> apiLogStore.append(message.log)
+
+            is DatabaseSnapshotMessage -> {
+                databaseStore.applySnapshot(
+                    message.payload.schema?.toDomain(),
+                    message.payload.table?.toDomain(),
+                )
             }
 
-            DevToolsMessageType.SNAPSHOT_PREFS -> {
-                envelope.payload?.let {
-                    val payload = DevToolsProtocol.decodePayload<PrefsSnapshotPayload>(it)
-                    prefsStore.applySnapshot(payload.keys, payload.values)
-                }
+            is PrefsSnapshotMessage -> {
+                prefsStore.applySnapshot(message.payload.keys, message.payload.values)
             }
 
             else -> Unit

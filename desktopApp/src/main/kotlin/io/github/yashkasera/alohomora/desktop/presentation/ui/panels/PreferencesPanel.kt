@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.PrefsViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
@@ -46,7 +47,7 @@ fun PreferencesPanel(prefsViewModel: PrefsViewModel) {
                 .fillMaxSize(),
         ) {
             Text(text = "Keys", style = MaterialTheme.typography.labelMedium)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -59,14 +60,14 @@ fun PreferencesPanel(prefsViewModel: PrefsViewModel) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { prefsViewModel.requestPrefValue(key) }
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = MaterialTheme.dimens.margin.xs),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
             Text(text = "Values", style = MaterialTheme.typography.labelMedium)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -76,7 +77,7 @@ fun PreferencesPanel(prefsViewModel: PrefsViewModel) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = MaterialTheme.dimens.margin.xs),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(

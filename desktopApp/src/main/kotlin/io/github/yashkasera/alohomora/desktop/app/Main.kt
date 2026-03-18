@@ -1,68 +1,445 @@
 package io.github.yashkasera.alohomora.desktop.app
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowDecoration
-import androidx.compose.ui.window.WindowDecorationDefaults
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberWindowState
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
+import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DevToolsDesktopApp
-import io.github.yashkasera.alohomora.desktop.presentation.ui.DeviceSelectionScreen
-import io.github.yashkasera.alohomora.desktop.util.DevicePortRegistry
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
+import io.github.yashkasera.alohomora.ui.icons.HardDrive
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
-import io.github.yashkasera.alohomora.ui.theme.LocalThemeIsDark
+import io.github.yashkasera.alohomora.ui.theme.brand
 import java.awt.Dimension
+import java.util.UUID
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
 
-fun main() = application {
-    val state = rememberWindowState(placement = WindowPlacement.Maximized)
-    Window(
-        title = "Alohomora",
-        state = state,
-        onCloseRequest = ::exitApplication,
-    ) {
-        AppTheme {
-            val theme = LocalThemeIsDark.current
-            MenuBar {
-                Menu("File") {
-                    Item("Toggle Theme", onClick = { theme.value = !theme.value })
-                    Item("Exit", onClick = ::exitApplication)
+private const val DEFAULT_HOST = "127.0.0.1"
+private const val DEFAULT_PORT = "53999"
+
+private data class PendingSession(
+    val deviceId: String,
+    val host: String,
+    val hostPort: Int,
+    val devicePort: Int,
+    val composition: DesktopAppComposition,
+)
+
+data class DeviceWindowSession(
+    val id: String = UUID.randomUUID().toString(),
+    val deviceId: String,
+    val host: String,
+    val hostPort: Int,
+    val devicePort: Int,
+    val composition: DesktopAppComposition,
+)
+
+@OptIn(ExperimentalComposeUiApi::class)
+fun main() {
+    val initialIsDark = DesktopThemePrefs.load()
+    System.setProperty(
+        "apple.awt.application.appearance",
+        if (initialIsDark) "NSAppearanceNameDarkAqua" else "NSAppearanceNameAqua",
+    )
+    application {
+        val sharedComposition = remember { DesktopAppComposition() }
+        val sessions = remember { mutableStateListOf<DeviceWindowSession>() }
+        var launcherVisible by remember { mutableStateOf(true) }
+        val sharedIsDark = remember { mutableStateOf(initialIsDark) }
+
+        LaunchedEffect(Unit) {
+            snapshotFlow { sharedIsDark.value }
+                .drop(1)
+                .collect { DesktopThemePrefs.save(it) }
+        }
+
+        if (launcherVisible) {
+            val state = rememberDialogState()
+            DialogWindow(
+                title = "Alohomora Launcher",
+                state = state,
+                onCloseRequest = {
+                    launcherVisible = false
+                    if (sessions.isEmpty()) exitApplication()
+                },
+                resizable = false
+            ) {
+                AppTheme(isDarkState = sharedIsDark) {
+                    window.minimumSize = Dimension(900, 560)
+
+                    LauncherScreen(
+                        sharedDevicesComposition = sharedComposition,
+                        onCloseLauncher = {
+                            launcherVisible = false
+                            if (sessions.isEmpty()) exitApplication()
+                        },
+                        onOpenDeviceWindow = { deviceId, host, hostPort, devicePort, composition ->
+                            val duplicate = sessions.any { it.deviceId == deviceId }
+                            if (!duplicate) {
+                                sessions += DeviceWindowSession(
+                                    deviceId = deviceId,
+                                    host = host,
+                                    hostPort = hostPort,
+                                    devicePort = devicePort,
+                                    composition = composition,
+                                )
+                            }
+                            launcherVisible = false
+                        },
+                    )
                 }
             }
-            window.minimumSize = Dimension(350, 600)
-            val composition = remember { DesktopAppComposition() }
-            val portRegistry = remember { DevicePortRegistry() }
-            var host by remember { mutableStateOf("127.0.0.1") }
-            var port by remember { mutableStateOf("53999") }
-            val devToolsState by composition.devToolsViewModel.uiState.collectAsState()
+        }
 
-            if (devToolsState.connection is DevToolsConnection.Connected) {
-                DevToolsDesktopApp(
-                    devToolsViewModel = composition.devToolsViewModel,
-                    devicesViewModel = composition.devicesViewModel,
-                    logcatViewModel = composition.logcatViewModel,
-                    databaseViewModel = composition.databaseViewModel,
-                    prefsViewModel = composition.prefsViewModel,
-                    host = host,
-                    port = port,
+        sessions.toList().forEach { session ->
+            key(session.id) {
+                val state = rememberWindowState(placement = WindowPlacement.Maximized)
+                Window(
+                    title = "Alohomora - ${session.deviceId}",
+                    state = state,
+                    onCloseRequest = {
+                        session.composition.devToolsViewModel.disconnect()
+                        session.composition.close()
+                        sessions.removeAll { it.id == session.id }
+                        if (sessions.isEmpty()) launcherVisible = true
+                    },
+                ) {
+                    AppTheme(isDarkState = sharedIsDark) {
+                        MenuBar {
+                            Menu("File") {
+                                Item("New Window", onClick = { launcherVisible = true })
+                                Item("Exit", onClick = ::exitApplication)
+                            }
+                            Menu("View") {
+                                Item("Toggle Theme", onClick = { sharedIsDark.value = !sharedIsDark.value })
+                            }
+                        }
+                        window.minimumSize = Dimension(1080, 600)
+
+                        DevToolsDesktopApp(
+                            devToolsViewModel = session.composition.devToolsViewModel,
+                            devicesViewModel = session.composition.devicesViewModel,
+                            logcatViewModel = session.composition.logcatViewModel,
+                            databaseViewModel = session.composition.databaseViewModel,
+                            prefsViewModel = session.composition.prefsViewModel,
+                            initialDeviceId = session.deviceId,
+                            onDisconnectWindow = {
+                                val devicesVm = session.composition.devicesViewModel
+                                val devToolsVm = session.composition.devToolsViewModel
+                                devicesVm.disconnectHost(session.host, session.hostPort)
+                                devicesVm.deactivateDevice(session.hostPort)
+                                devToolsVm.disconnect()
+                                session.composition.close()
+                                sessions.removeAll { it.id == session.id }
+                                if (sessions.isEmpty()) launcherVisible = true
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LauncherScreen(
+    sharedDevicesComposition: DesktopAppComposition,
+    onCloseLauncher: () -> Unit,
+    onOpenDeviceWindow: (deviceId: String, host: String, hostPort: Int, devicePort: Int, composition: DesktopAppComposition) -> Unit,
+) {
+    val devicesViewModel = sharedDevicesComposition.devicesViewModel
+    val devices by devicesViewModel.devices.collectAsState()
+
+    var selectedDeviceId by remember { mutableStateOf<String?>(null) }
+    var host by remember { mutableStateOf(DEFAULT_HOST) }
+    var hostPort by remember { mutableStateOf(DEFAULT_PORT) }
+    var devicePort by remember { mutableStateOf(DEFAULT_PORT) }
+    var actionError by remember { mutableStateOf<String?>(null) }
+
+    var pendingSession by remember { mutableStateOf<PendingSession?>(null) }
+    var pendingConnectionState by remember { mutableStateOf<DevToolsConnection>(DevToolsConnection.Disconnected) }
+    var otpInput by remember { mutableStateOf("") }
+
+    val scope = rememberCoroutineScope()
+
+    val onlineDevices = devices.filter { it.state == DeviceState.DEVICE }
+    val selectedDevice = onlineDevices.firstOrNull { it.id == selectedDeviceId }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            devicesViewModel.refreshDevices()
+            delay(3000)
+        }
+    }
+
+    LaunchedEffect(onlineDevices) {
+        if (selectedDeviceId == null || onlineDevices.none { it.id == selectedDeviceId }) {
+            selectedDeviceId = onlineDevices.firstOrNull()?.id
+        }
+    }
+
+    LaunchedEffect(pendingSession) {
+        val session = pendingSession ?: return@LaunchedEffect
+        session.composition.devToolsViewModel.uiState.collect { uiState ->
+            pendingConnectionState = uiState.connection
+            when (val conn = uiState.connection) {
+                is DevToolsConnection.Connected -> {
+                    onOpenDeviceWindow(session.deviceId, session.host, session.hostPort, session.devicePort, session.composition)
+                    pendingSession = null
+                    otpInput = ""
+                }
+                is DevToolsConnection.Failed -> {
+                    actionError = conn.reason
+                    pendingSession = null
+                    otpInput = ""
+                }
+                else -> {}
+            }
+        }
+    }
+
+    Surface {
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.HardDrive,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.brand,
                 )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    "Alohomora Launcher",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                OutlinedButton(onClick = { devicesViewModel.refreshDevices() }) {
+                    Icon(Icons.RefreshCw, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Refresh")
+                }
+            }
+
+            if (pendingSession != null) {
+                when (pendingConnectionState) {
+                    is DevToolsConnection.AwaitingAuth -> {
+                        Text(
+                            "Authentication Required",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            "Enter the 4-digit code shown on your device.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary,
+                        )
+                        AlohomoraTextField(
+                            value = otpInput,
+                            onValueChange = { if (it.length <= 4 && it.all(Char::isDigit)) otpInput = it },
+                            placeholder = "0000",
+                            singleLine = true,
+                            modifier = Modifier.width(160.dp),
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Button(
+                                onClick = {
+                                    pendingSession?.composition?.devToolsViewModel?.submitOtp(otpInput)
+                                    otpInput = ""
+                                },
+                                enabled = otpInput.length == 4,
+                            ) { Text("Confirm") }
+                            OutlinedButton(onClick = {
+                                pendingSession?.composition?.devToolsViewModel?.disconnect()
+                                pendingSession = null
+                                otpInput = ""
+                            }) { Text("Cancel") }
+                        }
+                    }
+                    else -> {
+                        Text(
+                            "Connecting…",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        (pendingConnectionState as? DevToolsConnection.Connecting)?.let { conn ->
+                            Text(
+                                "${conn.host}:${conn.port}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.secondary,
+                            )
+                        }
+                        OutlinedButton(onClick = {
+                            pendingSession?.composition?.devToolsViewModel?.disconnect()
+                            pendingSession = null
+                        }) { Text("Cancel") }
+                    }
+                }
+                if (!actionError.isNullOrBlank()) {
+                    Text(actionError!!, color = MaterialTheme.colorScheme.error)
+                }
             } else {
-                DeviceSelectionScreen(
-                    devicesViewModel = composition.devicesViewModel,
-                    devToolsViewModel = composition.devToolsViewModel,
-                    portRegistry = portRegistry,
-                    host = host,
-                    port = port,
-                    onHostChange = { host = it },
-                    onPortChange = { port = it.filter(Char::isDigit) },
+                Text(
+                    "Select a device, connect, and open a dedicated window.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary,
                 )
+
+                if (onlineDevices.isEmpty()) {
+                    Text(
+                        "No online devices found. Connect a device and refresh.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        onlineDevices.forEach { device ->
+                            val selected = device.id == selectedDeviceId
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        if (selected) MaterialTheme.colorScheme.secondaryContainer
+                                        else MaterialTheme.colorScheme.surface,
+                                    )
+                                    .clickable { selectedDeviceId = device.id }
+                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                            ) {
+                                Text(device.model ?: device.id)
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(device.id, color = MaterialTheme.colorScheme.secondary)
+                            }
+                        }
+                    }
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    AlohomoraTextField(
+                        value = host,
+                        onValueChange = { host = it },
+                        label = "Host",
+                        singleLine = true,
+                        modifier = Modifier.width(220.dp),
+                    )
+                    AlohomoraTextField(
+                        value = hostPort,
+                        onValueChange = { hostPort = it.filter(Char::isDigit) },
+                        label = "Host Port",
+                        singleLine = true,
+                        modifier = Modifier.width(140.dp),
+                    )
+                    AlohomoraTextField(
+                        value = devicePort,
+                        onValueChange = { devicePort = it.filter(Char::isDigit) },
+                        label = "Device Port",
+                        singleLine = true,
+                        modifier = Modifier.width(140.dp),
+                    )
+                }
+
+                if (!actionError.isNullOrBlank()) {
+                    Text(actionError!!, color = MaterialTheme.colorScheme.error)
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(
+                        onClick = {
+                            val target = selectedDevice
+                            if (target == null) {
+                                actionError = "Select an online device first"
+                                return@Button
+                            }
+                            val numericHostPort = hostPort.toIntOrNull() ?: DEFAULT_PORT.toInt()
+                            val numericDevicePort = devicePort.toIntOrNull() ?: DEFAULT_PORT.toInt()
+                            val isLocalHost = host == "127.0.0.1" || host == "localhost"
+
+                            val composition = DesktopAppComposition(sharedDevicesViewModel = devicesViewModel)
+
+                            scope.launch {
+                                if (isLocalHost) {
+                                    composition.devicesViewModel.selectDevice(target.id, numericHostPort, numericDevicePort) { selectError ->
+                                        if (selectError == null) {
+                                            composition.devToolsViewModel.switchDevice(host, numericHostPort, target.id)
+                                            pendingSession = PendingSession(target.id, host, numericHostPort, numericDevicePort, composition)
+                                            actionError = null
+                                        } else {
+                                            actionError = selectError
+                                        }
+                                    }
+                                } else {
+                                    composition.devicesViewModel.connectOverTcp(target.id, host, numericDevicePort) { connectError ->
+                                        if (connectError == null) {
+                                            composition.devicesViewModel.selectDevice(target.id, numericHostPort, numericDevicePort) { selectError ->
+                                                if (selectError == null) {
+                                                    composition.devToolsViewModel.switchDevice(host, numericHostPort, target.id)
+                                                    pendingSession = PendingSession(target.id, host, numericHostPort, numericDevicePort, composition)
+                                                    actionError = null
+                                                } else {
+                                                    actionError = selectError
+                                                }
+                                            }
+                                        } else {
+                                            actionError = connectError
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        enabled = selectedDevice != null,
+                    ) {
+                        Text("Connect & Open Window")
+                    }
+                    OutlinedButton(onClick = onCloseLauncher) {
+                        Text("Close")
+                    }
+                }
             }
         }
     }

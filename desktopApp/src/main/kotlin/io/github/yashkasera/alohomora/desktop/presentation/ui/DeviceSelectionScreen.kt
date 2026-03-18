@@ -50,6 +50,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.theme.brand
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.theme.muted
 import io.github.yashkasera.alohomora.ui.theme.success
 import io.github.yashkasera.alohomora.ui.theme.warning
@@ -105,34 +106,34 @@ fun DeviceSelectionScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                        .padding(horizontal = MaterialTheme.dimens.margin.lg, vertical = MaterialTheme.dimens.margin.xxl),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(24.dp)
+                                .size(MaterialTheme.dimens.icon.standard)
                                 .background(MaterialTheme.colorScheme.brand),
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
                         Text(
                             "Alohomora.",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                         )
                     }
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
                     Text(
                         "CONNECT",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(start = 12.dp),
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                     Text(
                         "Select a device and connect to DevTools.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.padding(start = 12.dp, end = 12.dp),
+                        modifier = Modifier.padding(start = MaterialTheme.dimens.margin.md, end = MaterialTheme.dimens.margin.md),
                     )
                 }
             }
@@ -155,41 +156,41 @@ fun DeviceSelectionScreen(
                     .padding(it)
                     .padding(horizontal = 40.dp, vertical = 24.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
             ) {
 
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(MaterialTheme.dimens.margin.lg)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text("Devices", style = MaterialTheme.typography.titleSmall)
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm)) {
                                 OutlinedButton(
                                     onClick = { devicesViewModel.refreshDevices() },
                                     shape = MaterialTheme.shapes.small,
                                     contentPadding = PaddingValues(
-                                        horizontal = 16.dp,
-                                        vertical = 8.dp,
+                                        horizontal = MaterialTheme.dimens.margin.lg,
+                                        vertical = MaterialTheme.dimens.margin.sm,
                                     ),
                                 ) {
                                     Icon(
                                         Icons.RefreshCw,
                                         contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
+                                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                                     Text("Refresh")
                                 }
 
                             }
                         }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm)) {
                             if (devices.isEmpty()) {
                                 Text(
                                     "No devices detected.",
@@ -215,8 +216,8 @@ fun DeviceSelectionScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                     ) {
                         Text("Connection", style = MaterialTheme.typography.titleSmall)
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -227,7 +228,7 @@ fun DeviceSelectionScreen(
                                 singleLine = true,
                                 modifier = Modifier.width(180.dp),
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
                             AlohomoraTextField(
                                 value = port,
                                 onValueChange = onPortChange,
@@ -235,7 +236,7 @@ fun DeviceSelectionScreen(
                                 singleLine = true,
                                 modifier = Modifier.width(120.dp),
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
                             AlohomoraTextField(
                                 value = devicePort,
                                 onValueChange = {
@@ -253,7 +254,7 @@ fun DeviceSelectionScreen(
                                 singleLine = true,
                                 modifier = Modifier.width(120.dp),
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
                             Button(
                                 onClick = {
                                     if (selectedDevice == null) {
@@ -407,7 +408,7 @@ private fun DeviceRow(
                     style = MaterialTheme.typography.labelSmall,
                     color = contentColor.copy(alpha = 0.6f),
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
                 Text(
                     text = "forwarded ${assignedPort ?: "-"}",
                     style = MaterialTheme.typography.labelSmall,

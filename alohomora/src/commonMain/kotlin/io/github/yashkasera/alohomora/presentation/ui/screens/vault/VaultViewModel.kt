@@ -1,7 +1,12 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.vault
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.yashkasera.alohomora.common.DatabaseInfo
+import io.github.yashkasera.alohomora.common.TableColumn
+import io.github.yashkasera.alohomora.common.TableData
+import io.github.yashkasera.alohomora.common.TableSchema
 import io.github.yashkasera.alohomora.domain.repository.VaultRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -10,28 +15,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class DatabaseInfo(
-    val name: String,
-    val path: String
-)
-
-data class TableColumn(
-    val name: String,
-    val type: String
-)
-
-data class TableData(
-    val columns: List<TableColumn>,
-    val rows: List<Map<String, String>>
-)
-
-data class TableSchema(
-    val name: String,
-    val columns: List<TableColumn>,
-    val primaryKey: String?,
-    val indexes: List<String>
-)
-
+@Immutable
 data class VaultState(
     val databases: List<DatabaseInfo> = emptyList(),
     val selectedDatabase: DatabaseInfo? = null,

@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -31,7 +32,7 @@ fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth()
             .background(containerColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.lg),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
@@ -40,7 +41,7 @@ fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
             ) {
                 MethodBadge(call.method.orEmpty())
                 Text(
@@ -52,7 +53,7 @@ fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
             ) {
                 Text(
                     text = "${call.duration}ms",
@@ -85,7 +86,7 @@ fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(end = 32.dp),
+            modifier = Modifier.padding(end = MaterialTheme.dimens.margin.xxxl),
         )
 
         Text(
@@ -115,7 +116,7 @@ private fun MethodBadge(method: String) {
         containerColor = backgroundColor,
         contentColor = contentColor,
         borderStroke = BorderStroke(
-            width = 1.dp,
+            width = MaterialTheme.dimens.stroke.small,
             color = contentColor,
         ).takeIf { !isWrite },
     )

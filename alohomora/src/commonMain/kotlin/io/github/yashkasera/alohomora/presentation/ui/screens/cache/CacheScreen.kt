@@ -37,7 +37,7 @@ import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.Database
-import io.github.yashkasera.alohomora.ui.theme.CanvasSuccessGreen
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,7 +68,7 @@ internal fun CacheScreen(
         },
         bottomBar = {
             CacheFooter(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
                 totalEntries = state.totalEntries,
                 filteredCount = state.filteredCount,
                 totalSize = totalSize,
@@ -81,10 +81,10 @@ internal fun CacheScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = MaterialTheme.dimens.margin.xl)
         ) {
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
             // Search Bar
             SearchTextField(
@@ -92,7 +92,7 @@ internal fun CacheScreen(
                 onQueryChange = viewModel::onSearchQueryChange,
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
             // Content
             if (state.entries.isEmpty()) {
@@ -152,7 +152,7 @@ private fun PreferenceItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
+            .padding(vertical = MaterialTheme.dimens.margin.lg),
     ) {
         // Key row with type chip
         Row(
@@ -171,17 +171,17 @@ private fun PreferenceItem(
                 modifier = Modifier.weight(1f),
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
 
             // Type chip
             AlohomoraChip(label = entry.type.name)
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(6.dp)) // 6.dp intentional: tight preference value gap
 
         // Value display with type-specific styling
         val valueColor = when (entry.type) {
-            PreferenceType.BOOLEAN -> CanvasSuccessGreen
+            PreferenceType.BOOLEAN -> MaterialTheme.colorScheme.tertiary
             else -> MaterialTheme.colorScheme.onSurfaceVariant
         }
 

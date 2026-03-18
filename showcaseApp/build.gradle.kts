@@ -33,7 +33,8 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":alohomora-noop"))
+    debugImplementation(project(":alohomora"))
+    releaseImplementation(project(":alohomora-noop"))
     implementation(libs.androidx.activityCompose)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)

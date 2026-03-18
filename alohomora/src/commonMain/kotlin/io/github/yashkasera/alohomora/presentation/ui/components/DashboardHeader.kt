@@ -19,9 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
-import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
-// We'll reuse AlertRed if we really need it, or just use Black for active state.
+import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
 fun DashboardHeader(
@@ -32,36 +30,34 @@ fun DashboardHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(CanvasWhite)
-            .border(width = 1.dp, color = CanvasBlack)
-            .padding(16.dp),
+            .background(MaterialTheme.colorScheme.surface)
+            .border(width = MaterialTheme.dimens.stroke.small, color = MaterialTheme.colorScheme.onSurface)
+            .padding(MaterialTheme.dimens.margin.lg),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left: Branding/Status
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
                     .size(12.dp)
-                    .background(if (isConnected) CanvasBlack else CanvasWhite, shape = RectangleShape)
-                    .border(1.dp, CanvasBlack, RectangleShape)
+                    .background(
+                        if (isConnected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surface,
+                        shape = RectangleShape
+                    )
+                    .border(MaterialTheme.dimens.stroke.small, MaterialTheme.colorScheme.onSurface, RectangleShape)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
             Text(
                 text = "ALOHOMORA // UNIT 01",
                 style = MaterialTheme.typography.titleMedium,
-                color = CanvasBlack
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
-        // Right: Actions
         CanvasButton(
             text = if (isConnected) "DISCONNECT" else "CONNECT",
             onClick = onConnectClick,
-            // Invert colors for active state or simple difference
             inverted = !isConnected
-            // If connected (Disconnect option), show as standard button.
-            // If disconnected (Connect option), show as inverted (Call to action).
         )
     }
 }
@@ -73,17 +69,16 @@ fun CanvasButton(
     inverted: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    // Brutalist: Sharp edges, thick border
     val shape: Shape = RectangleShape
-    val backgroundColor = if (inverted) CanvasBlack else CanvasWhite
-    val contentColor = if (inverted) CanvasWhite else CanvasBlack
+    val backgroundColor = if (inverted) MaterialTheme.colorScheme.inverseSurface else MaterialTheme.colorScheme.surface
+    val contentColor = if (inverted) MaterialTheme.colorScheme.inverseOnSurface else MaterialTheme.colorScheme.onSurface
 
     Box(
         modifier = modifier
             .clickable(onClick = onClick)
-            .border(1.dp, CanvasBlack, shape)
+            .border(MaterialTheme.dimens.stroke.small, MaterialTheme.colorScheme.onSurface, shape)
             .background(backgroundColor, shape)
-            .padding(horizontal = 24.dp, vertical = 8.dp)
+            .padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.sm)
     ) {
         Text(
             text = text,

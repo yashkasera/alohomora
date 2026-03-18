@@ -47,6 +47,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.theme.brand
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.theme.logError
 import io.github.yashkasera.alohomora.ui.theme.muted
 import io.github.yashkasera.alohomora.ui.theme.success
@@ -104,7 +105,7 @@ fun AdbToolsPanel(
                 modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 AlohomoraHorizontalDivider()
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                Column(modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.lg, vertical = MaterialTheme.dimens.margin.sm)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -129,7 +130,7 @@ fun AdbToolsPanel(
                         }
                     }
                     if (consoleExpanded) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
                         val rendered = adbCommandHistory.asReversed()
                         if (rendered.isEmpty()) {
                             Text(
@@ -211,7 +212,7 @@ fun AdbToolsPanel(
                         singleLine = true,
                         modifier = Modifier.widthIn(min = 240.dp, max = 360.dp),
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                     AlohomoraFilledButton(
                         text = "Browse",
                         onClick = {
@@ -221,7 +222,7 @@ fun AdbToolsPanel(
                             }
                         },
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                     AlohomoraFilledButton(
                         text = "Install",
                         onClick = { devicesViewModel.installApk(selectedDeviceId, apkPath) },
@@ -451,7 +452,7 @@ private fun AdbRow(
     trailingContent: @Composable () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = MaterialTheme.dimens.margin.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -465,7 +466,7 @@ private fun AdbRow(
                 )
             }
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
         Box(modifier = Modifier.widthIn(min = 220.dp)) {
             trailingContent()
         }
@@ -474,7 +475,7 @@ private fun AdbRow(
 
 @Composable
 private fun SectionHeader(title: String) {
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
     Text(
         title,
         style = MaterialTheme.typography.labelSmall,
@@ -495,7 +496,7 @@ private fun SwitchRow(
             style = MaterialTheme.typography.bodySmall,
             color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.muted,
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
         Switch(
             checked = checked,
             onCheckedChange = { onCheckedChange() },

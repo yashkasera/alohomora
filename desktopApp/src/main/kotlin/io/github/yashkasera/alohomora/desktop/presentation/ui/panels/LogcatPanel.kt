@@ -25,9 +25,9 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewM
 fun LogcatPanel(
     devicesViewModel: DevicesViewModel,
     logcatViewModel: LogcatViewModel,
+    selectedDeviceId: String?,
     modifier: Modifier = Modifier,
 ) {
-    val selectedDeviceId by devicesViewModel.selectedDeviceId.collectAsState()
     val error by devicesViewModel.error.collectAsState()
     val uiState by logcatViewModel.uiState.collectAsState()
 

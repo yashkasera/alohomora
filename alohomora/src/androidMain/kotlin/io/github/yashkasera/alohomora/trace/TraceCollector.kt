@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.trace
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.github.yashkasera.alohomora.common.TraceEntry
@@ -39,16 +40,15 @@ class TraceCollector(
      * Check if notification permission is granted.
      * On Android 13+ (API 33+), this requires explicit user permission.
      */
-    fun hasNotificationPermission(): Boolean {
-        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+    fun hasNotificationPermission() =
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
-                TraceInjector.context,
+                context,
                 Manifest.permission.POST_NOTIFICATIONS,
             ) == PackageManager.PERMISSION_GRANTED
         } else {
             true // Permission not required on older Android versions
         }
-    }
 
     /**
      * Call this method when you send an HTTP request.
@@ -67,8 +67,9 @@ class TraceCollector(
      * It must be called after [TraceCollector.onRequestSent].
      * @param transaction The sent HTTP transaction completed with the response
      */
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     internal fun onResponseReceived(transaction: TraceEntry) {
-        scope.launch {
+        scope.launch  {
             TraceInjector.dao.update(transaction)
             val latest = withContext(Dispatchers.IO) {
                 if (showNotification) {
@@ -77,19 +78,8 @@ class TraceCollector(
                     emptyList()
                 }
             }
-            if (showNotification) {
-                if (ActivityCompat.checkSelfPermission(
-                        TraceInjector.context,
-                        Manifest.permission.POST_NOTIFICATIONS,
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    if (showNotification && latest.isNotEmpty()) {
-                        if (!hasNotificationPermission()) {
-                            return@launch
-                        }
-                        notificationHelper.showLatest(latest)
-                    }
-                }
+            if (showNotification && latest.isNotEmpty() && hasNotificationPermission()) {
+                notificationHelper.showLatest(latest)
             }
         }
     }

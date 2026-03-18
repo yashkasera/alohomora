@@ -32,7 +32,8 @@ class DevToolsViewModel(
     private val requestPrefValueUseCase: RequestPrefValueUseCase,
     private val slackShareService: SlackShareService,
 ) {
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val job = SupervisorJob()
+    private val scope = CoroutineScope(Dispatchers.IO + job)
 
     val uiState: StateFlow<DevToolsUiState> = combine(
         repository.connectionState,
@@ -42,7 +43,7 @@ class DevToolsViewModel(
         DevToolsUiState(connection, deviceId, switching)
     }.stateIn(
         scope,
-        kotlinx.coroutines.flow.SharingStarted.Eagerly,
+        kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
         DevToolsUiState(
             connection = repository.connectionState.value,
             currentDeviceId = repository.currentDeviceId.value,
@@ -59,6 +60,8 @@ class DevToolsViewModel(
     }
 
     fun requestInitialState() = requestInitialStateUseCase()
+
+    fun submitOtp(otp: String) = repository.submitOtp(otp)
 
     fun requestDatabaseSchema(databaseName: String) = requestDatabaseSchemaUseCase(databaseName)
 
@@ -99,6 +102,10 @@ class DevToolsViewModel(
 
     fun clearSlackShareError() {
         _slackShareError.value = null
+    }
+
+    fun close() {
+        job.cancel()
     }
 
     val events = repository.events

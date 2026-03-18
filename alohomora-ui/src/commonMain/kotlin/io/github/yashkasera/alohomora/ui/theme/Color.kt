@@ -6,27 +6,27 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
-val CanvasBlack = Color(0xFF000000)
+val CanvasBlack = Color(0xFF0A0A0A)
 val CanvasWhite = Color(0xFFFFFFFF)
-val CanvasDarkGray = Color(0xFF333333) // For borders/accents
-val CanvasLightGray = Color(0xFFF5F5F5) // For surfaces
-val CanvasError = Color(0xFF000000)
-val CanvasAlertRed = Color(0xFFD00000)
+val CanvasDarkGray = Color(0xFF2D2D2D)
+val CanvasLightGray = Color(0xFFF5F4F1)
+val CanvasError = Color(0xFFDC2626)
+val CanvasAlertRed = Color(0xFFDC2626)
 val CanvasSuccessGreen = Color(0xFF059669)
 
-private val CanvasBrandBlueLight = Color(0xFF1A56DB)
-private val CanvasBrandBlueDark = Color(0xFF7AA2FF)
-private val CanvasWarningLight = Color(0xFFB27A00)
+private val CanvasBrandIndigoLight = Color(0xFF6366F1)
+private val CanvasBrandIndigoDark = Color(0xFFA5B4FC)
+private val CanvasWarningLight = Color(0xFFD97706)
 private val CanvasWarningDark = Color(0xFFFFC857)
-private val CanvasMutedLight = Color(0xFF8A8A8A)
+private val CanvasMutedLight = Color(0xFF71717A)
 private val CanvasMutedDark = Color(0xFFB0B0B0)
-private val CanvasMutedContainerLight = Color(0xFFE0E0E0)
+private val CanvasMutedContainerLight = Color(0xFFE4E4E7)
 private val CanvasMutedContainerDark = Color(0xFF2D2D2D)
-private val CanvasSubtleSurfaceLight = Color(0xFFF9FAFB)
+private val CanvasSubtleSurfaceLight = Color(0xFFFAFAF8)
 private val CanvasSubtleSurfaceDark = Color(0xFF1A1A1A)
-private val CanvasSubtleSurfaceAltLight = Color(0xFFF3F4F6)
+private val CanvasSubtleSurfaceAltLight = Color(0xFFF5F4F1)
 private val CanvasSubtleSurfaceAltDark = Color(0xFF242424)
-private val CanvasPanelBorderLight = Color(0xFFE0D7CC)
+private val CanvasPanelBorderLight = Color(0xFFE4E2DC)
 private val CanvasPanelBorderDark = Color(0xFF3A332B)
 
 private val CanvasLogVerboseLight = Color(0xFF9E9E9E)
@@ -45,32 +45,41 @@ private val CanvasLogFatalDark = Color(0xFFCE93D8)
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 val CanvasLightColorScheme = lightColorScheme(
 
-    primary = Color(0xFF111111),              // strong text / emphasis
+    primary = Color(0xFF6366F1),              // electric indigo — the single catchy accent
     onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFEEF2FF),
+    onPrimaryContainer = Color(0xFF3730A3),
 
-    secondary = Color(0xFF6B6B6B),            // subtle text / metadata
+    secondary = Color(0xFF52525B),            // zinc gray — neutral metadata
     onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFFF4F4F5),
+    onSecondaryContainer = Color(0xFF18181B),
 
-    tertiary = Color(0xFF1DB954),             // success / active state
-    onTertiary = Color(0xFF000000),
+    tertiary = Color(0xFF059669),             // emerald — success / active state
+    onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFECFDF5),
+    onTertiaryContainer = Color(0xFF065F46),
 
-    background = Color(0xFFF9FAFB),
-    onBackground = Color(0xFF111111),
+    background = Color(0xFFFAFAF8),           // warm off-white
+    onBackground = Color(0xFF0A0A0A),
 
     surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF111111),
+    onSurface = Color(0xFF0A0A0A),
 
-    surfaceVariant = Color(0xFFEDEDE9),
-    onSurfaceVariant = Color(0xFF6B6B6B),
+    surfaceVariant = Color(0xFFF5F4F1),       // warm light gray
+    onSurfaceVariant = Color(0xFF52525B),
 
-    outline = Color(0xFFE5E5E2),              // borders (very important in your UI)
-    outlineVariant = Color(0xFFD6D6D2),
+    outline = Color(0xFFE4E2DC),              // warm border
+    outlineVariant = Color(0xFFD4D2CC),
 
-    error = Color(0xFFE5484D),
+    error = Color(0xFFDC2626),
     onError = Color(0xFFFFFFFF),
+    errorContainer = Color(0xFFFEF2F2),
+    onErrorContainer = Color(0xFF7F1D1D),
 
-    inverseSurface = Color(0xFF1A1A1A),
-    inverseOnSurface = Color(0xFFF5F5F5),
+    inverseSurface = Color(0xFF1C1B1F),
+    inverseOnSurface = Color(0xFFF5F4F1),
+    inversePrimary = Color(0xFFA5B4FC),
 
     scrim = Color(0x66000000)
 )
@@ -114,7 +123,7 @@ val ColorScheme.success: Color
     get() = CanvasSuccessGreen
 
 val ColorScheme.brand: Color
-    get() = if (isDarkPalette) CanvasBrandBlueDark else CanvasBrandBlueLight
+    get() = if (isDarkPalette) CanvasBrandIndigoDark else CanvasBrandIndigoLight
 
 val ColorScheme.warning: Color
     get() = if (isDarkPalette) CanvasWarningDark else CanvasWarningLight

@@ -17,7 +17,7 @@ internal class FlowPager<Key, Item>(
     private val getNextKey: (Key) -> Key,
     private val pagingSourceFactory: () -> FlowPagingSource<Key, Item>,
 ) {
-    private val pagingSource = pagingSourceFactory()
+    private var pagingSource = pagingSourceFactory()
 
     private val loadedPages = mutableMapOf<Key, List<Item>>()
     private val pageJobs = mutableMapOf<Key, Job>()
@@ -87,6 +87,7 @@ internal class FlowPager<Key, Item>(
 
             currentKey = initialKey
             isEndReached = false
+            pagingSource = pagingSourceFactory()
 
             _pagingData.value = PagingData(
                 items = emptyList(),

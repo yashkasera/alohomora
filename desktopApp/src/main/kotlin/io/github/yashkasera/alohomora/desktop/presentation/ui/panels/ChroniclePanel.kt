@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.github.yashkasera.alohomora.desktop.domain.model.ChronicleCommit
@@ -59,7 +60,7 @@ fun ChroniclePanel(devToolsViewModel: DevToolsViewModel) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                        .padding(12.dp),
+                        .padding(MaterialTheme.dimens.margin.md),
                 ) {
                     Text(
                         text = "Build Info",
@@ -69,11 +70,11 @@ fun ChroniclePanel(devToolsViewModel: DevToolsViewModel) {
             }
             item {
                 OutlinedCard(
-                    modifier = Modifier.padding(24.dp),
+                    modifier = Modifier.padding(MaterialTheme.dimens.margin.xxl),
                 ) {
                     Column(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.md, vertical = MaterialTheme.dimens.margin.sm),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                     ) {
                         if (buildInfo == null) {
                             Text(
@@ -109,7 +110,7 @@ fun ChroniclePanel(devToolsViewModel: DevToolsViewModel) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                        .padding(12.dp),
+                        .padding(MaterialTheme.dimens.margin.md),
                 ) {
                     Text(
                         text = "Commit History",
@@ -148,8 +149,8 @@ private fun ChronicleRow(commit: ChronicleCommit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+            .padding(horizontal = MaterialTheme.dimens.margin.lg, vertical = MaterialTheme.dimens.margin.md),
+        verticalArrangement = Arrangement.spacedBy(6.dp), // 6.dp intentional: tight commit row gap
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -195,7 +196,7 @@ private fun InfoRow(label: String, value: String?) {
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium,
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
         Text(
             text = value ?: "-",
             style = MaterialTheme.typography.bodyMedium,

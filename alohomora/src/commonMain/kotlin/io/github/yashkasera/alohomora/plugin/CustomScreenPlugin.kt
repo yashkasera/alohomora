@@ -93,72 +93,33 @@ interface CustomScreenPlugin {
  * Registry for managing custom screen plugins.
  */
 internal object PluginRegistry {
-    private val plugins = mutableMapOf<String, CustomScreenPlugin>()
+    private val lock = Any()
 
-    /**
-     * Register a custom screen plugin.
-     *
-     * @param plugin The plugin to register
-     * @throws IllegalArgumentException if a plugin with the same id is already registered
-     */
-    fun register(plugin: CustomScreenPlugin) {
+    @Volatile
+    private var plugins: Map<String, CustomScreenPlugin> = emptyMap()
+
+    fun register(plugin: CustomScreenPlugin) = synchronized(lock) {
         require(!plugins.containsKey(plugin.id)) {
             "A plugin with id '${plugin.id}' is already registered"
         }
-        plugins[plugin.id] = plugin
+        plugins = plugins + (plugin.id to plugin)
     }
 
-    /**
-     * Unregister a plugin by id.
-     *
-     * @param pluginId The id of the plugin to unregister
-     * @return true if a plugin was removed, false if no plugin with that id was found
-     */
-    fun unregister(pluginId: String): Boolean {
-        return plugins.remove(pluginId) != null
+    fun unregister(pluginId: String): Boolean = synchronized(lock) {
+        val had = plugins.containsKey(pluginId)
+        if (had) plugins = plugins - pluginId
+        had
     }
 
-    /**
-     * Get a plugin by id.
-     *
-     * @param pluginId The id of the plugin to retrieve
-     * @return The plugin, or null if not found
-     */
-    fun getPlugin(pluginId: String): CustomScreenPlugin? {
-        return plugins[pluginId]
-    }
+    fun getPlugin(pluginId: String): CustomScreenPlugin? = plugins[pluginId]
 
-    /**
-     * Get all registered plugins.
-     *
-     * @return List of all registered plugins
-     */
-    fun getAllPlugins(): List<CustomScreenPlugin> {
-        return plugins.values.toList()
-    }
+    fun getAllPlugins(): List<CustomScreenPlugin> = plugins.values.toList()
 
-    /**
-     * Get plugins that should be shown in the dashboard, sorted by priority.
-     */
-    fun getDashboardPlugins(): List<CustomScreenPlugin> {
-        return plugins.values
-            .filter { it.showInDashboard }
-            .sortedBy { it.priority }
-    }
+    fun getDashboardPlugins(): List<CustomScreenPlugin> =
+        plugins.values.filter { it.showInDashboard }.sortedBy { it.priority }
 
-    /**
-     * Get plugins that should be shown in navigation, sorted by priority.
-     */
-    fun getNavigationPlugins(): List<CustomScreenPlugin> {
-        return plugins.values
-            .filter { it.showInNavigation }
-            .sortedBy { it.priority }
-    }
+    fun getNavigationPlugins(): List<CustomScreenPlugin> =
+        plugins.values.filter { it.showInNavigation }.sortedBy { it.priority }
 
-    /**
-     * Clear all registered plugins (useful for testing).
-     */
-    internal fun clear() {
-        plugins.clear()
-    }
+    internal fun clear() = synchronized(lock) { plugins = emptyMap() }
 }

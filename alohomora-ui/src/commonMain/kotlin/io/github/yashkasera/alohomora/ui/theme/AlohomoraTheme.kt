@@ -15,14 +15,16 @@ fun AlohomoraTheme(
     content: @Composable () -> Unit
 ) {
     val systemIsDark = isSystemInDarkTheme()
-    val isDarkState = remember(systemIsDark) { mutableStateOf(false) }
+    val isDarkState = remember(systemIsDark) { mutableStateOf(true) }
     CompositionLocalProvider(
-        LocalThemeIsDark provides isDarkState
+        LocalThemeIsDark provides isDarkState,
+        LocalAlohomoraDimens provides AlohomoraDimens(),
     ) {
         val isDark by isDarkState
         MaterialTheme(
             colorScheme = if (isDark) CanvasDarkColorScheme else CanvasLightColorScheme,
             typography = AlohomoraTypography(),
+            shapes = AlohomoraShapes,
             content = { Surface(content = content) }
         )
     }

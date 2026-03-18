@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.trace.list
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.yashkasera.alohomora.common.TraceEntry
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@Immutable
 data class TraceState(
     val calls: List<TraceEntry> = emptyList(),
     val isLoadingMore: Boolean = false,

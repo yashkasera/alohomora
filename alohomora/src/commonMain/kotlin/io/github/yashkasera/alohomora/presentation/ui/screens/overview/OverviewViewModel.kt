@@ -1,18 +1,23 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.overview
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+enum class DevConnectionStatus { Off, Disconnected, AwaitingAuth, Connected }
+
+@Immutable
 internal data class OverviewState(
     val serverEnabled: Boolean = false,
-    val serverPort: String = "53999",
+    val serverPort: String = DevToolsDefaults.DEFAULT_PORT.toString(),
     val serverError: String? = null,
-    val deviceConnectionStatus: String = "UNKNOWN",
+    val deviceConnectionStatus: DevConnectionStatus = DevConnectionStatus.Off,
+    val pendingOtp: String? = null,
 )
 
 sealed class OverviewEvent {
@@ -31,15 +36,17 @@ internal class OverviewViewModel(
         viewModelScope.launch {
             devToolsRuntime.serverState.collect { serverState ->
                 val status = when {
-                    serverState.isRunning && serverState.hasClient -> "CONNECTED"
-                    serverState.isRunning -> "DISCONNECTED"
-                    else -> "OFF"
+                    serverState.isRunning && serverState.hasClient && serverState.pendingOtp != null -> DevConnectionStatus.AwaitingAuth
+                    serverState.isRunning && serverState.hasClient -> DevConnectionStatus.Connected
+                    serverState.isRunning -> DevConnectionStatus.Disconnected
+                    else -> DevConnectionStatus.Off
                 }
                 _state.value = _state.value.copy(
                     serverEnabled = serverState.isRunning,
                     serverPort = serverState.port?.toString() ?: _state.value.serverPort,
                     serverError = serverState.lastError,
                     deviceConnectionStatus = status,
+                    pendingOtp = serverState.pendingOtp,
                 )
             }
         }
@@ -62,7 +69,7 @@ internal class OverviewViewModel(
                 return
             }
             try {
-                val started = Alohomora.startDevToolsServer(port)
+                val started = devToolsRuntime.start(port)
                 _state.value = _state.value.copy(
                     serverEnabled = started,
                     serverError = if (started) null else "Failed to start server",
@@ -75,7 +82,7 @@ internal class OverviewViewModel(
             }
         } else {
             try {
-                Alohomora.stopDevToolsServer()
+                devToolsRuntime.stop()
             } catch (_: Exception) {
                 /* no-op */
             }

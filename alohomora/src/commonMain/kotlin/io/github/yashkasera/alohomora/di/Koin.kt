@@ -3,16 +3,13 @@ package io.github.yashkasera.alohomora.di
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.data.repository.IncidentRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.TelemetryRepositoryImpl
-import io.github.yashkasera.alohomora.data.repository.LogRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.TraceRepositoryImpl
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.domain.repository.IncidentRepository
 import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
-import io.github.yashkasera.alohomora.domain.repository.LogRepository
 import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import io.github.yashkasera.alohomora.domain.usecase.cache.GetPreferencesUseCase
 import io.github.yashkasera.alohomora.domain.usecase.trace.GetTraceDetailsUseCase
-import io.github.yashkasera.alohomora.domain.usecase.trace.GetTracesUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.GetIncidentDetailsUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.MarkIncidentAsViewedUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.ClearIncidentsUseCase
@@ -46,7 +43,6 @@ internal val appModule = module {
     single { get<AlohomoraDb>().incidentDao() }
     single { get<AlohomoraDb>().screenDao() }
 
-    single<LogRepository> { LogRepositoryImpl(get()) }
     single<TraceRepository> { TraceRepositoryImpl(get()) }
     single<TelemetryRepository> { TelemetryRepositoryImpl(get()) }
     single<IncidentRepository> { IncidentRepositoryImpl(get()) }
@@ -56,7 +52,6 @@ internal val appModule = module {
 
 
     // UseCases
-    factory { GetTracesUseCase(get()) }
     factory { GetIncidentDetailsUseCase(get()) }
     factory { MarkIncidentAsViewedUseCase(get()) }
     factory { ClearIncidentsUseCase(get()) }

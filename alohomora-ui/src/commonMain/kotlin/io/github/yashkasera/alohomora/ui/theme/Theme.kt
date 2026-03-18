@@ -7,6 +7,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -172,17 +173,16 @@ val unspecified_scheme = ColorFamily(
 
 @Composable
 fun AppTheme(
-    systemIsDark: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
+    isDarkState: MutableState<Boolean>? = null,
+    initialIsDark: Boolean = true,
     content: @Composable() () -> Unit,
 ) {
-    val isDarkState = remember(systemIsDark) { mutableStateOf(false) }
+    val ownedState = remember { mutableStateOf(initialIsDark) }
+    val effectiveState = isDarkState ?: ownedState
     CompositionLocalProvider(
-        LocalThemeIsDark provides isDarkState,
+        LocalThemeIsDark provides effectiveState,
     ) {
-        val isDark by isDarkState
-
-
+        val isDark by effectiveState
         MaterialTheme(
             colorScheme = if (isDark) darkScheme else lightScheme,
             typography = AlohomoraTypography(),

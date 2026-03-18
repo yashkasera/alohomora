@@ -1,9 +1,7 @@
 package io.github.yashkasera.alohomora.common
 
+import io.github.yashkasera.alohomora.devtools.DevToolsSocket
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.encodeToJsonElement
 
 object DevToolsProtocol {
     private const val MAGIC_VALUE = 0x414C4F48
@@ -15,9 +13,8 @@ object DevToolsProtocol {
         encodeDefaults = true
     }
 
-    fun encodeEnvelope(envelope: DevToolsEnvelope): ByteArray {
-        val payload =
-            json.encodeToString(DevToolsEnvelope.serializer(), envelope).encodeToByteArray()
+    fun encodeEnvelope(message: DevToolsMessage): ByteArray {
+        val payload = json.encodeToString(DevToolsMessage.serializer(), message).encodeToByteArray()
         val length = payload.size
         val frame = ByteArray(HEADER_LENGTH + length)
         writeInt(frame, 0, MAGIC_VALUE)
@@ -27,12 +24,11 @@ object DevToolsProtocol {
         return frame
     }
 
-    fun decodeEnvelope(jsonBytes: ByteArray): DevToolsEnvelope {
-        val jsonString = jsonBytes.decodeToString()
-        return json.decodeFromString(DevToolsEnvelope.serializer(), jsonString)
+    fun decodeEnvelope(jsonBytes: ByteArray): DevToolsMessage {
+        return json.decodeFromString(DevToolsMessage.serializer(), jsonBytes.decodeToString())
     }
 
-    fun decodeFrame(frame: ByteArray): DevToolsEnvelope {
+    fun decodeFrame(frame: ByteArray): DevToolsMessage {
         require(frame.size >= HEADER_LENGTH) { "Frame too short" }
         val magic = readInt(frame, 0)
         require(magic == MAGIC_VALUE) { "Invalid magic" }
@@ -40,11 +36,10 @@ object DevToolsProtocol {
         require(version == VERSION) { "Unsupported version: $version" }
         val length = readInt(frame, 5)
         require(frame.size == HEADER_LENGTH + length) { "Invalid length" }
-        val jsonBytes = frame.copyOfRange(HEADER_LENGTH, HEADER_LENGTH + length)
-        return decodeEnvelope(jsonBytes)
+        return decodeEnvelope(frame.copyOfRange(HEADER_LENGTH, HEADER_LENGTH + length))
     }
 
-    suspend fun readEnvelope(socket: io.github.yashkasera.alohomora.devtools.DevToolsSocket): DevToolsEnvelope? {
+    suspend fun readEnvelope(socket: DevToolsSocket): DevToolsMessage? {
         val header = socket.readExact(HEADER_LENGTH) ?: return null
         val magic = readInt(header, 0)
         if (magic != MAGIC_VALUE) return null
@@ -56,14 +51,6 @@ object DevToolsProtocol {
         return decodeEnvelope(jsonBytes)
     }
 
-    inline fun <reified T> encodePayload(value: T): JsonElement {
-        return json.encodeToJsonElement(value)
-    }
-
-    inline fun <reified T> decodePayload(payload: JsonElement): T {
-        return json.decodeFromJsonElement(payload)
-    }
-
     private fun writeInt(buffer: ByteArray, offset: Int, value: Int) {
         buffer[offset] = (value shr 24).toByte()
         buffer[offset + 1] = (value shr 16).toByte()
@@ -72,7 +59,7 @@ object DevToolsProtocol {
     }
 
     private fun readInt(buffer: ByteArray, offset: Int): Int {
-        return (buffer[offset].toInt() shl 24) or
+        return ((buffer[offset].toInt() and 0xFF) shl 24) or
             ((buffer[offset + 1].toInt() and 0xFF) shl 16) or
             ((buffer[offset + 2].toInt() and 0xFF) shl 8) or
             (buffer[offset + 3].toInt() and 0xFF)

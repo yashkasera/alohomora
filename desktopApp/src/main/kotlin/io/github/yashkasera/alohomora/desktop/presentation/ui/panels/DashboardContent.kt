@@ -51,6 +51,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesView
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.theme.brand
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.theme.logError
 import io.github.yashkasera.alohomora.ui.theme.muted
 import io.github.yashkasera.alohomora.ui.theme.subtleSurfaceAlt
@@ -88,13 +89,13 @@ fun DashboardContent(
         Column(
             modifier = Modifier.fillMaxWidth()
                 .padding(it)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+                .padding(MaterialTheme.dimens.margin.xxl),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth()
                     .wrapContentHeight(),
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
             ) {
                 DeviceInfoCard(
                     selectedDevice = selectedDevice,
@@ -106,7 +107,7 @@ fun DashboardContent(
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
             ) {
                 RecentEventsCard(
                     events = events,
@@ -145,15 +146,15 @@ fun QuickActionsCard(
     OutlinedCard(
         modifier = modifier,
     ) {
-        Column(modifier = Modifier.padding(24.dp)) {
+        Column(modifier = Modifier.padding(MaterialTheme.dimens.margin.xxl)) {
             Text(
                 "Quick Actions",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
             ){
                 QuickActionButton("Take Screenshot", onTakeScreenshot)
                 QuickActionButton(recordLabel, onRecordScreen)
@@ -174,12 +175,14 @@ fun RowScope.DeviceInfoCard(
     val dotColor = when (connection) {
         is DevToolsConnection.Connected -> MaterialTheme.colorScheme.success
         is DevToolsConnection.Connecting -> MaterialTheme.colorScheme.warning
+        is DevToolsConnection.AwaitingAuth -> MaterialTheme.colorScheme.warning
         is DevToolsConnection.Failed -> MaterialTheme.colorScheme.logError
         DevToolsConnection.Disconnected -> MaterialTheme.colorScheme.muted
     }
     val connectionText = when (connection) {
         is DevToolsConnection.Connected -> "CONNECTED VIA ADB WI-FI"
         is DevToolsConnection.Connecting -> "CONNECTING"
+        is DevToolsConnection.AwaitingAuth -> "AWAITING AUTH"
         is DevToolsConnection.Failed -> "FAILED"
         DevToolsConnection.Disconnected -> "DISCONNECTED"
     }
@@ -188,7 +191,7 @@ fun RowScope.DeviceInfoCard(
         Column(modifier = Modifier.padding(24.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(dotColor))
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                 Text(
                     connectionText,
                     style = MaterialTheme.typography.labelSmall,
@@ -247,7 +250,7 @@ private fun InfoItem(
                 color = resolvedValueColor,
             )
             if (subValue != null) {
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.xs))
                 Text(
                     subValue,
                     style = MaterialTheme.typography.bodySmall,
@@ -265,7 +268,7 @@ private fun RowScope.CurrentBuildCard(
     buildInfo: BuildInfo?,
 ) {
     OutlinedCard(modifier = modifier.height(200.dp)) {
-        Column(modifier = Modifier.padding(24.dp)) {
+        Column(modifier = Modifier.padding(MaterialTheme.dimens.margin.xxl)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -273,14 +276,14 @@ private fun RowScope.CurrentBuildCard(
             ) {
                 Text("Current Build", fontWeight = FontWeight.Bold)
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
                     buildInfo?.versionName?.ifBlank { "-" } ?: "-",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                 Text(
                     buildInfo?.versionCode?.toString()?.let { "($it)" } ?: "",
                     color = MaterialTheme.colorScheme.muted,
@@ -310,7 +313,7 @@ private fun RowScope.CurrentBuildCard(
                     color = MaterialTheme.colorScheme.secondary,
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(6.dp)) // 6.dp intentional: tight build meta gap
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -337,7 +340,7 @@ private fun RowScope.CurrentBuildCard(
                 )
             }
             if (buildInfo != null && buildInfo.isDirty) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
                 Text(
                     "Working tree dirty",
                     style = MaterialTheme.typography.labelSmall,
@@ -362,7 +365,7 @@ fun RecentEventsCard(
         Column() {
             Row(
                 modifier = Modifier
-                    .padding(horizontal = 24.dp, vertical = 12.dp).fillMaxWidth(),
+                    .padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.md).fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -399,8 +402,8 @@ fun RecentEventsCard(
                         )
                         if (event != events.last())
                             HorizontalDivider(
-                                modifier = Modifier.padding(top = 16.dp),
-                                thickness = 0.5.dp,
+                                modifier = Modifier.padding(top = MaterialTheme.dimens.margin.lg),
+                                thickness = MaterialTheme.dimens.stroke.thin,
                                 color = MaterialTheme.colorScheme.subtleSurfaceAlt,
                             )
                     }
@@ -423,7 +426,7 @@ private fun NetworkTrafficLogsCard(
         Column() {
             Row(
                 modifier = Modifier
-                    .padding(horizontal = 24.dp, vertical = 12.dp).fillMaxWidth(),
+                    .padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.md).fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {

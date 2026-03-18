@@ -24,6 +24,7 @@ interface DevToolsRepository {
     fun connect(host: String, port: Int)
     fun switchDevice(host: String, port: Int, deviceId: String? = null)
     fun disconnect()
+    fun submitOtp(otp: String)
 
     fun requestDatabaseSchema(databaseName: String)
     fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int = 200)

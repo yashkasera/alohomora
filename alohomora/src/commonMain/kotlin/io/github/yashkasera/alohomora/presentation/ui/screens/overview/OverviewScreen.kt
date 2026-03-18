@@ -23,12 +23,11 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -45,6 +44,7 @@ import io.github.yashkasera.alohomora.presentation.ui.components.CanvasBackgroun
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraLargeTopAppBar
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopAppBarDefaults
@@ -55,6 +55,7 @@ import io.github.yashkasera.alohomora.ui.icons.HardDrive
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Settings
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
 private data class OverviewModule(
@@ -65,7 +66,7 @@ private data class OverviewModule(
     val route: Routes,
 )
 
-private fun getModules() = listOf(
+private val builtInModules = listOf(
     OverviewModule(
         title = "Trace",
         subtitle = "LIVE STREAM",
@@ -124,9 +125,10 @@ internal fun OverviewScreen(
     onNavigate: (Routes) -> Unit,
 ) {
     val viewModel = koinViewModel<OverviewViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
-    val (internalPlugins, customPlugins) = remember {
+    val pluginCount = PluginRegistry.getAllPlugins().size
+    val (internalPlugins, customPlugins) = remember(pluginCount) {
         PluginRegistry.getDashboardPlugins()
             .map { plugin ->
                 OverviewModule(
@@ -139,8 +141,8 @@ internal fun OverviewScreen(
             }
             .partition { it.route is Routes.Extension }
     }
-    val defaultModules = remember {
-        getModules() + internalPlugins
+    val defaultModules = remember(internalPlugins) {
+        builtInModules + internalPlugins
     }
 
     val lazyGridState = rememberLazyStaggeredGridState()
@@ -189,39 +191,14 @@ internal fun OverviewScreen(
             )
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        bottomBar = {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column {
-                    Text(
-                        "CLIENT VERSION",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
-                    Text(
-                        "v2.4.0 (Build 492)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
-                }
-
-                Row {
-                    Spacer(modifier = Modifier.width(16.dp))
-                }
-            }
-        },
     ) {
         CanvasBackground()
         LazyVerticalStaggeredGrid(
             modifier = Modifier.padding(it),
             columns = StaggeredGridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalItemSpacing = 16.dp,
-            contentPadding = PaddingValues(24.dp),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+            verticalItemSpacing = MaterialTheme.dimens.margin.lg,
+            contentPadding = PaddingValues(MaterialTheme.dimens.margin.xxl),
             state = lazyGridState,
         ) {
             item(span = StaggeredGridItemSpan.FullLine) {
@@ -236,10 +213,10 @@ internal fun OverviewScreen(
                     "SYSTEM MODULES",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.padding(bottom = 16.dp),
+                    modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.lg),
                 )
             }
-            items(defaultModules) { modules ->
+            items(defaultModules, key = { it.route::class.simpleName }) { modules ->
                 ModuleCard(modules, onNavigate = onNavigate)
             }
             customPlugins.ifEmpty { null }?.let { plugins ->
@@ -248,10 +225,10 @@ internal fun OverviewScreen(
                         "CUSTOM MODULES",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.padding(bottom = 16.dp),
+                        modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.lg),
                     )
                 }
-                items(plugins) { module ->
+                items(plugins, key = { it.route::class.simpleName }) { module ->
                     ModuleCard(module, onNavigate = onNavigate)
                 }
             }
@@ -267,88 +244,99 @@ private fun DevToolsStatusCard(
 ) {
     Box(
         modifier = Modifier.fillMaxWidth().border(
-            1.dp, MaterialTheme.colorScheme.onBackground, RectangleShape,
-        ).background(MaterialTheme.colorScheme.background).padding(24.dp),
+            MaterialTheme.dimens.stroke.small, MaterialTheme.colorScheme.onBackground, RectangleShape,
+        ).background(MaterialTheme.colorScheme.background).padding(MaterialTheme.dimens.margin.xxl),
     ) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    val dotState = when {
-                        state.serverEnabled && state.deviceConnectionStatus == "CONNECTED" -> ConnectionDotState.Connected
-                        state.serverEnabled -> ConnectionDotState.Reconnecting
-                        else -> ConnectionDotState.Disconnected
-                    }
-                    ConnectionStatusDot(state = dotState)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Switch(
-                        checked = state.serverEnabled,
-                        onCheckedChange = onToggle,
-                    )
-                }
+                Text(
+                    "Server Status",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Switch(
+                    checked = state.serverEnabled,
+                    onCheckedChange = onToggle,
+                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Server Status",
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-
-            Text(
-                "Port: ${state.serverPort}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-
-            AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom,
             ) {
                 Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("◎", color = MaterialTheme.colorScheme.onSecondaryContainer)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "DEVICE CONNECTION",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
-                    }
                     Text(
-                        state.deviceConnectionStatus,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(
-                            top = 8.dp, start = 20.dp,
-                        ), // Indent to align with text above
+                        "PORT",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                    AlohomoraTextField(
+                        value = state.serverPort,
+                        onValueChange = onPortChange,
+                        singleLine = true,
+                        enabled = !state.serverEnabled,
+                        modifier = Modifier.width(120.dp),
                     )
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        "SERVER PORT",
+                        "DEVICE",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        color = MaterialTheme.colorScheme.tertiary,
                     )
-                    OutlinedTextField(
-                        value = state.serverPort,
-                        onValueChange = onPortChange,
-                        singleLine = true,
-                        enabled = !state.serverEnabled,
-                        modifier = Modifier.width(140.dp),
-                    )
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val dotState = when (state.deviceConnectionStatus) {
+                            DevConnectionStatus.Connected -> ConnectionDotState.Connected
+                            DevConnectionStatus.AwaitingAuth,
+                            DevConnectionStatus.Disconnected -> ConnectionDotState.Reconnecting
+                            DevConnectionStatus.Off -> ConnectionDotState.Disconnected
+                        }
+                        ConnectionStatusDot(state = dotState)
+                        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+                        Text(
+                            state.deviceConnectionStatus.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                    }
                 }
             }
+
+            if (state.pendingOtp != null) {
+                AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.xxl))
+                Text(
+                    "OTP",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                Text(
+                    state.pendingOtp,
+                    style = MaterialTheme.typography.displayMedium,
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                Text(
+                    "Enter this code on the desktop client",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+            }
+
             if (!state.serverError.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(12.dp))
+                AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.lg))
                 Text(
                     text = state.serverError ?: "",
                     style = MaterialTheme.typography.bodySmall,
@@ -378,7 +366,7 @@ private fun ModuleCard(
         modifier = Modifier
             .height(IntrinsicSize.Max)
             .border(
-                width = 1.dp,
+                width = MaterialTheme.dimens.stroke.small,
                 color = borderColor,
                 shape = RectangleShape,
             )
@@ -386,7 +374,7 @@ private fun ModuleCard(
             .clickable {
                 onNavigate(overviewModule.route)
             }
-            .padding(20.dp),
+            .padding(MaterialTheme.dimens.margin.xl),
     ) {
         Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
             // Top Section (Icon + Arrow)
@@ -405,7 +393,7 @@ private fun ModuleCard(
                     fontStyle = FontStyle.Italic,
                     color = contentColor,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                 Text(
                     overviewModule.subtitle,
                     style = MaterialTheme.typography.labelSmall,

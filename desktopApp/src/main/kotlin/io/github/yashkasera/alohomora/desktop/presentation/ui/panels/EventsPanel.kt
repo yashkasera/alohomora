@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TelemetryItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
@@ -41,7 +42,7 @@ fun EventsPanel(devToolsViewModel: DevToolsViewModel) {
                 showDivider = lazyListState.canScrollBackward,
                 actions = {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(

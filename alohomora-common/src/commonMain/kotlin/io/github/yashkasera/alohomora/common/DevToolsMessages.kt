@@ -1,26 +1,104 @@
 package io.github.yashkasera.alohomora.common
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
-enum class DevToolsMessageType {
-    STREAM_EVENT,
-    STREAM_API_LOG,
-    SNAPSHOT_DATABASE,
-    SNAPSHOT_PREFS,
-    REQUEST_INITIAL_STATE,
-    REQUEST_DATABASE_SCHEMA,
-    REQUEST_DATABASE_TABLE,
-    REQUEST_PREF_VALUE,
+sealed class DevToolsMessage {
+    abstract val sequence: Long
 }
 
+// ── Server → Client ──────────────────────────────────────────────────────────
+
 @Serializable
-data class DevToolsEnvelope(
-    val type: DevToolsMessageType,
-    val sequence: Long,
-    val payload: JsonElement? = null,
-)
+@SerialName("AUTH_CHALLENGE")
+data class AuthChallengeMessage(override val sequence: Long) : DevToolsMessage()
+
+@Serializable
+@SerialName("AUTH_SUCCESS")
+data class AuthSuccessMessage(override val sequence: Long) : DevToolsMessage()
+
+@Serializable
+@SerialName("AUTH_FAILURE")
+data class AuthFailureMessage(
+    override val sequence: Long,
+    val reason: String,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("INITIAL_STATE")
+data class InitialStateMessage(
+    override val sequence: Long,
+    val payload: InitialStatePayload,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("STREAM_EVENT")
+data class StreamEventMessage(
+    override val sequence: Long,
+    val event: TelemetryEvent,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("STREAM_API_LOG")
+data class StreamApiLogMessage(
+    override val sequence: Long,
+    val log: TraceEntry,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("SNAPSHOT_DATABASE")
+data class DatabaseSnapshotMessage(
+    override val sequence: Long,
+    val payload: DatabaseSnapshotPayload,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("SNAPSHOT_PREFS")
+data class PrefsSnapshotMessage(
+    override val sequence: Long,
+    val payload: PrefsSnapshotPayload,
+) : DevToolsMessage()
+
+// ── Client → Server ──────────────────────────────────────────────────────────
+
+@Serializable
+@SerialName("AUTH_RESPONSE")
+data class AuthResponseMessage(
+    override val sequence: Long = 0,
+    val otp: String,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("REQUEST_INITIAL_STATE")
+data class RequestInitialStateMessage(
+    override val sequence: Long = 0,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("REQUEST_DATABASE_SCHEMA")
+data class RequestDatabaseSchemaMessage(
+    override val sequence: Long = 0,
+    val databaseName: String,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("REQUEST_DATABASE_TABLE")
+data class RequestDatabaseTableMessage(
+    override val sequence: Long = 0,
+    val databaseName: String? = null,
+    val tableName: String,
+    val limit: Int = 200,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("REQUEST_PREF_VALUE")
+data class RequestPrefValueMessage(
+    override val sequence: Long = 0,
+    val key: String,
+) : DevToolsMessage()
+
+// ── Payload types (kept as named wrappers for complex payloads) ───────────────
 
 @Serializable
 data class AppDatabaseInfo(
@@ -107,21 +185,4 @@ data class InitialStatePayload(
     val preferenceKeys: List<String>,
     val buildInfo: BuildInfoPayload? = null,
     val chronicle: List<ChronicleCommitPayload> = emptyList(),
-)
-
-@Serializable
-data class RequestDatabaseSchemaPayload(
-    val databaseName: String,
-)
-
-@Serializable
-data class RequestDatabaseTablePayload(
-    val databaseName: String? = null,
-    val tableName: String,
-    val limit: Int = 200,
-)
-
-@Serializable
-data class RequestPrefValuePayload(
-    val key: String,
 )

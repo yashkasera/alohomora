@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.cache
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.yashkasera.alohomora.domain.model.PreferenceEntry
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
  * @property error Error message if loading failed
  * @property isLiveMonitoring Whether live monitoring is active
  */
+@Immutable
 data class CacheState(
     val entries: List<PreferenceEntry> = emptyList(),
     val searchQuery: String = "",

@@ -22,15 +22,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TelemetryEvent
@@ -48,17 +46,14 @@ import io.github.yashkasera.alohomora.ui.icons.EyeOff
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
-import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
-import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
-import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray
-import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun TelemetryScreen(onBackClick: () -> Unit) {
     val viewModel = koinViewModel<TelemetryViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val isSlackConfigured = remember { Alohomora.config?.slackWebhookUrl.isNullOrBlank().not() }
 
     Scaffold(
@@ -71,36 +66,28 @@ internal fun TelemetryScreen(onBackClick: () -> Unit) {
                     }
                 },
                 actions = {
-                    // Property visibility toggle
                     AlohomoraIconButton(onClick = viewModel::toggleShowProperties) {
                         Icon(
                             imageVector = if (state.showProperties) Icons.Eye else Icons.EyeOff,
                             contentDescription = if (state.showProperties) "Hide properties" else "Show properties",
                         )
                     }
-                    // Clear all button (only show if there are events)
                     if (state.events.isNotEmpty()) {
                         AlohomoraIconButton(onClick = viewModel::showClearConfirmation) {
-                            Icon(
-                                imageVector = Icons.Trash,
-                                contentDescription = "Clear all events",
-                            )
+                            Icon(imageVector = Icons.Trash, contentDescription = "Clear all events")
                         }
                     }
                 },
             )
         },
-        containerColor = CanvasWhite,
-        contentColor = CanvasBlack,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            // Search field
             TelemetrySearchBar(
                 query = state.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChange,
             )
-
-            // Telemetry list
             TelemetryList(
                 events = state.events,
                 showProperties = state.showProperties,
@@ -108,20 +95,15 @@ internal fun TelemetryScreen(onBackClick: () -> Unit) {
             )
         }
 
-        // Event detail bottom sheet
         state.selectedEvent?.let { event ->
             TelemetryEventBottomSheet(
                 event = event,
                 isSlackConfigured = isSlackConfigured,
                 onDismiss = viewModel::dismissEventDetail,
-                onShareToSlack = { email ->
-                    viewModel.hideSlackSheet()
-                    // Share via Slack would be implemented here
-                },
+                onShareToSlack = { viewModel.hideSlackSheet() },
             )
         }
 
-        // Clear all confirmation bottom sheet
         if (state.showClearConfirmation) {
             ConfirmationBottomSheet(
                 config = ConfirmationConfig(
@@ -148,7 +130,7 @@ private fun TelemetrySearchBar(
         onQueryChange = onQueryChange,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.md),
         placeholder = "Search events by name",
     )
 }
@@ -167,7 +149,7 @@ fun TelemetryList(
         )
     } else {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(events) { event ->
+            items(events, key = { it.id }) { event ->
                 TelemetryItem(
                     event = event,
                     showProperties = showProperties,
@@ -188,9 +170,8 @@ fun TelemetryItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
     ) {
-        // Header Row: Title + Timestamp
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -201,57 +182,48 @@ fun TelemetryItem(
                     text = event.name,
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
                     ),
-                    color = CanvasBlack,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
 
             Text(
                 text = DateUtils.format(event.time, DateUtils.Format.HH_MM_SS),
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
-        // Code Block - only shown if showProperties is true
         if (showProperties) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 4.dp)
-                    .background(CanvasLightGray.copy(alpha = 0.5f))
-                    .border(1.dp, CanvasLightGray.copy(alpha = 0.8f)),
+                    .padding(start = MaterialTheme.dimens.margin.xs)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(MaterialTheme.dimens.stroke.small, MaterialTheme.colorScheme.outline),
             ) {
-                // Exceptions get a special left accent border
                 if (event.name == "App.Exception") {
                     Box(
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .width(2.dp)
                             .fillMaxHeight()
-                            .background(CanvasBlack),
+                            .background(MaterialTheme.colorScheme.onSurface),
                     )
                 }
 
                 Text(
                     text = event.properties?.toString() ?: "{}",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                        color = CanvasDarkGray,
-                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
-                        .padding(8.dp)
-                        .padding(start = if (event.name == "App.Exception") 8.dp else 0.dp),
+                        .padding(MaterialTheme.dimens.margin.sm)
+                        .padding(start = if (event.name == "App.Exception") MaterialTheme.dimens.margin.sm else 0.dp),
                 )
             }
         }
     }
-    AlohomoraHorizontalDivider(color = CanvasLightGray, thickness = 1.dp)
+    AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = MaterialTheme.dimens.stroke.small)
 }
-

@@ -50,6 +50,7 @@ import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Clock
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import kotlin.math.log10
@@ -108,8 +109,8 @@ fun TraceDetailsContent(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(overviewScrollState)
-                            .padding(horizontal = 24.dp)
-                            .padding(top = 24.dp),
+                            .padding(horizontal = MaterialTheme.dimens.margin.xxl)
+                            .padding(top = MaterialTheme.dimens.margin.xxl),
                     ) {
                         OverviewTab(trace = trace)
                     }
@@ -120,8 +121,8 @@ fun TraceDetailsContent(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(requestScrollState)
-                            .padding(horizontal = 24.dp)
-                            .padding(top = 24.dp),
+                            .padding(horizontal = MaterialTheme.dimens.margin.xxl)
+                            .padding(top = MaterialTheme.dimens.margin.xxl),
                     ) {
                         RequestTab(trace = trace)
                     }
@@ -152,7 +153,7 @@ private fun OverviewTab(trace: TraceEntry) {
         url = trace.pathWithQuery(),
     )
 
-    Spacer(modifier = Modifier.height(32.dp))
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
 
     // Calculate sizes from content
     val requestSize = trace.requestSize ?: 0
@@ -170,12 +171,12 @@ private fun OverviewTab(trace: TraceEntry) {
         format = responseFormat,
     )
 
-    AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 32.dp))
+    AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.xxxl))
 
     // Info rows with all TraceEntry fields
     InfoRowsSection(trace = trace)
 
-    Spacer(modifier = Modifier.height(48.dp))
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.huge))
 }
 
 // ============================================================================
@@ -191,7 +192,7 @@ private fun RequestTab(trace: TraceEntry) {
             url = trace.url.orEmpty(),
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
         // Request headers section with formatted display
         trace.requestHeaders?.let { headers ->
@@ -200,11 +201,11 @@ private fun RequestTab(trace: TraceEntry) {
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SectionHeader(title = "REQUEST HEADERS")
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                 CountBadge(count = headerCount)
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
             // Display formatted headers
             Column(
@@ -212,7 +213,7 @@ private fun RequestTab(trace: TraceEntry) {
                     .fillMaxWidth()
                     .clip(MaterialTheme.shapes.small)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(16.dp),
+                    .padding(MaterialTheme.dimens.margin.lg),
             ) {
                 formattedHeaders.forEach { headerLine ->
                     Text(
@@ -220,11 +221,11 @@ private fun RequestTab(trace: TraceEntry) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
         }
 
         // Request body section
@@ -232,18 +233,18 @@ private fun RequestTab(trace: TraceEntry) {
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             SectionHeader(title = "REQUEST BODY")
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
             FormatBadge(format = requestFormat.contentSubtype.uppercase())
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
         AlohomoraCodeBlock(
             content = trace.requestBody ?: "{}",
             isScrollable = false,
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
         // Action buttons
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -252,7 +253,7 @@ private fun RequestTab(trace: TraceEntry) {
                 onClick = { /* TODO */ },
                 modifier = Modifier.weight(1f),
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
             AlohomoraOutlinedButton(
                 text = "Share",
                 onClick = { /* TODO */ },
@@ -260,7 +261,7 @@ private fun RequestTab(trace: TraceEntry) {
             )
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.huge))
     }
 }
 
@@ -299,8 +300,8 @@ private fun ResponseTab(
                     Row(
                         modifier = Modifier.fillMaxWidth()
                             .padding(
-                                horizontal = 24.dp,
-                                vertical = 16.dp,
+                                horizontal = MaterialTheme.dimens.margin.xxl,
+                                vertical = MaterialTheme.dimens.margin.lg,
                             )
                             .clickable {
                                 expanded = !expanded
@@ -315,7 +316,7 @@ private fun ResponseTab(
                         Icon(
                             imageVector = Icons.Download,
                             contentDescription = "Download",
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
                         )
                     }
                     if (expanded) {
@@ -348,7 +349,7 @@ private fun MethodAndEndpointSection(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             MethodBadgeDetails(method = method)
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
             Text(
                 text = url,
                 style = MaterialTheme.typography.bodyMedium,
@@ -388,22 +389,22 @@ private fun HeroStatsSection(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 text = statusCode.toString(),
                 style = MaterialTheme.typography.displayMedium,
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
             Text(
                 text = getStatusText(statusCode),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp),
+                modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.sm),
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
 
         // Latency, Size, and Format row
         Row(
@@ -416,18 +417,18 @@ private fun HeroStatsSection(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = latencyMs.toString(),
                         style = MaterialTheme.typography.displaySmall,
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.xs))
                     Text(
                         text = "ms",
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 4.dp),
+                        modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.xs),
                     )
                 }
             }
@@ -438,7 +439,7 @@ private fun HeroStatsSection(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                 Text(
                     text = formatBytes(responseSize),
                     style = MaterialTheme.typography.displaySmall,
@@ -456,7 +457,7 @@ private fun HeroStatsSection(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                 Text(
                     text = format.contentSubtype,
                     style = MaterialTheme.typography.displaySmall,
@@ -468,7 +469,7 @@ private fun HeroStatsSection(
 
 @Composable
 private fun InfoRowsSection(trace: TraceEntry) {
-    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl)) {
         InfoRow(
             icon = Icons.Clock,
             label = "TIMESTAMP",
@@ -520,14 +521,14 @@ private fun InfoRow(
             imageVector = icon,
             contentDescription = null,
         )
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
         Column {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
             Text(
                 text = value ?: "--not-set--",
                 style = MaterialTheme.typography.bodyMedium,
@@ -619,13 +620,13 @@ private fun ResponseMetadata(
 ) {
     Row(
         modifier = Modifier
-            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.md)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
             modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(

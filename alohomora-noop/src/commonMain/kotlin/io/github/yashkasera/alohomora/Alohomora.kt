@@ -29,15 +29,6 @@ object Alohomora {
     // ============================================================================
 
     @Suppress("UNUSED_PARAMETER")
-    fun log(
-        message: String,
-        tag: String = "Alohomora",
-        throwable: Throwable? = null,
-    ) {
-        /* no-op */
-    }
-
-    @Suppress("UNUSED_PARAMETER")
     fun recordTrace(
         status: Int? = null,
         url: String? = null,

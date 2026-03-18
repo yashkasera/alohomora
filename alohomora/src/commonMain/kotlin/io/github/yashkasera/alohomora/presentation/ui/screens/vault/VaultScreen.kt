@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Settings
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.theme.queryErrorContainer
 import io.github.yashkasera.alohomora.ui.theme.querySuccessContainer
 import io.github.yashkasera.alohomora.ui.theme.success
@@ -46,7 +47,7 @@ internal fun VaultScreen(
     onBackClick: () -> Unit,
     viewModel: VaultViewModel = koinViewModel()
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -70,9 +71,9 @@ internal fun VaultScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = MaterialTheme.dimens.margin.lg)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
             // Database Selector - Compact
             DatabaseSelector(
@@ -80,7 +81,7 @@ internal fun VaultScreen(
                 onClick = { viewModel.toggleDatabaseSelector(true) }
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
             // Tables Section - Compact
             TablesSection(
@@ -89,7 +90,7 @@ internal fun VaultScreen(
                 onTableSelected = { viewModel.selectTable(it) }
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
             // Tabs and Content
             TabsWithContent(
@@ -129,18 +130,18 @@ fun DatabaseSelector(
             color = MaterialTheme.colorScheme.tertiary
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .border(
-                    width = 1.dp,
+                    width = MaterialTheme.dimens.stroke.small,
                     color = MaterialTheme.colorScheme.onBackground,
-                    shape = RoundedCornerShape(4.dp)
+                    shape = RoundedCornerShape(MaterialTheme.dimens.corner.small)
                 )
                 .clickable(onClick = onClick)
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = MaterialTheme.dimens.margin.sm)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -176,13 +177,13 @@ fun TablesSection(
             color = MaterialTheme.colorScheme.tertiary
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md)
         ) {
             tables.forEach { table ->
                 Text(
@@ -228,7 +229,7 @@ fun TabsWithContent(
         // Tabs - Compact
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(24.dp)
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl)
         ) {
             tabs.forEachIndexed { index, tab ->
                 Column(
@@ -246,12 +247,12 @@ fun TabsWithContent(
                             MaterialTheme.colorScheme.tertiary
                         }
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
                     if (pagerState.currentPage == index) {
                         Box(
                             modifier = Modifier
-                                .width(24.dp)
-                                .height(2.dp)
+                                .width(MaterialTheme.dimens.margin.xxl)
+                                .height(MaterialTheme.dimens.stroke.medium)
                                 .background(MaterialTheme.colorScheme.onBackground)
                         )
                     }
@@ -259,11 +260,11 @@ fun TabsWithContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
         HorizontalDivider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
         // Pager Content
         HorizontalPager(
@@ -314,11 +315,11 @@ fun QueryTabContent(
                 .fillMaxWidth()
                 .weight(0.35f)
                 .border(
-                    width = 1.dp,
+                    width = MaterialTheme.dimens.stroke.small,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(4.dp)
+                    shape = RoundedCornerShape(MaterialTheme.dimens.corner.small)
                 )
-                .padding(8.dp)
+                .padding(MaterialTheme.dimens.margin.sm)
         ) {
             Column {
                 AlohomoraTextField(
@@ -349,7 +350,7 @@ fun QueryTabContent(
                         onClick = onRunQuery,
                         containerColor = MaterialTheme.colorScheme.inverseSurface,
                         contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-                        shape = RoundedCornerShape(4.dp),
+                        shape = RoundedCornerShape(MaterialTheme.dimens.corner.small),
                         text = "Run",
                     ) {
                         Text("▶ RUN", style = MaterialTheme.typography.labelSmall)
@@ -358,7 +359,7 @@ fun QueryTabContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
         // Query Results
         Column(modifier = Modifier.weight(0.65f)) {
@@ -383,8 +384,8 @@ fun QueryTabContent(
                         shape = MaterialTheme.shapes.small
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = MaterialTheme.dimens.margin.xs),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs)
                         ) {
                             Text(
                                 text = if (status.success) "✓" else "✗",
@@ -405,7 +406,7 @@ fun QueryTabContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
             if (queryResults != null) {
                 DataTableViewer(tableData = queryResults)
@@ -436,14 +437,14 @@ fun SchemaTabContent(tableSchema: TableSchema?) {
                 color = MaterialTheme.colorScheme.tertiary
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
 
             // Table-style layout for columns
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(
-                        width = 1.dp,
+                        width = MaterialTheme.dimens.stroke.small,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
                     )
             ) {
@@ -455,7 +456,7 @@ fun SchemaTabContent(tableSchema: TableSchema?) {
                                 if (index % 2 == 0) Color.Transparent
                                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                             )
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                            .padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -482,7 +483,7 @@ fun SchemaTabContent(tableSchema: TableSchema?) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
             // Primary Key - Compact
             if (tableSchema.primaryKey != null) {
@@ -491,14 +492,14 @@ fun SchemaTabContent(tableSchema: TableSchema?) {
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.tertiary
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
                 Text(
                     text = tableSchema.primaryKey,
                     style = MaterialTheme.typography.bodySmall,
                     fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.sm)
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
             }
 
             // Indexes - Compact
@@ -508,13 +509,13 @@ fun SchemaTabContent(tableSchema: TableSchema?) {
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.tertiary
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
                 tableSchema.indexes.forEach { index ->
                     Text(
                         text = "• $index",
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = 2.dp)
                     )
                 }
             }
@@ -553,7 +554,7 @@ fun DatabaseSelectorBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(MaterialTheme.dimens.margin.lg)
         ) {
             Text(
                 text = "Select Database",
@@ -561,7 +562,7 @@ fun DatabaseSelectorBottomSheet(
                 fontStyle = FontStyle.Italic
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
             databases.forEach { database ->
                 Column(
@@ -575,7 +576,7 @@ fun DatabaseSelectorBottomSheet(
                                 Color.Transparent
                             }
                         )
-                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                        .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = 10.dp)
                 ) {
                     Text(
                         text = database.name,
@@ -599,7 +600,7 @@ fun DatabaseSelectorBottomSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
         }
     }
 }

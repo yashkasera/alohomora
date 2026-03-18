@@ -24,10 +24,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 
-private val keyColor = Color(0xFF1772A1)
-private val stringColor = Color(0xFFD9764B)
-private val numberColor = Color(0xFF75CE45)
-private val bracketColor = Color(0xFFA1A1A1)
+private val keyColor = Color(0xFF6366F1)      // indigo — matches brand primary
+private val stringColor = Color(0xFFC2410C)   // burnt orange
+private val numberColor = Color(0xFF059669)   // emerald — matches CanvasSuccessGreen
+private val bracketColor = Color(0xFFA1A1AA)  // zinc-400
 
 @Composable
 internal fun LazyItemScope.JsonRow(
@@ -72,7 +72,7 @@ internal fun LazyItemScope.JsonRow(
                         .clickable(enabled = isExpandable) { visibleState.toggle(node.path) }
                         .padding(end = 6.dp),
                     color = if (isExpandable)
-                        Color.DarkGray else Color.LightGray,
+                        Color(0xFF52525B) else Color(0xFFD4D4D8),
                 )
 
                 node.key?.let { key ->

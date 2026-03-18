@@ -23,13 +23,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Incident
@@ -46,10 +45,7 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.Clock
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
-import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
-import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
-import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray
-import io.github.yashkasera.alohomora.ui.theme.CanvasWhite
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -58,7 +54,7 @@ internal fun IncidentScreen(
     onNavigateToIncident: (incidentId: Long) -> Unit,
 ) {
     val viewModel = koinViewModel<IncidentViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -74,7 +70,7 @@ internal fun IncidentScreen(
                         Icon(
                             Icons.Trash,
                             contentDescription = "Clear all incidents",
-                            tint = CanvasBlack,
+                            tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 },
@@ -83,49 +79,44 @@ internal fun IncidentScreen(
         floatingActionButton = {
             AlohomoraFloatingActionButton(
                 onClick = { /* TODO: Export incidents */ },
-                containerColor = CanvasBlack,
-                contentColor = CanvasWhite,
+                containerColor = MaterialTheme.colorScheme.inverseSurface,
+                contentColor = MaterialTheme.colorScheme.inverseOnSurface,
                 shape = CircleShape,
             ) {
                 Icon(Icons.Download, contentDescription = "Download incidents")
             }
         },
-        containerColor = CanvasWhite,
-        contentColor = CanvasBlack,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize(),
         ) {
-            // Header Section
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(CanvasWhite)
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
             ) {
                 Text(
                     text = "Incident Logs",
                     style = MaterialTheme.typography.displayMedium.copy(
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 48.sp,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                     ),
-                    color = CanvasBlack,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = "DIAGNOSTIC REPORT LIST",
                     style = MaterialTheme.typography.labelSmall.copy(
                         letterSpacing = 2.sp,
-                        fontSize = 11.sp,
                     ),
-                    color = CanvasDarkGray.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xl))
 
-                // Search Bar
                 AlohomoraSearchTextField(
                     query = state.searchQuery,
                     onQueryChange = { viewModel.onSearchQueryChange(it) },
@@ -133,9 +124,8 @@ internal fun IncidentScreen(
                     placeholder = "Search exceptions or packages...",
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
-                // Stats Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -145,20 +135,18 @@ internal fun IncidentScreen(
                         text = "${state.incidents.size} TOTAL OCCURRENCES",
                         style = MaterialTheme.typography.labelSmall.copy(
                             letterSpacing = 1.sp,
-                            fontSize = 11.sp,
                         ),
-                        color = CanvasDarkGray.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     AlohomoraOutlinedButton(
                         text = "Live Session",
                         onClick = { /* TODO: Filter live session */ },
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(MaterialTheme.dimens.corner.full),
                     ) {
                         Text(
                             "LIVE SESSION",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
                                 letterSpacing = 1.sp,
                             ),
                         )
@@ -166,7 +154,6 @@ internal fun IncidentScreen(
                 }
             }
 
-            // Incident List
             if (state.incidents.isEmpty()) {
                 EmptyState(
                     icon = Icons.AlertTriangle,
@@ -175,22 +162,19 @@ internal fun IncidentScreen(
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    items(state.incidents) { incident ->
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(state.incidents, key = { it.id }) { incident ->
                         IncidentListItem(
                             incident = incident,
                             onClick = { onNavigateToIncident(incident.id) },
                         )
                     }
 
-                    // Streaming indicator at bottom
                     item {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 32.dp),
+                                .padding(vertical = MaterialTheme.dimens.margin.xxxl),
                             contentAlignment = Alignment.Center,
                         ) {
                             Row(
@@ -199,18 +183,17 @@ internal fun IncidentScreen(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(8.dp)
+                                        .size(MaterialTheme.dimens.margin.sm)
                                         .clip(CircleShape)
-                                        .background(CanvasBlack),
+                                        .background(MaterialTheme.colorScheme.onSurface),
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                                 Text(
                                     text = "STREAMING LIVE LOGS",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         letterSpacing = 2.sp,
-                                        fontSize = 10.sp,
                                     ),
-                                    color = CanvasDarkGray.copy(alpha = 0.5f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
@@ -229,9 +212,9 @@ private fun IncidentListItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .border(width = 0.5.dp, color = CanvasLightGray)
+            .border(width = MaterialTheme.dimens.stroke.thin, color = MaterialTheme.colorScheme.outlineVariant)
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -241,89 +224,78 @@ private fun IncidentListItem(
             Column(modifier = Modifier.weight(1f)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                 ) {
                     Text(
                         text = incident.reason?.substringAfterLast(".")?.substringBefore(":")
                             ?: "Unknown Exception",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
                         ),
-                        color = CanvasBlack,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Box(
                         modifier = Modifier
-                            .background(CanvasBlack, RoundedCornerShape(4.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .background(MaterialTheme.colorScheme.inverseSurface, RoundedCornerShape(MaterialTheme.dimens.corner.small))
+                            .padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = MaterialTheme.dimens.margin.xs),
                     ) {
                         Text(
                             text = "FATAL",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp,
                             ),
-                            color = CanvasWhite,
+                            color = MaterialTheme.colorScheme.inverseOnSurface,
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
                 Text(
                     text = incident.place ?: "Unknown location",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.sp,
-                    ),
-                    color = CanvasDarkGray.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
                     ) {
                         Icon(
                             Icons.Clock,
                             contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = CanvasDarkGray.copy(alpha = 0.6f),
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            text = DateUtils.format(
-                                incident.time * 1000,
-                                DateUtils.Format.HH_MM_SS_3MS,
-                            ),
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 12.sp,
-                            ),
-                            color = CanvasDarkGray.copy(alpha = 0.6f),
+                            text = DateUtils.format(incident.time * 1000, DateUtils.Format.HH_MM_SS_3MS),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
                     ) {
                         Icon(
                             Icons.HardDrive,
                             contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = CanvasDarkGray.copy(alpha = 0.6f),
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
                             text = "Device Info",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 12.sp,
-                            ),
-                            color = CanvasDarkGray.copy(alpha = 0.6f),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

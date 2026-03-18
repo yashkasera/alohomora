@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import androidx.graphics.shapes.RoundedPolygon
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
@@ -267,8 +268,8 @@ private fun DesktopOverviewTab(trace: TraceEntry) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scroll)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
         MethodChip(trace.method.orEmpty())
         Text(
@@ -295,8 +296,8 @@ private fun DesktopRequestTab(trace: TraceEntry) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scroll)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
         MethodChip(trace.method.orEmpty())
         Text(
@@ -315,7 +316,7 @@ private fun DesktopRequestTab(trace: TraceEntry) {
                     .orEmpty()
                     .ifBlank { "No headers" },
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
             )
         }
         SectionLabel("Body")
@@ -325,7 +326,7 @@ private fun DesktopRequestTab(trace: TraceEntry) {
             Text(
                 text = trace.requestBody.orEmpty().ifBlank { "{}" },
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
             )
         }
     }
@@ -340,7 +341,7 @@ private fun DesktopResponseTab(trace: TraceEntry) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                        .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.md),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
@@ -374,7 +375,7 @@ private fun SlackShareDialog(
         onDismissRequest = onDismiss,
         title = { Text("Share to Slack") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md)) {
                 if (isConfigured) {
                     OutlinedTextField(
                         value = email,
@@ -405,7 +406,7 @@ private fun SlackShareDialog(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Icon(imageVector = Icons.Copy, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                         Text("Share Text to Slack")
                     }
                     if (!shareError.isNullOrBlank()) {
@@ -466,7 +467,7 @@ private fun MethodChip(method: String) {
 private fun OverviewStatRow(status: String, duration: String, size: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
     ) {
         KeyValueColumn("Status", status, Modifier.weight(1f))
         KeyValueColumn("Latency", duration, Modifier.weight(1f))
@@ -490,7 +491,7 @@ private fun KeyValueRow(label: String, value: String) {
             text = value,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(start = 12.dp),
+            modifier = Modifier.padding(start = MaterialTheme.dimens.margin.md),
         )
     }
 }

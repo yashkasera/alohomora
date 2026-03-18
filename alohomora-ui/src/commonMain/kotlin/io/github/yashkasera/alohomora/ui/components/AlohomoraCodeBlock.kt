@@ -18,12 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
-import io.github.yashkasera.alohomora.ui.theme.CanvasLightGray
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
@@ -31,9 +28,8 @@ import kotlinx.serialization.json.JsonElement
  * A lightweight, reusable code block component for displaying text and JSON content.
  *
  * Features:
- * - Fixed light gray background (CanvasLightGray)
- * - Fixed 1dp border (CanvasLightGray)
- * - Fixed font styling (12.sp, monospace, 18.sp line height)
+ * - `surfaceContainerLow` background with `outlineVariant` border
+ * - `typography.bodySmall` (JetBrains Mono, 12sp) with 18sp line height for code readability
  * - Optional left accent border for error highlighting
  * - Optional vertical scrolling
  * - Optional JSON prettification
@@ -84,22 +80,20 @@ fun AlohomoraCodeBlock(
         val textModifier = if (isScrollable) {
             Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(MaterialTheme.dimens.margin.lg)
                 .padding(start = if (accentBorder) 20.dp else 0.dp)
                 .verticalScroll(rememberScrollState())
         } else {
             Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(MaterialTheme.dimens.margin.lg)
                 .padding(start = if (accentBorder) 20.dp else 0.dp)
         }
 
         SelectionContainer {
             BasicText(
                 text = displayContent,
-                style = TextStyle(
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
+                style = MaterialTheme.typography.bodySmall.copy(
                     lineHeight = 18.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),

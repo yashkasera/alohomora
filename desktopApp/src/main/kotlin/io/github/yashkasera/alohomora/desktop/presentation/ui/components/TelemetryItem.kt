@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TelemetryEvent
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
@@ -31,7 +32,7 @@ fun LazyItemScope.TelemetryItem(
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .animateItem()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
     ) {
         // Header Row: Title + Timestamp
         Row(
@@ -57,7 +58,7 @@ fun LazyItemScope.TelemetryItem(
 
         // Code Block - only shown if showProperties is true
         if (showProperties) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
             AlohomoraCodeBlock(
                 content = event.properties?.toString() ?: "{}",

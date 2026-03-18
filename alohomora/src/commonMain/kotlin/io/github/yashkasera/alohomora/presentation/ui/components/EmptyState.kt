@@ -19,20 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.yashkasera.alohomora.ui.theme.CanvasBlack
-import io.github.yashkasera.alohomora.ui.theme.CanvasDarkGray
+import io.github.yashkasera.alohomora.ui.theme.dimens
 
-/**
- * A reusable empty state component that can be used across different screens
- * to show when there is no data available.
- *
- * @param icon The icon to display in the empty state
- * @param title The main title text
- * @param subtitle Optional subtitle or description text
- * @param modifier Optional modifier for the component
- */
 @Composable
 fun EmptyState(
     icon: ImageVector,
@@ -47,15 +36,14 @@ fun EmptyState(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 32.dp)
+            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.xxxl)
         ) {
-            // Icon container with border
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(MaterialTheme.dimens.icon.illustration)
                     .border(
-                        width = 2.dp,
-                        color = CanvasBlack.copy(alpha = 0.2f),
+                        width = MaterialTheme.dimens.stroke.medium,
+                        color = MaterialTheme.colorScheme.outline,
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -63,34 +51,30 @@ fun EmptyState(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.size(36.dp),
-                    tint = CanvasDarkGray.copy(alpha = 0.6f)
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.xl),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
-            // Title
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontStyle = FontStyle.Italic,
-                    fontSize = 24.sp
                 ),
-                color = CanvasBlack.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
 
-            // Subtitle
             if (subtitle != null) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 14.sp,
                         letterSpacing = 0.5.sp
                     ),
-                    color = CanvasDarkGray.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }

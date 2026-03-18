@@ -1,18 +1,27 @@
 package io.github.yashkasera.alohomora.devtools
 
+import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.common.AuthChallengeMessage
+import io.github.yashkasera.alohomora.common.AuthFailureMessage
+import io.github.yashkasera.alohomora.common.AuthResponseMessage
+import io.github.yashkasera.alohomora.common.AuthSuccessMessage
+import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
+import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
+import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
+import io.github.yashkasera.alohomora.common.DevToolsMessage
+import io.github.yashkasera.alohomora.common.DevToolsProtocol
+import io.github.yashkasera.alohomora.common.InitialStateMessage
+import io.github.yashkasera.alohomora.common.InitialStatePayload
+import io.github.yashkasera.alohomora.common.PrefsSnapshotMessage
+import io.github.yashkasera.alohomora.common.PrefsSnapshotPayload
+import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
+import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
+import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
+import io.github.yashkasera.alohomora.common.RequestPrefValueMessage
+import io.github.yashkasera.alohomora.common.StreamApiLogMessage
+import io.github.yashkasera.alohomora.common.StreamEventMessage
 import io.github.yashkasera.alohomora.common.TelemetryEvent
 import io.github.yashkasera.alohomora.common.TraceEntry
-import io.github.yashkasera.alohomora.Alohomora
-import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
-import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
-import io.github.yashkasera.alohomora.common.DevToolsEnvelope
-import io.github.yashkasera.alohomora.common.DevToolsMessageType
-import io.github.yashkasera.alohomora.common.DevToolsProtocol
-import io.github.yashkasera.alohomora.common.InitialStatePayload
-import io.github.yashkasera.alohomora.common.PrefsSnapshotPayload
-import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaPayload
-import io.github.yashkasera.alohomora.common.RequestDatabaseTablePayload
-import io.github.yashkasera.alohomora.common.RequestPrefValuePayload
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import kotlinx.coroutines.CoroutineScope
@@ -22,13 +31,11 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.json.JsonElement
+import kotlinx.coroutines.launch
+import kotlin.concurrent.AtomicLong
 
 internal object DevToolsDefaults {
     const val DEFAULT_PORT: Int = 53999
@@ -45,8 +52,7 @@ internal class DevToolsRuntime(
     private val appDatabaseProvider: DevToolsAppDatabaseProvider,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private val sequenceMutex = Mutex()
-    private var nextSequence: Long = 1
+    private val sequenceCounter = AtomicLong(1)
     private var activeConnection: DevToolsConnection? = null
     private val databaseInspector = DevToolsDatabaseInspector(database, appDatabaseProvider)
     private var defaultDatabaseName: String? = null
@@ -83,33 +89,30 @@ internal class DevToolsRuntime(
         activeConnection?.close()
         val connection = DevToolsConnection(socket)
         activeConnection = connection
-        _serverState.value = _serverState.value.copy(hasClient = true, lastError = null)
+        _serverState.value = _serverState.value.copy(hasClient = true, lastError = null, pendingOtp = null)
         connection.start()
     }
 
-    private suspend fun nextSequence(): Long {
-        return sequenceMutex.withLock {
-            nextSequence++
-        }
-    }
+    private fun nextSequence(): Long = sequenceCounter.getAndIncrement()
 
     private inner class DevToolsConnection(
         private val socket: DevToolsSocket,
     ) {
         private val connectionScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-        private val outbound = Channel<DevToolsEnvelope>(
+        private val outbound = Channel<DevToolsMessage>(
             capacity = DevToolsDefaults.STREAM_BUFFER_CAPACITY,
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
         )
         private val eventAdapter = DevToolsStreamAdapter { event: TelemetryEvent -> event.time }
         private val apiLogSignatures = linkedMapOf<String, Int>()
+        private val otp = (1000..9999).random().toString()
+        private var isAuthenticated = false
 
         fun start() {
+            _serverState.value = _serverState.value.copy(pendingOtp = otp)
+            outbound.trySend(AuthChallengeMessage(nextSequence()))
             connectionScope.launch { writerLoop() }
             connectionScope.launch { readerLoop() }
-            connectionScope.launch { streamEvents() }
-            connectionScope.launch { streamApiLogs() }
-            connectionScope.launch { sendInitialState() }
         }
 
         fun close() {
@@ -118,32 +121,50 @@ internal class DevToolsRuntime(
             connectionScope.coroutineContext.cancel()
             if (activeConnection === this) {
                 activeConnection = null
-                _serverState.value = _serverState.value.copy(hasClient = false)
+                _serverState.value = _serverState.value.copy(hasClient = false, pendingOtp = null)
             }
         }
 
         private suspend fun writerLoop() {
-            for (envelope in outbound) {
-                val frame = DevToolsProtocol.encodeEnvelope(envelope)
-                socket.write(frame)
+            for (message in outbound) {
+                socket.write(DevToolsProtocol.encodeEnvelope(message))
             }
         }
 
         private suspend fun readerLoop() {
             while (true) {
-                val envelope = DevToolsProtocol.readEnvelope(socket) ?: break
-                when (envelope.type) {
-                    DevToolsMessageType.REQUEST_INITIAL_STATE -> sendInitialState()
-                    DevToolsMessageType.REQUEST_DATABASE_SCHEMA -> handleDatabaseSchemaRequest(
-                        envelope.payload,
+                val message = DevToolsProtocol.readEnvelope(socket) ?: break
+                if (!isAuthenticated) {
+                    if (message is AuthResponseMessage) handleAuthResponse(message.otp)
+                    continue
+                }
+                when (message) {
+                    is RequestInitialStateMessage -> sendInitialState()
+                    is RequestDatabaseSchemaMessage -> handleDatabaseSchemaRequest(message.databaseName)
+                    is RequestDatabaseTableMessage -> handleDatabaseRequest(
+                        message.databaseName,
+                        message.tableName,
+                        message.limit,
                     )
-
-                    DevToolsMessageType.REQUEST_DATABASE_TABLE -> handleDatabaseRequest(envelope.payload)
-                    DevToolsMessageType.REQUEST_PREF_VALUE -> handlePreferenceRequest(envelope.payload)
+                    is RequestPrefValueMessage -> handlePreferenceRequest(message.key)
                     else -> Unit
                 }
             }
             close()
+        }
+
+        private fun handleAuthResponse(otp: String) {
+            if (otp == this.otp) {
+                isAuthenticated = true
+                _serverState.value = _serverState.value.copy(pendingOtp = null)
+                send(AuthSuccessMessage(nextSequence()))
+                connectionScope.launch { streamEvents() }
+                connectionScope.launch { streamApiLogs() }
+                connectionScope.launch { sendInitialState() }
+            } else {
+                send(AuthFailureMessage(nextSequence(), "Invalid OTP"))
+                close()
+            }
         }
 
         private suspend fun sendInitialState() {
@@ -176,14 +197,14 @@ internal class DevToolsRuntime(
             )
             eventAdapter.seed(events)
             seedApiLogSignatures(apiLogs)
-            send(DevToolsMessageType.REQUEST_INITIAL_STATE, payload)
+            send(InitialStateMessage(nextSequence(), payload))
         }
 
         private suspend fun streamEvents() {
             telemetryRepository.list("", 0, DevToolsDefaults.EVENT_SNAPSHOT_LIMIT).collect { events ->
                 val newItems = eventAdapter.filterNew(events)
                 newItems.forEach { item ->
-                    send(DevToolsMessageType.STREAM_EVENT, item)
+                    send(StreamEventMessage(nextSequence(), item))
                 }
             }
         }
@@ -192,7 +213,7 @@ internal class DevToolsRuntime(
             database.traceDao().observeLatest(DevToolsDefaults.API_LOG_SNAPSHOT_LIMIT).collect { logs ->
                 val changedItems = changedApiLogs(logs)
                 changedItems.forEach { item ->
-                    send(DevToolsMessageType.STREAM_API_LOG, item)
+                    send(StreamApiLogMessage(nextSequence(), item))
                 }
             }
         }
@@ -240,46 +261,37 @@ internal class DevToolsRuntime(
                 time,
             ).hashCode()
 
-        private suspend fun handleDatabaseRequest(payload: JsonElement?) {
-            if (payload == null) return
-            val request = DevToolsProtocol.decodePayload<RequestDatabaseTablePayload>(payload)
-            val databaseName = request.databaseName ?: defaultDatabaseName ?: return
-            val tableSnapshot =
-                databaseInspector.loadTable(databaseName, request.tableName, request.limit)
-            val snapshotPayload = DatabaseSnapshotPayload(
-                databaseName = databaseName,
-                table = tableSnapshot,
-            )
-            send(DevToolsMessageType.SNAPSHOT_DATABASE, snapshotPayload)
+        private suspend fun handleDatabaseRequest(databaseName: String?, tableName: String, limit: Int) {
+            val resolvedName = databaseName ?: defaultDatabaseName ?: return
+            val tableSnapshot = databaseInspector.loadTable(resolvedName, tableName, limit)
+            send(DatabaseSnapshotMessage(
+                nextSequence(),
+                DatabaseSnapshotPayload(databaseName = resolvedName, table = tableSnapshot),
+            ))
         }
 
-        private suspend fun handleDatabaseSchemaRequest(payload: JsonElement?) {
-            if (payload == null) return
-            val request = DevToolsProtocol.decodePayload<RequestDatabaseSchemaPayload>(payload)
-            defaultDatabaseName = request.databaseName
-            val schema = databaseInspector.loadSchema(request.databaseName)
-            val snapshotPayload = DatabaseSnapshotPayload(
-                databaseName = request.databaseName,
-                schema = schema,
-            )
-            send(DevToolsMessageType.SNAPSHOT_DATABASE, snapshotPayload)
+        private suspend fun handleDatabaseSchemaRequest(databaseName: String) {
+            defaultDatabaseName = databaseName
+            val schema = databaseInspector.loadSchema(databaseName)
+            send(DatabaseSnapshotMessage(
+                nextSequence(),
+                DatabaseSnapshotPayload(databaseName = databaseName, schema = schema),
+            ))
         }
 
-        private suspend fun handlePreferenceRequest(payload: JsonElement?) {
-            if (payload == null) return
-            val request = DevToolsProtocol.decodePayload<RequestPrefValuePayload>(payload)
-            val value = preferencesInspector.getValue(request.key)
-            val snapshotPayload = PrefsSnapshotPayload(values = mapOf(request.key to value))
-            send(DevToolsMessageType.SNAPSHOT_PREFS, snapshotPayload)
+        private suspend fun handlePreferenceRequest(key: String) {
+            val value = preferencesInspector.getValue(key)
+            send(PrefsSnapshotMessage(
+                nextSequence(),
+                PrefsSnapshotPayload(values = mapOf(key to value)),
+            ))
         }
 
-        private suspend inline fun <reified T> send(type: DevToolsMessageType, payload: T) {
-            val envelope = DevToolsEnvelope(
-                type = type,
-                sequence = nextSequence(),
-                payload = DevToolsProtocol.encodePayload(payload),
-            )
-            outbound.trySend(envelope)
+        private fun send(message: DevToolsMessage) {
+            val result = outbound.trySend(message)
+            if (result.isFailure) {
+                println("[Alohomora] DevTools outbound channel full, dropped ${message::class.simpleName}")
+            }
         }
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.dimens
 
 /**
  * A data table component with proper column alignment across all rows.
@@ -62,7 +63,7 @@ fun AlohomoraTable(
     Box(
         modifier = modifier
             .border(
-                width = 1.dp,
+                width = MaterialTheme.dimens.stroke.small,
                 color = MaterialTheme.colorScheme.outlineVariant,
                 shape = MaterialTheme.shapes.small
             )
@@ -145,10 +146,10 @@ private fun TableCell(
         modifier = Modifier
             .width(width.dp)
             .border(
-                width = 0.5.dp,
+                width = MaterialTheme.dimens.stroke.thin,
                 color = MaterialTheme.colorScheme.outlineVariant
             )
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = 6.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         when (content) {

@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.incident.list
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.yashkasera.alohomora.common.Incident
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@Immutable
 data class IncidentState(
     val incidents: List<Incident> = emptyList(),
     val isLoadingMore: Boolean = false,

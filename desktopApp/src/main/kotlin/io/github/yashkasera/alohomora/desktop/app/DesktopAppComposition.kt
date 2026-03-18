@@ -43,7 +43,9 @@ import java.security.cert.X509Certificate
 import javax.net.ssl.X509TrustManager
 import kotlinx.serialization.json.Json
 
-class DesktopAppComposition {
+class DesktopAppComposition(
+    sharedDevicesViewModel: DevicesViewModel? = null,
+) {
     val devicesViewModel: DevicesViewModel
     val devToolsViewModel: DevToolsViewModel
     val logcatViewModel: LogcatViewModel
@@ -109,7 +111,7 @@ class DesktopAppComposition {
         }
         val slackShareService = SlackShareService(slackHttpClient)
 
-        devicesViewModel = DevicesViewModel(
+        devicesViewModel = sharedDevicesViewModel ?: DevicesViewModel(
             repository = adbRepository,
             refreshDevicesUseCase = refreshDevicesUseCase,
             selectDeviceUseCase = selectDeviceUseCase,
@@ -149,5 +151,9 @@ class DesktopAppComposition {
             repository = prefsRepository,
             requestPrefValueUseCase = requestPrefValueUseCase,
         )
+    }
+
+    fun close() {
+        devToolsViewModel.close()
     }
 }
