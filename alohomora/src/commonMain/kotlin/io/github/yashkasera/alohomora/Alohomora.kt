@@ -14,6 +14,8 @@ import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import kotlin.time.Clock
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -61,7 +63,7 @@ object Alohomora {
 
     internal var config: AlohomoraConfig? = null
         private set
-    
+
     internal val json by lazy {
         Json {
             prettyPrint = true
@@ -104,6 +106,60 @@ object Alohomora {
     ) {
         val repo = koin?.get<TraceRepository>() ?: return
         scope.launch {
+            try {
+                repo.save(trace)
+            } catch (e: Exception) {
+                Logger.d {
+                    "[Alohomora] Failed to log API request: ${e.message}"
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    fun recordTrace(
+        status: Int? = null,
+        url: String? = null,
+        message: String? = null,
+        method: String? = null,
+        scheme: String? = null,
+        host: String? = null,
+        path: String? = null,
+        query: String? = null,
+        requestBody: String? = null,
+        responseBody: String? = null,
+        time: Long? = null,
+        duration: Long? = null,
+        requestHeaders: Map<String, List<String>>? = null,
+        requestContentType: String? = null,
+        responseContentType: String? = null,
+        responseHeaders: Map<String, List<String>>? = null,
+        requestSize: Long? = null,
+        responseSize: Long? = null,
+    ) {
+        val repo = koin?.get<TraceRepository>() ?: return
+        scope.launch {
+            val trace = TraceEntry(
+                id = Uuid.random().toString(),
+                status = status,
+                url = url,
+                message = message,
+                method = method,
+                scheme = scheme,
+                host = host,
+                path = path,
+                query = query,
+                requestBody = requestBody,
+                responseBody = responseBody,
+                time = time,
+                duration = duration,
+                requestHeaders = requestHeaders,
+                requestContentType = requestContentType,
+                responseContentType = responseContentType,
+                responseHeaders = responseHeaders,
+                requestSize = requestSize,
+                responseSize = responseSize,
+            )
             try {
                 repo.save(trace)
             } catch (e: Exception) {

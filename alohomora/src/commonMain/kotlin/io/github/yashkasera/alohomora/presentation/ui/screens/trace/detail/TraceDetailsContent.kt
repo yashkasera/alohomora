@@ -233,7 +233,7 @@ private fun RequestTab(trace: TraceEntry) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             SectionHeader(title = "REQUEST BODY")
             Spacer(modifier = Modifier.width(8.dp))
-            FormatBadge(format = requestFormat.uppercase())
+            FormatBadge(format = requestFormat.contentSubtype.uppercase())
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -379,7 +379,7 @@ private fun HeroStatsSection(
     latencyMs: Long,
     responseSize: Long,
     requestSize: Long,
-    format: String,
+    format: ContentType,
 ) {
     Column {
         // Status section (large)
@@ -458,7 +458,7 @@ private fun HeroStatsSection(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = format,
+                    text = format.contentSubtype,
                     style = MaterialTheme.typography.displaySmall,
                 )
             }
@@ -614,7 +614,7 @@ private fun PrettifyToggle(
 @Composable
 private fun ResponseMetadata(
     statusCode: Int,
-    format: String,
+    format: ContentType,
     sizeBytes: Long,
 ) {
     Row(
@@ -644,7 +644,7 @@ private fun ResponseMetadata(
             }
 
             Text(
-                text = format.uppercase(),
+                text = format.contentSubtype.uppercase(),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -716,5 +716,5 @@ private fun formatHeaders(headers: Map<String, List<String>>?): List<String> {
 /**
  * Detects content format from Content-Type header
  */
-private fun detectFormatFromContentType(contentType: String?): String =
-    ContentType.parse(contentType ?: "").contentSubtype
+private fun detectFormatFromContentType(contentType: String?): ContentType =
+    ContentType.parse(contentType ?: "")

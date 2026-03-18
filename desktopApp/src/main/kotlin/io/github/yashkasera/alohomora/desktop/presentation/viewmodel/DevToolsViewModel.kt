@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
+import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
+import io.github.yashkasera.alohomora.desktop.domain.service.SlackShareService
 import io.github.yashkasera.alohomora.desktop.domain.usecase.ConnectDevToolsUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.DisconnectDevToolsUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseSchemaUseCase
@@ -12,9 +14,12 @@ import io.github.yashkasera.alohomora.desktop.presentation.model.DevToolsUiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class DevToolsViewModel(
     private val repository: DevToolsRepository,
@@ -25,6 +30,7 @@ class DevToolsViewModel(
     private val requestDatabaseSchemaUseCase: RequestDatabaseSchemaUseCase,
     private val requestDatabaseTableUseCase: RequestDatabaseTableUseCase,
     private val requestPrefValueUseCase: RequestPrefValueUseCase,
+    private val slackShareService: SlackShareService,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -61,6 +67,39 @@ class DevToolsViewModel(
     }
 
     fun requestPrefValue(key: String) = requestPrefValueUseCase(key)
+
+    private val _slackShareError = MutableStateFlow<String?>(null)
+    val slackShareError: StateFlow<String?> = _slackShareError.asStateFlow()
+
+    fun isSlackConfigured(): Boolean = buildInfo.value?.slackWebhookUrl.isNullOrBlank().not()
+
+    fun shareCurlToSlack(trace: TraceEntry, email: String, onSuccess: () -> Unit = {}) {
+        scope.launch {
+            val result = slackShareService.shareCurl(trace, email, buildInfo.value)
+            result.onSuccess {
+                _slackShareError.value = null
+                onSuccess()
+            }.onFailure { error ->
+                _slackShareError.value = error.message
+            }
+        }
+    }
+
+    fun shareTextToSlack(trace: TraceEntry, email: String, onSuccess: () -> Unit = {}) {
+        scope.launch {
+            val result = slackShareService.shareText(trace, email, buildInfo.value)
+            result.onSuccess {
+                _slackShareError.value = null
+                onSuccess()
+            }.onFailure { error ->
+                _slackShareError.value = error.message
+            }
+        }
+    }
+
+    fun clearSlackShareError() {
+        _slackShareError.value = null
+    }
 
     val events = repository.events
     val apiLogs = repository.apiLogs

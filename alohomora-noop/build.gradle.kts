@@ -9,6 +9,7 @@ plugins {
 }
 
 kotlin {
+    jvmToolchain(17)
     android {
         namespace = "io.github.yashkasera.alohomora.noop"
         compileSdk = 36

@@ -1,0 +1,98 @@
+package io.github.yashkasera.alohomora.desktop.domain.service
+
+import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
+import io.ktor.client.HttpClient
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import kotlinx.serialization.Serializable
+
+class SlackShareService(
+    private val httpClient: HttpClient,
+) {
+    suspend fun shareCurl(
+        trace: TraceEntry,
+        recipientEmail: String,
+        buildInfo: BuildInfo?,
+    ): Result<Unit> {
+        val curlCommand = trace.curlCommand
+        val message = buildTraceMessage(
+            trace = trace,
+            recipientEmail = recipientEmail,
+            content = "```bash\n$curlCommand\n```",
+            buildInfo = buildInfo,
+        )
+        return postToWebhook(message, buildInfo?.slackWebhookUrl)
+    }
+
+    suspend fun shareText(
+        trace: TraceEntry,
+        recipientEmail: String,
+        buildInfo: BuildInfo?,
+    ): Result<Unit> {
+        val rawText = trace.generateTransactionText()
+        val message = buildTraceMessage(
+            trace = trace,
+            recipientEmail = recipientEmail,
+            content = "```\n$rawText\n```",
+            buildInfo = buildInfo,
+        )
+        return postToWebhook(message, buildInfo?.slackWebhookUrl)
+    }
+
+    private fun buildTraceMessage(
+        trace: TraceEntry,
+        recipientEmail: String,
+        content: String,
+        buildInfo: BuildInfo?,
+    ): SlackMessage {
+        val summary = buildString {
+            appendLine("🌐 API Request Shared")
+            appendLine()
+            appendLine("• Method: ${trace.method ?: "N/A"} ${trace.pathWithQuery}")
+            appendLine("• Status: ${trace.status ?: "N/A"} ${trace.statusMessage}")
+            appendLine("• Duration: ${trace.duration ?: 0}ms")
+            appendLine("• Time: ${trace.time ?: "N/A"}")
+            appendLine()
+            appendLine(content)
+        }
+        return SlackMessage(
+            content = summary,
+            recipientEmail = recipientEmail,
+            buildIdentifier = buildInfo.toBuildIdentifier(),
+        )
+    }
+
+    private fun BuildInfo?.toBuildIdentifier(): String? {
+        if (this == null) return null
+        return "${projectName}-${variantName}-${versionName}-${commitSha}"
+    }
+
+    private suspend fun postToWebhook(message: SlackMessage, webhookUrl: String?): Result<Unit> {
+        return try {
+            val url = requireNotNull(webhookUrl?.takeIf { it.isNotBlank() }) {
+                return Result.failure(Exception("Slack webhook URL is not configured"))
+            }
+            val response = httpClient.post(url) {
+                contentType(ContentType.Application.Json)
+                setBody(message)
+            }
+            if (response.status.value in 200..299) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Slack webhook returned ${response.status}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    @Serializable
+    private data class SlackMessage(
+        val content: String,
+        val recipientEmail: String,
+        val buildIdentifier: String? = null,
+    )
+}

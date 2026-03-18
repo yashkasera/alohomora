@@ -43,6 +43,12 @@ interface TraceDao {
     suspend fun getLatest(limit: Int): List<TraceEntry>
 
     /**
+     * Observes latest traces with full data for realtime streaming.
+     */
+    @Query("SELECT * FROM TraceEntry ORDER BY time DESC LIMIT :limit")
+    fun observeLatest(limit: Int): Flow<List<TraceEntry>>
+
+    /**
      * Marks a trace as viewed.
      */
     @Query("Update TraceEntry SET isViewed = 1 WHERE id = :id")

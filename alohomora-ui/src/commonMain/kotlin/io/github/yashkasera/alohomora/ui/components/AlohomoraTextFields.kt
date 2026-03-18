@@ -86,7 +86,7 @@ fun AlohomoraTextField(
 
     val currentBorderColor = if (isFocused) focusedBorderColor else borderColor
 
-    Column{
+    Column(modifier = modifier) {
         label?.let {
             Text(
                 text = it,
@@ -98,7 +98,6 @@ fun AlohomoraTextField(
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = modifier,
             enabled = enabled,
             readOnly = readOnly,
             singleLine = singleLine,

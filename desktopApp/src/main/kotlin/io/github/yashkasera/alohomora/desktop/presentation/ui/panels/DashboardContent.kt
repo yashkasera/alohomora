@@ -382,14 +382,15 @@ fun RecentEventsCard(
                     )
                 }
             }
-            if (events.isEmpty()) {
+            val rendered = events.asReversed()
+            if (rendered.isEmpty()) {
                 EmptyState(
                     icon = Icons.Server,
                     title = "No Events",
                 )
             } else {
                 LazyColumn {
-                    items(events) { event ->
+                    items(rendered) { event ->
                         TelemetryItem(
                             event, showProperties = true,
                             onClick = {

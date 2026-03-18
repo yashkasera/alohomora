@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
@@ -35,6 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -61,15 +60,10 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.brand
 import java.io.File
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val DEVTOOLS_PORT = 53999
-private const val NETWORK_WINDOW_MS = 5 * 60 * 1000L
-private val buildTimeFormatter: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("MMM d, yyyy HH:mm").withZone(ZoneId.systemDefault())
 
 @Suppress("UNUSED_PARAMETER")
 @Composable
@@ -129,6 +123,7 @@ fun DevToolsDesktopApp(
         PermanentNavigationDrawer(
             drawerContent = {
                 PermanentDrawerSheet(
+                    modifier = Modifier.fillMaxWidth(0.25f),
                     windowInsets = WindowInsets.safeContent,
                 ) {
                     Sidebar(
@@ -147,123 +142,122 @@ fun DevToolsDesktopApp(
                 }
             },
         ) {
-            when (activeSection) {
-                DesktopSection.Dashboard -> DashboardContent(
-                    devToolsViewModel = devToolsViewModel,
-                    devicesViewModel = devicesViewModel,
-                    selectedDevice = selectedDevice,
-                    recordLabel = if (isRecording) "Stop Recording" else "Start Recording",
-                    onTakeScreenshot = screenshot@{
-                        val timestamp = System.currentTimeMillis()
-                        val defaultName = "alohomora_screenshot_${timestamp}.png"
-                        val localPath = pickSavePath(defaultName, "Save Screenshot", ".png")
-                            ?: return@screenshot
-                        val devicePath = "/sdcard/${File(localPath).name}"
-                        devicesViewModel.takeScreenshot(
-                            selectedDeviceId,
-                            devicePath,
-                            localPath,
-                        )
-                    },
-                    onRecordScreen = record@{
-                        if (!isRecording) {
-                            val timestamp = System.currentTimeMillis()
-                            val defaultName = "alohomora_record_${timestamp}.mp4"
-                            val localPath =
-                                pickSavePath(defaultName, "Save Recording", ".mp4")
-                                    ?: return@record
-                            val devicePath = "/sdcard/${File(localPath).name}"
-                            recordingDevicePath = devicePath
-                            recordingLocalPath = localPath
-                            isRecording = true
-                            devicesViewModel.startScreenRecord(selectedDeviceId, devicePath)
-                        } else {
-                            devicesViewModel.stopScreenRecord(
-                                selectedDeviceId,
-                                recordingDevicePath,
-                                recordingLocalPath,
-                            )
-                            isRecording = false
-                            recordingDevicePath = null
-                            recordingLocalPath = null
-                        }
-                    },
-                    onClearAppData = {
-                        val packageName = buildInfo?.packageName
-                        if (packageName.isNullOrBlank()) {
-                            devicesViewModel.setActionError("Build package name unavailable")
-                            return@DashboardContent
-                        }
-                        devicesViewModel.runCommand(
-                            selectedDeviceId,
-                            "shell pm clear $packageName",
-                        )
-                        devicesViewModel.setActionMessage("App data clear command sent")
-                    },
-                    onRestartAdb = {
-                        scope.launch {
-                            devicesViewModel.restartAdb { error ->
-                                if (error == null) devicesViewModel.setActionMessage("ADB restarted")
-                                else devicesViewModel.setActionError(error)
-                            }
-                        }
-                    },
-                    onApiLogClick = { selectedTraceForDrawer = it },
-                    connection = devToolsState.connection,
-                    onEventViewClick = {
-                    },
-                    onTracesClick = {
-                        activeSection = DesktopSection.Traces
-                    },
-                    onEventsClick = {
-                        activeSection = DesktopSection.TelemetryEvents
-                    },
-                )
+             when (activeSection) {
+                 DesktopSection.Dashboard -> DashboardContent(
+                     devToolsViewModel = devToolsViewModel,
+                     devicesViewModel = devicesViewModel,
+                     selectedDevice = selectedDevice,
+                     recordLabel = if (isRecording) "Stop Recording" else "Start Recording",
+                     onTakeScreenshot = screenshot@{
+                         val timestamp = System.currentTimeMillis()
+                         val defaultName = "alohomora_screenshot_${timestamp}.png"
+                         val localPath = pickSavePath(defaultName, "Save Screenshot", ".png")
+                             ?: return@screenshot
+                         val devicePath = "/sdcard/${File(localPath).name}"
+                         devicesViewModel.takeScreenshot(
+                             selectedDeviceId,
+                             devicePath,
+                             localPath,
+                         )
+                     },
+                     onRecordScreen = record@{
+                         if (!isRecording) {
+                             val timestamp = System.currentTimeMillis()
+                             val defaultName = "alohomora_record_${timestamp}.mp4"
+                             val localPath =
+                                 pickSavePath(defaultName, "Save Recording", ".mp4")
+                                     ?: return@record
+                             val devicePath = "/sdcard/${File(localPath).name}"
+                             recordingDevicePath = devicePath
+                             recordingLocalPath = localPath
+                             isRecording = true
+                             devicesViewModel.startScreenRecord(selectedDeviceId, devicePath)
+                         } else {
+                             devicesViewModel.stopScreenRecord(
+                                 selectedDeviceId,
+                                 recordingDevicePath,
+                                 recordingLocalPath,
+                             )
+                             isRecording = false
+                             recordingDevicePath = null
+                             recordingLocalPath = null
+                         }
+                     },
+                     onClearAppData = {
+                         val packageName = buildInfo?.packageName
+                         if (packageName.isNullOrBlank()) {
+                             devicesViewModel.setActionError("Build package name unavailable")
+                             return@DashboardContent
+                         }
+                         devicesViewModel.runCommand(
+                             selectedDeviceId,
+                             "shell pm clear $packageName",
+                         )
+                         devicesViewModel.setActionMessage("App data clear command sent")
+                     },
+                     onRestartAdb = {
+                         scope.launch {
+                             devicesViewModel.restartAdb { error ->
+                                 if (error == null) devicesViewModel.setActionMessage("ADB restarted")
+                                 else devicesViewModel.setActionError(error)
+                             }
+                         }
+                     },
+                     onApiLogClick = { selectedTraceForDrawer = it },
+                     connection = devToolsState.connection,
+                     onEventViewClick = {
+                     },
+                     onTracesClick = {
+                         activeSection = DesktopSection.Traces
+                     },
+                     onEventsClick = {
+                         activeSection = DesktopSection.TelemetryEvents
+                     },
+                 )
 
-//                DesktopSection.Builds -> CurrentBuildCard(
-//                    buildInfo = buildInfo,
-//                    modifier = Modifier.fillMaxWidth(),
-//                )
+ //                DesktopSection.Builds -> CurrentBuildCard(
+ //                    buildInfo = buildInfo,
+ //                    modifier = Modifier.fillMaxWidth(),
+ //                )
 
-                DesktopSection.Logcat -> LogcatPanel(
-                    devicesViewModel = devicesViewModel,
-                    logcatViewModel = logcatViewModel,
-                )
+                 DesktopSection.Logcat -> LogcatPanel(
+                     devicesViewModel = devicesViewModel,
+                     logcatViewModel = logcatViewModel,
+                 )
 
-                DesktopSection.Adb -> AdbToolsPanel(
-                    devicesViewModel = devicesViewModel,
-                    selectedDeviceId = selectedDeviceId,
-                    adbCommandHistory = adbCommandHistory,
-                    buildInfo = buildInfo,
-                )
+                 DesktopSection.Adb -> AdbToolsPanel(
+                     devicesViewModel = devicesViewModel,
+                     selectedDeviceId = selectedDeviceId,
+                     adbCommandHistory = adbCommandHistory,
+                     buildInfo = buildInfo,
+                 )
 
-                DesktopSection.Traces ->
-                    ApiLogsPanel(
-                        devToolsViewModel = devToolsViewModel,
-                        onLogClick = { selectedTraceForDrawer = it },
-                    )
+                 DesktopSection.Traces ->
+                     ApiLogsPanel(
+                         devToolsViewModel = devToolsViewModel,
+                         onLogClick = { selectedTraceForDrawer = it },
+                     )
 
-                DesktopSection.TelemetryEvents ->
-                    EventsPanel(devToolsViewModel = devToolsViewModel)
+                 DesktopSection.TelemetryEvents ->
+                     EventsPanel(devToolsViewModel = devToolsViewModel)
 
-                DesktopSection.Preferences ->
-                    PreferencesPanel(prefsViewModel = prefsViewModel)
+                 DesktopSection.Preferences ->
+                     PreferencesPanel(prefsViewModel = prefsViewModel)
 
-                DesktopSection.Chronicle ->
-                    ChroniclePanel(devToolsViewModel = devToolsViewModel)
+                 DesktopSection.Chronicle ->
+                     ChroniclePanel(devToolsViewModel = devToolsViewModel)
 
-                DesktopSection.Database ->
-                    DatabasePanel(databaseViewModel = databaseViewModel)
-                else -> {}
-            }
+                 DesktopSection.Database ->
+                     DatabasePanel(databaseViewModel = databaseViewModel)
+
+             }
         }
 
-        selectedTraceForDrawer?.let { trace ->
-            TraceDetailsSideModal(
-                trace = trace,
-                onDismiss = { selectedTraceForDrawer = null },
-            )
-        }
+        TraceDetailsSideModal(
+            trace = selectedTraceForDrawer,
+            devToolsViewModel = devToolsViewModel,
+            onDismiss = { selectedTraceForDrawer = null },
+        )
     }
 }
 
@@ -298,9 +292,9 @@ fun ColumnScope.Sidebar(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.surfaceContainer, MaterialTheme.shapes.small)
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(horizontal = 8.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val dotState = when (connection) {
@@ -359,34 +353,6 @@ fun ColumnScope.Sidebar(
             selected = false,
             onClick = onDisconnect,
         )
-    }
-}
-
-@Composable
-fun SectionContentCard(
-    title: String,
-    subtitle: String,
-    content: @Composable () -> Unit,
-) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.displaySmall,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            subtitle,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.secondary,
-        )
-        Spacer(Modifier.height(24.dp))
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = CardDefaults.outlinedCardBorder(),
-        ) {
-            content()
-        }
     }
 }
 

@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -110,7 +111,7 @@ fun DeviceSelectionScreen(
                         Box(
                             modifier = Modifier
                                 .size(24.dp)
-                                .background(MaterialTheme.colorScheme.brand, CircleShape),
+                                .background(MaterialTheme.colorScheme.brand),
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(

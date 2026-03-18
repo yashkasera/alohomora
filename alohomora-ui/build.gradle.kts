@@ -10,6 +10,7 @@ plugins {
 }
 
 kotlin {
+    jvmToolchain(17)
     android {
         namespace = "io.github.yashkasera.alohomora.ui"
         compileSdk = 36

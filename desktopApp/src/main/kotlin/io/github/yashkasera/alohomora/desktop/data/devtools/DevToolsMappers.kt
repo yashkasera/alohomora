@@ -60,6 +60,7 @@ internal fun BuildInfoPayload.toDomain(): BuildInfo = BuildInfo(
     commitSha = commitSha,
     isDirty = isDirty,
     buildTimestampUtc = buildTimestampUtc,
+    slackWebhookUrl = slackWebhookUrl,
 )
 
 internal fun ChronicleCommitPayload.toDomain(): ChronicleCommit = ChronicleCommit(

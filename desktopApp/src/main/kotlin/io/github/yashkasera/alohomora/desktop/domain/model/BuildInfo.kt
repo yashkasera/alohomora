@@ -12,4 +12,5 @@ data class BuildInfo(
     val commitSha: String,
     val isDirty: Boolean,
     val buildTimestampUtc: Long,
+    val slackWebhookUrl: String? = null,
 )

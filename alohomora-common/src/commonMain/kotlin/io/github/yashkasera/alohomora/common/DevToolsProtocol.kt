@@ -6,7 +6,7 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
 object DevToolsProtocol {
-    private const val MAGIC_VALUE = 0x414C4F48 // "ALOH"
+    private const val MAGIC_VALUE = 0x414C4F48
     const val VERSION: Byte = 1
     private const val HEADER_LENGTH = 9
 

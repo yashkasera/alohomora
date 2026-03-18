@@ -15,7 +15,6 @@ import io.github.yashkasera.alohomora.common.RequestDatabaseTablePayload
 import io.github.yashkasera.alohomora.common.RequestPrefValuePayload
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
-import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -40,7 +39,6 @@ internal object DevToolsDefaults {
 
 internal class DevToolsRuntime(
     private val telemetryRepository: TelemetryRepository,
-    private val traceRepository: TraceRepository,
     private val database: AlohomoraDb,
     private val preferencesInspector: DevToolsPreferencesInspector,
     private val server: DevToolsTcpServer,
@@ -104,7 +102,7 @@ internal class DevToolsRuntime(
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
         )
         private val eventAdapter = DevToolsStreamAdapter { event: TelemetryEvent -> event.time }
-        private val apiAdapter = DevToolsStreamAdapter { log: TraceEntry -> log.time ?: 0L }
+        private val apiLogSignatures = linkedMapOf<String, Int>()
 
         fun start() {
             connectionScope.launch { writerLoop() }
@@ -177,7 +175,7 @@ internal class DevToolsRuntime(
                 chronicle = Alohomora.config?.commits?.map { it.toChronicleCommitPayload() }.orEmpty(),
             )
             eventAdapter.seed(events)
-            apiAdapter.seed(apiLogs)
+            seedApiLogSignatures(apiLogs)
             send(DevToolsMessageType.REQUEST_INITIAL_STATE, payload)
         }
 
@@ -191,13 +189,56 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun streamApiLogs() {
-            traceRepository.list("", "", 0, DevToolsDefaults.API_LOG_SNAPSHOT_LIMIT).collect { logs ->
-                val newItems = apiAdapter.filterNew(logs)
-                newItems.forEach { item ->
+            database.traceDao().observeLatest(DevToolsDefaults.API_LOG_SNAPSHOT_LIMIT).collect { logs ->
+                val changedItems = changedApiLogs(logs)
+                changedItems.forEach { item ->
                     send(DevToolsMessageType.STREAM_API_LOG, item)
                 }
             }
         }
+
+        private fun seedApiLogSignatures(logs: List<TraceEntry>) {
+            apiLogSignatures.clear()
+            logs.forEach { log ->
+                apiLogSignatures[log.id] = log.streamSignature()
+            }
+        }
+
+        private fun changedApiLogs(logs: List<TraceEntry>): List<TraceEntry> {
+            val visibleIds = logs.mapTo(mutableSetOf()) { it.id }
+            apiLogSignatures.keys.retainAll(visibleIds)
+
+            val changed = mutableListOf<TraceEntry>()
+            logs.asReversed().forEach { log ->
+                val signature = log.streamSignature()
+                if (apiLogSignatures[log.id] != signature) {
+                    apiLogSignatures[log.id] = signature
+                    changed += log
+                }
+            }
+            return changed
+        }
+
+        private fun TraceEntry.streamSignature(): Int =
+            listOf(
+                status,
+                message,
+                method,
+                scheme,
+                host,
+                path,
+                query,
+                requestBody,
+                responseBody,
+                duration,
+                requestHeaders,
+                requestContentType,
+                responseContentType,
+                responseHeaders,
+                requestSize,
+                responseSize,
+                time,
+            ).hashCode()
 
         private suspend fun handleDatabaseRequest(payload: JsonElement?) {
             if (payload == null) return

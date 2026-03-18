@@ -1,13 +1,18 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,21 +25,32 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes.Companion.Puffy
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.graphics.shapes.RoundedPolygon
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TraceItem
@@ -44,10 +60,13 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
 import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
+import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Slack
 import io.github.yashkasera.alohomora.ui.icons.X
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ApiLogsPanel(
     devToolsViewModel: DevToolsViewModel,
@@ -55,7 +74,6 @@ fun ApiLogsPanel(
 ) {
     val logs by devToolsViewModel.apiLogs.collectAsState()
     val lazyListState = rememberLazyListState()
-
     ScaffoldContent(
         lazyListState = lazyListState,
         logs = logs,
@@ -77,7 +95,7 @@ private fun ScaffoldContent(
                 showDivider = lazyListState.canScrollBackward,
             )
         },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
         LazyColumn(
             state = lazyListState,
@@ -95,57 +113,110 @@ private fun ScaffoldContent(
 
 @Composable
 fun TraceDetailsSideModal(
-    trace: TraceEntry,
+    trace: TraceEntry?,
+    devToolsViewModel: DevToolsViewModel,
     onDismiss: () -> Unit,
 ) {
-    Row(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.30f))
-                .clickable(onClick = onDismiss),
-        )
-        Surface(
-            modifier = Modifier
-                .width(620.dp)
-                .fillMaxHeight(),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 8.dp,
-            shadowElevation = 12.dp,
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "API Request",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            text = trace.path ?: trace.url ?: "-",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    AlohomoraIconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.X, contentDescription = "Close")
+    var showSlackShareDialog by remember { mutableStateOf(false) }
+    val slackShareError by devToolsViewModel.slackShareError.collectAsState()
+    val buildInfo by devToolsViewModel.buildInfo.collectAsState()
+    val isSlackConfigured = buildInfo?.slackWebhookUrl.isNullOrBlank().not()
+
+    AnimatedVisibility(
+        trace != null,
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.30f))
+                    .clickable(
+                        indication = null,
+                        interactionSource = null,
+                        onClick = onDismiss,
+                    ),
+            )
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn() + slideInHorizontally { -it },
+                exit = fadeOut() + slideOutHorizontally { it },
+            ) {
+                trace?.let {
+                    Surface(
+                        modifier = Modifier
+                            .width(620.dp)
+                            .fillMaxHeight(),
+                        color = MaterialTheme.colorScheme.background,
+                    ) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "API Request",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                    Text(
+                                        text = trace.path ?: trace.url ?: "-",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                                AlohomoraIconButton(onClick = { showSlackShareDialog = true }) {
+                                    Icon(
+                                        imageVector = Icons.Slack,
+                                        contentDescription = "Share to Slack",
+                                    )
+                                }
+                                AlohomoraIconButton(onClick = onDismiss) {
+                                    Icon(imageVector = Icons.X, contentDescription = "Close")
+                                }
+                            }
+                            AlohomoraHorizontalDivider()
+                            DesktopTraceDetailsContent(
+                                trace = trace,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
                     }
                 }
-                AlohomoraHorizontalDivider()
-                DesktopTraceDetailsContent(
-                    trace = trace,
-                    modifier = Modifier.fillMaxSize(),
-                )
             }
+        }
+    }
+
+    trace?.let {
+        if (showSlackShareDialog) {
+            SlackShareDialog(
+                isConfigured = isSlackConfigured,
+                currentWebhookUrl = buildInfo?.slackWebhookUrl,
+                shareError = slackShareError,
+                onDismiss = {
+                    showSlackShareDialog = false
+                    devToolsViewModel.clearSlackShareError()
+                },
+                onShareCurl = { email ->
+                    devToolsViewModel.shareCurlToSlack(trace, email) {
+                        showSlackShareDialog = false
+                    }
+                },
+                onShareText = { email ->
+                    devToolsViewModel.shareTextToSlack(trace, email) {
+                        showSlackShareDialog = false
+                    }
+                },
+                onClearError = devToolsViewModel::clearSlackShareError,
+            )
         }
     }
 }
@@ -282,6 +353,89 @@ private fun DesktopResponseTab(trace: TraceEntry) {
                     )
                 }
                 AlohomoraHorizontalDivider()
+            }
+        },
+    )
+}
+
+@Composable
+private fun SlackShareDialog(
+    isConfigured: Boolean,
+    currentWebhookUrl: String?,
+    shareError: String?,
+    onDismiss: () -> Unit,
+    onShareCurl: (String) -> Unit,
+    onShareText: (String) -> Unit,
+    onClearError: () -> Unit,
+) {
+    var email by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Share to Slack") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (isConfigured) {
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = {
+                            email = it
+                            if (shareError != null) onClearError()
+                        },
+                        label = { Text("Recipient Email") },
+                        placeholder = { Text("abc.xyz@example.org") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Text(
+                        text = "This will share in the DM with the specified user",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Button(
+                        onClick = { onShareCurl(email) },
+                        enabled = email.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("Share cURL to Slack")
+                    }
+                    Button(
+                        onClick = { onShareText(email) },
+                        enabled = email.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Icon(imageVector = Icons.Copy, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Share Text to Slack")
+                    }
+                    if (!shareError.isNullOrBlank()) {
+                        Text(
+                            text = shareError,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "Slack is not configured.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        text = "Configure slackWebhookUrl in your mobile Alohomora build config.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = "Desktop received webhook: ${currentWebhookUrl ?: "<null>"}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
             }
         },
     )

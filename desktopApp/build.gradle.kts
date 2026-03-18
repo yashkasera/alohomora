@@ -7,6 +7,9 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
 }
 
+kotlin {
+    jvmToolchain(17)
+}
 
 dependencies {
     implementation(project(":alohomora-common"))
@@ -50,6 +53,10 @@ compose.desktop {
             packageName = "Alohomora"
             packageVersion = "1.0.0"
 
+            appResourcesRootDir.set(
+                project.layout.projectDirectory.dir("src/main/resources")
+            )
+
             linux {
                 iconFile.set(project.file("appIcons/LinuxIcon.png"))
             }
@@ -60,6 +67,10 @@ compose.desktop {
                 iconFile.set(project.file("appIcons/MacosIcon.icns"))
                 bundleID = "io.github.yashkasera.alohomora.desktopApp"
             }
+        }
+
+        buildTypes.release.proguard {
+            configurationFiles.from(project.file("proguard-rules.pro"))
         }
     }
 }

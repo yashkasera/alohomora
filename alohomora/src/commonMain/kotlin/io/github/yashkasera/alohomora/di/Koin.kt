@@ -52,7 +52,7 @@ internal val appModule = module {
     single<IncidentRepository> { IncidentRepositoryImpl(get()) }
     // PreferenceRepository is provided in platformModule
 
-    single { DevToolsRuntime(get(), get(), get(), get(), get(), get()) }
+    single { DevToolsRuntime(get(), get(), get(), get(), get()) }
 
 
     // UseCases

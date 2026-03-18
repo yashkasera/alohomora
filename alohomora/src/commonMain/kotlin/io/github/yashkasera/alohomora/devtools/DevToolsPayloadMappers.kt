@@ -17,6 +17,7 @@ internal fun AlohomoraConfig.toBuildInfoPayload(): BuildInfoPayload = BuildInfoP
     commitSha = commitSha,
     isDirty = isDirty,
     buildTimestampUtc = buildTimestampUtc,
+    slackWebhookUrl = slackWebhookUrl,
 )
 
 internal fun AlohomoraCommit.toChronicleCommitPayload(): ChronicleCommitPayload = ChronicleCommitPayload(

@@ -20,7 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 
 @Composable
 fun JsonTreeView(
@@ -28,9 +30,15 @@ fun JsonTreeView(
     listState: LazyListState = rememberLazyListState(),
     parentContent: (LazyListScope.() -> Unit)? = null,
 ) {
-    val element = remember { Json.parseToJsonElement(json) }
-    val tree = remember { JsonTreeBuilder.build(element) }
-    val visibleState = remember { VisibleTreeState(tree) }
+    val element: JsonElement? = remember {
+        try {
+            Json.parseToJsonElement(json)
+        } catch (e: Exception) {
+            null
+        }
+    }
+    val tree = remember { element?.let(JsonTreeBuilder::build) }
+    val visibleState = remember { tree?.let(::VisibleTreeState) }
 
     CompositionLocalProvider(
         LocalTextStyle provides MaterialTheme.typography.bodyMedium.copy(
@@ -47,29 +55,48 @@ fun JsonTreeView(
             state = listState,
         ) {
             parentContent?.invoke(this)
-            stickyHeader {
-                SearchToolbar(
-                    modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
-                    tree = tree,
-                    visibleState = visibleState,
-                    listState = listState,
-                )
-            }
-            itemsIndexed(
-                visibleState.rows,
-                key = { _, row -> row.path + row.kind },
-            ) { index, row ->
 
-                val node = tree.nodes[row.path]!!
+            guardLet(element, tree, visibleState) { element, tree, visibleState ->
+                stickyHeader {
+                    SearchToolbar(
+                        modifier = Modifier.fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(horizontal = 20.dp, vertical = 12.dp),
+                        tree = tree,
+                        visibleState = visibleState,
+                        listState = listState,
+                    )
+                }
+                itemsIndexed(
+                    visibleState.rows,
+                    key = { _, row -> row.path + row.kind },
+                ) { index, row ->
 
-                JsonRow(
-                    node = node,
-                    row = row,
-                    index = index,
-                    visibleState = visibleState,
-                )
+                    val node = tree.nodes[row.path]!!
+
+                    JsonRow(
+                        node = node,
+                        row = row,
+                        index = index,
+                        visibleState = visibleState,
+                    )
+                }
+            } ?: run {
+                item {
+                    AlohomoraCodeBlock(
+                        content = json,
+                        isScrollable = false,
+                    )
+                }
             }
         }
     }
+}
+
+fun <A, B, C> guardLet(a: A?, b: B?, c: C?, action: (A, B, C) -> Unit): Unit? {
+    if (a != null && b != null && c != null) {
+        action(a, b, c)
+        return Unit
+    }
+    return null
 }

@@ -12,6 +12,7 @@ import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.PrefsRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.local.PrefsStore
 import io.github.yashkasera.alohomora.desktop.data.logcat.LogcatRepositoryImpl
+import io.github.yashkasera.alohomora.desktop.domain.service.SlackShareService
 import io.github.yashkasera.alohomora.desktop.domain.usecase.ClearLogcatUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.ConnectDevToolsUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.DeactivateDeviceUseCase
@@ -34,6 +35,13 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsVie
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.PrefsViewModel
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
+import java.security.cert.X509Certificate
+import javax.net.ssl.X509TrustManager
+import kotlinx.serialization.json.Json
 
 class DesktopAppComposition {
     val devicesViewModel: DevicesViewModel
@@ -85,6 +93,22 @@ class DesktopAppComposition {
         val stopLogcatUseCase = StopLogcatUseCase()
         val clearLogcatUseCase = ClearLogcatUseCase(logcatRepository)
 
+        val slackHttpClient = HttpClient(CIO) {
+            engine {
+                https {
+                    trustManager = object : X509TrustManager {
+                        override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
+                        override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
+                        override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+                    }
+                }
+            }
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+        val slackShareService = SlackShareService(slackHttpClient)
+
         devicesViewModel = DevicesViewModel(
             repository = adbRepository,
             refreshDevicesUseCase = refreshDevicesUseCase,
@@ -104,6 +128,7 @@ class DesktopAppComposition {
             requestDatabaseSchemaUseCase = requestDatabaseSchemaUseCase,
             requestDatabaseTableUseCase = requestDatabaseTableUseCase,
             requestPrefValueUseCase = requestPrefValueUseCase,
+            slackShareService = slackShareService,
         )
 
         logcatViewModel = LogcatViewModel(
