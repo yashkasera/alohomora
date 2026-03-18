@@ -272,7 +272,7 @@ private fun DesktopOverviewTab(trace: TraceEntry) {
     ) {
         MethodChip(trace.method.orEmpty())
         Text(
-            text = trace.pathWithQuery.ifBlank { trace.url.orEmpty() },
+            text = trace.pathWithQuery().ifBlank { trace.url.orEmpty() },
             style = MaterialTheme.typography.bodyMedium,
         )
         AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))

@@ -8,7 +8,6 @@ import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.di.initKoin
-import io.github.yashkasera.alohomora.domain.repository.LogRepository
 import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
@@ -80,7 +79,11 @@ object Alohomora {
 
     // Initialize the library.
     // On Android, pass { androidContext(context) } in appDeclaration
-    fun init(config: AlohomoraConfig? = null, appDeclaration: KoinAppDeclaration = {}) {
+    fun init(appDeclaration: KoinAppDeclaration = {}) {
+        AlohomoraInternal.init(config = null, appDeclaration = appDeclaration)
+    }
+
+    internal fun initInternal(config: AlohomoraConfig? = null, appDeclaration: KoinAppDeclaration = {}) {
         this.config = config
         if (koin != null) return
         koin = initKoin(appDeclaration).koin
@@ -90,34 +93,10 @@ object Alohomora {
     // Logging and Event Tracking
     // ============================================================================
 
-    fun log(
-        message: String,
-        tag: String = "Alohomora",
-        throwable: Throwable? = null,
-    ) {
-        val repo = koin?.get<LogRepository>() ?: return
-        scope.launch {
-//            repo.addLog(level, tag, message, throwable)
-        }
-    }
-
-    fun log(
-        trace: TraceEntry,
-    ) {
-        val repo = koin?.get<TraceRepository>() ?: return
-        scope.launch {
-            try {
-                repo.save(trace)
-            } catch (e: Exception) {
-                Logger.d {
-                    "[Alohomora] Failed to log API request: ${e.message}"
-                }
-            }
-        }
-    }
 
     @OptIn(ExperimentalUuidApi::class)
     fun recordTrace(
+        id: String = Uuid.random().toString(),
         status: Int? = null,
         url: String? = null,
         message: String? = null,
@@ -140,7 +119,7 @@ object Alohomora {
         val repo = koin?.get<TraceRepository>() ?: return
         scope.launch {
             val trace = TraceEntry(
-                id = Uuid.random().toString(),
+                id = id,
                 status = status,
                 url = url,
                 message = message,

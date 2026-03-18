@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora
 
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
-import kotlinx.serialization.json.JsonElement
+import org.koin.dsl.KoinAppDeclaration
 
 /**
  * No-op implementation of Alohomora for release builds.
@@ -20,8 +20,8 @@ import kotlinx.serialization.json.JsonElement
 object Alohomora {
 
     @Suppress("UNUSED_PARAMETER")
-    fun init(appDeclaration: Any = Unit) {
-        // No-op
+    fun init(appDeclaration: KoinAppDeclaration = {}) {
+        /* no-op */
     }
 
     // ============================================================================
@@ -34,21 +34,67 @@ object Alohomora {
         tag: String = "Alohomora",
         throwable: Throwable? = null,
     ) {
-        // No-op
+        /* no-op */
     }
 
     @Suppress("UNUSED_PARAMETER")
-    fun trackEvent(name: String, properties: Map<String, Any?>? = null) {
-        // No-op
+    fun recordTrace(
+        status: Int? = null,
+        url: String? = null,
+        message: String? = null,
+        method: String? = null,
+        scheme: String? = null,
+        host: String? = null,
+        path: String? = null,
+        query: String? = null,
+        requestBody: String? = null,
+        responseBody: String? = null,
+        time: Long? = null,
+        duration: Long? = null,
+        requestHeaders: Map<String, List<String>>? = null,
+        requestContentType: String? = null,
+        responseContentType: String? = null,
+        responseHeaders: Map<String, List<String>>? = null,
+        requestSize: Long? = null,
+        responseSize: Long? = null,
+    ) {
+        /* no-op */
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun recordTelemetry(name: String, properties: Map<String, String>? = null) {
+        /* no-op */
     }
 
     // ============================================================================
-    // Remote Connection - No-op
+    // DevTools TCP Server - No-op
     // ============================================================================
 
     @Suppress("UNUSED_PARAMETER")
-    fun connect(url: String) {
-        // No-op
+    fun startDevToolsServer(port: Int = -1): Boolean {
+        return false
+    }
+
+    fun stopDevToolsServer() {
+        /* no-op */
+    }
+
+    // ============================================================================
+    // App Database Overrides - No-op
+    // ============================================================================
+
+    @Suppress("UNUSED_PARAMETER")
+    fun registerAppDatabase(name: String, path: String? = null) {
+        /* no-op */
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun excludeAppDatabase(name: String) {
+        /* no-op */
+    }
+
+    fun clearAppDatabaseOverrides() {
+        /* no-op */
     }
 
     // ============================================================================
@@ -57,7 +103,7 @@ object Alohomora {
 
     @Suppress("UNUSED_PARAMETER")
     fun registerPlugin(plugin: CustomScreenPlugin) {
-        // No-op
+        /* no-op */
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -67,107 +113,5 @@ object Alohomora {
 
     fun getPlugins(): List<CustomScreenPlugin> {
         return emptyList()
-    }
-
-    // ============================================================================
-    // Custom Value Store - No-op
-    // ============================================================================
-
-    @Suppress("UNUSED_PARAMETER")
-    fun putValue(key: String, value: String) {
-        // No-op
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun putValue(key: String, value: Int) {
-        // No-op
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun putValue(key: String, value: Long) {
-        // No-op
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun putValue(key: String, value: Boolean) {
-        // No-op
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun putValue(key: String, value: Float) {
-        // No-op
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun putValue(key: String, value: Double) {
-        // No-op
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun putValue(key: String, value: JsonElement) {
-        // No-op
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    inline fun <reified T> putObject(key: String, value: T) {
-        // No-op
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun getString(key: String, defaultValue: String? = null): String? {
-        return defaultValue
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun getInt(key: String, defaultValue: Int? = null): Int? {
-        return defaultValue
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun getLong(key: String, defaultValue: Long? = null): Long? {
-        return defaultValue
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun getBoolean(key: String, defaultValue: Boolean? = null): Boolean? {
-        return defaultValue
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun getFloat(key: String, defaultValue: Float? = null): Float? {
-        return defaultValue
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun getDouble(key: String, defaultValue: Double? = null): Double? {
-        return defaultValue
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun getJson(key: String): JsonElement? {
-        return null
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    inline fun <reified T> getObject(key: String): T? {
-        return null
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun removeValue(key: String): Boolean {
-        return false
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun hasValue(key: String): Boolean {
-        return false
-    }
-
-    fun getAllKeys(): Set<String> {
-        return emptySet()
-    }
-
-    fun clearAllValues() {
-        // No-op
     }
 }

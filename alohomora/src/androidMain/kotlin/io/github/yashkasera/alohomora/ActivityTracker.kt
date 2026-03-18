@@ -8,7 +8,7 @@ import android.os.Parcelable
 import java.io.Serializable
 import java.util.concurrent.CopyOnWriteArrayList
 
-data class ActivityEvent(
+internal data class ActivityEvent(
     val activityName: String,
     val timestamp: Long,
     val state: ActivityState,
@@ -16,7 +16,7 @@ data class ActivityEvent(
     val taskId: Int? = null,
 )
 
-enum class ActivityState {
+internal enum class ActivityState {
     CREATED,
     STARTED,
     RESUMED,
@@ -25,7 +25,7 @@ enum class ActivityState {
     DESTROYED
 }
 
-data class IntentSnapshot(
+internal data class IntentSnapshot(
     val action: String?,
     val data: String?,
     val categories: Set<String>?,
@@ -33,7 +33,7 @@ data class IntentSnapshot(
     val extras: Map<String, String>,
 )
 
-object ActivityTracker : Application.ActivityLifecycleCallbacks {
+internal object ActivityTracker : Application.ActivityLifecycleCallbacks {
 
     private val _events = CopyOnWriteArrayList<ActivityEvent>()
     val events: List<ActivityEvent>
@@ -95,7 +95,7 @@ object ActivityTracker : Application.ActivityLifecycleCallbacks {
     }
 }
 
-fun Intent.toSnapshot(): IntentSnapshot =
+private fun Intent.toSnapshot(): IntentSnapshot =
     IntentSnapshot(
         action = action,
         data = dataString,

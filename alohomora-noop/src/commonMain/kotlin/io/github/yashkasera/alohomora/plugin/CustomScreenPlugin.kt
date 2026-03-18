@@ -23,38 +23,3 @@ interface CustomScreenPlugin {
     fun onScreenHidden() {}
 }
 
-/**
- * No-op implementation of PluginRegistry for release builds.
- */
-object PluginRegistry {
-    @Suppress("UNUSED_PARAMETER")
-    fun register(plugin: CustomScreenPlugin) {
-        // No-op
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun unregister(pluginId: String): Boolean {
-        return false
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun getPlugin(pluginId: String): CustomScreenPlugin? {
-        return null
-    }
-
-    fun getAllPlugins(): List<CustomScreenPlugin> {
-        return emptyList()
-    }
-
-    fun getDashboardPlugins(): List<CustomScreenPlugin> {
-        return emptyList()
-    }
-
-    fun getNavigationPlugins(): List<CustomScreenPlugin> {
-        return emptyList()
-    }
-
-    internal fun clear() {
-        // No-op
-    }
-}

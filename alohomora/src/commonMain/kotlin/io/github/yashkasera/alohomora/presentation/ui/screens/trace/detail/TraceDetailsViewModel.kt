@@ -1,6 +1,5 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.trace.detail
 
-//import io.github.yashkasera.alohomora.generated.AlohomoraBuildGenerationInfo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.yashkasera.alohomora.Alohomora
@@ -60,7 +59,7 @@ internal class TraceDetailsViewModel(
 
     fun shareCurlViaSystem() {
         val trace = _state.value.trace ?: return
-        shareManager.shareText(trace.curlCommand)
+        shareManager.shareText(trace.curlCommand())
         hideShareSheet()
     }
 

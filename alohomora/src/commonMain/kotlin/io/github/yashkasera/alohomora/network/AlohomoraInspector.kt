@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.network
 
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraInternal
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.statement.bodyAsText
@@ -63,6 +63,6 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
             "<binary or unreadable body: ${e.message}>"
         }
 
-        Alohomora.log(trace = entity)
+        AlohomoraInternal.recordTrace(entity)
     }
 }

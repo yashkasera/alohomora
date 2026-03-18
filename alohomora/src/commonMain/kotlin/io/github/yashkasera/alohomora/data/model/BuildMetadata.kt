@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.data.model
 
-data class BuildMetadata(
+internal data class BuildMetadata(
     val branch: String,
     val commitSha: String,
     val isDirty: Boolean,
@@ -10,7 +10,7 @@ data class BuildMetadata(
     val versionCode: Int,
 )
 
-fun AlohomoraConfig?.toBuildMetadata(): BuildMetadata {
+internal fun AlohomoraConfig?.toBuildMetadata(): BuildMetadata {
     return BuildMetadata(
         branch = this?.branch ?: "unknown",
         commitSha = this?.commitSha ?: "unknown",

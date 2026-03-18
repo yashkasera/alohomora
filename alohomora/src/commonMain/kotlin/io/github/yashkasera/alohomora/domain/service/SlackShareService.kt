@@ -9,20 +9,20 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
 
-class SlackShareService(
+internal class SlackShareService(
     private val httpClient: HttpClient,
 ) {
-    val webhookUrl: String? by lazy {
+    private val webhookUrl: String? by lazy {
         Alohomora.config?.slackWebhookUrl
     }
 
-    fun isConfigured(): Boolean = webhookUrl.isNullOrBlank().not()
+    private fun isConfigured(): Boolean = webhookUrl.isNullOrBlank().not()
 
     suspend fun shareCurl(
         trace: TraceEntry,
         recipientEmail: String,
     ): Result<Unit> {
-        val curlCommand = trace.curlCommand
+        val curlCommand = trace.curlCommand()
         val message = buildSlackMessage(
             trace = trace,
             recipientEmail = recipientEmail,
@@ -65,8 +65,8 @@ class SlackShareService(
         val summary = buildString {
             appendLine("🌐 API Request Shared")
             appendLine()
-            appendLine("• Method: ${trace.method ?: "N/A"} ${trace.pathWithQuery}")
-            appendLine("• Status: ${trace.status ?: "N/A"} ${trace.statusMessage}")
+            appendLine("• Method: ${trace.method ?: "N/A"} ${trace.pathWithQuery()}")
+            appendLine("• Status: ${trace.status ?: "N/A"} ${trace.statusMessage()}")
             appendLine("• Duration: ${trace.duration ?: 0}ms")
             appendLine("• Time: ${trace.time ?: "N/A"}")
             appendLine()

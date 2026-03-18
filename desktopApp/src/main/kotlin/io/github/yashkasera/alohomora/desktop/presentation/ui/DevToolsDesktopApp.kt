@@ -113,7 +113,7 @@ fun DevToolsDesktopApp(
             DesktopSection.Chronicle,
         )
         if (activeSection in gatedSections && !isConnected) {
-            activeSection = DesktopSection.Logcat
+            activeSection = DesktopSection.Dashboard
             devicesViewModel.setActionError("Connect a device first to open traces, telemetry, preferences, config, and chronicle")
         }
     }

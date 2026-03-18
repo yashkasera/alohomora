@@ -1,5 +1,8 @@
 package io.github.yashkasera.alohomora.devtools
 
+import io.github.yashkasera.alohomora.common.AppDatabaseInfo
+import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
+import io.github.yashkasera.alohomora.common.DatabaseTableSnapshot
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 
 internal actual class DevToolsDatabaseInspector actual constructor(
@@ -18,7 +21,11 @@ internal actual class DevToolsDatabaseInspector actual constructor(
         )
     }
 
-    actual fun loadTable(databaseName: String, tableName: String, limit: Int): DatabaseTableSnapshot {
+    actual fun loadTable(
+        databaseName: String,
+        tableName: String,
+        limit: Int,
+    ): DatabaseTableSnapshot {
         return DatabaseTableSnapshot(
             databaseName = databaseName,
             name = tableName,

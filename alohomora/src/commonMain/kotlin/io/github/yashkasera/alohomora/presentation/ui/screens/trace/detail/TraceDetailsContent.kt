@@ -149,7 +149,7 @@ private fun OverviewTab(trace: TraceEntry) {
     // Method badge and endpoint
     MethodAndEndpointSection(
         method = trace.method.orEmpty(),
-        url = trace.pathWithQuery,
+        url = trace.pathWithQuery(),
     )
 
     Spacer(modifier = Modifier.height(32.dp))
@@ -322,7 +322,7 @@ private fun ResponseTab(
                         AlohomoraCodeBlock(
                             modifier = Modifier.animateItem(),
                             isScrollable = false,
-                            accentBorder = !trace.isSuccessful,
+                            accentBorder = !trace.isSuccessful(),
                             content = formattedHeaders.joinToString("\n"),
                         )
                     }

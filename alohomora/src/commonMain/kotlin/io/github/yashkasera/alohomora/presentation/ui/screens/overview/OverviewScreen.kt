@@ -260,7 +260,7 @@ internal fun OverviewScreen(
 }
 
 @Composable
-fun DevToolsStatusCard(
+private fun DevToolsStatusCard(
     state: OverviewState,
     onToggle: (Boolean) -> Unit,
     onPortChange: (String) -> Unit,

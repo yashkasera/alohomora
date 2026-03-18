@@ -92,7 +92,7 @@ interface CustomScreenPlugin {
 /**
  * Registry for managing custom screen plugins.
  */
-object PluginRegistry {
+internal object PluginRegistry {
     private val plugins = mutableMapOf<String, CustomScreenPlugin>()
 
     /**

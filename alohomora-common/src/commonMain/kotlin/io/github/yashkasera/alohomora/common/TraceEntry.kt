@@ -32,24 +32,18 @@ data class TraceEntry(
     var isViewed: Boolean = false,
 ) {
 
-    val isShareable: Boolean
-        get() =
-            requestBody != UNABLE_PARSE_MESSAGE
+    fun isShareable(): Boolean =
+        requestBody != UNABLE_PARSE_MESSAGE
 
-    val isSuccessful: Boolean
-        get() = status in 200..299
+    fun isSuccessful(): Boolean = status in 200..299
 
-    val pathWithQuery: String
-        get() = "$path${if (query.isNullOrEmpty()) "" else "?$query"}"
+    fun pathWithQuery(): String = "$path${if (query.isNullOrEmpty()) "" else "?$query"}"
 
-    val summary: String
-        get() = "$status $method $pathWithQuery"
+    fun summary(): String = "$status $method ${pathWithQuery()}"
 
-    val schemeHostPath: String
-        get() = url?.split("?")?.get(0) ?: ""
+    fun schemeHostPath(): String = url?.split("?")?.get(0) ?: ""
 
-    val curlCommand: String
-        get() = generateCurlCommand()
+    fun curlCommand(): String = generateCurlCommand()
 
     private fun generateCurlCommand(): String {
         return buildString {
@@ -93,22 +87,21 @@ data class TraceEntry(
     private fun String.shellEscape(): String = "'${replace("'", "'\\''")}'"
 
 
-    val statusMessage: String
-        get() {
-            return when (status) {
-                200 -> "OK"
-                201 -> "Created"
-                204 -> "No Content"
-                400 -> "Bad Request"
-                401 -> "Unauthorized"
-                403 -> "Forbidden"
-                404 -> "Not Found"
-                500 -> "Internal Server Error"
-                502 -> "Bad Gateway"
-                503 -> "Service Unavailable"
-                else -> ""
-            }
+    fun statusMessage(): String {
+        return when (status) {
+            200 -> "OK"
+            201 -> "Created"
+            204 -> "No Content"
+            400 -> "Bad Request"
+            401 -> "Unauthorized"
+            403 -> "Forbidden"
+            404 -> "Not Found"
+            500 -> "Internal Server Error"
+            502 -> "Bad Gateway"
+            503 -> "Service Unavailable"
+            else -> ""
         }
+    }
 
     fun generateTransactionText(): String {
         return buildString {
@@ -176,54 +169,6 @@ data class TraceEntry(
             else -> "${bytes / (1024 * 1024)} MB"
         }
     }
-
-    /*val overview
-        get() = buildString {
-            bold { append("Method: ") }
-            append("${method}\n\n")
-
-            bold { append("URL: ") }
-            append("${url}\n\n")
-
-            bold { append("Status: ") }
-            append(": ${status}\n\n")
-
-            if (message.isNullOrEmpty().not()) {
-                bold { append("Message: ") }
-                append("${message}\n\n")
-            }
-
-            time?.let {
-                bold { append("Time: ") }
-                append("${DateUtils().toDate(it, DateUtils.Format._27)}\n\n")
-            }
-
-            bold { append("Duration: ") }
-            append("${duration}\n\n")
-
-            size?.let {
-                bold { append("Size: ") }
-                append("${it.toReadableSize}\n\n")
-            }
-
-            if (query.isNullOrEmpty().not()) {
-                bold {
-                    append("Query: \n")
-                }
-                italic {
-                    query?.split("&")?.forEach { query ->
-                        query.split("=").let { strings ->
-                            append("${strings[0]}: ${strings[1]}\n")
-                        }
-                    }
-                }
-                append("\n")
-            }
-
-            bold { append("Headers: \n") }
-            italic { append("${headers}") }
-
-        }*/
 
     companion object {
         const val UNABLE_PARSE_MESSAGE = "Cannot parse body"

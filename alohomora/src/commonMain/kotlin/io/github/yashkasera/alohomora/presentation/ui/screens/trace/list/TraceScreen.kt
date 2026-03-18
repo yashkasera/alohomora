@@ -164,7 +164,7 @@ private fun TraceTopBar(
 
 @Composable
 private fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
-    val containerColor = if (call.isSuccessful.not()) MaterialTheme.colorScheme.errorContainer
+    val containerColor = if (call.isSuccessful().not()) MaterialTheme.colorScheme.errorContainer
     else MaterialTheme.colorScheme.background
 
     Column(
@@ -201,7 +201,7 @@ private fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
                 )
 
                 val statusColor = when {
-                    call.isSuccessful -> MaterialTheme.colorScheme.onSurface // Design shows Black for 200 GET, Emerald for 201 etc. using Black for simplicity or custom logic
+                    call.isSuccessful() -> MaterialTheme.colorScheme.onSurface // Design shows Black for 200 GET, Emerald for 201 etc. using Black for simplicity or custom logic
                     call.isViewed -> MaterialTheme.colorScheme.onSurface
                     else -> MaterialTheme.colorScheme.error
                 }
@@ -220,7 +220,7 @@ private fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
         }
 
         Text(
-            text = call.pathWithQuery,
+            text = call.pathWithQuery(),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 2,

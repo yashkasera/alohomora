@@ -15,35 +15,56 @@ The goal is understanding.
 
 Alohomora is designed for **full observability in debug builds** and **zero-overhead behavior in release builds**.
 
-### 1) Apply the Gradle plugin
-
-In your app module `build.gradle.kts`:
-
-```kotlin
-plugins {
-    id("com.android.application")
-    kotlin("android")
-    id("io.github.yashkasera.alohomora")
-}
-```
-
-### 2) Add variant-specific dependencies
+### 1) Add variant-specific dependencies
 
 ```kotlin
 dependencies {
     // Full Alohomora runtime for local development and debugging
     debugImplementation("io.github.yashkasera:alohomora:1.0.0")
 
-    // No-op implementation for production builds (same public API)
+    /* no-op */ implementation for production builds (same public API)
     releaseImplementation("io.github.yashkasera:alohomora-noop:1.0.0")
 }
 ```
 
-### 3) Library selection guide
+### 2) GitHub Packages setup
 
-- **`build.gradle.kts`**: declare the plugin and dependencies at module level.
-- **`alohomora`**: use in `debug` variants for full inspection and tooling.
-- **`alohomora-noop`**: use in `release` variants to keep source compatibility with no runtime instrumentation.
+Publish and consume from GitHub Packages:
+
+- Repository URL: `https://maven.pkg.github.com/<owner>/<repo>`
+- Credentials (Gradle properties or env vars):
+  - `gpr.user` / `GITHUB_ACTOR`
+  - `gpr.key` / `GH_PACKAGES_TOKEN` / `GITHUB_TOKEN`
+
+### 3) Public API quick usage
+
+```kotlin
+Alohomora.init()
+
+Alohomora.log(message = "App started")
+Alohomora.recordTelemetry(name = "screen_opened", properties = mapOf("screen" to "home"))
+
+Alohomora.recordTrace(
+    status = 200,
+    url = "https://api.example.com/users",
+    method = "GET",
+)
+
+Alohomora.startDevToolsServer(8080)
+Alohomora.stopDevToolsServer()
+
+Alohomora.registerAppDatabase(name = "app.db")
+Alohomora.excludeAppDatabase(name = "cache.db")
+Alohomora.clearAppDatabaseOverrides()
+```
+
+### 4) Plugin APIs
+
+```kotlin
+Alohomora.registerPlugin(plugin)
+Alohomora.unregisterPlugin(pluginId = "my-plugin")
+val plugins = Alohomora.getPlugins()
+```
 
 For deeper implementation details, see `NOOP_IMPLEMENTATION_GUIDE.md` (if present in your checkout).
 

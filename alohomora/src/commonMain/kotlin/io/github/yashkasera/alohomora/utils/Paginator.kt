@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.utils
 
-class Paginator<Key, Item>(
+private class Paginator<Key, Item>(
     private val initialKey: Key,
     private val onLoadUpdated: (Boolean) -> Unit,
     private val onRequest: suspend (nextKey: Key) -> Result<PaginationResult<Item>>,
@@ -46,7 +46,7 @@ class Paginator<Key, Item>(
     }
 }
 
-data class PaginationResult<T>(
+private data class PaginationResult<T>(
     val data: List<T>,
     val total: Long,
 )

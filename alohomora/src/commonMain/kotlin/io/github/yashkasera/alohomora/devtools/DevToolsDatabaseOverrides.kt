@@ -2,7 +2,7 @@ package io.github.yashkasera.alohomora.devtools
 
 import kotlinx.coroutines.sync.withLock
 
-data class DevToolsDatabaseOverridesSnapshot(
+internal data class DevToolsDatabaseOverridesSnapshot(
     val includes: Map<String, String?>,
     val excludes: Set<String>,
 )

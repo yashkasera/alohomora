@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class FlowPager<Key, Item>(
+internal class FlowPager<Key, Item>(
     private val config: PagingConfig,
     private val initialKey: Key,
     private val getNextKey: (Key) -> Key,

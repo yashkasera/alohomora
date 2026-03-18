@@ -1,7 +1,9 @@
 package io.github.yashkasera.alohomora.data.db
 
+import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
 import io.github.yashkasera.alohomora.common.TelemetryEvent
 import io.github.yashkasera.alohomora.common.TraceEntry
@@ -21,10 +23,16 @@ import io.github.yashkasera.alohomora.data.datasource.local.ScreenDao
     version = 1,
     exportSchema = false,
 )
+@ConstructedBy(AlohomoraDbConstructor::class)
 @TypeConverters(PropertiesConverter::class, HeadersConverter::class)
 internal abstract class AlohomoraDb : RoomDatabase() {
     abstract fun screenDao(): ScreenDao
     abstract fun incidentDao(): IncidentDao
     abstract fun traceDao(): TraceDao
     abstract fun telemetryDao(): TelemetryDao
+}
+
+@Suppress("KotlinNoActualForExpect")
+internal expect object AlohomoraDbConstructor : RoomDatabaseConstructor<AlohomoraDb> {
+    override fun initialize(): AlohomoraDb
 }

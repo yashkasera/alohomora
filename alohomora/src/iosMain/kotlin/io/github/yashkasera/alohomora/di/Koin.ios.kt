@@ -5,6 +5,7 @@ import org.koin.dsl.module
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
+import io.github.yashkasera.alohomora.data.db.AlohomoraDbConstructor
 import io.github.yashkasera.alohomora.data.repository.VaultRepositoryImpl
 import io.github.yashkasera.alohomora.devtools.DevToolsAppDatabaseProvider
 import io.github.yashkasera.alohomora.devtools.DevToolsPreferencesInspector
@@ -20,7 +21,7 @@ actual val platformModule = module {
         val dbFilePath = NSHomeDirectory() + "/alohomora.db"
         Room.databaseBuilder<AlohomoraDb>(
             name = dbFilePath,
-            factory = { AlohomoraDb::class.instantiateImpl() }
+            factory = AlohomoraDbConstructor::initialize,
         )
             .setDriver(BundledSQLiteDriver())
             .fallbackToDestructiveMigration(true)

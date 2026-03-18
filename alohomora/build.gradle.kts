@@ -1,5 +1,6 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
@@ -11,6 +12,7 @@ plugins {
     alias(libs.plugins.room)
     alias(libs.plugins.ksp)
     alias(libs.plugins.buildConfig)
+    `maven-publish`
 }
 
 kotlin {
@@ -117,4 +119,31 @@ dependencies {
     add("kspIosSimulatorArm64", libs.androidx.room.compiler)
     add("kspIosX64", libs.androidx.room.compiler)
     add("kspIosArm64", libs.androidx.room.compiler)
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            val githubOwner = providers.gradleProperty("github.owner").orNull ?: System.getenv("GITHUB_REPOSITORY_OWNER") ?: "yashkasera"
+            val githubRepo = providers.gradleProperty("github.repo").orNull ?: rootProject.name
+            url = uri("https://maven.pkg.github.com/$githubOwner/$githubRepo")
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull
+                    ?: System.getenv("GITHUB_ACTOR")
+                    ?: System.getenv("GITHUB_REPOSITORY_OWNER")
+                password = providers.gradleProperty("gpr.key").orNull
+                    ?: System.getenv("GH_PACKAGES_TOKEN")
+                    ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+
+    publications.withType<MavenPublication>().configureEach {
+        pom {
+            name.set(project.name)
+            description.set("Alohomora developer observability toolkit")
+            url.set("https://github.com/yashkasera/Alohomora")
+        }
+    }
 }

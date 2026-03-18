@@ -24,7 +24,7 @@ internal class TelemetryRepositoryImpl(private val db: AlohomoraDb) : TelemetryR
     override suspend fun clearAll() = db.telemetryDao().clearAll()
 
     override suspend fun markAsViewed(id: Long) {
-        // No-op: Telemetry events are not marked as viewed
+        /* no-op */: Telemetry events are not marked as viewed
     }
 
     // Telemetry-specific implementations

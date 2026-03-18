@@ -34,7 +34,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json as KJson
-fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
+internal fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
     appDeclaration()
     modules(appModule, platformModule)
 }

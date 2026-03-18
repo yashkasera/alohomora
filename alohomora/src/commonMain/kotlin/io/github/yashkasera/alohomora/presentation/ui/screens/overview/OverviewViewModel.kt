@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-data class OverviewState(
+internal data class OverviewState(
     val serverEnabled: Boolean = false,
     val serverPort: String = "53999",
     val serverError: String? = null,
@@ -77,7 +77,7 @@ internal class OverviewViewModel(
             try {
                 Alohomora.stopDevToolsServer()
             } catch (_: Exception) {
-                // no-op
+                /* no-op */
             }
             _state.value = _state.value.copy(serverEnabled = false)
         }

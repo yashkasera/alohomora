@@ -22,7 +22,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 
 @Composable
 fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
-    val containerColor = if (call.isSuccessful.not())
+    val containerColor = if (call.isSuccessful().not())
         MaterialTheme.colorScheme.errorContainer
     else if(call.isViewed) MaterialTheme.colorScheme.surfaceVariant
     else MaterialTheme.colorScheme.surfaceContainerLowest
@@ -61,7 +61,7 @@ fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
                 )
 
                 val statusColor = when {
-                    call.isSuccessful -> MaterialTheme.colorScheme.onSurface // Design shows Black for 200 GET, Emerald for 201 etc. using Black for simplicity or custom logic
+                    call.isSuccessful() -> MaterialTheme.colorScheme.onSurface // Design shows Black for 200 GET, Emerald for 201 etc. using Black for simplicity or custom logic
                     call.isViewed -> MaterialTheme.colorScheme.onSurface
                     else -> MaterialTheme.colorScheme.error
                 }
@@ -80,7 +80,7 @@ fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
         }
 
         Text(
-            text = call.pathWithQuery,
+            text = call.pathWithQuery(),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 2,
@@ -100,7 +100,6 @@ fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
 
 @Composable
 private fun MethodBadge(method: String) {
-    // Design: POST/PUT/PATCH -> Black bg + White text. GET -> Border + Black text.
     val isWrite = method in listOf("POST", "PUT", "PATCH", "DELETE")
 
     val backgroundColor =

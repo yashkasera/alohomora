@@ -17,7 +17,7 @@ class SlackShareService(
         recipientEmail: String,
         buildInfo: BuildInfo?,
     ): Result<Unit> {
-        val curlCommand = trace.curlCommand
+        val curlCommand = trace.curlCommand()
         val message = buildTraceMessage(
             trace = trace,
             recipientEmail = recipientEmail,
@@ -51,8 +51,8 @@ class SlackShareService(
         val summary = buildString {
             appendLine("🌐 API Request Shared")
             appendLine()
-            appendLine("• Method: ${trace.method ?: "N/A"} ${trace.pathWithQuery}")
-            appendLine("• Status: ${trace.status ?: "N/A"} ${trace.statusMessage}")
+            appendLine("• Method: ${trace.method ?: "N/A"} ${trace.pathWithQuery()}")
+            appendLine("• Status: ${trace.status ?: "N/A"} ${trace.statusMessage()}")
             appendLine("• Duration: ${trace.duration ?: 0}ms")
             appendLine("• Time: ${trace.time ?: "N/A"}")
             appendLine()
