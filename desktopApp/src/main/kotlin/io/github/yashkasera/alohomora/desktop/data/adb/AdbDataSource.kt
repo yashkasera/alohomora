@@ -9,4 +9,7 @@ interface AdbDataSource {
     suspend fun disconnect(host: String, port: Int): AdbCommandResult
     suspend fun restartServer(): AdbCommandResult
     suspend fun runCommand(deviceId: String?, args: List<String>): AdbCommandResult
+
+    /** Starts a long-running command (e.g. screenrecord) without awaiting it. */
+    suspend fun runDetached(deviceId: String?, args: List<String>): String?
 }

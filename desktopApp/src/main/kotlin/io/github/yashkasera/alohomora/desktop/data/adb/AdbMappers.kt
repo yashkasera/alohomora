@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.desktop.data.adb
 
 import io.github.yashkasera.alohomora.desktop.domain.model.CommandResult
 import io.github.yashkasera.alohomora.desktop.domain.model.Device
+import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 
 internal fun AdbDevice.toDomain(): Device = Device(
@@ -10,6 +11,7 @@ internal fun AdbDevice.toDomain(): Device = Device(
     model = model,
     product = product,
     transportId = transportId,
+    platform = DevicePlatform.ANDROID,
 )
 
 internal fun AdbDeviceState.toDomain(): DeviceState = when (this) {

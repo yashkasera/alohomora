@@ -58,6 +58,12 @@ internal class AdbServiceImpl(
             runner.run(command)
         }
 
+    override suspend fun runDetached(deviceId: String?, args: List<String>): String? =
+        withContext(Dispatchers.IO) {
+            val command = if (deviceId.isNullOrBlank()) args else listOf("-s", deviceId) + args
+            runner.runDetached(command)
+        }
+
     private suspend fun runRequired(deviceId: String, args: List<String>) {
         val result = runCommand(deviceId, args)
         if (result.exitCode != 0) {

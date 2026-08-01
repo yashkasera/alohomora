@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.data.adb
 
+import io.github.yashkasera.alohomora.desktop.data.ios.IosDeviceDataSource
 import io.github.yashkasera.alohomora.desktop.domain.model.CommandResult
 import io.github.yashkasera.alohomora.desktop.domain.model.Device
 import io.github.yashkasera.alohomora.desktop.domain.repository.AdbRepository
@@ -15,6 +16,16 @@ import kotlinx.coroutines.sync.withLock
 
 class AdbRepositoryImpl(
     private val dataSource: AdbDataSource = AdbServiceImpl(),
+    /**
+     * iOS discovery, alongside Android.
+     *
+     * Deliberately merged into one device list rather than split into a separate repository:
+     * the DevTools protocol is identical across platforms, so only *discovery* and *transport*
+     * differ. Keeping one list means the launcher, session model and every panel stay
+     * platform-agnostic, with [io.github.yashkasera.alohomora.desktop.domain.model.Device.platform]
+     * driving capability gating.
+     */
+    private val iosDataSource: IosDeviceDataSource? = IosDeviceDataSource(),
 ) : AdbRepository {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val deviceMutex = Mutex()
@@ -31,13 +42,34 @@ class AdbRepositoryImpl(
     private val _error = MutableStateFlow<String?>(null)
     override val error: StateFlow<String?> = _error.asStateFlow()
 
+    /**
+     * Live port forwards, keyed by device id.
+     *
+     * Multi-device support was broken without this. `activateDevice` used to tear down the
+     * *previous* device's forward on the same host port, and `deactivateDevice` resolved the
+     * device from the single global [_selectedDeviceId] — so with two windows open, connecting
+     * device B killed device A's tunnel, and closing window A removed device B's forward.
+     * Guarded by [deviceMutex] along with every other mutation here.
+     */
+    private val forwards = mutableMapOf<String, Int>()
+
     override fun refreshDevices() {
         scope.launch {
-            try {
-                _devices.value = dataSource.listDevices().map { it.toDomain() }
-                _error.value = null
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Failed to list devices"
+            // Android and iOS are collected independently so one failing toolchain does not
+            // hide the other's devices — a Mac without the Android SDK should still list
+            // iPhones, and a machine with no Xcode should still list Android devices.
+            val android = runCatching { dataSource.listDevices().map { it.toDomain() } }
+            val ios = runCatching { iosDataSource?.listDevices().orEmpty() }
+
+            _devices.value = android.getOrDefault(emptyList()) + ios.getOrDefault(emptyList())
+
+            _error.value = when {
+                android.isFailure && ios.isFailure ->
+                    android.exceptionOrNull()?.message ?: "Failed to list devices"
+                // Only surface a partial failure when the other side found nothing, otherwise
+                // a missing SDK would nag on every 3-second poll.
+                android.isFailure && _devices.value.isEmpty() -> android.exceptionOrNull()?.message
+                else -> null
             }
         }
     }
@@ -50,12 +82,14 @@ class AdbRepositoryImpl(
                 return@withLock "Device ${device.id} is ${device.state.name.lowercase()}"
             }
 
-            val previousId = _selectedDeviceId.value
             return@withLock try {
-                if (!previousId.isNullOrBlank() && previousId != deviceId) {
-                    dataSource.removeForward(previousId, hostPort)
+                // Only this device's own stale forward is replaced. Other devices' forwards
+                // are on their own host ports and must be left alone.
+                forwards[deviceId]?.takeIf { it != hostPort }?.let { stalePort ->
+                    runCatching { dataSource.removeForward(deviceId, stalePort) }
                 }
                 dataSource.forwardDevToolsPort(deviceId, hostPort, devicePort)
+                forwards[deviceId] = hostPort
                 _selectedDeviceId.value = deviceId
                 _error.value = null
                 null
@@ -66,13 +100,18 @@ class AdbRepositoryImpl(
         }
     }
 
-    override suspend fun deactivateDevice(hostPort: Int): String? {
+    override suspend fun deactivateDevice(deviceId: String?, hostPort: Int): String? {
         return deviceMutex.withLock {
-            val deviceId = _selectedDeviceId.value
-            if (deviceId.isNullOrBlank()) return@withLock null
+            // Resolve by the caller's own device id, falling back to whichever device actually
+            // owns this host port. Never the global selection — that is what made closing one
+            // window tear down a different window's tunnel.
+            val target = deviceId?.takeIf { it.isNotBlank() }
+                ?: forwards.entries.firstOrNull { it.value == hostPort }?.key
+                ?: return@withLock null
             return@withLock try {
-                dataSource.removeForward(deviceId, hostPort)
-                _selectedDeviceId.value = null
+                dataSource.removeForward(target, hostPort)
+                forwards.remove(target)
+                if (_selectedDeviceId.value == target) _selectedDeviceId.value = null
                 null
             } catch (e: Exception) {
                 _error.value = e.message
@@ -154,6 +193,12 @@ class AdbRepositoryImpl(
             val result = dataSource.runCommand(deviceId, args)
             _lastCommandResult.value = result.toDomain()
         }
+    }
+
+    override suspend fun runDetached(deviceId: String?, args: List<String>): String? {
+        val error = dataSource.runDetached(deviceId, args)
+        if (error != null) _error.value = error
+        return error
     }
 
     override fun installApk(deviceId: String?, apkPath: String) {
