@@ -47,6 +47,16 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
     @get:Optional
     abstract val buildType: Property<String>
 
+    /**
+     * Whether the target variant is debuggable.
+     *
+     * Gates [slackWebhookUrl]: the URL is emitted as a plaintext `String` constant, so in a
+     * non-debuggable variant it ships in production dex and is recoverable with `strings`.
+     * Nothing but `enabledVariants` previously stood between a live webhook and a release APK.
+     */
+    @get:Input
+    abstract val debuggable: Property<Boolean>
+
     init {
         outputs.upToDateWhen { false }
     }
@@ -62,7 +72,10 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
                 "git",
                 "log",
                 "-${maxCommits.get()}",
-                "--pretty=format:%h|%an|%s|%ct",
+                // Use the ASCII unit separator (0x1F) as the field delimiter:
+                // commit subjects (%s) routinely contain '|', which would corrupt
+                // a '|'-delimited split and shift fields into the wrong slots.
+                "--pretty=format:%h%x1f%an%x1f%s%x1f%ct",
             )
                 .start()
                 .inputStream
@@ -88,8 +101,22 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
         val branch = git(listOf("git", "rev-parse", "--abbrev-ref", "HEAD"))
         val sha = git(listOf("git", "rev-parse", "--short", "HEAD"))
         val dirty = git(listOf("git", "status", "--porcelain")).isNotEmpty()
-        val timestamp = System.currentTimeMillis() / 1000
-        val slackUrl = slackWebhookUrl.orNull
+        // Milliseconds, like every other timestamp in the project. This used to be seconds,
+        // which the desktop dashboard rendered with the format's implicit seconds default while
+        // the Chronicle panel had to override it — the sort of split that produced 1970 dates.
+        val timestamp = System.currentTimeMillis()
+        val isDebuggable = debuggable.getOrElse(false)
+        val slackUrl = slackWebhookUrl.orNull?.takeIf { url ->
+            if (!isDebuggable && url.isNotBlank()) {
+                logger.warn(
+                    "[Alohomora] slackWebhookUrl is set but variant '${variantName.get()}' is " +
+                        "not debuggable; omitting it so the secret does not ship in release dex.",
+                )
+                false
+            } else {
+                true
+            }
+        }
         val projectName = projectName.get()
         val packageName = packageName.orNull
         val versionName = versionName.get()
@@ -138,13 +165,16 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
             appendLine("    override val commits: List<AlohomoraCommit> = listOf(")
 
             commits.forEach { commit ->
-                val parts = commit.split("|", limit = 4)
+                val parts = commit.split("", limit = 4)
                 if (parts.size != 4) return@forEach
 
                 val sha = parts[0]
                 val author = escape(parts[1], false)
                 val message = escape(parts[2], false)
-                val timestamp = parts[3]
+                // git %ct is epoch SECONDS; convert once here so nothing downstream has to
+                // remember that commits are the odd one out. Both Chronicle screens formatted
+                // this as milliseconds and rendered every commit as 1970-01-21.
+                val timestamp = parts[3].toLongOrNull()?.times(1_000) ?: 0L
 
                 appendLine(
                     """
@@ -175,6 +205,7 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
     private fun escape(value: String?, wrap: Boolean = true): String? =
         value?.replace("\\", "\\\\")
             ?.replace("\"", "\\\"")
+            ?.replace("$", "\\$")
             ?.replace("\n", "\\n")
             ?.let { if (wrap) "\"$it\"" else it }
 

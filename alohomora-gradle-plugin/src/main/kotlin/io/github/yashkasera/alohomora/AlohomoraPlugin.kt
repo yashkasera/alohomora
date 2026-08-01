@@ -54,6 +54,9 @@ class AlohomoraPlugin : Plugin<Project> {
                 }
                 maxCommits.set(extension.maxCommits)
                 slackWebhookUrl.set(extension.slackWebhookUrl)
+                // ApplicationVariant exposes debuggable; a library variant has no such flag,
+                // so treat it as non-debuggable and withhold the webhook.
+                debuggable.set((variant as? ApplicationVariant)?.debuggable ?: false)
                 variantName.set(variant.name)
                 flavorName.set(variant.flavorName)
                 buildType.set(variant.buildType)
