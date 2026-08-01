@@ -44,6 +44,8 @@ import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberWindowState
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
+import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DevToolsDesktopApp
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
@@ -55,6 +57,10 @@ import java.awt.Dimension
 import java.util.UUID
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
+import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
+import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import kotlinx.coroutines.launch
 
 private const val DEFAULT_HOST = "127.0.0.1"
@@ -170,7 +176,7 @@ fun main() {
                                 val devicesVm = session.composition.devicesViewModel
                                 val devToolsVm = session.composition.devToolsViewModel
                                 devicesVm.disconnectHost(session.host, session.hostPort)
-                                devicesVm.deactivateDevice(session.hostPort)
+                                devicesVm.deactivateDevice(session.deviceId, session.hostPort)
                                 devToolsVm.disconnect()
                                 session.composition.close()
                                 sessions.removeAll { it.id == session.id }
@@ -402,31 +408,50 @@ private fun LauncherScreen(
 
                             val composition = DesktopAppComposition(sharedDevicesViewModel = devicesViewModel)
 
+                            fun openSession(target1: DeviceUi, tunnel: DevToolsTarget) {
+                                composition.devToolsViewModel.switchDevice(tunnel, target1.id)
+                                pendingSession = PendingSession(
+                                    target1.id, tunnel.displayHost, numericHostPort, numericDevicePort, composition,
+                                )
+                                actionError = null
+                            }
+
                             scope.launch {
-                                if (isLocalHost) {
-                                    composition.devicesViewModel.selectDevice(target.id, numericHostPort, numericDevicePort) { selectError ->
-                                        if (selectError == null) {
-                                            composition.devToolsViewModel.switchDevice(host, numericHostPort, target.id)
-                                            pendingSession = PendingSession(target.id, host, numericHostPort, numericDevicePort, composition)
-                                            actionError = null
+                                when (target.platform) {
+                                    // Physical iOS: no adb, and no host-side port to reserve.
+                                    // usbmuxd tunnels straight to the device port over USB.
+                                    DevicePlatform.IOS -> {
+                                        val usbmuxId = target.usbmuxDeviceId
+                                        if (usbmuxId == null) {
+                                            actionError = "Device is not reachable over USB. Reconnect the cable and trust this Mac."
                                         } else {
-                                            actionError = selectError
+                                            openSession(target, DevToolsTarget.Usbmux(usbmuxId, numericDevicePort))
                                         }
                                     }
-                                } else {
-                                    composition.devicesViewModel.connectOverTcp(target.id, host, numericDevicePort) { connectError ->
-                                        if (connectError == null) {
-                                            composition.devicesViewModel.selectDevice(target.id, numericHostPort, numericDevicePort) { selectError ->
-                                                if (selectError == null) {
-                                                    composition.devToolsViewModel.switchDevice(host, numericHostPort, target.id)
-                                                    pendingSession = PendingSession(target.id, host, numericHostPort, numericDevicePort, composition)
-                                                    actionError = null
-                                                } else {
-                                                    actionError = selectError
-                                                }
+
+                                    // Simulator: nothing to tunnel. It runs on the host's network
+                                    // stack, so the device's 127.0.0.1 is the host's 127.0.0.1.
+                                    DevicePlatform.IOS_SIMULATOR ->
+                                        openSession(target, DevToolsTarget.Tcp("127.0.0.1", numericDevicePort))
+
+                                    DevicePlatform.ANDROID -> {
+                                        // Wi-Fi adb needs `adb connect` before a forward exists.
+                                        if (!isLocalHost) {
+                                            val connectError = suspendConnectOverTcp(
+                                                composition.devicesViewModel, target.id, host, numericDevicePort,
+                                            )
+                                            if (connectError != null) {
+                                                actionError = connectError
+                                                return@launch
                                             }
+                                        }
+                                        val selectError = suspendSelectDevice(
+                                            composition.devicesViewModel, target.id, numericHostPort, numericDevicePort,
+                                        )
+                                        if (selectError != null) {
+                                            actionError = selectError
                                         } else {
-                                            actionError = connectError
+                                            openSession(target, DevToolsTarget.Tcp(host, numericHostPort))
                                         }
                                     }
                                 }
@@ -443,4 +468,29 @@ private fun LauncherScreen(
             }
         }
     }
+}
+
+/**
+ * Callback-to-suspend adapters for the device activation calls.
+ *
+ * The launcher previously nested these four callbacks deep inside an onClick, which made the
+ * ordering (adb connect -> forward -> DevTools switch) impossible to follow and impossible to
+ * short-circuit on error.
+ */
+private suspend fun suspendConnectOverTcp(
+    viewModel: DevicesViewModel,
+    deviceId: String,
+    host: String,
+    port: Int,
+): String? = suspendCancellableCoroutine { continuation ->
+    viewModel.connectOverTcp(deviceId, host, port) { error -> continuation.resume(error) }
+}
+
+private suspend fun suspendSelectDevice(
+    viewModel: DevicesViewModel,
+    deviceId: String,
+    hostPort: Int,
+    devicePort: Int,
+): String? = suspendCancellableCoroutine { continuation ->
+    viewModel.selectDevice(deviceId, hostPort, devicePort) { error -> continuation.resume(error) }
 }

@@ -52,6 +52,13 @@ class DesktopAppComposition(
     val databaseViewModel: DatabaseViewModel
     val prefsViewModel: PrefsViewModel
 
+    /** Everything [close] has to release. Held so per-window teardown is complete. */
+    private val devToolsRepositoryRef: DevToolsRepositoryImpl
+    private val slackHttpClientRef: HttpClient
+
+    /** True when [devicesViewModel] is owned by another composition and must not be closed. */
+    private val ownsDevicesViewModel: Boolean = sharedDevicesViewModel == null
+
     init {
         val eventStore = EventStore()
         val apiLogStore = ApiLogStore()
@@ -70,17 +77,15 @@ class DesktopAppComposition(
             chronicleStore = chronicleStore,
         )
 
-        val adbRepository = AdbRepositoryImpl()
+        devToolsRepositoryRef = devToolsRepository
+
+        // Built only when this composition actually owns the DevicesViewModel. Previously
+        // AdbRepositoryImpl (and its CoroutineScope) plus six use cases were constructed
+        // unconditionally and then thrown away whenever a shared view model was supplied.
+        val adbRepository = if (ownsDevicesViewModel) AdbRepositoryImpl() else null
         val logcatRepository = LogcatRepositoryImpl()
         val databaseRepository = DatabaseRepositoryImpl(databaseSnapshotStore)
         val prefsRepository = PrefsRepositoryImpl(prefsStore)
-
-        val refreshDevicesUseCase = RefreshDevicesUseCase(adbRepository)
-        val selectDeviceUseCase = SelectDeviceUseCase(adbRepository)
-        val deactivateDeviceUseCase = DeactivateDeviceUseCase(adbRepository)
-        val runAdbCommandUseCase = RunAdbCommandUseCase(adbRepository)
-        val installApkUseCase = InstallApkUseCase(adbRepository)
-        val uninstallPackageUseCase = UninstallPackageUseCase(adbRepository)
 
         val connectDevToolsUseCase = ConnectDevToolsUseCase(devToolsRepository)
         val disconnectDevToolsUseCase = DisconnectDevToolsUseCase(devToolsRepository)
@@ -109,17 +114,22 @@ class DesktopAppComposition(
                 json(Json { ignoreUnknownKeys = true })
             }
         }
+        slackHttpClientRef = slackHttpClient
         val slackShareService = SlackShareService(slackHttpClient)
 
-        devicesViewModel = sharedDevicesViewModel ?: DevicesViewModel(
-            repository = adbRepository,
-            refreshDevicesUseCase = refreshDevicesUseCase,
-            selectDeviceUseCase = selectDeviceUseCase,
-            deactivateDeviceUseCase = deactivateDeviceUseCase,
-            runAdbCommandUseCase = runAdbCommandUseCase,
-            installApkUseCase = installApkUseCase,
-            uninstallPackageUseCase = uninstallPackageUseCase,
-        )
+        devicesViewModel = if (adbRepository == null) {
+            requireNotNull(sharedDevicesViewModel)
+        } else {
+            DevicesViewModel(
+                repository = adbRepository,
+                refreshDevicesUseCase = RefreshDevicesUseCase(adbRepository),
+                selectDeviceUseCase = SelectDeviceUseCase(adbRepository),
+                deactivateDeviceUseCase = DeactivateDeviceUseCase(adbRepository),
+                runAdbCommandUseCase = RunAdbCommandUseCase(adbRepository),
+                installApkUseCase = InstallApkUseCase(adbRepository),
+                uninstallPackageUseCase = UninstallPackageUseCase(adbRepository),
+            )
+        }
 
         devToolsViewModel = DevToolsViewModel(
             repository = devToolsRepository,
@@ -153,7 +163,23 @@ class DesktopAppComposition(
         )
     }
 
+    /**
+     * Releases everything this composition allocated. Call exactly once per window close.
+     *
+     * Previously this closed only [devToolsViewModel], leaking — per closed window — four
+     * view-model scopes (one with an Eagerly-started `stateIn` collector), the DevTools
+     * repository scope and socket, and the Ktor CIO [HttpClient] with its engine dispatcher
+     * and selector threads. Open and close twenty device windows and twenty CIO engines stayed
+     * alive for the life of the process.
+     */
     fun close() {
         devToolsViewModel.close()
+        logcatViewModel.close()
+        databaseViewModel.close()
+        prefsViewModel.close()
+        devToolsRepositoryRef.close()
+        // Only if we built it — a shared view model outlives this window.
+        if (ownsDevicesViewModel) devicesViewModel.close()
+        slackHttpClientRef.close()
     }
 }

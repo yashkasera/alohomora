@@ -6,6 +6,7 @@ import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.github.yashkasera.alohomora.desktop.domain.model.ChronicleCommit
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
+import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.model.PrefsState
 import kotlinx.coroutines.flow.StateFlow
 
@@ -21,10 +22,30 @@ interface DevToolsRepository {
     val buildInfo: StateFlow<BuildInfo?>
     val chronicle: StateFlow<List<ChronicleCommit>>
 
-    fun connect(host: String, port: Int)
-    fun switchDevice(host: String, port: Int, deviceId: String? = null)
+    fun connect(target: DevToolsTarget)
+    fun switchDevice(target: DevToolsTarget, deviceId: String? = null)
+
+    /** Convenience for TCP targets (adb forward, or the iOS Simulator's shared loopback). */
+    fun connect(host: String, port: Int) = connect(DevToolsTarget.Tcp(host, port))
+
+    fun switchDevice(host: String, port: Int, deviceId: String? = null) =
+        switchDevice(DevToolsTarget.Tcp(host, port), deviceId)
     fun disconnect()
     fun submitOtp(otp: String)
+
+    /**
+     * Deletes captured traces and/or telemetry on the device as well as locally.
+     *
+     * Device-side, not just local: a local-only clear repopulates from the device snapshot on the
+     * next reconnect, which reads as the button not having worked.
+     */
+    fun clearCaptured(traces: Boolean = false, events: Boolean = false)
+
+    /** Dims a trace the user opened in this window. */
+    fun markTraceViewed(id: String)
+
+    /** Dims a telemetry event the user opened in this window. */
+    fun markEventViewed(id: Long)
 
     fun requestDatabaseSchema(databaseName: String)
     fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int = 200)
