@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +22,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -55,6 +57,7 @@ import io.github.yashkasera.alohomora.ui.icons.HardDrive
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Settings
+import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -123,6 +126,11 @@ private val builtInModules = listOf(
 @Composable
 internal fun OverviewScreen(
     onNavigate: (Routes) -> Unit,
+    /**
+     * Dismisses the console. Non-null only when the host has no way out of its own — notably an
+     * iOS sheet, where there is no system back button.
+     */
+    onClose: (() -> Unit)? = null,
 ) {
     val viewModel = koinViewModel<OverviewViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -136,7 +144,7 @@ internal fun OverviewScreen(
                     subtitle = plugin.description ?: "",
                     isInverse = plugin.priority > 5,
                     route = Routes.Extension(extensionId = plugin.id),
-                    icon = plugin.icon,
+                    icon = plugin.icon ?: Icons.Server,
                 )
             }
             .partition { it.route is Routes.Extension }
@@ -176,15 +184,17 @@ internal fun OverviewScreen(
                     }
                 },
                 actions = {
-                    AlohomoraIconButton(
-                        onClick = {
-
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Settings,
-                            contentDescription = "Settings",
-                        )
+                    // Rendered only when the host supplies a dismiss handler. This slot
+                    // previously held a settings icon with an empty onClick — a control that did
+                    // nothing, which on iOS was the *only* button in the bar and left the console
+                    // impossible to leave (Compose swallows a sheet's swipe-to-dismiss drag).
+                    if (onClose != null) {
+                        AlohomoraIconButton(onClick = onClose) {
+                            Icon(
+                                imageVector = Icons.X,
+                                contentDescription = "Close Alohomora",
+                            )
+                        }
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -193,6 +203,7 @@ internal fun OverviewScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     ) {
         CanvasBackground()
+        Box(modifier = Modifier.fillMaxSize()) {
         LazyVerticalStaggeredGrid(
             modifier = Modifier.padding(it),
             columns = StaggeredGridCells.Fixed(2),
@@ -206,6 +217,9 @@ internal fun OverviewScreen(
                     state = state,
                     onToggle = { viewModel.onEvent(OverviewEvent.ToggleServer(it)) },
                     onPortChange = { viewModel.onEvent(OverviewEvent.PortChanged(it)) },
+                    onRememberChange = {
+                        viewModel.onEvent(OverviewEvent.RememberDeviceChanged(it))
+                    },
                 )
             }
             item(span = StaggeredGridItemSpan.FullLine) {
@@ -216,7 +230,7 @@ internal fun OverviewScreen(
                     modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.lg),
                 )
             }
-            items(defaultModules, key = { it.route::class.simpleName }) { modules ->
+            items(defaultModules, key = { it.route::class.simpleName.orEmpty() }) { modules ->
                 ModuleCard(modules, onNavigate = onNavigate)
             }
             customPlugins.ifEmpty { null }?.let { plugins ->
@@ -228,10 +242,12 @@ internal fun OverviewScreen(
                         modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.lg),
                     )
                 }
-                items(plugins, key = { it.route::class.simpleName }) { module ->
+                items(plugins, key = { it.route::class.simpleName.orEmpty() }) { module ->
                     ModuleCard(module, onNavigate = onNavigate)
                 }
             }
+        }
+            ScrollToTopButton(lazyGridState)
         }
     }
 }
@@ -241,6 +257,7 @@ private fun DevToolsStatusCard(
     state: OverviewState,
     onToggle: (Boolean) -> Unit,
     onPortChange: (String) -> Unit,
+    onRememberChange: (Boolean) -> Unit,
 ) {
     Box(
         modifier = Modifier.fillMaxWidth().border(
@@ -333,6 +350,28 @@ private fun DevToolsStatusCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary,
                 )
+
+                // Same consent control as the pop-up sheet. Without it, a pairing completed from
+                // this screen could never be remembered, which would look like the checkbox
+                // simply not working depending on where the user happened to be.
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onRememberChange(!state.rememberDevice) },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(
+                        checked = state.rememberDevice,
+                        onCheckedChange = onRememberChange,
+                    )
+                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+                    Text(
+                        "Remember this computer",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                }
             }
 
             if (!state.serverError.isNullOrBlank()) {

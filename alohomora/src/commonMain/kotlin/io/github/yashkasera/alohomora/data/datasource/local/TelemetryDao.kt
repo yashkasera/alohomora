@@ -23,6 +23,9 @@ internal interface TelemetryDao {
     @Query("DELETE FROM TelemetryEvent")
     suspend fun clearAll()
 
+    @Query("UPDATE TelemetryEvent SET isViewed = 1 WHERE id = :id")
+    suspend fun markAsViewed(id: Long)
+
     @Delete
     suspend fun delete(entity: TelemetryEvent)
 

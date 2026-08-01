@@ -23,9 +23,7 @@ internal class TelemetryRepositoryImpl(private val db: AlohomoraDb) : TelemetryR
 
     override suspend fun clearAll() = db.telemetryDao().clearAll()
 
-    override suspend fun markAsViewed(id: Long) {
-        /* no-op */
-    }
+    override suspend fun markAsViewed(id: Long) = db.telemetryDao().markAsViewed(id)
 
     // Telemetry-specific implementations
     override fun count(query: String): Flow<Long> =

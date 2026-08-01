@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @Immutable
-data class TelemetryState(
+internal data class TelemetryState(
     val events: List<TelemetryEvent> = emptyList(),
     val isLoadingMore: Boolean = false,
     val error: String? = null,
@@ -101,6 +101,11 @@ internal class TelemetryViewModel(
 
     fun onEventClick(event: TelemetryEvent) {
         selectedEvent.value = event
+        // Persisted, so the row stays dimmed across restarts — same contract as traces and
+        // incidents. Guarded so an already-read event does not churn the DB on every reopen.
+        if (!event.isViewed) {
+            viewModelScope.launch { telemetryRepository.markAsViewed(event.id) }
+        }
     }
 
     fun dismissEventDetail() {

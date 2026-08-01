@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-enum class DevConnectionStatus { Off, Disconnected, AwaitingAuth, Connected }
+internal enum class DevConnectionStatus { Off, Disconnected, AwaitingAuth, Connected }
 
 @Immutable
 internal data class OverviewState(
@@ -18,11 +18,13 @@ internal data class OverviewState(
     val serverError: String? = null,
     val deviceConnectionStatus: DevConnectionStatus = DevConnectionStatus.Off,
     val pendingOtp: String? = null,
+    val rememberDevice: Boolean = false,
 )
 
-sealed class OverviewEvent {
+internal sealed class OverviewEvent {
     data class ToggleServer(val enabled: Boolean) : OverviewEvent()
     data class PortChanged(val value: String) : OverviewEvent()
+    data class RememberDeviceChanged(val remember: Boolean) : OverviewEvent()
 }
 
 internal class OverviewViewModel(
@@ -47,6 +49,7 @@ internal class OverviewViewModel(
                     serverError = serverState.lastError,
                     deviceConnectionStatus = status,
                     pendingOtp = serverState.pendingOtp,
+                    rememberDevice = serverState.rememberDevice,
                 )
             }
         }
@@ -55,6 +58,8 @@ internal class OverviewViewModel(
     fun onEvent(event: OverviewEvent) {
         when (event) {
             is OverviewEvent.ToggleServer -> handleToggle(event.enabled)
+            is OverviewEvent.RememberDeviceChanged ->
+                devToolsRuntime.setRememberDevice(event.remember)
             is OverviewEvent.PortChanged -> {
                 _state.value = _state.value.copy(serverPort = event.value, serverError = null)
             }

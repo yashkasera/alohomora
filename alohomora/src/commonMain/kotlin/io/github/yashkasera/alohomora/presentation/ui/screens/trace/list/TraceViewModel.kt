@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @Immutable
-data class TraceState(
+internal data class TraceState(
     val calls: List<TraceEntry> = emptyList(),
     val isLoadingMore: Boolean = false,
     val error: String? = null,

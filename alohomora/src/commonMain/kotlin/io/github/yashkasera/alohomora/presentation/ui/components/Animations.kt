@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 // --- Minimal Canvas Background ---
 
 @Composable
-fun CanvasBackground(
+internal fun CanvasBackground(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     gridColor: Color = MaterialTheme.colorScheme.tertiaryContainer

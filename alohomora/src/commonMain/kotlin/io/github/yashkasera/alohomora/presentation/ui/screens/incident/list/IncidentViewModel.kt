@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @Immutable
-data class IncidentState(
+internal data class IncidentState(
     val incidents: List<Incident> = emptyList(),
     val isLoadingMore: Boolean = false,
     val error: String? = null,

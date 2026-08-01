@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
@@ -153,7 +154,7 @@ internal fun IncidentDetailsScreen(
                             Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
                             MetadataItem(
                                 label = "TIMESTAMP",
-                                value = DateUtils.format(incident.time * 1000, DateUtils.Format.MONTH_DAY_TIME),
+                                value = DateUtils.format(incident.time, DateUtils.Format.MONTH_DAY_TIME),
                                 modifier = Modifier.weight(1f),
                             )
                         }

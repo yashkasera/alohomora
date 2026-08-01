@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -72,10 +75,14 @@ internal fun ChronicleScreen(
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(state.commits, key = { it.sha }) { commit ->
-                        CommitListItem(commit = commit)
+                val listState = rememberLazyListState()
+                Box(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                        items(state.commits, key = { it.sha }) { commit ->
+                            CommitListItem(commit = commit)
+                        }
                     }
+                    ScrollToTopButton(listState)
                 }
             }
         }
@@ -124,7 +131,6 @@ private fun CommitListItem(
                     text = DateUtils.format(
                         commit.timestamp,
                         DateUtils.Format.READABLE_DATE_TIME,
-                        DateUtils.TimeUnit.MILLISECONDS,
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

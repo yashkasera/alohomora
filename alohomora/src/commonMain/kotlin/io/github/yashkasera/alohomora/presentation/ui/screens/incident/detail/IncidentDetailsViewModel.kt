@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class IncidentDetailsState(
+internal data class IncidentDetailsState(
     val incident: Incident? = null,
     val isLoading: Boolean = true,
 )

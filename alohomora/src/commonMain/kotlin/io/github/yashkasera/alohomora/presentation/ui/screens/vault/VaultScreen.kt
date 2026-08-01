@@ -26,6 +26,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.yashkasera.alohomora.common.DatabaseInfo
+import io.github.yashkasera.alohomora.common.TableData
+import io.github.yashkasera.alohomora.common.TableSchema
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Settings
@@ -119,7 +123,7 @@ internal fun VaultScreen(
 }
 
 @Composable
-fun DatabaseSelector(
+private fun DatabaseSelector(
     selectedDatabase: DatabaseInfo?,
     onClick: () -> Unit
 ) {
@@ -165,7 +169,7 @@ fun DatabaseSelector(
 }
 
 @Composable
-fun TablesSection(
+private fun TablesSection(
     tables: List<String>,
     selectedTable: String?,
     onTableSelected: (String) -> Unit
@@ -202,7 +206,7 @@ fun TablesSection(
 }
 
 @Composable
-fun TabsWithContent(
+private fun TabsWithContent(
     currentTab: Int,
     onTabSelected: (Int) -> Unit,
     queryText: String,
@@ -287,7 +291,7 @@ fun TabsWithContent(
 }
 
 @Composable
-fun BrowseTabContent(tableData: TableData?) {
+private fun BrowseTabContent(tableData: TableData?) {
     if (tableData != null) {
         DataTableViewer(tableData = tableData)
     } else {
@@ -301,7 +305,7 @@ fun BrowseTabContent(tableData: TableData?) {
 }
 
 @Composable
-fun QueryTabContent(
+private fun QueryTabContent(
     queryText: String,
     onQueryTextChanged: (String) -> Unit,
     onRunQuery: () -> Unit,
@@ -423,7 +427,7 @@ fun QueryTabContent(
 }
 
 @Composable
-fun SchemaTabContent(tableSchema: TableSchema?) {
+private fun SchemaTabContent(tableSchema: TableSchema?) {
     if (tableSchema != null) {
         Column(
             modifier = Modifier
@@ -494,7 +498,7 @@ fun SchemaTabContent(tableSchema: TableSchema?) {
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
                 Text(
-                    text = tableSchema.primaryKey,
+                    text = tableSchema.primaryKey.orEmpty(),
                     style = MaterialTheme.typography.bodySmall,
                     fontFamily = FontFamily.Monospace,
                     modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.sm)
@@ -531,7 +535,7 @@ fun SchemaTabContent(tableSchema: TableSchema?) {
 }
 
 @Composable
-fun DataTableViewer(tableData: TableData) {
+private fun DataTableViewer(tableData: TableData) {
     val columns = tableData.columns.map { TableColumn(it.name, it.type) }
     AlohomoraTable(
         columns = columns,
@@ -541,7 +545,7 @@ fun DataTableViewer(tableData: TableData) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatabaseSelectorBottomSheet(
+private fun DatabaseSelectorBottomSheet(
     databases: List<DatabaseInfo>,
     selectedDatabase: DatabaseInfo?,
     onDatabaseSelected: (DatabaseInfo) -> Unit,

@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -162,7 +164,9 @@ internal fun IncidentScreen(
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                val listState = rememberLazyListState()
+                Box(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                     items(state.incidents, key = { it.id }) { incident ->
                         IncidentListItem(
                             incident = incident,
@@ -198,6 +202,8 @@ internal fun IncidentScreen(
                             }
                         }
                     }
+                }
+                ScrollToTopButton(listState)
                 }
             }
         }
@@ -276,7 +282,7 @@ private fun IncidentListItem(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            text = DateUtils.format(incident.time * 1000, DateUtils.Format.HH_MM_SS_3MS),
+                            text = DateUtils.format(incident.time, DateUtils.Format.HH_MM_SS_3MS),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

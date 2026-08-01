@@ -10,7 +10,7 @@ package io.github.yashkasera.alohomora.domain.model
  * @property isEncrypted Whether this entry comes from an encrypted store
  * @property storeName The name of the specific store file (e.g., "user_prefs" for user_prefs.xml)
  */
-data class PreferenceEntry(
+internal data class PreferenceEntry(
     val key: String,
     val value: String,
     val type: PreferenceType,
@@ -22,7 +22,7 @@ data class PreferenceEntry(
 /**
  * The data type of preference value.
  */
-enum class PreferenceType {
+internal enum class PreferenceType {
     STRING,
     BOOLEAN,
     INT,
@@ -84,7 +84,7 @@ enum class PreferenceType {
 /**
  * The storage source of a preference.
  */
-enum class PreferenceSource {
+internal enum class PreferenceSource {
     SHARED_PREFERENCES,
     ENCRYPTED_SHARED_PREFERENCES,
     DATASTORE,
@@ -99,7 +99,7 @@ enum class PreferenceSource {
  * @property isEncrypted Whether the store is encrypted
  * @property entryCount Number of entries in the store
  */
-data class PreferenceStore(
+internal data class PreferenceStore(
     val name: String,
     val source: PreferenceSource,
     val isEncrypted: Boolean,

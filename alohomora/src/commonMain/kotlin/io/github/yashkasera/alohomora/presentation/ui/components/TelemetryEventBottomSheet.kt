@@ -63,7 +63,6 @@ internal fun TelemetryEventBottomSheet(
                     DateUtils.format(
                         event.time,
                         DateUtils.Format.ISO_DATE_TIME_SECONDS,
-                        DateUtils.TimeUnit.SECONDS,
                     )
                 }",
             )
@@ -92,7 +91,6 @@ internal fun TelemetryEventBottomSheet(
                         text = DateUtils.format(
                             event.time,
                             DateUtils.Format.READABLE_DATE_TIME,
-                            DateUtils.TimeUnit.MILLISECONDS,
                         ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

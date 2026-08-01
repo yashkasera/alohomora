@@ -35,7 +35,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
  * @property subtitle The subtitle/description text
  * @property onShare Callback when this option is selected with the recipient email
  */
-data class SlackShareOption(
+internal data class SlackShareOption(
     val icon: ImageVector,
     val title: String,
     val subtitle: String,

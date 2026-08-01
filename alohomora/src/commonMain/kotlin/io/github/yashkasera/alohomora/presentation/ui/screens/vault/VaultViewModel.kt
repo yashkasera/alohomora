@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @Immutable
-data class VaultState(
+internal data class VaultState(
     val databases: List<DatabaseInfo> = emptyList(),
     val selectedDatabase: DatabaseInfo? = null,
     val tables: List<String> = emptyList(),
@@ -36,7 +36,7 @@ data class VaultState(
     val error: String? = null
 )
 
-data class QueryStatus(
+internal data class QueryStatus(
     val success: Boolean,
     val executionTimeMs: Long,
     val rowsAffected: Int = 0

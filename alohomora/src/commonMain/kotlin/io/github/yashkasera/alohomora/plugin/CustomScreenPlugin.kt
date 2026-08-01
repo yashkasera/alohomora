@@ -2,8 +2,9 @@ package io.github.yashkasera.alohomora.plugin
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
-import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.Server
+import kotlin.concurrent.Volatile
+import kotlinx.atomicfu.locks.ReentrantLock
+import kotlinx.atomicfu.locks.withLock
 
 /**
  * Interface for custom screens that can be added to Alohomora by library users.
@@ -44,10 +45,14 @@ interface CustomScreenPlugin {
         get() = null
 
     /**
-     * Optional icon to display in navigation.
+     * Optional icon to display in navigation. When null, Alohomora supplies a default.
+     *
+     * Deliberately nullable so this interface depends only on `compose.ui`, never on
+     * Alohomora's own icon set — the release-build mirror in `alohomora-noop` has to
+     * declare the identical signature without pulling in the whole design system.
      */
-    val icon: ImageVector
-        get() = Icons.Server
+    val icon: ImageVector?
+        get() = null
 
     /**
      * Whether this screen should be shown in the dashboard as a card.
@@ -93,19 +98,29 @@ interface CustomScreenPlugin {
  * Registry for managing custom screen plugins.
  */
 internal object PluginRegistry {
-    private val lock = Any()
+    private val lock = ReentrantLock()
 
     @Volatile
     private var plugins: Map<String, CustomScreenPlugin> = emptyMap()
 
-    fun register(plugin: CustomScreenPlugin) = synchronized(lock) {
-        require(!plugins.containsKey(plugin.id)) {
-            "A plugin with id '${plugin.id}' is already registered"
+    /**
+     * Registers [plugin], ignoring the call if its id is already taken.
+     *
+     * Deliberately does not throw: this runs from `AlohomoraInitializer` during the host
+     * app's startup, and a debug tool must never be able to abort app launch.
+     *
+     * @return true if the plugin was registered, false if the id was already in use.
+     */
+    fun register(plugin: CustomScreenPlugin): Boolean = lock.withLock {
+        if (plugins.containsKey(plugin.id)) {
+            println("[Alohomora] Plugin id '${plugin.id}' is already registered; ignoring.")
+            return@withLock false
         }
         plugins = plugins + (plugin.id to plugin)
+        true
     }
 
-    fun unregister(pluginId: String): Boolean = synchronized(lock) {
+    fun unregister(pluginId: String): Boolean = lock.withLock {
         val had = plugins.containsKey(pluginId)
         if (had) plugins = plugins - pluginId
         had
@@ -121,5 +136,5 @@ internal object PluginRegistry {
     fun getNavigationPlugins(): List<CustomScreenPlugin> =
         plugins.values.filter { it.showInNavigation }.sortedBy { it.priority }
 
-    internal fun clear() = synchronized(lock) { plugins = emptyMap() }
+    internal fun clear() = lock.withLock { plugins = emptyMap() }
 }

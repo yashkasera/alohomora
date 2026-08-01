@@ -6,6 +6,7 @@ import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.domain.service.SlackShareService
 import io.github.yashkasera.alohomora.domain.usecase.trace.GetTraceDetailsUseCase
+import io.github.yashkasera.alohomora.domain.usecase.trace.MarkTraceAsViewedUseCase
 import io.github.yashkasera.alohomora.utils.share.ShareManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +15,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-data class TraceDetailsState(
+internal data class TraceDetailsState(
     val trace: TraceEntry? = null,
     val isLoading: Boolean = true,
     val showShareSheet: Boolean = false,
@@ -28,12 +29,17 @@ internal class TraceDetailsViewModel(
     private val shareManager: ShareManager,
     private val slackShareService: SlackShareService,
     getTraceDetailsUseCase: GetTraceDetailsUseCase,
+    private val markTraceAsViewedUseCase: MarkTraceAsViewedUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TraceDetailsState())
     val state: StateFlow<TraceDetailsState> = _state.asStateFlow()
 
     init {
+        // Opening the detail screen is what "viewed" means here; the list dims the row on the
+        // strength of it.
+        viewModelScope.launch { markTraceAsViewedUseCase(traceId) }
+
         getTraceDetailsUseCase(id = traceId)
             .onEach { trace ->
                 _state.value = _state.value.copy(trace = trace, isLoading = false)

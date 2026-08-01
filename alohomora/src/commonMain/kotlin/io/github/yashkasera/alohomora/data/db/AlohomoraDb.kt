@@ -20,7 +20,8 @@ import io.github.yashkasera.alohomora.data.datasource.local.ScreenDao
 
 @Database(
     entities = [TelemetryEvent::class, TraceEntry::class, Incident::class, Screen::class],
-    version = 1,
+    // 2: TelemetryEvent.isViewed added.
+    version = 2,
     exportSchema = false,
 )
 @ConstructedBy(AlohomoraDbConstructor::class)

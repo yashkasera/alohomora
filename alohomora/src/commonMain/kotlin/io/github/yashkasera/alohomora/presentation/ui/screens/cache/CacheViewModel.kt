@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
  * @property isLiveMonitoring Whether live monitoring is active
  */
 @Immutable
-data class CacheState(
+internal data class CacheState(
     val entries: List<PreferenceEntry> = emptyList(),
     val searchQuery: String = "",
     val isLoading: Boolean = false,

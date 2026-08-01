@@ -14,7 +14,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.FollowNewest
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
@@ -69,15 +73,18 @@ internal fun TraceScreen(
                 modifier = Modifier.padding(padding),
             )
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-            ) {
-                items(state.calls, key = { it.id }) { call ->
-                    TraceItem(call = call, onClick = { onTraceClick(call.id) })
-                    AlohomoraHorizontalDivider()
+            val listState = rememberLazyListState()
+            FollowNewest(listState, state.calls.size)
+            Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                    items(state.calls, key = { it.id }) { call ->
+                        TraceItem(call = call, onClick = { onTraceClick(call.id) })
+                        AlohomoraHorizontalDivider()
+                    }
+                    // Spacer to avoid bottom bar overlap if scaffold padding isn't enough (usually it is)
+                    item { Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl)) }
                 }
-                // Spacer to avoid bottom bar overlap if scaffold padding isn't enough (usually it is)
-                item { Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl)) }
+                ScrollToTopButton(listState)
             }
         }
 
@@ -164,8 +171,13 @@ private fun TraceTopBar(
 
 @Composable
 private fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
-    val containerColor = if (call.isSuccessful().not()) MaterialTheme.colorScheme.errorContainer
-    else MaterialTheme.colorScheme.background
+    // Failures keep their red regardless of having been read — a viewed failure is still a
+    // failure. Everything else sinks to a dimmer surface once opened, matching the desktop row.
+    val containerColor = when {
+        call.isSuccessful().not() -> MaterialTheme.colorScheme.errorContainer
+        call.isViewed -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MaterialTheme.colorScheme.background
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -201,8 +213,9 @@ private fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
                 )
 
                 val statusColor = when {
-                    call.isSuccessful() -> MaterialTheme.colorScheme.onSurface // Design shows Black for 200 GET, Emerald for 201 etc. using Black for simplicity or custom logic
-                    call.isViewed -> MaterialTheme.colorScheme.onSurface
+                    call.isSuccessful() -> MaterialTheme.colorScheme.onSurface
+                    // Not softened by isViewed: having read a failed request does not make it
+                    // succeed, and the previous rule dropped the red as soon as it was opened.
                     else -> MaterialTheme.colorScheme.error
                 }
                 // Override for 201 -> Emerald using theme color

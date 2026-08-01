@@ -8,8 +8,8 @@ import kotlinx.serialization.json.JsonElement
  * Repository for telemetry events (analytics).
  * Extends base [Repository] with telemetry-specific tracking method.
  *
- * Note: [getById] and [markAsViewed] are no-ops for telemetry as events
- * are not individually reviewed like crashes or traces.
+ * Note: [getById] is a no-op for telemetry — events are not fetched individually. [markAsViewed]
+ * is implemented: events *are* opened one at a time, and the list dims the ones already read.
  */
 internal interface TelemetryRepository : Repository<TelemetryEvent, Long> {
 

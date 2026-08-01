@@ -26,6 +26,7 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.vault.VaultScreen
 @Composable
 internal fun AlohomoraNavHost(
     startDestination: Routes = Routes.Overview,
+    onClose: (() -> Unit)? = null,
 ) {
     val navController = rememberNavController()
 
@@ -39,7 +40,7 @@ internal fun AlohomoraNavHost(
 
     NavHost(navController = navController, startDestination = Routes.Overview) {
         composable<Routes.Overview> {
-            OverviewScreen(onNavigate = navController::navigate)
+            OverviewScreen(onNavigate = navController::navigate, onClose = onClose)
         }
 
         composable<Routes.Trace> {

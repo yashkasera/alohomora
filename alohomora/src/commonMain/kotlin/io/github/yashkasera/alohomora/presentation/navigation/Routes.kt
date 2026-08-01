@@ -2,7 +2,7 @@ package io.github.yashkasera.alohomora.presentation.navigation
 
 import kotlinx.serialization.Serializable
 
-sealed interface Routes {
+internal sealed interface Routes {
     @Serializable
     data object Overview : Routes
 

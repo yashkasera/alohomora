@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
  * DAO for [TraceEntry] entities (network traces).
  */
 @Dao
-interface TraceDao {
+internal interface TraceDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: TraceEntry): Long

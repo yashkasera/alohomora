@@ -14,7 +14,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.lazy.LazyColumn
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.FollowNewest
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -136,7 +140,7 @@ private fun TelemetrySearchBar(
 }
 
 @Composable
-fun TelemetryList(
+internal fun TelemetryList(
     events: List<TelemetryEvent>,
     showProperties: Boolean,
     onEventClick: (TelemetryEvent) -> Unit,
@@ -148,27 +152,41 @@ fun TelemetryList(
             subtitle = "Telemetry events will appear here in real-time",
         )
     } else {
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(events, key = { it.id }) { event ->
-                TelemetryItem(
-                    event = event,
-                    showProperties = showProperties,
-                    onClick = { onEventClick(event) },
-                )
+        val listState = rememberLazyListState()
+        FollowNewest(listState, events.size)
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                items(events, key = { it.id }) { event ->
+                    TelemetryItem(
+                        event = event,
+                        showProperties = showProperties,
+                        onClick = { onEventClick(event) },
+                    )
+                }
             }
+            ScrollToTopButton(listState)
         }
     }
 }
 
 @Composable
-fun TelemetryItem(
+internal fun TelemetryItem(
     event: TelemetryEvent,
     showProperties: Boolean,
     onClick: () -> Unit,
 ) {
     Column(
+        // Sunken once read, matching the trace row. Telemetry has no error state, so unlike
+        // TraceItem there is nothing that should override the dimming.
         modifier = Modifier
             .fillMaxWidth()
+            .background(
+                if (event.isViewed) {
+                    MaterialTheme.colorScheme.surfaceVariant
+                } else {
+                    Color.Transparent
+                },
+            )
             .clickable(onClick = onClick)
             .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
     ) {

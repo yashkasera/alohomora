@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
-fun EmptyState(
+internal fun EmptyState(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,

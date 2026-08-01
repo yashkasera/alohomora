@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.rememberLazyListState
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -131,17 +134,22 @@ private fun SearchTextField(
 private fun PreferencesList(
     entries: List<PreferenceEntry>,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(0.dp),
-    ) {
-        items(
-            items = entries,
-            key = { "${it.source.name}_${it.key}" },
-        ) { entry ->
-            PreferenceItem(entry = entry)
-            AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.outline)
+    val listState = rememberLazyListState()
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+        ) {
+            items(
+                items = entries,
+                key = { "${it.source.name}_${it.key}" },
+            ) { entry ->
+                PreferenceItem(entry = entry)
+                AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.outline)
+            }
         }
+        ScrollToTopButton(listState)
     }
 }
 

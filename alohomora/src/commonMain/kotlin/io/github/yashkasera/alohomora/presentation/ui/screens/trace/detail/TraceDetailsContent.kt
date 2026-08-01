@@ -60,7 +60,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TraceDetailsContent(
+internal fun TraceDetailsContent(
     modifier: Modifier = Modifier,
     trace: TraceEntry,
 ) {
