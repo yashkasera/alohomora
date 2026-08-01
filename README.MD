@@ -226,6 +226,27 @@ Alohomora.registerReplayHandler { request ->
 Pass the client you use for the endpoint being replayed. One without the signing interceptor produces
 authentic-looking auth failures.
 
+#### If you sign requests, name your signature headers
+
+Capture redacts `Authorization`, `Cookie`, `X-Api-Key` and a few others, and redacted values are
+dropped rather than replayed — your interceptor resupplies them. A bespoke `X-Signature` or
+`X-Timestamp` is *not* on that list, so it survives into the trace and would be forwarded verbatim.
+If your interceptor uses `addHeader` rather than `header`, the stale value then rides along beside the
+fresh one. Name them once at startup:
+
+```kotlin
+ReplayHeaders.additionalStripList = setOf("X-Signature", "X-Timestamp", "X-Nonce")
+```
+
+A signature over a timestamp plus a body hash replays cleanly: your interceptor is handed the edited
+request, so it hashes the new body and stamps a current timestamp. Nothing is reused from capture, and
+because the timestamp differs the server will not mistake the replay for a duplicate of the original.
+
+One caveat if you hash the body: the replayed body is reconstructed from text. JSON is UTF-8 and
+round-trips byte for byte. A protobuf or otherwise binary body does not — capture decodes it as UTF-8,
+so invalid sequences become replacement characters and your hash would cover corrupted bytes. Replay
+is not currently blocked for that case.
+
 #### Retrofit
 
 Retrofit has no interceptors of its own — it delegates to OkHttp. Yours live on the `OkHttpClient` you

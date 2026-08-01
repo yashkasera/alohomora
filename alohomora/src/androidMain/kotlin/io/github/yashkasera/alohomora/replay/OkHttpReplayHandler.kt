@@ -48,9 +48,14 @@ private fun ReplayRequest.toOkHttpRequest(): Request {
 
     // Built from the string body rather than reusing the captured RequestBody, which was consumed
     // at capture time and may have been edited since.
+    //
+    // Encoded to bytes here rather than via String.toRequestBody, which rewrites a charset-less
+    // media type: `application/json` goes out as `application/json; charset=utf-8`. Any signing
+    // scheme that canonicalises Content-Type into the signed set would then reject every replay,
+    // and the request would differ from the captured one for no reason the user can see.
     val capturedBody = body
     val requestBody = when {
-        capturedBody != null -> capturedBody.toRequestBody(mediaType)
+        capturedBody != null -> capturedBody.encodeToByteArray().toRequestBody(mediaType)
 
         // OkHttp requires a body for these and rejects one for GET/HEAD, so an empty body is the
         // only correct stand-in when a POST was captured with none.
