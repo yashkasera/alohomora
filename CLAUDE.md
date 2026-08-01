@@ -76,7 +76,9 @@ alohomora {
 
 Custom framed binary protocol defined in `alohomora-common`: 9-byte header (`magic=0x414C4F48`, `version=1`, `payloadLength`) + JSON payload → `DevToolsEnvelope(type, sequence, payload)`. **`alohomora-common` is a shared protocol contract** — changes here affect both the in-app library and the desktop app.
 
-Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_PREFS`, `REQUEST_INITIAL_STATE`, `REQUEST_DATABASE_SCHEMA`, `REQUEST_DATABASE_TABLE`, `REQUEST_PREF_VALUE`.
+Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_PREFS`, `REQUEST_INITIAL_STATE`, `REQUEST_DATABASE_SCHEMA`, `REQUEST_DATABASE_TABLE`, `REQUEST_PREF_VALUE`, `REQUEST_CLEAR`, `REQUEST_REPLAY_TRACE`, `REPLAY_RESULT`.
+
+`REPLAY_RESULT` is the only reply to a desktop→device command. Every other command either answers with a snapshot or is unobservable, but a replay can fail before any trace exists (no handler registered, an unparseable hand-edited URL, a refused connection), and with no reply the desktop would wait forever on a trace that is never coming. Device-side capabilities that a client must not assume — currently `InitialStatePayload.replaySupported` — default to `false`, so a newer desktop hides the action against an older app rather than sending into a void.
 
 ### Library internals
 
@@ -92,6 +94,22 @@ Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_
 - OkHttp: `TraceInterceptor : okhttp3.Interceptor` — attach to `OkHttpClient.Builder`
 - Ktor: `AlohomoraInspector` — a Ktor `ClientPlugin` hooking `onRequest`/`onResponse`
 
+**Trace replay:** A captured request can be edited and re-sent, from the mobile console or the desktop. **Alohomora never sends it** — the host app registers a `TraceReplayHandler` and the request goes back through the app's own client, so its interceptors regenerate whatever they derive per-request. This is not an implementation shortcut: a payload signature computed at capture time is invalid the moment the body is edited, and the redaction below means secret headers are not recoverable from a trace at all.
+
+```kotlin
+Alohomora.registerReplayHandler(okHttpReplayHandler(client))  // OkHttp, incl. Retrofit
+Alohomora.registerReplayHandler(ktorReplayHandler(client))    // Android + iOS, Ktor
+Alohomora.registerReplayHandler { request -> /* … */ }        // signing above the client
+```
+
+There is deliberately **no Retrofit handler and no built-in fallback.** Retrofit has no interceptors of its own — it delegates to the `OkHttpClient` passed to `Retrofit.Builder().client(...)`, so `okHttpReplayHandler` on that client *is* the Retrofit path, and adding a `retrofitReplayHandler` would only pull a Retrofit dependency into `:alohomora` and `:alohomora-noop` to save one line. A default fallback built on a client Alohomora constructs itself was considered and rejected: it would carry none of the app's interceptors, so a signed payload would fail auth and read as a bug in the feature rather than a fallback doing its best. `isReplaySupported` is false until the app registers something, and both consoles hide the action rather than offering one that cannot work.
+
+Rules that keep replay honest — none are cosmetic:
+- **Never mark a replay with a wire header.** `okHttpReplayHandler` uses a `ReplayTag`, `ktorReplayHandler` an `AlohomoraReplayOfKey` attribute. `ReplayMarker.HEADER` exists for handlers with no out-of-band channel and has to be stripped on the way out, which only works if capture runs *before* the app's signing interceptor. Get that order wrong and the signature covers a header that is then removed.
+- **Refuse what cannot be reproduced.** `TraceEntry.replayBlockedReason()` gates the action: a truncated body (`requestBodyTruncated`) would send silently corrupted data, and `UNABLE_PARSE_MESSAGE` bodies (multipart, streaming, one-shot) are placeholders.
+- **Drop `[REDACTED]` header values, never forward them.** `ReplayHeaders.sanitize` removes them along with `Content-Length`/`Host` and anything in `additionalStripList`, so the app's own interceptors resupply them.
+- The replay's response is not returned to the caller. Capture records it like any other request, stamped with `replayOf`; the consoles find it from there.
+
 **Plugin system:** `CustomScreenPlugin` interface allows embedding custom Compose screens into Alohomora's navigation. Managed by `PluginRegistry`, routed via `Routes.Extension(extensionId)`.
 
 **TCP server:** `DevToolsRuntime` starts a TCP server (default port 53999). One active connection at a time. On connect: sends initial state snapshot, then streams new telemetry and API logs via `DevToolsStreamAdapter` (key-based deduplication). All guarded by `isDebugBuild` expect/actual.
@@ -100,9 +118,120 @@ Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_
 
 Manual DI (no Koin): `DesktopAppComposition` constructs all stores, repositories, use cases, and ViewModels. `LauncherScreen` dialog lets users select an ADB device and open per-device windows. Each window owns its own `DesktopAppComposition`. ADB port forwarding sets up the TCP tunnel from host to device. Includes an embedded terminal panel (`LocalTerminal`, `TerminalView`) via pty4j.
 
+## Compose UI Architecture
+
+Both mobile and desktop use Compose for the DevTools UI. **The mobile console runs inside the debug app; the desktop app connects to the device via ADB and TCP.** This means the Compose UI code is shared (`alohomora-ui`), but the hosting context differs sharply.
+
+### Mobile (Android/iOS) UI
+
+- `alohomora/src/commonMain/kotlin/.../presentation/ui/screens/` — shared Compose screens
+- `alohomora/src/androidMain/` — Android-specific activity hosting, sheet presentation, keyboard handling
+- `alohomora/src/iosMain/` — iOS-specific UIKit wrapper (uses `ComposeViewController` for bottom sheet, main navigation)
+- Each screen is a `@Composable` that reads from a ViewModel in `presentation/viewmodel/`
+- All UI components are in `alohomora-ui/src/commonMain/kotlin/.../ui/components/` and follow Material Design 3 tokens
+
+### Desktop UI
+
+- `desktopApp/src/main/kotlin/.../presentation/ui/` — desktop-specific panels and screens
+- Manual DI (no Koin); each desktop window gets its own `DesktopAppComposition` instance
+- Panels are stateful and receive mutations from `DevToolsViewModel` (not ViewModels)
+- `AlohomoraTopBar` is shared; each panel implements its own content
+
+### Design tokens
+
+All spacing, colors, and typography come from `alohomora-ui/.../theme/`:
+- **Dimens:** `margin` (xs/sm/md/lg/xl/xxl), `corner` (small/medium), `icon` (xs/sm/md/lg), `stroke` (thin/small/medium)
+- **Typography:** Material Design 3 styles (displayMedium, headlineSmall, titleMedium, bodyMedium, labelSmall, etc.)
+- **Colors:** Material scheme (primary, secondary, tertiary, error, surface, background, etc.)
+
+Use tokens everywhere. Hardcoded `dp` values are a refactoring smell.
+
+### Icons (Lucide)
+
+Icons are hand-translated Lucide paths using `ImageVector.Builder` with `arcToRelative` for curves. All icon files are in `alohomora-ui/src/commonMain/kotlin/.../ui/icons/`:
+
+```kotlin
+val Icons.MyIcon: ImageVector
+    get() {
+        if (_myIcon != null) return _myIcon!!
+        _myIcon = ImageVector.Builder(
+            name = "MyIcon",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 2f, /* ... */) {
+                moveTo(12f, 2f)
+                lineTo(12f, 22f)
+                // etc.
+            }
+        }.build()
+        return _myIcon!!
+    }
+
+private var _myIcon: ImageVector? = null
+```
+
+To add a new icon: find it on [https://lucide.dev/icons/](https://lucide.dev/icons/), copy the SVG path data, translate `<path>` and `<circle>` elements into `moveTo()`, `lineTo()`, `arcToRelative()`, etc., and wrap in `path { ... }` block. Reference the existing icons for curve translation patterns.
+
+## Platform-Specific Notes
+
+### iOS
+
+- **Test on physical device only** — the Simulator has incomplete Compose support and permissions, leading to false negatives
+- `alohomoraURLSessionConfiguration()` is required to intercept URLSession; `URLSession.shared` cannot be intercepted
+- iOS sheet presentation uses `UIViewControllerRepresentative` wrapping the Compose `ComposeViewController`
+- The nav stack on iOS is managed by SwiftUI, not Compose (outer shell in Swift, inner console in Compose)
+
+### Android
+
+- `AlohomoraInitializer : Initializer<Unit>` auto-runs via AndroidX Startup; no manual call needed
+- DevTools can overlay on any Activity or fall back to a notification if no foreground Activity exists
+- `DevToolsDatabaseInspector.android.kt` directly queries the Room database; iOS has a separate `actual` implementation
+- Traces, telemetry, and database schemas survive app backgrounding and rotation
+
+### Desktop
+
+- Embedded terminal (`TerminalView` via pty4j) is **desktop-only** and not available on mobile
+- ADB port forwarding handles TCP tunneling; the desktop app never has raw socket access to the device
+- Device selection is per-window; closing a window closes the ADB tunnel for that device
+
 ## Key Conventions
 
-- **`expect`/`actual` boundaries:** `DevToolsDatabaseInspector`, `DevToolsTcpServer`, `isDebugBuild`, `platformModule`, `PreferenceRepositoryImpl`, `VaultRepositoryImpl`, `ShareManager` all have platform-specific `actual` implementations.
+- **`expect`/`actual` boundaries:** `DevToolsDatabaseInspector`, `DevToolsTcpServer`, `isDebugBuild`, `platformModule`, `PreferenceRepositoryImpl`, `VaultRepositoryImpl`, `ShareManager` all have platform-specific `actual` implementations. **When modifying these, update all three (Android, iOS, Desktop).**
 - **API validation:** Only `alohomora` and `alohomora-noop` are API-validated (not `desktopApp`, `showcaseApp`, `alohomora-common`, `alohomora-ui`). Run `./gradlew apiCheck` before any commit that changes the public surface; run `./gradlew apiDump` to update the `.api` golden files.
-- **Room schema directories:** `alohomora/schemas/kspAndroidMain/` (Android) and `alohomora/schemas/` (iOS KSP targets). Update schemas when changing Room entities.
+- **Noop parity is not enforced by any build task.** `apiCheck` validates each module against its *own* golden file, so it happily passes while the two `Alohomora` objects have diverged — the failure surfaces only in a consumer's release build. After changing the public surface, diff the two `.api` files by hand. Types `alohomora` re-exports from `alohomora-common` (`ReplayRequest`, `CustomScreenPlugin`) appear in the noop dump but not in `alohomora`'s; that asymmetry is expected. What must match exactly is the member list of the `Alohomora` object itself.
+- **Room migrations:** `AlohomoraDb` sets `exportSchema = false` and both platforms use `fallbackToDestructiveMigration(true)`, so there are no schema JSON files to update and no migrations to write — but **bumping `version` wipes every captured trace, event and incident on the next launch.** Bump it (with a comment saying what changed) whenever an entity gains or loses a column; skipping the bump crashes at startup instead.
 - **Slack integration** exists in both `alohomora` (mobile) and `desktopApp` via `SlackShareService`.
+- **Naming:** The console uses consistent terminology across all three platforms (Trace, Telemetry, Vault, Incidents, Cache, Config, Chronicle). Names should not be repeated in UI (e.g., top bar says "Trace", content should not re-title itself).
+- **Vocabulary:** Use the same terms everywhere:
+  - Network requests = **Trace** (not "Traffic Logs" or "API Logs")
+  - Re-sending a captured request = **Replay** (not "resend", "retry" or "relay")
+  - User/system events = **Telemetry**
+  - Database + key-value store = **Vault**
+  - Crashes/exceptions = **Incidents**
+  - Preferences/SharedPreferences/UserDefaults = **Cache**
+  - Build metadata = **Config**
+  - Git history = **Chronicle**
+
+## Authentication & Connection Flow
+
+The console implements trust-on-first-use (TOFU) authentication:
+
+1. Desktop connects to device with a probe (empty token if no prior pairing, or a stored token)
+2. Device responds with either `AuthOtpRequiredMessage` (if new device) or `AuthSuccessMessage` (if recognized)
+3. If new, desktop shows `OtpPromptDialog` asking for the 4-digit code the device displays
+4. Desktop sends `AuthResponseMessage` with the code
+5. Device validates, generates a token, and responds with `AuthSuccessMessage` carrying the new token
+6. Desktop stores the token locally and can reconnect silently next time
+
+**Key:** The wire-level message shapes decide the entire flow. `AuthOtpRequiredMessage` is essential — without it, the device window would land in `AwaitingAuth` with no input rendered. See `AuthHandshakeTest` for the contract.
+
+## Testing Notes
+
+- **Unit tests:** Run with `./gradlew test` or `./gradlew :alohomora:test` for the library only
+- **Desktop tests:** `./gradlew :desktopApp:test` (includes connection and message serialization tests)
+- **iOS:** Tests run on physical device via `./gradlew :alohomora:iosSimulatorArm64Test` (note: **Simulator only** for unit tests; integration tests require a physical device)
+- **Flaky UI tests:** The Compose test harness can be brittle with timing. If a test flakes, increase timeouts or break the assertion into smaller steps
+- **Message round-trips:** Use `DevToolsProtocol.encodeEnvelope()` and `decodeFrame()` to verify message serialization round-trips (see `AuthHandshakeTest` for the pattern)
