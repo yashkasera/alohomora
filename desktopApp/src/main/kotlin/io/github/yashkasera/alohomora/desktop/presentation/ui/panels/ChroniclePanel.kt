@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Box
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -50,11 +52,10 @@ fun ChroniclePanel(devToolsViewModel: DevToolsViewModel) {
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
+        Box(modifier = Modifier.padding(it).fillMaxSize()) {
         LazyColumn(
             state = lazyListState,
-            modifier = Modifier
-                .padding(it)
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
         ) {
             stickyHeader {
                 Column(
@@ -100,7 +101,6 @@ fun ChroniclePanel(devToolsViewModel: DevToolsViewModel) {
                             value = DateUtils.format(
                                 info.buildTimestampUtc,
                                 DateUtils.Format.READABLE_DATE_TIME,
-                                DateUtils.TimeUnit.SECONDS,
                             ),
                         )
                     }
@@ -141,6 +141,8 @@ fun ChroniclePanel(devToolsViewModel: DevToolsViewModel) {
                 }
             }
         }
+            ScrollToTopButton(lazyListState)
+        }
     }
 }
 
@@ -177,7 +179,6 @@ private fun ChronicleRow(commit: ChronicleCommit) {
             text = DateUtils.format(
                 commit.timestamp,
                 DateUtils.Format.READABLE_DATE_TIME,
-                DateUtils.TimeUnit.MILLISECONDS,
             ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.secondary,

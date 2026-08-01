@@ -40,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
+import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.AdbToolsPanel
@@ -79,7 +80,7 @@ fun DevToolsDesktopApp(
     initialDeviceId: String? = null,
     onDisconnectWindow: () -> Unit,
 ) {
-    var activeSection by remember { mutableStateOf(DesktopSection.Dashboard) }
+    var activeSection by remember { mutableStateOf(DesktopSection.Traces) }
 
     val devices by devicesViewModel.devices.collectAsState()
     val adbCommandHistory by devicesViewModel.adbCommandHistory.collectAsState()
@@ -117,7 +118,13 @@ fun DevToolsDesktopApp(
     val selectedDevice = devices.firstOrNull { it.id == selectedDeviceId }
     val isConnected = devToolsState.connection is DevToolsConnection.Connected
 
-    LaunchedEffect(activeSection, isConnected, hasConnectedDevice) {
+    // Where to land, and where to fall back to. Must follow the platform: iOS has no Dashboard
+    // (it is dumpsys-backed), so defaulting there would leave every iOS window blank.
+    val fallbackSection = DesktopSection.defaultFor(
+        selectedDevice?.platform ?: DevicePlatform.ANDROID,
+    )
+
+    LaunchedEffect(activeSection, isConnected, hasConnectedDevice, selectedDevice?.platform) {
         val gatedSections = setOf(
             DesktopSection.Traces,
             DesktopSection.TelemetryEvents,
@@ -126,12 +133,20 @@ fun DevToolsDesktopApp(
             DesktopSection.Chronicle,
         )
         if (activeSection in gatedSections && !isConnected) {
-            activeSection = DesktopSection.Dashboard
+            activeSection = fallbackSection
             devicesViewModel.setActionError("Connect a device first to open traces, telemetry, preferences, config, and chronicle")
         }
 
         if (!hasConnectedDevice) {
-            activeSection = DesktopSection.Dashboard
+            activeSection = fallbackSection
+        }
+
+        // The active section can become unavailable when switching from an Android device to an
+        // iOS one (e.g. Logcat). Move to something the new platform can actually serve.
+        selectedDevice?.let { device ->
+            if (!activeSection.isSupportedBy(device.capabilities)) {
+                activeSection = fallbackSection
+            }
         }
     }
 
@@ -321,11 +336,14 @@ fun Sidebar(
         onDisconnect = onDisconnect,
     )
 
-    val globalSections = emptySet<DesktopSection>()
-    val visibleSections = if (hasConnectedDevice) {
-        DesktopSection.entries
-    } else {
-        DesktopSection.entries.filter { it in globalSections }
+    // Only show what the connected platform can actually serve. Logcat, ADB and the metrics
+    // Dashboard are all logcat/dumpsys/adb-shell backed and have no iOS equivalent, so for an
+    // iOS device they are omitted rather than rendered as controls that fail when used.
+    val connectedPlatform = devices.firstOrNull { it.id == selectedDeviceId }?.platform
+    val visibleSections = when {
+        !hasConnectedDevice -> emptyList()
+        connectedPlatform != null -> DesktopSection.forPlatform(connectedPlatform)
+        else -> DesktopSection.entries.toList()
     }
 
     Column(
@@ -382,6 +400,7 @@ private fun SidebarConnectionCard(
                 is DevToolsConnection.Connecting -> ConnectionDotState.Reconnecting
                 is DevToolsConnection.AwaitingAuth -> ConnectionDotState.Reconnecting
                 is DevToolsConnection.Connected -> ConnectionDotState.Connected
+                is DevToolsConnection.Reconnecting -> ConnectionDotState.Reconnecting
                 is DevToolsConnection.Failed -> ConnectionDotState.Disconnected
             }
             ConnectionStatusDot(state = dotState)
@@ -391,6 +410,10 @@ private fun SidebarConnectionCard(
                 is DevToolsConnection.Connecting -> "Connecting ${connection.host}:${connection.port}"
                 is DevToolsConnection.AwaitingAuth -> "Waiting for OTP"
                 is DevToolsConnection.Connected -> "Connected ${connection.host}:${connection.port}"
+                // Says why, because the usual cause is not a fault: the phone is in the user's
+                // pocket and iOS has suspended the app.
+                is DevToolsConnection.Reconnecting ->
+                    "Device asleep — reconnecting (${connection.attempt})"
                 is DevToolsConnection.Failed -> "Failed: ${connection.reason}"
             }
             Text(

@@ -10,6 +10,7 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.StopLogcatUseCase
 import io.github.yashkasera.alohomora.desktop.presentation.model.LogcatFilterState
 import io.github.yashkasera.alohomora.desktop.presentation.model.LogcatUiState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -142,5 +143,16 @@ class LogcatViewModel(
                 haystack.contains(query)
             }
             .toList()
+    }
+
+    /**
+     * Cancels this view model's scope.
+     *
+     * Required for per-window teardown: DesktopAppComposition.close() used to cancel
+     * only DevToolsViewModel, so every other scope (and its collectors) leaked for the
+     * life of the process each time a device window was closed.
+     */
+    fun close() {
+        scope.cancel()
     }
 }

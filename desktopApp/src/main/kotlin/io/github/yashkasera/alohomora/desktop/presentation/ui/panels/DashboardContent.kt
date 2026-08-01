@@ -16,7 +16,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import io.github.yashkasera.alohomora.ui.components.FollowNewest
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -176,6 +179,7 @@ fun RowScope.DeviceInfoCard(
         is DevToolsConnection.Connected -> MaterialTheme.colorScheme.success
         is DevToolsConnection.Connecting -> MaterialTheme.colorScheme.warning
         is DevToolsConnection.AwaitingAuth -> MaterialTheme.colorScheme.warning
+        is DevToolsConnection.Reconnecting -> MaterialTheme.colorScheme.warning
         is DevToolsConnection.Failed -> MaterialTheme.colorScheme.logError
         DevToolsConnection.Disconnected -> MaterialTheme.colorScheme.muted
     }
@@ -183,6 +187,7 @@ fun RowScope.DeviceInfoCard(
         is DevToolsConnection.Connected -> "CONNECTED VIA ADB WI-FI"
         is DevToolsConnection.Connecting -> "CONNECTING"
         is DevToolsConnection.AwaitingAuth -> "AWAITING AUTH"
+        is DevToolsConnection.Reconnecting -> "RECONNECTING"
         is DevToolsConnection.Failed -> "FAILED"
         DevToolsConnection.Disconnected -> "DISCONNECTED"
     }
@@ -385,15 +390,19 @@ fun RecentEventsCard(
                     )
                 }
             }
-            val rendered = events.asReversed()
+            // No asReversed(): EventStore already yields newest-first. Reversing here made the
+            // dashboard disagree with the Telemetry panel about the order of the same data.
+            val rendered = events
             if (rendered.isEmpty()) {
                 EmptyState(
                     icon = Icons.Server,
                     title = "No Events",
                 )
             } else {
-                LazyColumn {
-                    items(rendered) { event ->
+                val eventsState = rememberLazyListState()
+                FollowNewest(eventsState, rendered.size)
+                LazyColumn(state = eventsState) {
+                    items(rendered, key = { event -> event.id to event.time }) { event ->
                         TelemetryItem(
                             event, showProperties = true,
                             onClick = {
@@ -446,17 +455,20 @@ private fun NetworkTrafficLogsCard(
                     )
                 }
             }
-            val rendered = apiLogs.asReversed()
+            // No asReversed(): ApiLogStore already yields newest-first.
+            val rendered = apiLogs
             if (rendered.isEmpty()) {
                 EmptyState(
                     icon = Icons.Server,
                     title = "No Network Traces",
                 )
             } else {
-                LazyColumn {
-                    items(rendered) { log ->
+                val logsState = rememberLazyListState()
+                FollowNewest(logsState, rendered.size)
+                LazyColumn(state = logsState) {
+                    itemsIndexed(rendered, key = { _, log -> log.id }) { index, log ->
                         TraceItem(call = log, onClick = { onLogClick(log) })
-                        if (log != rendered.last()) {
+                        if (index < rendered.lastIndex) {
                             HorizontalDivider(
                                 color = MaterialTheme.colorScheme.subtleSurfaceAlt,
                             )

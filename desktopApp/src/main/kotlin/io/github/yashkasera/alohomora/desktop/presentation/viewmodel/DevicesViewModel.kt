@@ -15,6 +15,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.model.DashboardUiStat
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -79,9 +80,9 @@ class DevicesViewModel(
         }
     }
 
-    fun deactivateDevice(hostPort: Int, onError: (String?) -> Unit = {}) {
+    fun deactivateDevice(deviceId: String?, hostPort: Int, onError: (String?) -> Unit = {}) {
         scope.launch {
-            val error = deactivateDeviceUseCase(hostPort)
+            val error = deactivateDeviceUseCase(deviceId, hostPort)
             onError(error)
         }
     }
@@ -338,8 +339,13 @@ class DevicesViewModel(
             return
         }
         logAdbCommand(deviceId, formatCommand(deviceId, "shell screenrecord $devicePath"))
-        repository.runCommand(deviceId, "shell screenrecord $devicePath")
-        setActionMessage("Screen recording started")
+        scope.launch {
+            // runDetached, not runCommand: screenrecord runs until stopScreenRecord signals it,
+            // so it must not be awaited — and must not be subject to the command timeout, which
+            // would cut the recording short.
+            val error = repository.runDetached(deviceId, listOf("shell", "screenrecord", devicePath))
+            if (error != null) setActionError(error) else setActionMessage("Screen recording started")
+        }
     }
 
     fun stopScreenRecord(deviceId: String?, devicePath: String?, localPath: String?) {
@@ -423,6 +429,9 @@ class DevicesViewModel(
         id = id,
         state = state,
         model = model,
+        platform = platform,
+        capabilities = capabilities,
+        usbmuxDeviceId = usbmuxDeviceId,
     )
 
     private fun logAdbCommand(deviceId: String?, command: String) {
@@ -463,5 +472,16 @@ class DevicesViewModel(
             if (pidResult.stdout.isBlank()) return
             delay(200)
         }
+    }
+
+    /**
+     * Cancels this view model's scope.
+     *
+     * Required for per-window teardown: DesktopAppComposition.close() used to cancel
+     * only DevToolsViewModel, so every other scope (and its collectors) leaked for the
+     * life of the process each time a device window was closed.
+     */
+    fun close() {
+        scope.cancel()
     }
 }

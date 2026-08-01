@@ -54,8 +54,11 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 import androidx.graphics.shapes.RoundedPolygon
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TraceItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
+import io.github.yashkasera.alohomora.ui.components.FollowNewest
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
@@ -64,6 +67,7 @@ import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Slack
+import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.X
 import kotlinx.coroutines.launch
 
@@ -75,11 +79,30 @@ fun ApiLogsPanel(
 ) {
     val logs by devToolsViewModel.apiLogs.collectAsState()
     val lazyListState = rememberLazyListState()
+    var showClearConfirmation by remember { mutableStateOf(false) }
+
     ScaffoldContent(
         lazyListState = lazyListState,
         logs = logs,
-        onLogClick = onLogClick,
+        onLogClick = { log ->
+            // Dim the row as soon as it is opened; TraceItem already styles on isViewed.
+            devToolsViewModel.markTraceViewed(log.id)
+            onLogClick(log)
+        },
+        onClearRequested = { showClearConfirmation = true },
     )
+
+    if (showClearConfirmation) {
+        ClearCapturedDialog(
+            title = "Clear all traces?",
+            message = "Captured traces will be deleted from the device. This cannot be undone.",
+            onConfirm = {
+                devToolsViewModel.clearApiLogs()
+                showClearConfirmation = false
+            },
+            onDismiss = { showClearConfirmation = false },
+        )
+    }
 }
 
 @Composable
@@ -87,6 +110,7 @@ private fun ScaffoldContent(
     lazyListState: androidx.compose.foundation.lazy.LazyListState,
     logs: List<TraceEntry>,
     onLogClick: (TraceEntry) -> Unit,
+    onClearRequested: () -> Unit,
 ) {
     androidx.compose.material3.Scaffold(
         topBar = {
@@ -94,21 +118,28 @@ private fun ScaffoldContent(
                 title = "Traces",
                 subtitle = "Live trace entries from connected app",
                 showDivider = lazyListState.canScrollBackward,
+                actions = {
+                    AlohomoraIconButton(onClick = onClearRequested) {
+                        Icon(
+                            imageVector = Icons.Trash,
+                            contentDescription = "Clear all traces",
+                        )
+                    }
+                },
             )
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier
-                .padding(it)
-                .fillMaxSize(),
-        ) {
-            items(logs) { log ->
-                TraceItem(call = log, onClick = { onLogClick(log) })
-                AlohomoraHorizontalDivider()
+        Box(modifier = Modifier.padding(it).fillMaxSize()) {
+            LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                items(logs, key = { log -> log.id }) { log ->
+                    TraceItem(call = log, onClick = { onLogClick(log) })
+                    AlohomoraHorizontalDivider()
+                }
             }
+            ScrollToTopButton(lazyListState)
         }
+        FollowNewest(lazyListState, logs.size)
     }
 }
 
@@ -426,8 +457,15 @@ private fun SlackShareDialog(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    // Deliberately reports only whether a URL arrived, never the URL itself:
+                    // a Slack webhook is a live posting credential and this dialog ends up in
+                    // screenshots and screen shares.
                     Text(
-                        text = "Desktop received webhook: ${currentWebhookUrl ?: "<null>"}",
+                        text = if (currentWebhookUrl.isNullOrBlank()) {
+                            "The connected app did not send a webhook URL."
+                        } else {
+                            "A webhook URL was received but appears unusable."
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

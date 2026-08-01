@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.theme.dimens
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TelemetryEvent
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
@@ -28,8 +30,17 @@ fun LazyItemScope.TelemetryItem(
     onClick: () -> Unit,
 ) {
     Column(
+        // Sunken once read, matching the trace row. Telemetry has no error state, so unlike
+        // TraceItem there is nothing that should override the dimming.
         modifier = Modifier
             .fillMaxWidth()
+            .background(
+                if (event.isViewed) {
+                    MaterialTheme.colorScheme.surfaceVariant
+                } else {
+                    Color.Transparent
+                },
+            )
             .clickable(onClick = onClick)
             .animateItem()
             .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),

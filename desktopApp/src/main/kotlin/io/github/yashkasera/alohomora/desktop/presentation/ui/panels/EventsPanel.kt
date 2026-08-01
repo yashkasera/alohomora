@@ -13,6 +13,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.Icon
+import io.github.yashkasera.alohomora.ui.icons.Trash
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,8 +28,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TelemetryItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
+import androidx.compose.foundation.layout.Box
+import io.github.yashkasera.alohomora.ui.components.FollowNewest
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,6 +41,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 fun EventsPanel(devToolsViewModel: DevToolsViewModel) {
     val events by devToolsViewModel.events.collectAsState()
     val lazyListState = rememberLazyListState()
+    var showClearConfirmation by remember { mutableStateOf(false) }
     var showProperties by remember { mutableStateOf(true) }
     Scaffold(
         topBar = {
@@ -56,26 +65,46 @@ fun EventsPanel(devToolsViewModel: DevToolsViewModel) {
                             checked = showProperties,
                             onCheckedChange = { showProperties = it },
                         )
+
+                        AlohomoraIconButton(onClick = { showClearConfirmation = true }) {
+                            Icon(
+                                imageVector = Icons.Trash,
+                                contentDescription = "Clear all events",
+                            )
+                        }
                     }
                 },
             )
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier
-                .padding(it)
-                .fillMaxSize(),
-        ) {
-            items(events) { event ->
-                TelemetryItem(
-                    event = event,
-                    showProperties = showProperties,
-                    onClick = {},
-                )
-                AlohomoraHorizontalDivider()
+        Box(modifier = Modifier.padding(it).fillMaxSize()) {
+            LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                items(events, key = { event -> event.id to event.time }) { event ->
+                    TelemetryItem(
+                        event = event,
+                        showProperties = showProperties,
+                        onClick = { devToolsViewModel.markEventViewed(event.id) },
+                    )
+                    AlohomoraHorizontalDivider()
+                }
             }
+            ScrollToTopButton(lazyListState)
+        }
+        // Follows only while the user is already at the top; see FollowNewest.
+        FollowNewest(lazyListState, events.size)
+
+        if (showClearConfirmation) {
+            ClearCapturedDialog(
+                title = "Clear all events?",
+                // Says "device" deliberately: this deletes at the source, not just this window.
+                message = "Telemetry events will be deleted from the device. This cannot be undone.",
+                onConfirm = {
+                    devToolsViewModel.clearEvents()
+                    showClearConfirmation = false
+                },
+                onDismiss = { showClearConfirmation = false },
+            )
         }
     }
 }

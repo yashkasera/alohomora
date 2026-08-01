@@ -9,6 +9,7 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseSche
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseTableUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestInitialStateUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestPrefValueUseCase
+import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.usecase.SwitchDevToolsDeviceUseCase
 import io.github.yashkasera.alohomora.desktop.presentation.model.DevToolsUiState
 import kotlinx.coroutines.CoroutineScope
@@ -55,6 +56,10 @@ class DevToolsViewModel(
 
     fun disconnect() = disconnectUseCase()
 
+    fun switchDevice(target: DevToolsTarget, deviceId: String? = null) {
+        switchDeviceUseCase(target, deviceId)
+    }
+
     fun switchDevice(host: String, port: Int, deviceId: String? = null) {
         switchDeviceUseCase(host, port, deviceId)
     }
@@ -62,6 +67,14 @@ class DevToolsViewModel(
     fun requestInitialState() = requestInitialStateUseCase()
 
     fun submitOtp(otp: String) = repository.submitOtp(otp)
+
+    fun markTraceViewed(id: String) = repository.markTraceViewed(id)
+
+    fun markEventViewed(id: Long) = repository.markEventViewed(id)
+
+    fun clearApiLogs() = repository.clearCaptured(traces = true)
+
+    fun clearEvents() = repository.clearCaptured(events = true)
 
     fun requestDatabaseSchema(databaseName: String) = requestDatabaseSchemaUseCase(databaseName)
 

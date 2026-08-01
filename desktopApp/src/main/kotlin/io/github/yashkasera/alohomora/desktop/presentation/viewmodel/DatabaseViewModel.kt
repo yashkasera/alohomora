@@ -5,6 +5,7 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseSche
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseTableUseCase
 import io.github.yashkasera.alohomora.desktop.presentation.model.DatabaseUiState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.StateFlow
@@ -29,5 +30,16 @@ class DatabaseViewModel(
 
     fun requestTable(databaseName: String, tableName: String, limit: Int = 200) {
         requestDatabaseTableUseCase(databaseName, tableName, limit)
+    }
+
+    /**
+     * Cancels this view model's scope.
+     *
+     * Required for per-window teardown: DesktopAppComposition.close() used to cancel
+     * only DevToolsViewModel, so every other scope (and its collectors) leaked for the
+     * life of the process each time a device window was closed.
+     */
+    fun close() {
+        scope.cancel()
     }
 }
