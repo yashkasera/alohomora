@@ -3,15 +3,14 @@ package io.github.yashkasera.alohomora.desktop.app
 import io.github.yashkasera.alohomora.desktop.data.adb.AdbRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.devtools.DevToolsRemoteDataSource
 import io.github.yashkasera.alohomora.desktop.data.devtools.DevToolsRepositoryImpl
-import io.github.yashkasera.alohomora.desktop.data.local.ApiLogStore
-import io.github.yashkasera.alohomora.desktop.data.local.BuildInfoStore
-import io.github.yashkasera.alohomora.desktop.data.local.ChronicleStore
-import io.github.yashkasera.alohomora.desktop.data.local.DatabaseRepositoryImpl
+import io.github.yashkasera.alohomora.desktop.data.local.BuildMetadataStore
+import io.github.yashkasera.alohomora.desktop.data.local.CacheRepositoryImpl
+import io.github.yashkasera.alohomora.desktop.data.local.CacheStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
-import io.github.yashkasera.alohomora.desktop.data.local.PrefsRepositoryImpl
-import io.github.yashkasera.alohomora.desktop.data.local.PrefsStore
+import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
+import io.github.yashkasera.alohomora.desktop.data.local.TrafficStore
 import io.github.yashkasera.alohomora.desktop.data.logcat.LogcatRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.domain.service.SlackShareService
 import io.github.yashkasera.alohomora.desktop.domain.usecase.ClearLogcatUseCase
@@ -21,22 +20,22 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.DisconnectDevToolsU
 import io.github.yashkasera.alohomora.desktop.domain.usecase.InstallApkUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.ObserveLogcatUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RefreshDevicesUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.ReplayTrafficUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestCacheValueUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseSchemaUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseTableUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestInitialStateUseCase
-import io.github.yashkasera.alohomora.desktop.domain.usecase.ReplayTraceUseCase
-import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestPrefValueUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RunAdbCommandUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.SelectDeviceUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.StartLogcatUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.StopLogcatUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.SwitchDevToolsDeviceUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.UninstallPackageUseCase
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.CacheViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
-import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.PrefsViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -52,7 +51,7 @@ class DesktopAppComposition(
     val devToolsViewModel: DevToolsViewModel
     val logcatViewModel: LogcatViewModel
     val databaseViewModel: DatabaseViewModel
-    val prefsViewModel: PrefsViewModel
+    val cacheViewModel: CacheViewModel
 
     /** Everything [close] has to release. Held so per-window teardown is complete. */
     private val devToolsRepositoryRef: DevToolsRepositoryImpl
@@ -63,21 +62,21 @@ class DesktopAppComposition(
 
     init {
         val eventStore = EventStore()
-        val apiLogStore = ApiLogStore()
+        val trafficStore = TrafficStore()
         val databaseSnapshotStore = DatabaseSnapshotStore()
-        val prefsStore = PrefsStore()
-        val buildInfoStore = BuildInfoStore()
-        val chronicleStore = ChronicleStore()
+        val cacheStore = CacheStore()
+        val buildMetadataStore = BuildMetadataStore()
+        val gitHistoryStore = GitHistoryStore()
         val replayStore = ReplayStore()
 
         val devToolsRepository = DevToolsRepositoryImpl(
             remoteDataSource = DevToolsRemoteDataSource(),
             eventStore = eventStore,
-            apiLogStore = apiLogStore,
+            trafficStore = trafficStore,
             databaseStore = databaseSnapshotStore,
-            prefsStore = prefsStore,
-            buildInfoStore = buildInfoStore,
-            chronicleStore = chronicleStore,
+            cacheStore = cacheStore,
+            buildMetadataStore = buildMetadataStore,
+            gitHistoryStore = gitHistoryStore,
             replayStore = replayStore,
         )
 
@@ -88,8 +87,8 @@ class DesktopAppComposition(
         // unconditionally and then thrown away whenever a shared view model was supplied.
         val adbRepository = if (ownsDevicesViewModel) AdbRepositoryImpl() else null
         val logcatRepository = LogcatRepositoryImpl()
-        val databaseRepository = DatabaseRepositoryImpl(databaseSnapshotStore)
-        val prefsRepository = PrefsRepositoryImpl(prefsStore)
+        val databaseRepository = io.github.yashkasera.alohomora.desktop.data.local.DatabaseRepositoryImpl(databaseSnapshotStore)
+        val cacheRepository = CacheRepositoryImpl(cacheStore)
 
         val connectDevToolsUseCase = ConnectDevToolsUseCase(devToolsRepository)
         val disconnectDevToolsUseCase = DisconnectDevToolsUseCase(devToolsRepository)
@@ -97,8 +96,8 @@ class DesktopAppComposition(
         val requestInitialStateUseCase = RequestInitialStateUseCase(devToolsRepository)
         val requestDatabaseSchemaUseCase = RequestDatabaseSchemaUseCase(devToolsRepository)
         val requestDatabaseTableUseCase = RequestDatabaseTableUseCase(devToolsRepository)
-        val requestPrefValueUseCase = RequestPrefValueUseCase(devToolsRepository)
-        val replayTraceUseCase = ReplayTraceUseCase(devToolsRepository)
+        val requestCacheValueUseCase = RequestCacheValueUseCase(devToolsRepository)
+        val replayTrafficUseCase = ReplayTrafficUseCase(devToolsRepository)
 
         val observeLogcatUseCase = ObserveLogcatUseCase(logcatRepository)
         val startLogcatUseCase = StartLogcatUseCase(logcatRepository)
@@ -144,8 +143,8 @@ class DesktopAppComposition(
             requestInitialStateUseCase = requestInitialStateUseCase,
             requestDatabaseSchemaUseCase = requestDatabaseSchemaUseCase,
             requestDatabaseTableUseCase = requestDatabaseTableUseCase,
-            requestPrefValueUseCase = requestPrefValueUseCase,
-            replayTraceUseCase = replayTraceUseCase,
+            requestCacheValueUseCase = requestCacheValueUseCase,
+            replayTrafficUseCase = replayTrafficUseCase,
             slackShareService = slackShareService,
         )
 
@@ -163,9 +162,9 @@ class DesktopAppComposition(
             requestDatabaseTableUseCase = requestDatabaseTableUseCase,
         )
 
-        prefsViewModel = PrefsViewModel(
-            repository = prefsRepository,
-            requestPrefValueUseCase = requestPrefValueUseCase,
+        cacheViewModel = CacheViewModel(
+            repository = cacheRepository,
+            requestCacheValueUseCase = requestCacheValueUseCase,
         )
     }
 
@@ -182,7 +181,7 @@ class DesktopAppComposition(
         devToolsViewModel.close()
         logcatViewModel.close()
         databaseViewModel.close()
-        prefsViewModel.close()
+        cacheViewModel.close()
         devToolsRepositoryRef.close()
         // Only if we built it — a shared view model outlives this window.
         if (ownsDevicesViewModel) devicesViewModel.close()

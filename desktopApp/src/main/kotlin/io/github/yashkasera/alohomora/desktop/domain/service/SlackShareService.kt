@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.domain.service
 
-import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
@@ -13,7 +13,7 @@ class SlackShareService(
     private val httpClient: HttpClient,
 ) {
     suspend fun shareCurl(
-        trace: TraceEntry,
+        trace: TrafficEntry,
         recipientEmail: String,
         buildInfo: BuildInfo?,
     ): Result<Unit> {
@@ -28,7 +28,7 @@ class SlackShareService(
     }
 
     suspend fun shareText(
-        trace: TraceEntry,
+        trace: TrafficEntry,
         recipientEmail: String,
         buildInfo: BuildInfo?,
     ): Result<Unit> {
@@ -43,7 +43,7 @@ class SlackShareService(
     }
 
     private fun buildTraceMessage(
-        trace: TraceEntry,
+        trace: TrafficEntry,
         recipientEmail: String,
         content: String,
         buildInfo: BuildInfo?,

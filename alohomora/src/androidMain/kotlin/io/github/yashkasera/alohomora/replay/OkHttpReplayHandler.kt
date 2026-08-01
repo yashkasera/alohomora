@@ -8,7 +8,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
- * A [TraceReplayHandler] that re-sends a captured request through [client].
+ * A [TrafficReplayHandler] that re-sends a captured request through [client].
  *
  * The whole point is `client.newCall(...)`: it re-runs the app's full interceptor chain, so a
  * signing interceptor recomputes the signature over the body being replayed rather than the one
@@ -26,10 +26,10 @@ import okhttp3.RequestBody.Companion.toRequestBody
  *
  * @param client the app's own client, complete with its interceptors
  */
-fun okHttpReplayHandler(client: OkHttpClient): TraceReplayHandler = TraceReplayHandler { request ->
+fun okHttpReplayHandler(client: OkHttpClient): TrafficReplayHandler = TrafficReplayHandler { request ->
     withContext(Dispatchers.IO) {
         try {
-            // Closed rather than read: TraceInterceptor already peeked the body for capture, and
+            // Closed rather than read: TrafficInterceptor already peeked the body for capture, and
             // the console renders the replay from the trace it recorded. A non-2xx is a real answer
             // from the server and shows up as one — only a transport failure is a replay failure.
             client.newCall(request.toOkHttpRequest()).execute().close()
@@ -69,7 +69,7 @@ private fun ReplayRequest.toOkHttpRequest(): Request {
         .method(method, requestBody)
         .apply {
             headers.forEach { (name, values) -> values.forEach { addHeader(name, it) } }
-            // A tag, not a header: TraceInterceptor reads it to link the new trace back to its
+            // A tag, not a header: TrafficInterceptor reads it to link the new trace back to its
             // source, and nothing goes on the wire that the app's signing interceptor could sign.
             tag(ReplayTag::class.java, ReplayTag(sourceTraceId))
         }

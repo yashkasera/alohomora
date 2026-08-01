@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.data.local
 
-import io.github.yashkasera.alohomora.common.TelemetryEvent
-import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.TrafficEntry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -17,16 +17,16 @@ import kotlin.test.assertTrue
 class StreamStoreOrderingTest {
 
     private fun trace(id: String, time: Long, status: Int? = null) =
-        TraceEntry(id = id, time = time, status = status, path = "/p$id")
+        TrafficEntry(id = id, time = time, status = status, path = "/p$id")
 
     private fun event(id: Long, time: Long, name: String = "e$id") =
-        TelemetryEvent(id = id, time = time, name = name, properties = null)
+        Event(id = id, time = time, name = name, properties = null)
 
-    // region ApiLogStore
+    // region TrafficStore
 
     @Test
-    fun `newly streamed traces appear at the top`() {
-        val store = ApiLogStore()
+    fun `newly streamed traffic appears at the top`() {
+        val store = TrafficStore()
         store.append(trace("a", time = 1_000))
         store.append(trace("b", time = 2_000))
         store.append(trace("c", time = 3_000))
@@ -35,8 +35,8 @@ class StreamStoreOrderingTest {
     }
 
     @Test
-    fun `a streamed trace lands above an existing snapshot`() {
-        val store = ApiLogStore()
+    fun `a streamed traffic entry lands above an existing snapshot`() {
+        val store = TrafficStore()
         // Exactly what the device sends: ORDER BY time DESC.
         store.replace(listOf(trace("old2", 2_000), trace("old1", 1_000)))
 
@@ -47,7 +47,7 @@ class StreamStoreOrderingTest {
 
     @Test
     fun `replace normalises an out-of-order snapshot`() {
-        val store = ApiLogStore()
+        val store = TrafficStore()
         // Do not trust the wire order — normalise it.
         store.replace(listOf(trace("a", 1_000), trace("c", 3_000), trace("b", 2_000)))
 
@@ -55,19 +55,19 @@ class StreamStoreOrderingTest {
     }
 
     @Test
-    fun `a trace updated in flight is replaced, not duplicated`() {
-        val store = ApiLogStore()
-        // The device re-sends a trace when its contents change: captured pending, then completed.
+    fun `a traffic entry updated in flight is replaced, not duplicated`() {
+        val store = TrafficStore()
+        // The device re-sends a traffic entry when its contents change: captured pending, then completed.
         store.append(trace("req", time = 1_000, status = null))
         store.append(trace("req", time = 1_000, status = 200))
 
-        assertEquals(1, store.logs.value.size, "the same trace must not appear twice")
+        assertEquals(1, store.logs.value.size, "the same traffic entry must not appear twice")
         assertEquals(200, store.logs.value.single().status, "the update must win")
     }
 
     @Test
-    fun `an updated trace keeps its position rather than jumping to the top`() {
-        val store = ApiLogStore()
+    fun `an updated traffic entry keeps its position rather than jumping to the top`() {
+        val store = TrafficStore()
         store.append(trace("a", 1_000))
         store.append(trace("b", 2_000))
         store.append(trace("c", 3_000))
@@ -81,7 +81,7 @@ class StreamStoreOrderingTest {
 
     @Test
     fun `the cap drops the oldest, not the newest`() {
-        val store = ApiLogStore()
+        val store = TrafficStore()
         // 2001 entries; the very first one must be the one evicted.
         repeat(2_001) { index -> store.append(trace("t$index", time = index.toLong())) }
 
@@ -92,9 +92,9 @@ class StreamStoreOrderingTest {
     }
 
     @Test
-    fun `traces with no timestamp sort last instead of throwing`() {
-        val store = ApiLogStore()
-        store.replace(listOf(TraceEntry(id = "null-time"), trace("timed", 1_000)))
+    fun `traffic with no timestamp sorts last instead of throwing`() {
+        val store = TrafficStore()
+        store.replace(listOf(TrafficEntry(id = "null-time"), trace("timed", 1_000)))
 
         assertEquals(listOf("timed", "null-time"), store.logs.value.map { it.id })
     }

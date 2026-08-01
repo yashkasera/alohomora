@@ -43,10 +43,12 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberWindowState
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
+import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
+import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
-import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DevToolsDesktopApp
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -55,13 +57,11 @@ import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.brand
 import java.awt.Dimension
 import java.util.UUID
+import kotlin.coroutines.resume
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
-import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
-import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 private const val DEFAULT_HOST = "127.0.0.1"
 private const val DEFAULT_PORT = "53999"
@@ -170,7 +170,7 @@ fun main() {
                             devicesViewModel = session.composition.devicesViewModel,
                             logcatViewModel = session.composition.logcatViewModel,
                             databaseViewModel = session.composition.databaseViewModel,
-                            prefsViewModel = session.composition.prefsViewModel,
+                            cacheViewModel = session.composition.cacheViewModel,
                             initialDeviceId = session.deviceId,
                             onDisconnectWindow = {
                                 val devicesVm = session.composition.devicesViewModel

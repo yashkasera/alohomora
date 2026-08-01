@@ -71,8 +71,8 @@ enum class DeviceCapability {
         val ANDROID_CAPABILITIES: Set<DeviceCapability> = entries.toSet()
 
         /**
-         * iOS today supports only the DevTools protocol itself (traces, telemetry, prefs,
-         * vault, chronicle) plus app install via `devicectl`. Everything else in the ADB
+         * iOS today supports only the DevTools protocol itself (traffic, events, cache,
+         * database, git history) plus app install via `devicectl`. Everything else in the ADB
          * panel is Android-shaped.
          */
         val IOS_CAPABILITIES: Set<DeviceCapability> = setOf(APP_INSTALL)

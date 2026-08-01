@@ -265,25 +265,6 @@ fun AlohomoraIconButton(
     }
 }
 
-@Deprecated(
-    "Use AlohomoraFilledButton instead.",
-    ReplaceWith("AlohomoraFilledButton(text = text, onClick = onClick, modifier = modifier, enabled = enabled)")
-)
-@Composable
-fun AlohomoraButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-) {
-    AlohomoraFilledButton(
-        text = text,
-        onClick = onClick,
-        modifier = modifier,
-        enabled = enabled,
-    )
-}
-
 @Composable
 private fun AlohomoraButtonBase(
     text: String,

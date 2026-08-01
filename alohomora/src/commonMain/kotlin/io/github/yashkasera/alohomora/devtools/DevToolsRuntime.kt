@@ -6,41 +6,42 @@ import io.github.yashkasera.alohomora.common.AuthFailureMessage
 import io.github.yashkasera.alohomora.common.AuthOtpRequiredMessage
 import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.AuthSuccessMessage
+import io.github.yashkasera.alohomora.common.CacheSnapshotMessage
+import io.github.yashkasera.alohomora.common.CacheSnapshotPayload
 import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
+import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.InitialStatePayload
-import io.github.yashkasera.alohomora.common.PrefsSnapshotMessage
-import io.github.yashkasera.alohomora.common.PrefsSnapshotPayload
+import io.github.yashkasera.alohomora.common.ReplayResultMessage
+import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
-import io.github.yashkasera.alohomora.common.ReplayResultMessage
-import io.github.yashkasera.alohomora.common.RequestPrefValueMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
-import io.github.yashkasera.alohomora.common.StreamApiLogMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
-import io.github.yashkasera.alohomora.common.TelemetryEvent
-import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.common.StreamTrafficMessage
+import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
+import io.github.yashkasera.alohomora.domain.repository.EventsRepository
 import io.github.yashkasera.alohomora.replay.ReplayOutcome
-import io.github.yashkasera.alohomora.replay.TraceReplayRegistry
-import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
+import io.github.yashkasera.alohomora.replay.TrafficReplayRegistry
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,12 +49,11 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
-import kotlinx.coroutines.CoroutineExceptionHandler
 
 internal object DevToolsDefaults {
     const val DEFAULT_PORT: Int = 53999
     const val EVENT_SNAPSHOT_LIMIT: Int = 500
-    const val API_LOG_SNAPSHOT_LIMIT: Int = 200
+    const val TRAFFIC_SNAPSHOT_LIMIT: Int = 200
     const val STREAM_BUFFER_CAPACITY: Int = 1024
 
     /**
@@ -66,9 +66,9 @@ internal object DevToolsDefaults {
 
 @OptIn(ExperimentalAtomicApi::class)
 internal class DevToolsRuntime(
-    private val telemetryRepository: TelemetryRepository,
+    private val eventsRepository: EventsRepository,
     private val database: AlohomoraDb,
-    private val preferencesInspector: DevToolsPreferencesInspector,
+    private val cacheInspector: DevToolsCacheInspector,
     private val server: DevToolsTcpServer,
     private val appDatabaseProvider: DevToolsAppDatabaseProvider,
     private val trustStore: DevToolsTrustStore,
@@ -228,8 +228,8 @@ internal class DevToolsRuntime(
             capacity = DevToolsDefaults.STREAM_BUFFER_CAPACITY,
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
         )
-        private val eventAdapter = DevToolsStreamAdapter { event: TelemetryEvent -> event.time }
-        private val apiLogSignatures = linkedMapOf<String, Int>()
+        private val eventAdapter = DevToolsStreamAdapter { event: Event -> event.time }
+        private val trafficSignatures = linkedMapOf<String, Int>()
         private val otp = (1000..9999).random().toString()
         private var isAuthenticated = false
 
@@ -309,7 +309,7 @@ internal class DevToolsRuntime(
                             message.tableName,
                             message.limit,
                         )
-                        is RequestPrefValueMessage -> handlePreferenceRequest(message.key)
+                        is RequestCacheValueMessage -> handleCacheRequest(message.key)
                         is RequestReplayTraceMessage -> handleReplayRequest(message)
                         // Includes UnknownMessage from a newer peer: ignore, don't disconnect.
                         else -> Unit
@@ -375,7 +375,7 @@ internal class DevToolsRuntime(
             _serverState.value = _serverState.value.copy(pendingOtp = null)
             send(AuthSuccessMessage(nextSequence(), token = issuedToken))
             connectionScope.launch { streamEvents() }
-            connectionScope.launch { streamApiLogs() }
+            connectionScope.launch { streamTraffic() }
             connectionScope.launch { sendInitialState() }
         }
 
@@ -386,8 +386,8 @@ internal class DevToolsRuntime(
          * fresh snapshot the two sides would disagree until the next reconnect.
          */
         private suspend fun handleClear(message: RequestClearMessage) {
-            if (message.traces) database.traceDao().clearAll()
-            if (message.events) database.telemetryDao().clearAll()
+            if (message.traces) database.trafficDao().clearAll()
+            if (message.events) database.eventDao().clearAll()
             sendInitialState()
         }
 
@@ -402,7 +402,7 @@ internal class DevToolsRuntime(
         private fun handleReplayRequest(message: RequestReplayTraceMessage) {
             connectionScope.launch {
                 val request = message.request
-                val outcome = TraceReplayRegistry.replay(request)
+                val outcome = TrafficReplayRegistry.replay(request)
                 send(
                     when (outcome) {
                         is ReplayOutcome.Sent -> ReplayResultMessage(
@@ -424,10 +424,10 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun sendInitialState() {
-            val events = database.telemetryDao()
+            val events = database.eventDao()
                 .getLatest(DevToolsDefaults.EVENT_SNAPSHOT_LIMIT)
-            val apiLogs = database.traceDao()
-                .getLatest(DevToolsDefaults.API_LOG_SNAPSHOT_LIMIT)
+            val traffic = database.trafficDao()
+                .getLatest(DevToolsDefaults.TRAFFIC_SNAPSHOT_LIMIT)
             val databases = databaseInspector.listDatabases()
             val selectedDatabase = databases.firstOrNull()?.name
             defaultDatabaseName = selectedDatabase
@@ -440,25 +440,25 @@ internal class DevToolsRuntime(
             } else {
                 databaseInspector.loadSchema(selectedDatabase)
             }
-            val preferenceKeys = preferencesInspector.getAllKeys()
+            val cacheKeys = cacheInspector.getAllKeys()
             val payload = InitialStatePayload(
                 events = events,
-                apiLogs = apiLogs,
+                traffic = traffic,
                 databaseSchema = schema,
                 databases = databases,
                 selectedDatabase = selectedDatabase,
-                preferenceKeys = preferenceKeys,
-                buildInfo = Alohomora.config?.toBuildInfoPayload(),
-                chronicle = Alohomora.config?.commits?.map { it.toChronicleCommitPayload() }.orEmpty(),
-                replaySupported = TraceReplayRegistry.isSupported,
+                cacheKeys = cacheKeys,
+                buildMetadata = Alohomora.config?.toBuildMetadataPayload(),
+                gitHistory = Alohomora.config?.commits?.map { it.toGitHistoryPayload() }.orEmpty(),
+                replaySupported = TrafficReplayRegistry.isSupported,
             )
             eventAdapter.seed(events)
-            seedApiLogSignatures(apiLogs)
+            seedTrafficSignatures(traffic)
             send(InitialStateMessage(nextSequence(), payload))
         }
 
         private suspend fun streamEvents() {
-            telemetryRepository.list("", 0, DevToolsDefaults.EVENT_SNAPSHOT_LIMIT).collect { events ->
+            eventsRepository.list("", 0, DevToolsDefaults.EVENT_SNAPSHOT_LIMIT).collect { events ->
                 val newItems = eventAdapter.filterNew(events)
                 newItems.forEach { item ->
                     sendStream(StreamEventMessage(nextSequence(), item))
@@ -466,38 +466,38 @@ internal class DevToolsRuntime(
             }
         }
 
-        private suspend fun streamApiLogs() {
-            database.traceDao().observeLatest(DevToolsDefaults.API_LOG_SNAPSHOT_LIMIT).collect { logs ->
-                val changedItems = changedApiLogs(logs)
+        private suspend fun streamTraffic() {
+            database.trafficDao().observeLatest(DevToolsDefaults.TRAFFIC_SNAPSHOT_LIMIT).collect { logs ->
+                val changedItems = changedTraffic(logs)
                 changedItems.forEach { item ->
-                    sendStream(StreamApiLogMessage(nextSequence(), item))
+                    sendStream(StreamTrafficMessage(nextSequence(), item))
                 }
             }
         }
 
-        private fun seedApiLogSignatures(logs: List<TraceEntry>) {
-            apiLogSignatures.clear()
+        private fun seedTrafficSignatures(logs: List<TrafficEntry>) {
+            trafficSignatures.clear()
             logs.forEach { log ->
-                apiLogSignatures[log.id] = log.streamSignature()
+                trafficSignatures[log.id] = log.streamSignature()
             }
         }
 
-        private fun changedApiLogs(logs: List<TraceEntry>): List<TraceEntry> {
+        private fun changedTraffic(logs: List<TrafficEntry>): List<TrafficEntry> {
             val visibleIds = logs.mapTo(mutableSetOf()) { it.id }
-            apiLogSignatures.keys.retainAll(visibleIds)
+            trafficSignatures.keys.retainAll(visibleIds)
 
-            val changed = mutableListOf<TraceEntry>()
+            val changed = mutableListOf<TrafficEntry>()
             logs.asReversed().forEach { log ->
                 val signature = log.streamSignature()
-                if (apiLogSignatures[log.id] != signature) {
-                    apiLogSignatures[log.id] = signature
+                if (trafficSignatures[log.id] != signature) {
+                    trafficSignatures[log.id] = signature
                     changed += log
                 }
             }
             return changed
         }
 
-        private fun TraceEntry.streamSignature(): Int =
+        private fun TrafficEntry.streamSignature(): Int =
             listOf(
                 status,
                 message,
@@ -536,11 +536,11 @@ internal class DevToolsRuntime(
             ))
         }
 
-        private suspend fun handlePreferenceRequest(key: String) {
-            val value = preferencesInspector.getValue(key)
-            send(PrefsSnapshotMessage(
+        private suspend fun handleCacheRequest(key: String) {
+            val value = cacheInspector.getValue(key)
+            send(CacheSnapshotMessage(
                 nextSequence(),
-                PrefsSnapshotPayload(values = mapOf(key to value)),
+                CacheSnapshotPayload(values = mapOf(key to value)),
             ))
         }
 

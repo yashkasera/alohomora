@@ -13,5 +13,5 @@ interface AlohomoraConfig {
     val isDirty: Boolean
     val buildTimestampUtc: Long
     val slackWebhookUrl: String?
-    val commits: List<AlohomoraCommit>
+    val commits: List<GitHistoryCommit>
 }

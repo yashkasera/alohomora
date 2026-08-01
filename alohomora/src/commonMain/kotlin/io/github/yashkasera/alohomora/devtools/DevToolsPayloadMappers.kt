@@ -1,11 +1,11 @@
 package io.github.yashkasera.alohomora.devtools
 
-import io.github.yashkasera.alohomora.common.BuildInfoPayload
-import io.github.yashkasera.alohomora.common.ChronicleCommitPayload
-import io.github.yashkasera.alohomora.data.model.AlohomoraCommit
+import io.github.yashkasera.alohomora.common.BuildMetadataPayload
+import io.github.yashkasera.alohomora.common.GitHistoryPayload
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
+import io.github.yashkasera.alohomora.data.model.GitHistoryCommit
 
-internal fun AlohomoraConfig.toBuildInfoPayload(): BuildInfoPayload = BuildInfoPayload(
+internal fun AlohomoraConfig.toBuildMetadataPayload(): BuildMetadataPayload = BuildMetadataPayload(
     projectName = projectName,
     packageName = packageName,
     versionName = versionName,
@@ -20,7 +20,7 @@ internal fun AlohomoraConfig.toBuildInfoPayload(): BuildInfoPayload = BuildInfoP
     slackWebhookUrl = slackWebhookUrl,
 )
 
-internal fun AlohomoraCommit.toChronicleCommitPayload(): ChronicleCommitPayload = ChronicleCommitPayload(
+internal fun GitHistoryCommit.toGitHistoryPayload(): GitHistoryPayload = GitHistoryPayload(
     sha = sha,
     author = author,
     message = message,

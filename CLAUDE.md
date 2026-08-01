@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Is
 
-Alohomora is a developer observability and debugging toolkit for Android/iOS apps, delivered as a Kotlin Multiplatform library. It captures API traces, telemetry events, database state, preferences, and crash incidents from a running debug app and streams them in real time to a companion Compose Desktop app via a custom binary TCP protocol over ADB port forwarding.
+Alohomora is a developer observability and debugging toolkit for Android/iOS apps, delivered as a Kotlin Multiplatform library. It captures traffic, events, database state, cache, and errors from a running debug app and streams them in real time to a companion Compose Desktop app via a custom binary TCP protocol over ADB port forwarding.
 
 ## Build Commands
 
@@ -78,23 +78,23 @@ Custom framed binary protocol defined in `alohomora-common`: 9-byte header (`mag
 
 Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_PREFS`, `REQUEST_INITIAL_STATE`, `REQUEST_DATABASE_SCHEMA`, `REQUEST_DATABASE_TABLE`, `REQUEST_PREF_VALUE`, `REQUEST_CLEAR`, `REQUEST_REPLAY_TRACE`, `REPLAY_RESULT`.
 
-`REPLAY_RESULT` is the only reply to a desktop→device command. Every other command either answers with a snapshot or is unobservable, but a replay can fail before any trace exists (no handler registered, an unparseable hand-edited URL, a refused connection), and with no reply the desktop would wait forever on a trace that is never coming. Device-side capabilities that a client must not assume — currently `InitialStatePayload.replaySupported` — default to `false`, so a newer desktop hides the action against an older app rather than sending into a void.
+`REPLAY_RESULT` is the only reply to a desktop→device command. Every other command either answers with a snapshot or is unobservable, but a replay can fail before any traffic exists (no handler registered, an unparseable hand-edited URL, a refused connection), and with no reply the desktop would wait forever on a traffic entry that is never coming. Device-side capabilities that a client must not assume — currently `InitialStatePayload.replaySupported` — default to `false`, so a newer desktop hides the action against an older app rather than sending into a void.
 
 ### Library internals
 
 **Entry point:** `Alohomora` object singleton holds a Koin instance and a `CoroutineScope`. `AlohomoraInternal` is the internal counterpart used by interceptors.
 
-**DI:** Koin `appModule` provides repositories, use cases, ViewModels, `DevToolsRuntime`, and `SlackShareService`. `platformModule` is `expect`/`actual` — Android provides Room database builder, `AndroidPreferencesInspector`, `AndroidAppDatabaseProvider`, `DevToolsTcpServer`, and `ShareManager`.
+**DI:** Koin `appModule` provides repositories, use cases, ViewModels, `DevToolsRuntime`, and `SlackShareService`. `platformModule` is `expect`/`actual` — Android provides Room database builder, `AndroidCacheInspector`, `AndroidAppDatabaseProvider`, `DevToolsTcpServer`, and `ShareManager`.
 
-**Persistence:** `AlohomoraDb : RoomDatabase` with four entities (`TraceEntry`, `TelemetryEvent`, `Incident`, `Screen`). Uses bundled SQLite. The database undergoes a `PRAGMA quick_check` health validation at startup; corrupt databases are deleted and recreated.
+**Persistence:** `AlohomoraDb : RoomDatabase` with four entities (`TrafficEntry`, `Event`, `Error`, `Screen`). Uses bundled SQLite. The database undergoes a `PRAGMA quick_check` health validation at startup; corrupt databases are deleted and recreated.
 
 **Layering:** `data/datasource/local/` (Room DAOs) → `data/repository/` (impls) → `domain/repository/` (interfaces, base `Repository<T, ID>`) → `domain/usecase/` (one operation per class) → `presentation/ui/screens/` (Compose screens + Koin ViewModels).
 
 **Network interception:**
-- OkHttp: `TraceInterceptor : okhttp3.Interceptor` — attach to `OkHttpClient.Builder`
+- OkHttp: `TrafficInterceptor : okhttp3.Interceptor` — attach to `OkHttpClient.Builder`
 - Ktor: `AlohomoraInspector` — a Ktor `ClientPlugin` hooking `onRequest`/`onResponse`
 
-**Trace replay:** A captured request can be edited and re-sent, from the mobile console or the desktop. **Alohomora never sends it** — the host app registers a `TraceReplayHandler` and the request goes back through the app's own client, so its interceptors regenerate whatever they derive per-request. This is not an implementation shortcut: a payload signature computed at capture time is invalid the moment the body is edited, and the redaction below means secret headers are not recoverable from a trace at all.
+**Traffic replay:** A captured traffic can be edited and re-sent, from the mobile console or the desktop. **Alohomora never sends it** — the host app registers a `TrafficReplayHandler` and the request goes back through the app's own client, so its interceptors regenerate whatever they derive per-request. This is not an implementation shortcut: a payload signature computed at capture time is invalid the moment the body is edited, and the redaction below means secret headers are not recoverable from a traffic entry at all.
 
 ```kotlin
 Alohomora.registerReplayHandler(okHttpReplayHandler(client))  // OkHttp, incl. Retrofit
@@ -106,13 +106,13 @@ There is deliberately **no Retrofit handler and no built-in fallback.** Retrofit
 
 Rules that keep replay honest — none are cosmetic:
 - **Never mark a replay with a wire header.** `okHttpReplayHandler` uses a `ReplayTag`, `ktorReplayHandler` an `AlohomoraReplayOfKey` attribute. `ReplayMarker.HEADER` exists for handlers with no out-of-band channel and has to be stripped on the way out, which only works if capture runs *before* the app's signing interceptor. Get that order wrong and the signature covers a header that is then removed.
-- **Refuse what cannot be reproduced.** `TraceEntry.replayBlockedReason()` gates the action: a truncated body (`requestBodyTruncated`) would send silently corrupted data, and `UNABLE_PARSE_MESSAGE` bodies (multipart, streaming, one-shot) are placeholders.
+- **Refuse what cannot be reproduced.** `TrafficEntry.replayBlockedReason()` gates the action: a truncated body (`requestBodyTruncated`) would send silently corrupted data, and `UNABLE_PARSE_MESSAGE` bodies (multipart, streaming, one-shot) are placeholders.
 - **Drop `[REDACTED]` header values, never forward them.** `ReplayHeaders.sanitize` removes them along with `Content-Length`/`Host` and anything in `additionalStripList`, so the app's own interceptors resupply them.
 - The replay's response is not returned to the caller. Capture records it like any other request, stamped with `replayOf`; the consoles find it from there.
 
 **Plugin system:** `CustomScreenPlugin` interface allows embedding custom Compose screens into Alohomora's navigation. Managed by `PluginRegistry`, routed via `Routes.Extension(extensionId)`.
 
-**TCP server:** `DevToolsRuntime` starts a TCP server (default port 53999). One active connection at a time. On connect: sends initial state snapshot, then streams new telemetry and API logs via `DevToolsStreamAdapter` (key-based deduplication). All guarded by `isDebugBuild` expect/actual.
+**TCP server:** `DevToolsRuntime` starts a TCP server (default port 53999). One active connection at a time. On connect: sends initial state snapshot, then streams new events and traffic via `DevToolsStreamAdapter` (key-based deduplication). All guarded by `isDebugBuild` expect/actual.
 
 ### Desktop app architecture
 
@@ -189,7 +189,7 @@ To add a new icon: find it on [https://lucide.dev/icons/](https://lucide.dev/ico
 - `AlohomoraInitializer : Initializer<Unit>` auto-runs via AndroidX Startup; no manual call needed
 - DevTools can overlay on any Activity or fall back to a notification if no foreground Activity exists
 - `DevToolsDatabaseInspector.android.kt` directly queries the Room database; iOS has a separate `actual` implementation
-- Traces, telemetry, and database schemas survive app backgrounding and rotation
+- Traffic, events, and database schemas survive app backgrounding and rotation
 
 ### Desktop
 
@@ -199,21 +199,21 @@ To add a new icon: find it on [https://lucide.dev/icons/](https://lucide.dev/ico
 
 ## Key Conventions
 
-- **`expect`/`actual` boundaries:** `DevToolsDatabaseInspector`, `DevToolsTcpServer`, `isDebugBuild`, `platformModule`, `PreferenceRepositoryImpl`, `VaultRepositoryImpl`, `ShareManager` all have platform-specific `actual` implementations. **When modifying these, update all three (Android, iOS, Desktop).**
+- **`expect`/`actual` boundaries:** `DevToolsDatabaseInspector`, `DevToolsTcpServer`, `isDebugBuild`, `platformModule`, `CacheRepositoryImpl`, `DatabaseRepositoryImpl`, `ShareManager` all have platform-specific `actual` implementations. **When modifying these, update all three (Android, iOS, Desktop).**
 - **API validation:** Only `alohomora` and `alohomora-noop` are API-validated (not `desktopApp`, `showcaseApp`, `alohomora-common`, `alohomora-ui`). Run `./gradlew apiCheck` before any commit that changes the public surface; run `./gradlew apiDump` to update the `.api` golden files.
 - **Noop parity is not enforced by any build task.** `apiCheck` validates each module against its *own* golden file, so it happily passes while the two `Alohomora` objects have diverged — the failure surfaces only in a consumer's release build. After changing the public surface, diff the two `.api` files by hand. Types `alohomora` re-exports from `alohomora-common` (`ReplayRequest`, `CustomScreenPlugin`) appear in the noop dump but not in `alohomora`'s; that asymmetry is expected. What must match exactly is the member list of the `Alohomora` object itself.
-- **Room migrations:** `AlohomoraDb` sets `exportSchema = false` and both platforms use `fallbackToDestructiveMigration(true)`, so there are no schema JSON files to update and no migrations to write — but **bumping `version` wipes every captured trace, event and incident on the next launch.** Bump it (with a comment saying what changed) whenever an entity gains or loses a column; skipping the bump crashes at startup instead.
+- **Room migrations:** `AlohomoraDb` sets `exportSchema = false` and both platforms use `fallbackToDestructiveMigration(true)`, so there are no schema JSON files to update and no migrations to write — but **bumping `version` wipes every captured traffic, event and error on the next launch.** Bump it (with a comment saying what changed) whenever an entity gains or loses a column; skipping the bump crashes at startup instead.
 - **Slack integration** exists in both `alohomora` (mobile) and `desktopApp` via `SlackShareService`.
-- **Naming:** The console uses consistent terminology across all three platforms (Trace, Telemetry, Vault, Incidents, Cache, Config, Chronicle). Names should not be repeated in UI (e.g., top bar says "Trace", content should not re-title itself).
+- **Naming:** The console uses consistent terminology across all three platforms (Traffic, Events, Database, Errors, Cache, Config, Git History). Names should not be repeated in UI (e.g., top bar says "Traffic", content should not re-title itself).
 - **Vocabulary:** Use the same terms everywhere:
-  - Network requests = **Trace** (not "Traffic Logs" or "API Logs")
-  - Re-sending a captured request = **Replay** (not "resend", "retry" or "relay")
-  - User/system events = **Telemetry**
-  - Database + key-value store = **Vault**
-  - Crashes/exceptions = **Incidents**
+  - Network requests = **Traffic** (not "Trace", "API Logs", or "Traffic Logs")
+  - Re-sending a captured traffic = **Replay** (not "resend", "retry" or "relay")
+  - User/system events = **Events** (not "Telemetry")
+  - Database + key-value store = **Database** (not "Vault")
+  - Crashes/exceptions = **Errors** (not "Errors")
   - Preferences/SharedPreferences/UserDefaults = **Cache**
-  - Build metadata = **Config**
-  - Git history = **Chronicle**
+  - Build metadata = **BuildMetadata** (or **Config**)
+  - Git history = **GitHistory** (records are `GitHistoryCommit`)
 
 ## Authentication & Connection Flow
 

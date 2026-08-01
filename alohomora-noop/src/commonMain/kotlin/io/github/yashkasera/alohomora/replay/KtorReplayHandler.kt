@@ -10,6 +10,6 @@ import io.ktor.client.HttpClient
  * to production whose only purpose is re-issuing arbitrary requests.
  */
 @Suppress("UNUSED_PARAMETER")
-fun ktorReplayHandler(client: HttpClient): TraceReplayHandler = TraceReplayHandler {
+fun ktorReplayHandler(client: HttpClient): TrafficReplayHandler = TrafficReplayHandler {
     ReplayOutcome.Failed("Replay is not available in release builds.")
 }

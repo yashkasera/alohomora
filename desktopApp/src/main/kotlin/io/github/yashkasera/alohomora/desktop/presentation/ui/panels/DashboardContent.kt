@@ -12,14 +12,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -37,24 +37,24 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
-import io.github.yashkasera.alohomora.common.TelemetryEvent
-import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.github.yashkasera.alohomora.desktop.presentation.model.DashboardUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TelemetryItem
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TraceItem
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EventItem
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedCard
-import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
-import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -85,14 +85,14 @@ fun DashboardContent(
     isRecording: Boolean,
     onTakeScreenshot: () -> Unit,
     onRecordScreen: () -> Unit,
-    onApiLogClick: (TraceEntry) -> Unit,
-    onEventViewClick: (TelemetryEvent) -> Unit,
-    onTracesClick: () -> Unit,
+    onTrafficItemClick: (TrafficEntry) -> Unit,
+    onEventViewClick: (Event) -> Unit,
+    onTrafficClick: () -> Unit,
     onEventsClick: () -> Unit,
 ) {
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()
     val events by devToolsViewModel.events.collectAsState()
-    val apiLogs by devToolsViewModel.apiLogs.collectAsState()
+    val traffic by devToolsViewModel.traffic.collectAsState()
     val dashboard by devicesViewModel.dashboardState.collectAsState()
     val scrollState = rememberScrollState()
 
@@ -169,9 +169,9 @@ fun DashboardContent(
                         modifier = modifier,
                     ) {
                         items(events, key = { event -> event.id to event.time }) { event ->
-                            TelemetryItem(
+                            EventItem(
                                 event = event,
-                                // False here, true on the Telemetry panel. A JSON block wraps
+                                // False here, true on the Events panel. A JSON block wraps
                                 // badly in a half-width column, and the panel owns the detail.
                                 showProperties = false,
                                 onClick = { onEventViewClick(event) },
@@ -184,19 +184,19 @@ fun DashboardContent(
                     }
                 }
 
-                val tracesCard: @Composable (Modifier) -> Unit = { modifier ->
+                val trafficCard: @Composable (Modifier) -> Unit = { modifier ->
                     DashboardListCard(
-                        title = "Recent Traces",
-                        onAction = onTracesClick,
-                        isEmpty = apiLogs.isEmpty(),
+                        title = "Recent Traffic",
+                        onAction = onTrafficClick,
+                        isEmpty = traffic.isEmpty(),
                         emptyIcon = Icons.Server,
-                        emptyTitle = "No traces yet",
-                        itemCount = apiLogs.size,
+                        emptyTitle = "No traffic yet",
+                        itemCount = traffic.size,
                         modifier = modifier,
                     ) {
-                        itemsIndexed(apiLogs, key = { _, log -> log.id }) { index, log ->
-                            TraceItem(call = log, onClick = { onApiLogClick(log) })
-                            if (index < apiLogs.lastIndex) {
+                        itemsIndexed(traffic, key = { _, log -> log.id }) { index, log ->
+                            TrafficItem(call = log, onClick = { onTrafficItemClick(log) })
+                            if (index < traffic.lastIndex) {
                                 AlohomoraHorizontalDivider(
                                     thickness = MaterialTheme.dimens.stroke.thin,
                                     color = MaterialTheme.colorScheme.subtleSurfaceAlt,
@@ -208,14 +208,14 @@ fun DashboardContent(
 
                 if (stacked) {
                     eventsCard(Modifier.fillMaxWidth().height(STACKED_LIST_HEIGHT))
-                    tracesCard(Modifier.fillMaxWidth().height(STACKED_LIST_HEIGHT))
+                    trafficCard(Modifier.fillMaxWidth().height(STACKED_LIST_HEIGHT))
                 } else {
                     Row(
                         modifier = Modifier.fillMaxWidth().weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
                     ) {
                         eventsCard(Modifier.weight(1f).fillMaxSize())
-                        tracesCard(Modifier.weight(1f).fillMaxSize())
+                        trafficCard(Modifier.weight(1f).fillMaxSize())
                     }
                 }
             }
@@ -384,7 +384,7 @@ private fun BuildMeta(label: String, value: String) {
 /**
  * A titled card wrapping a live list, with a "view all" action and an empty state.
  *
- * Extracted because the events and traces cards were the same twenty lines twice — and had
+ * Extracted because the events and traffic cards were the same twenty lines twice — and had
  * drifted apart in the process: the events card used `if (event != events.last())` for its
  * dividers, an O(n) scan per row that compared by data equality rather than position, so two
  * identical events collapsed the divider between them.

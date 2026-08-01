@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora
 
-import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
 import org.koin.dsl.KoinAppDeclaration
 
@@ -9,8 +9,8 @@ internal object AlohomoraInternal {
         Alohomora.initInternal(config = config, appDeclaration = appDeclaration)
     }
 
-    fun recordTrace(trace: TraceEntry) {
-        Alohomora.recordTrace(
+    fun recordTraffic(trace: TrafficEntry) {
+        Alohomora.recordTraffic(
             id = trace.id,
             status = trace.status,
             url = trace.url,

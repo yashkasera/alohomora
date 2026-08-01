@@ -1,19 +1,22 @@
 package io.github.yashkasera.alohomora
 
 import co.touchlab.kermit.Logger
+import io.github.yashkasera.alohomora.Alohomora.initLock
+import io.github.yashkasera.alohomora.Alohomora.isReplaySupported
+import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
-import io.github.yashkasera.alohomora.common.TelemetryEvent
-import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.di.initKoin
-import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
-import io.github.yashkasera.alohomora.domain.repository.TraceRepository
+import io.github.yashkasera.alohomora.domain.repository.EventsRepository
+import io.github.yashkasera.alohomora.domain.repository.TrafficRepository
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
-import io.github.yashkasera.alohomora.replay.TraceReplayHandler
-import io.github.yashkasera.alohomora.replay.TraceReplayRegistry
+import io.github.yashkasera.alohomora.replay.TrafficReplayHandler
+import io.github.yashkasera.alohomora.replay.TrafficReplayRegistry
+import kotlin.concurrent.Volatile
 import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 import kotlin.time.Clock
@@ -21,7 +24,6 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
-import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -133,7 +135,7 @@ object Alohomora {
 
     @OptIn(ExperimentalUuidApi::class)
     @JvmStatic
-    fun recordTrace(
+    fun recordTraffic(
         id: String = Uuid.random().toString(),
         status: Int? = null,
         url: String? = null,
@@ -154,13 +156,13 @@ object Alohomora {
         requestSize: Long? = null,
         responseSize: Long? = null,
     ) {
-        // Resolution happens inside the coroutine on purpose: building TraceRepository
+        // Resolution happens inside the coroutine on purpose: building TrafficRepository
         // transitively opens AlohomoraDb, which runs a synchronous SQLite open plus
         // `PRAGMA quick_check`. Doing that eagerly would charge it to whichever thread
         // recorded the first trace — typically an OkHttp dispatcher thread, or main.
         scope.launch {
-            val repo = koin?.get<TraceRepository>() ?: return@launch
-            val trace = TraceEntry(
+            val repo = koin?.get<TrafficRepository>() ?: return@launch
+            val trace = TrafficEntry(
                 id = id,
                 status = status,
                 url = url,
@@ -193,12 +195,12 @@ object Alohomora {
 
     @JvmStatic
     @JvmOverloads
-    fun recordTelemetry(name: String, properties: Map<String, String>? = null) {
+    fun recordEvent(name: String, properties: Map<String, String>? = null) {
         scope.launch {
-            val repo = koin?.get<TelemetryRepository>() ?: return@launch
+            val repo = koin?.get<EventsRepository>() ?: return@launch
             try {
                 repo.save(
-                    TelemetryEvent(
+                    Event(
                         time = Clock.System.now().toEpochMilliseconds(),
                         name = name,
                         properties = Json.encodeToJsonElement(properties),
@@ -275,17 +277,17 @@ object Alohomora {
      * Until a handler is registered, [isReplaySupported] is false and both consoles hide the replay
      * action instead of offering one that cannot work.
      */
-    fun registerReplayHandler(handler: TraceReplayHandler) {
-        TraceReplayRegistry.register(handler)
+    fun registerReplayHandler(handler: TrafficReplayHandler) {
+        TrafficReplayRegistry.register(handler)
     }
 
     /** Removes the registered replay handler, disabling replay in both consoles. */
     fun clearReplayHandler() {
-        TraceReplayRegistry.clear()
+        TrafficReplayRegistry.clear()
     }
 
     /** True when a replay handler is registered and captured requests can be re-sent. */
-    val isReplaySupported: Boolean get() = TraceReplayRegistry.isSupported
+    val isReplaySupported: Boolean get() = TrafficReplayRegistry.isSupported
 
     // ============================================================================
     // Plugin System - Custom Screens

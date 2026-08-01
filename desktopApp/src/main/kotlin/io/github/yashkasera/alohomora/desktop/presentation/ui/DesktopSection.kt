@@ -6,12 +6,10 @@ import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Database
-import io.github.yashkasera.alohomora.ui.icons.Download
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Server
-import io.github.yashkasera.alohomora.ui.icons.Settings
 
 enum class DesktopSection(
     val title: String,
@@ -32,11 +30,11 @@ enum class DesktopSection(
     Adb("ADB", Icons.Server, DeviceCapability.SHELL),
 
     // Everything below is delivered over the DevTools protocol, so it is platform-agnostic.
-    Traces("Traces", Icons.Server),
-    TelemetryEvents("Telemetry Events", Icons.ChartLine),
+    Traffic("Traffic", Icons.Server),
+    Events("Events", Icons.ChartLine),
     Database("Database", Icons.Database),
-    Preferences("Preferences", Icons.AlertTriangle),
-    Chronicle("Chronicle", Icons.GitGraph),
+    Cache("Cache", Icons.AlertTriangle),
+    GitHistory("Git History", Icons.GitGraph),
     ;
 
     fun isSupportedBy(capabilities: Set<DeviceCapability>): Boolean =
@@ -56,6 +54,6 @@ enum class DesktopSection(
          * a permanently blank screen.
          */
         fun defaultFor(platform: DevicePlatform): DesktopSection =
-            forPlatform(platform).firstOrNull() ?: Traces
+            forPlatform(platform).firstOrNull() ?: Traffic
     }
 }

@@ -76,14 +76,14 @@ class DevToolsTargetTest {
         assertFalse(DesktopSection.Dashboard in iosSections)
 
         // The protocol-backed sections are the whole point of connecting, so they must remain.
-        assertTrue(DesktopSection.Traces in iosSections)
+        assertTrue(DesktopSection.Traffic in iosSections)
         assertTrue(DesktopSection.Database in iosSections)
-        assertTrue(DesktopSection.Preferences in iosSections)
-        assertTrue(DesktopSection.TelemetryEvents in iosSections)
-        assertTrue(DesktopSection.Chronicle in iosSections)
+        assertTrue(DesktopSection.Cache in iosSections)
+        assertTrue(DesktopSection.Events in iosSections)
+        assertTrue(DesktopSection.GitHistory in iosSections)
 
         // Landing on Dashboard would open every iOS window on a permanently blank screen.
-        assertEquals(DesktopSection.Traces, DesktopSection.defaultFor(DevicePlatform.IOS))
+        assertEquals(DesktopSection.Traffic, DesktopSection.defaultFor(DevicePlatform.IOS))
     }
 
     @Test

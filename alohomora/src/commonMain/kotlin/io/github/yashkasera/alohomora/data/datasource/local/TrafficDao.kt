@@ -1,0 +1,66 @@
+package io.github.yashkasera.alohomora.data.datasource.local
+
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
+import io.github.yashkasera.alohomora.common.TrafficEntry
+import kotlinx.coroutines.flow.Flow
+
+/**
+ * DAO for [TrafficEntry] entities (network traces).
+ */
+@Dao
+internal interface TrafficDao {
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(item: TrafficEntry): Long
+
+    @Query("SELECT * FROM TrafficEntry WHERE id = :id")
+    fun getById(id: String): Flow<TrafficEntry?>
+
+    @Query("DELETE FROM TrafficEntry")
+    suspend fun clearAll()
+
+    @Delete
+    suspend fun delete(entity: TrafficEntry)
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun update(item: TrafficEntry): Int
+
+    /**
+     * Lists traces with pagination, filtering by path query and HTTP method.
+     */
+    @Query("SELECT id, status, host, path, `query`, method, duration, time, isViewed, replayOf, requestBodyTruncated, responseBodyTruncated FROM TrafficEntry WHERE path LIKE '%' || :query || '%' AND method LIKE '%' || :method || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
+    fun list(query: String?, method: String?, page: Int, pageSize: Int): Flow<List<TrafficEntry>>
+
+    /**
+     * Observes the trace produced by replaying [sourceId], if one has landed yet.
+     *
+     * A Flow rather than a one-shot read on purpose: capture writes the trace from its own
+     * coroutine, so it is routinely not in the database at the moment the replay handler returns.
+     * Querying once would miss it and leave the console with nothing to show.
+     */
+    @Query("SELECT * FROM TrafficEntry WHERE replayOf = :sourceId ORDER BY time DESC LIMIT 1")
+    fun observeReplayOf(sourceId: String): Flow<TrafficEntry?>
+
+    /**
+     * Gets latest traces with full data.
+     */
+    @Query("SELECT * FROM TrafficEntry ORDER BY time DESC LIMIT :limit")
+    suspend fun getLatest(limit: Int): List<TrafficEntry>
+
+    /**
+     * Observes latest traces with full data for realtime streaming.
+     */
+    @Query("SELECT * FROM TrafficEntry ORDER BY time DESC LIMIT :limit")
+    fun observeLatest(limit: Int): Flow<List<TrafficEntry>>
+
+    /**
+     * Marks a trace as viewed.
+     */
+    @Query("Update TrafficEntry SET isViewed = 1 WHERE id = :id")
+    suspend fun markAsViewed(id: String)
+}

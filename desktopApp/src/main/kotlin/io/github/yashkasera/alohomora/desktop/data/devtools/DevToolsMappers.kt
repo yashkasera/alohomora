@@ -1,19 +1,19 @@
 package io.github.yashkasera.alohomora.desktop.data.devtools
 
 import io.github.yashkasera.alohomora.common.AppDatabaseInfo
-import io.github.yashkasera.alohomora.common.BuildInfoPayload
-import io.github.yashkasera.alohomora.common.ChronicleCommitPayload
+import io.github.yashkasera.alohomora.common.BuildMetadataPayload
 import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
 import io.github.yashkasera.alohomora.common.DatabaseTableColumnPayload
 import io.github.yashkasera.alohomora.common.DatabaseTableSchemaPayload
 import io.github.yashkasera.alohomora.common.DatabaseTableSnapshot
+import io.github.yashkasera.alohomora.common.GitHistoryPayload
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
-import io.github.yashkasera.alohomora.desktop.domain.model.ChronicleCommit
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseInfo
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSchema
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseTable
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseTableColumn
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseTableSchema
+import io.github.yashkasera.alohomora.desktop.domain.model.GitHistoryCommit
 
 internal fun AppDatabaseInfo.toDomain(): DatabaseInfo = DatabaseInfo(
     name = name,
@@ -48,7 +48,7 @@ internal fun DatabaseTableSnapshot.toDomain(): DatabaseTable = DatabaseTable(
     rows = rows,
 )
 
-internal fun BuildInfoPayload.toDomain(): BuildInfo = BuildInfo(
+internal fun BuildMetadataPayload.toDomain(): BuildInfo = BuildInfo(
     projectName = projectName,
     packageName = packageName,
     versionName = versionName,
@@ -63,7 +63,7 @@ internal fun BuildInfoPayload.toDomain(): BuildInfo = BuildInfo(
     slackWebhookUrl = slackWebhookUrl,
 )
 
-internal fun ChronicleCommitPayload.toDomain(): ChronicleCommit = ChronicleCommit(
+internal fun GitHistoryPayload.toDomain(): GitHistoryCommit = GitHistoryCommit(
     sha = sha,
     author = author,
     message = message,

@@ -7,13 +7,13 @@ internal sealed interface Routes {
     data object Overview : Routes
 
     @Serializable
-    data object Trace : Routes
+    data object Traffic : Routes
 
     @Serializable
-    data class TraceDetails(val traceId: String) : Routes
+    data class TrafficDetails(val trafficId: String) : Routes
 
     @Serializable
-    data object Telemetry : Routes
+    data object Events : Routes
 
     @Serializable
     data object Cache : Routes
@@ -22,16 +22,16 @@ internal sealed interface Routes {
     data object Config : Routes
 
     @Serializable
-    data object Vault : Routes
+    data object Database : Routes
 
     @Serializable
-    data object Incident : Routes
+    data object Error : Routes
 
     @Serializable
-    data class IncidentDetails(val incidentId: Long): Routes
+    data class ErrorDetails(val errorId: Long): Routes
 
     @Serializable
-    data object Chronicle : Routes
+    data object GitHistory : Routes
 
     /**
      * Route for extension screens.

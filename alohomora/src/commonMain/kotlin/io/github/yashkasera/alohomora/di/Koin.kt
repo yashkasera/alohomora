@@ -1,39 +1,40 @@
 package io.github.yashkasera.alohomora.di
 
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
-import io.github.yashkasera.alohomora.data.repository.IncidentRepositoryImpl
-import io.github.yashkasera.alohomora.data.repository.TelemetryRepositoryImpl
-import io.github.yashkasera.alohomora.data.repository.TraceRepositoryImpl
+import io.github.yashkasera.alohomora.data.repository.ErrorRepositoryImpl
+import io.github.yashkasera.alohomora.data.repository.EventsRepositoryImpl
+import io.github.yashkasera.alohomora.data.repository.TrafficRepositoryImpl
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
-import io.github.yashkasera.alohomora.domain.repository.IncidentRepository
-import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
-import io.github.yashkasera.alohomora.domain.repository.TraceRepository
-import io.github.yashkasera.alohomora.domain.usecase.cache.GetPreferencesUseCase
-import io.github.yashkasera.alohomora.domain.usecase.trace.GetTraceDetailsUseCase
-import io.github.yashkasera.alohomora.domain.usecase.trace.MarkTraceAsViewedUseCase
-import io.github.yashkasera.alohomora.domain.usecase.trace.ObserveReplayResultUseCase
-import io.github.yashkasera.alohomora.domain.usecase.trace.ReplayTraceUseCase
-import io.github.yashkasera.alohomora.domain.usecase.incident.GetIncidentDetailsUseCase
-import io.github.yashkasera.alohomora.domain.usecase.incident.MarkIncidentAsViewedUseCase
-import io.github.yashkasera.alohomora.domain.usecase.incident.ClearIncidentsUseCase
-import io.github.yashkasera.alohomora.presentation.ui.screens.cache.CacheViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.trace.detail.TraceDetailsViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.trace.list.TraceViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.telemetry.TelemetryViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.incident.detail.IncidentDetailsViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.incident.list.IncidentViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.VaultViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.chronicle.ChronicleViewModel
-import io.github.yashkasera.alohomora.presentation.ui.screens.overview.OverviewViewModel
-import org.koin.core.module.dsl.viewModel
-import org.koin.dsl.KoinAppDeclaration
-import org.koin.dsl.koinApplication
-import org.koin.dsl.module
+import io.github.yashkasera.alohomora.domain.repository.ErrorRepository
+import io.github.yashkasera.alohomora.domain.repository.EventsRepository
+import io.github.yashkasera.alohomora.domain.repository.TrafficRepository
 import io.github.yashkasera.alohomora.domain.service.SlackShareService
+import io.github.yashkasera.alohomora.domain.usecase.cache.GetCacheUseCase
+import io.github.yashkasera.alohomora.domain.usecase.error.ClearErrorsUseCase
+import io.github.yashkasera.alohomora.domain.usecase.error.GetErrorDetailsUseCase
+import io.github.yashkasera.alohomora.domain.usecase.error.MarkErrorAsViewedUseCase
+import io.github.yashkasera.alohomora.domain.usecase.traffic.GetTrafficDetailsUseCase
+import io.github.yashkasera.alohomora.domain.usecase.traffic.MarkTrafficAsViewedUseCase
+import io.github.yashkasera.alohomora.domain.usecase.traffic.ObserveReplayResultUseCase
+import io.github.yashkasera.alohomora.domain.usecase.traffic.ReplayTrafficUseCase
+import io.github.yashkasera.alohomora.presentation.ui.screens.cache.CacheViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.database.DatabaseViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.error.detail.ErrorDetailsViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.error.list.ErrorViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.events.EventsViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.githistory.GitHistoryViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.overview.OverviewViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail.TrafficDetailsViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.list.TrafficViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json as KJson
+import org.koin.core.module.dsl.viewModel
+import org.koin.dsl.KoinAppDeclaration
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
+
 /**
  * Builds Alohomora's **isolated** Koin container.
  *
@@ -51,28 +52,28 @@ internal fun initKoin(appDeclaration: KoinAppDeclaration = {}) = koinApplication
 
 // Common modules
 internal val appModule = module {
-    single { get<AlohomoraDb>().traceDao() }
-    single { get<AlohomoraDb>().telemetryDao() }
-    single { get<AlohomoraDb>().incidentDao() }
+    single { get<AlohomoraDb>().trafficDao() }
+    single { get<AlohomoraDb>().eventDao() }
+    single { get<AlohomoraDb>().errorDao() }
     single { get<AlohomoraDb>().screenDao() }
 
-    single<TraceRepository> { TraceRepositoryImpl(get()) }
-    single<TelemetryRepository> { TelemetryRepositoryImpl(get()) }
-    single<IncidentRepository> { IncidentRepositoryImpl(get()) }
-    // PreferenceRepository is provided in platformModule
+    single<TrafficRepository> { TrafficRepositoryImpl(get()) }
+    single<EventsRepository> { EventsRepositoryImpl(get()) }
+    single<ErrorRepository> { ErrorRepositoryImpl(get()) }
+    // CacheRepository is provided in platformModule
 
     single { DevToolsRuntime(get(), get(), get(), get(), get(), get()) }
 
 
     // UseCases
-    factory { GetIncidentDetailsUseCase(get()) }
-    factory { MarkIncidentAsViewedUseCase(get()) }
-    factory { ClearIncidentsUseCase(get()) }
-    factory { GetTraceDetailsUseCase(get()) }
-    factory { MarkTraceAsViewedUseCase(get()) }
-    factory { ReplayTraceUseCase() }
+    factory { GetErrorDetailsUseCase(get()) }
+    factory { MarkErrorAsViewedUseCase(get()) }
+    factory { ClearErrorsUseCase(get()) }
+    factory { GetTrafficDetailsUseCase(get()) }
+    factory { MarkTrafficAsViewedUseCase(get()) }
+    factory { ReplayTrafficUseCase() }
     factory { ObserveReplayResultUseCase(get()) }
-    factory { GetPreferencesUseCase(get()) }
+    factory { GetCacheUseCase(get()) }
 
     single {
         HttpClient {
@@ -87,16 +88,16 @@ internal val appModule = module {
 
     // ViewModels
     viewModel { OverviewViewModel(get()) }
-    viewModel { TraceViewModel(get()) }
+    viewModel { TrafficViewModel(get()) }
     viewModel { (traceId: String) ->
-        TraceDetailsViewModel(traceId, get(), get(), get(), get(), get(), get())
+        TrafficDetailsViewModel(traceId, get(), get(), get(), get(), get(), get())
     }
-    viewModel { TelemetryViewModel(get()) }
-    viewModel { VaultViewModel(get()) }
+    viewModel { EventsViewModel(get()) }
+    viewModel { DatabaseViewModel(get()) }
     viewModel { CacheViewModel(get()) }
-    viewModel { ChronicleViewModel() }
-    viewModel { IncidentViewModel(get()) }
-    viewModel { (incidentId: Long) -> IncidentDetailsViewModel(incidentId, get(), get()) }
+    viewModel { GitHistoryViewModel() }
+    viewModel { ErrorViewModel(get()) }
+    viewModel { (errorId: Long) -> ErrorDetailsViewModel(errorId, get(), get()) }
 }
 
 

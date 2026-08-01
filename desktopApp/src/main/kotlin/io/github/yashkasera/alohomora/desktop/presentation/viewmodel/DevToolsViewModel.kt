@@ -1,16 +1,16 @@
 package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
-import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
 import io.github.yashkasera.alohomora.desktop.domain.service.SlackShareService
 import io.github.yashkasera.alohomora.desktop.domain.usecase.ConnectDevToolsUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.DisconnectDevToolsUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.ReplayTrafficUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestCacheValueUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseSchemaUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseTableUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestInitialStateUseCase
-import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestPrefValueUseCase
-import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
-import io.github.yashkasera.alohomora.desktop.domain.usecase.ReplayTraceUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.SwitchDevToolsDeviceUseCase
 import io.github.yashkasera.alohomora.desktop.presentation.model.DevToolsUiState
 import io.github.yashkasera.alohomora.replay.ReplayRequest
@@ -32,8 +32,8 @@ class DevToolsViewModel(
     private val requestInitialStateUseCase: RequestInitialStateUseCase,
     private val requestDatabaseSchemaUseCase: RequestDatabaseSchemaUseCase,
     private val requestDatabaseTableUseCase: RequestDatabaseTableUseCase,
-    private val requestPrefValueUseCase: RequestPrefValueUseCase,
-    private val replayTraceUseCase: ReplayTraceUseCase,
+    private val requestCacheValueUseCase: RequestCacheValueUseCase,
+    private val replayTrafficUseCase: ReplayTrafficUseCase,
     private val slackShareService: SlackShareService,
 ) {
     private val job = SupervisorJob()
@@ -71,11 +71,11 @@ class DevToolsViewModel(
 
     fun submitOtp(otp: String) = repository.submitOtp(otp)
 
-    fun markTraceViewed(id: String) = repository.markTraceViewed(id)
+    fun markTrafficViewed(id: String) = repository.markTrafficViewed(id)
 
     fun markEventViewed(id: Long) = repository.markEventViewed(id)
 
-    fun clearApiLogs() = repository.clearCaptured(traces = true)
+    fun clearTraffic() = repository.clearCaptured(traces = true)
 
     fun clearEvents() = repository.clearCaptured(events = true)
 
@@ -85,27 +85,27 @@ class DevToolsViewModel(
         requestDatabaseTableUseCase(databaseName, tableName, limit)
     }
 
-    fun requestPrefValue(key: String) = requestPrefValueUseCase(key)
+    fun requestCacheValue(key: String) = requestCacheValueUseCase(key)
 
     /**
      * Sends [request] to the device to be re-issued through the app's own HTTP client.
      *
      * Takes a whole [ReplayRequest] rather than a trace id because the caller has already let the
      * user edit the URL, headers and payload. The response is not returned here — it arrives as a
-     * new trace in [apiLogs], stamped with `replayOf`.
+     * new trace in [traffic], stamped with `replayOf`.
      */
-    fun replayTrace(request: ReplayRequest) = replayTraceUseCase(request)
+    fun replayTraffic(request: ReplayRequest) = replayTrafficUseCase(request)
 
     fun dismissReplayError(sourceTraceId: String) = repository.dismissReplayError(sourceTraceId)
 
     private val _slackShareError = MutableStateFlow<String?>(null)
     val slackShareError: StateFlow<String?> = _slackShareError.asStateFlow()
 
-    fun isSlackConfigured(): Boolean = buildInfo.value?.slackWebhookUrl.isNullOrBlank().not()
+    fun isSlackConfigured(): Boolean = repository.buildInfo.value?.slackWebhookUrl.isNullOrBlank().not()
 
-    fun shareCurlToSlack(trace: TraceEntry, email: String, onSuccess: () -> Unit = {}) {
+    fun shareCurlToSlack(trace: TrafficEntry, email: String, onSuccess: () -> Unit = {}) {
         scope.launch {
-            val result = slackShareService.shareCurl(trace, email, buildInfo.value)
+            val result = slackShareService.shareCurl(trace, email, repository.buildInfo.value)
             result.onSuccess {
                 _slackShareError.value = null
                 onSuccess()
@@ -115,9 +115,9 @@ class DevToolsViewModel(
         }
     }
 
-    fun shareTextToSlack(trace: TraceEntry, email: String, onSuccess: () -> Unit = {}) {
+    fun shareTextToSlack(trace: TrafficEntry, email: String, onSuccess: () -> Unit = {}) {
         scope.launch {
-            val result = slackShareService.shareText(trace, email, buildInfo.value)
+            val result = slackShareService.shareText(trace, email, repository.buildInfo.value)
             result.onSuccess {
                 _slackShareError.value = null
                 onSuccess()
@@ -136,10 +136,10 @@ class DevToolsViewModel(
     }
 
     val events = repository.events
-    val apiLogs = repository.apiLogs
+    val traffic = repository.traffic
     val databaseSnapshot = repository.databaseSnapshot
-    val prefsState = repository.prefsState
+    val cacheState = repository.cacheState
     val buildInfo = repository.buildInfo
-    val chronicle = repository.chronicle
+    val gitHistory = repository.gitHistory
     val replayState = repository.replayState
 }

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
  * Base repository interface providing consistent CRUD patterns across all repositories.
  *
  * @param T The entity type
- * @param ID The identifier type (String for TraceEntry, Long for Incident/TelemetryEvent)
+ * @param ID The identifier type (String for TrafficEntry, Long for Error/Event)
  */
 internal interface Repository<T, ID> {
 

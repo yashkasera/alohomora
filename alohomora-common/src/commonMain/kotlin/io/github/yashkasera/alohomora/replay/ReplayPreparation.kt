@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.replay
 
 import io.github.yashkasera.alohomora.common.HeaderRedaction
-import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.common.TrafficEntry
 
 /**
  * Why a captured trace cannot be replayed.
@@ -137,9 +137,9 @@ object ReplayHeaderText {
 /**
  * Returns why this trace cannot be replayed, or null when it can be.
  */
-fun TraceEntry.replayBlockedReason(): ReplayBlockedReason? = when {
+fun TrafficEntry.replayBlockedReason(): ReplayBlockedReason? = when {
     url.isNullOrBlank() || method.isNullOrBlank() -> ReplayBlockedReason.INCOMPLETE_TRACE
-    requestBody == TraceEntry.UNABLE_PARSE_MESSAGE -> ReplayBlockedReason.UNPARSEABLE_BODY
+    requestBody == TrafficEntry.UNABLE_PARSE_MESSAGE -> ReplayBlockedReason.UNPARSEABLE_BODY
     requestBodyTruncated -> ReplayBlockedReason.TRUNCATED_BODY
     else -> null
 }
@@ -148,7 +148,7 @@ fun TraceEntry.replayBlockedReason(): ReplayBlockedReason? = when {
  * Builds a replayable request from this trace, or returns null when [replayBlockedReason] says it
  * cannot be replayed.
  */
-fun TraceEntry.toReplayRequest(): ReplayRequest? {
+fun TrafficEntry.toReplayRequest(): ReplayRequest? {
     if (replayBlockedReason() != null) return null
     return ReplayRequest(
         sourceTraceId = id,

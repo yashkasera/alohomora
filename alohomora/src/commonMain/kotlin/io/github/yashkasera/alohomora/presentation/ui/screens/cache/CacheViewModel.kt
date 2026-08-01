@@ -3,8 +3,8 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.cache
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.yashkasera.alohomora.domain.model.PreferenceEntry
-import io.github.yashkasera.alohomora.domain.usecase.cache.GetPreferencesUseCase
+import io.github.yashkasera.alohomora.domain.model.CacheEntry
+import io.github.yashkasera.alohomora.domain.usecase.cache.GetCacheUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  */
 @Immutable
 internal data class CacheState(
-    val entries: List<PreferenceEntry> = emptyList(),
+    val entries: List<CacheEntry> = emptyList(),
     val searchQuery: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -31,7 +31,7 @@ internal data class CacheState(
     /**
      * Filtered entries based on search query (matches key or value).
      */
-    val filteredEntries: List<PreferenceEntry>
+    val filteredEntries: List<CacheEntry>
         get() = if (searchQuery.isBlank()) {
             entries
         } else {
@@ -51,10 +51,10 @@ internal data class CacheState(
  * Manages loading preferences and search/filter functionality.
  */
 internal class CacheViewModel(
-    private val getPreferencesUseCase: GetPreferencesUseCase,
+    private val getPreferencesUseCase: GetCacheUseCase,
 ) : ViewModel() {
 
-    private val entries = MutableStateFlow<List<PreferenceEntry>>(emptyList())
+    private val entries = MutableStateFlow<List<CacheEntry>>(emptyList())
     private val searchQuery = MutableStateFlow("")
     private val isLoading = MutableStateFlow(false)
     private val error = MutableStateFlow<String?>(null)
@@ -70,7 +70,7 @@ internal class CacheViewModel(
     ) { flows ->
         @Suppress("UNCHECKED_CAST")
         CacheState(
-            entries = flows[0] as List<PreferenceEntry>,
+            entries = flows[0] as List<CacheEntry>,
             searchQuery = flows[1] as String,
             isLoading = flows[2] as Boolean,
             error = flows[3] as String?,

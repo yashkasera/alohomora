@@ -2,7 +2,7 @@ package io.github.yashkasera.alohomora.network
 
 import io.github.yashkasera.alohomora.AlohomoraInternal
 import io.github.yashkasera.alohomora.common.HeaderRedaction
-import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.replay.ReplayMarker
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.statement.bodyAsText
@@ -14,7 +14,7 @@ import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-private val AlohomoraRequestKey = AttributeKey<TraceEntry>("AlohomoraRequest")
+private val AlohomoraRequestKey = AttributeKey<TrafficEntry>("AlohomoraRequest")
 
 /**
  * Marks a Ktor call as the replay of the trace whose id this holds.
@@ -53,7 +53,7 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
                 .joinToString("&") { "${it.key}=${it.value.joinToString(",")}" }
                 .takeIf { it.isNotEmpty() }
 
-            val entity = TraceEntry(
+            val entity = TrafficEntry(
                 id = Uuid.random().toString(),
                 url = request.url.buildString(),
                 method = request.method.value,
@@ -89,7 +89,7 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
                 // Deliberately not content.toString(): for any streaming/multipart
                 // OutgoingContent that yields a bare class name, which reads like a captured
                 // body but is not one.
-                else -> TraceEntry.UNABLE_PARSE_MESSAGE
+                else -> TrafficEntry.UNABLE_PARSE_MESSAGE
             }
 
             request.attributes.put(AlohomoraRequestKey, entity)
@@ -120,7 +120,7 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
                 "<binary or unreadable body: ${e.message}>"
             }
 
-            AlohomoraInternal.recordTrace(entity)
+            AlohomoraInternal.recordTraffic(entity)
         }
     }
 }

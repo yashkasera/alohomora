@@ -1,13 +1,12 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.overview
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,62 +14,57 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.presentation.ui.components.CanvasBackground
-import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
-import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraLargeTopAppBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopAppBarDefaults
-import io.github.yashkasera.alohomora.ui.icons.ChartLine
+import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
+import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeftRight
+import io.github.yashkasera.alohomora.ui.icons.ArrowRight
+import io.github.yashkasera.alohomora.ui.icons.Braces
+import io.github.yashkasera.alohomora.ui.icons.CircleAlert
+import io.github.yashkasera.alohomora.ui.icons.ClipboardList
 import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
-import io.github.yashkasera.alohomora.ui.icons.HardDrive
-import io.github.yashkasera.alohomora.ui.icons.ArrowRight
-import androidx.compose.foundation.layout.size
-import io.github.yashkasera.alohomora.ui.icons.ArrowLeftRight
-import io.github.yashkasera.alohomora.ui.icons.CircleAlert
-import io.github.yashkasera.alohomora.ui.icons.Key
-import io.github.yashkasera.alohomora.ui.icons.Braces
-import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
-import io.github.yashkasera.alohomora.ui.icons.ClipboardList
-import io.github.yashkasera.alohomora.ui.icons.Layers
 import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.Server
-import io.github.yashkasera.alohomora.ui.icons.Settings
+import io.github.yashkasera.alohomora.ui.icons.Layers
+import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
@@ -89,28 +83,28 @@ private val builtInModules = listOf(
         subtitle = "LIVE STREAM",
         icon = Icons.ArrowLeftRight,
         isInverse = true,
-        route = Routes.Trace,
+        route = Routes.Traffic,
     ),
     OverviewModule(
-        title = "Telemetry",
+        title = "Events",
         subtitle = "SYSTEM TRIGGERS",
         icon = Icons.ClipboardList,
         isInverse = false,
-        route = Routes.Telemetry,
+        route = Routes.Events,
     ),
     OverviewModule(
         title = "Vault",
         subtitle = "INSPECTOR",
         icon = Icons.Database,
         isInverse = false,
-        route = Routes.Vault,
+        route = Routes.Database,
     ),
     OverviewModule(
-        title = "Incidents",
+        title = "Errors",
         subtitle = "CRITICAL LOGS",
         icon = Icons.CircleAlert,
         isInverse = false,
-        route = Routes.Incident,
+        route = Routes.Error,
     ),
     OverviewModule(
         title = "Cache",
@@ -127,11 +121,11 @@ private val builtInModules = listOf(
         route = Routes.Config,
     ),
     OverviewModule(
-        title = "Chronicle",
+        title = "Git History",
         subtitle = "COMMIT HISTORY",
         icon = Icons.GitGraph,
         isInverse = false,
-        route = Routes.Chronicle,
+        route = Routes.GitHistory,
     ),
 )
 

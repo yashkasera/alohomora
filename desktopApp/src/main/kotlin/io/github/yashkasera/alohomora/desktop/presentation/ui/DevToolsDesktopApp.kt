@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Text
@@ -38,42 +38,40 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.OtpPromptDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.AdbToolsPanel
-import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ApiLogsPanel
-import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ChroniclePanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.CachePanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DashboardContent
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DatabasePanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
-import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.PreferencesPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceDetailsSideModal
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TrafficPanel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.CacheViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
-import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.PrefsViewModel
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.OtpPromptDialog
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.brand
-import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
-import androidx.compose.foundation.clickable
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import java.io.File
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun DevToolsDesktopApp(
@@ -81,11 +79,11 @@ fun DevToolsDesktopApp(
     devicesViewModel: DevicesViewModel,
     logcatViewModel: LogcatViewModel,
     databaseViewModel: DatabaseViewModel,
-    prefsViewModel: PrefsViewModel,
+    cacheViewModel: CacheViewModel,
     initialDeviceId: String? = null,
     onDisconnectWindow: () -> Unit,
 ) {
-    var activeSection by remember { mutableStateOf(DesktopSection.Traces) }
+    var activeSection by remember { mutableStateOf(DesktopSection.Traffic) }
 
     val devices by devicesViewModel.devices.collectAsState()
     val adbCommandHistory by devicesViewModel.adbCommandHistory.collectAsState()
@@ -96,7 +94,7 @@ fun DevToolsDesktopApp(
     var isRecording by remember { mutableStateOf(false) }
     var recordingDevicePath by remember { mutableStateOf<String?>(null) }
     var recordingLocalPath by remember { mutableStateOf<String?>(null) }
-    var selectedTraceForDrawer by remember { mutableStateOf<TraceEntry?>(null) }
+    var selectedTraceForDrawer by remember { mutableStateOf<TrafficEntry?>(null) }
     var selectedDeviceId by remember(initialDeviceId) { mutableStateOf(initialDeviceId) }
 
     val onlineDevices = devices.filter { it.state == DeviceState.DEVICE }
@@ -131,15 +129,15 @@ fun DevToolsDesktopApp(
 
     LaunchedEffect(activeSection, isConnected, hasConnectedDevice, selectedDevice?.platform) {
         val gatedSections = setOf(
-            DesktopSection.Traces,
-            DesktopSection.TelemetryEvents,
-            DesktopSection.Preferences,
+            DesktopSection.Traffic,
+            DesktopSection.Events,
+            DesktopSection.Cache,
             DesktopSection.Database,
-            DesktopSection.Chronicle,
+            DesktopSection.GitHistory,
         )
         if (activeSection in gatedSections && !isConnected) {
             activeSection = fallbackSection
-            devicesViewModel.setActionError("Connect a device first to open traces, telemetry, preferences, config, and chronicle")
+            devicesViewModel.setActionError("Connect a device first to open traffic, events, cache, database, and git history")
         }
 
         if (!hasConnectedDevice) {
@@ -216,10 +214,10 @@ fun DevToolsDesktopApp(
                                 recordingLocalPath = null
                             }
                         },
-                        onApiLogClick = { selectedTraceForDrawer = it },
+                        onTrafficItemClick = { selectedTraceForDrawer = it },
                         onEventViewClick = {},
-                        onTracesClick = { activeSection = DesktopSection.Traces },
-                        onEventsClick = { activeSection = DesktopSection.TelemetryEvents },
+                        onTrafficClick = { activeSection = DesktopSection.Traffic },
+                        onEventsClick = { activeSection = DesktopSection.Events },
                     )
 
                     DesktopSection.Logcat -> LogcatPanel(
@@ -235,14 +233,14 @@ fun DevToolsDesktopApp(
                         buildInfo = buildInfo,
                     )
 
-                    DesktopSection.Traces -> ApiLogsPanel(
+                    DesktopSection.Traffic -> TrafficPanel(
                         devToolsViewModel = devToolsViewModel,
                         onLogClick = { selectedTraceForDrawer = it },
                     )
 
-                    DesktopSection.TelemetryEvents -> EventsPanel(devToolsViewModel = devToolsViewModel)
-                    DesktopSection.Preferences -> PreferencesPanel(prefsViewModel = prefsViewModel)
-                    DesktopSection.Chronicle -> ChroniclePanel(devToolsViewModel = devToolsViewModel)
+                    DesktopSection.Events -> EventsPanel(devToolsViewModel = devToolsViewModel)
+                    DesktopSection.Cache -> CachePanel(cacheViewModel = cacheViewModel)
+                    DesktopSection.GitHistory -> GitHistoryPanel(devToolsViewModel = devToolsViewModel)
                     DesktopSection.Database -> DatabasePanel(databaseViewModel = databaseViewModel)
                 }
             }

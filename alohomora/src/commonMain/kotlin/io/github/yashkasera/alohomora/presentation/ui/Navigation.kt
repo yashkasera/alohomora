@@ -9,15 +9,15 @@ import androidx.navigation.toRoute
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.presentation.ui.screens.cache.CacheScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.chronicle.ChronicleScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.config.ConfigScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.incident.detail.IncidentDetailsScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.incident.list.IncidentScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.database.DatabaseScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.error.detail.ErrorDetailsScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.error.list.ErrorScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.events.EventsScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.githistory.GitHistoryScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.overview.OverviewScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.telemetry.TelemetryScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.trace.detail.TraceDetailsScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.trace.list.TraceScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.VaultScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail.TrafficDetailsScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.list.TrafficScreen
 
 // Need to detect platform - minimal expect/actual or just resizing for now
 // Assuming Desktop has wide screen, Mobile has narrow.
@@ -43,23 +43,23 @@ internal fun AlohomoraNavHost(
             OverviewScreen(onNavigate = navController::navigate, onClose = onClose)
         }
 
-        composable<Routes.Trace> {
-            TraceScreen(
-                onTraceClick = { id -> navController.navigate(Routes.TraceDetails(id)) },
+        composable<Routes.Traffic> {
+            TrafficScreen(
+                onTraceClick = { id -> navController.navigate(Routes.TrafficDetails(id)) },
                 onBackClick = navController::navigateUp
             )
         }
 
-        composable<Routes.Telemetry> {
-            TelemetryScreen(onBackClick = navController::navigateUp)
+        composable<Routes.Events> {
+            EventsScreen(onBackClick = navController::navigateUp)
         }
 
-        composable<Routes.TraceDetails> { backStackEntry ->
-            val route: Routes.TraceDetails = backStackEntry.toRoute()
-            TraceDetailsScreen(
-                traceId = route.traceId,
+        composable<Routes.TrafficDetails> { backStackEntry ->
+            val route: Routes.TrafficDetails = backStackEntry.toRoute()
+            TrafficDetailsScreen(
+                traceId = route.trafficId,
                 onBackClick = navController::navigateUp,
-                onOpenTrace = { id -> navController.navigate(Routes.TraceDetails(id)) },
+                onOpenTrace = { id -> navController.navigate(Routes.TrafficDetails(id)) },
             )
         }
 
@@ -77,28 +77,28 @@ internal fun AlohomoraNavHost(
             )
         }
 
-        composable<Routes.Vault> {
-            VaultScreen(onBackClick = navController::navigateUp)
+        composable<Routes.Database> {
+            DatabaseScreen(onBackClick = navController::navigateUp)
         }
 
-        composable<Routes.Incident> {
-            IncidentScreen(
+        composable<Routes.Error> {
+            ErrorScreen(
                 onBackClick = navController::navigateUp,
-                onNavigateToIncident = {
-                    navController.navigate(Routes.IncidentDetails(it))
+                onNavigateToError = {
+                    navController.navigate(Routes.ErrorDetails(it))
                 },
             )
         }
-        composable<Routes.IncidentDetails> { backStackEntry ->
-            val route: Routes.IncidentDetails = backStackEntry.toRoute()
-            IncidentDetailsScreen(
-                incidentId = route.incidentId,
+        composable<Routes.ErrorDetails> { backStackEntry ->
+            val route: Routes.ErrorDetails = backStackEntry.toRoute()
+            ErrorDetailsScreen(
+                errorId = route.errorId,
                 onBackClick = navController::navigateUp,
             )
         }
 
-        composable<Routes.Chronicle> {
-            ChronicleScreen(
+        composable<Routes.GitHistory> {
+            GitHistoryScreen(
                 onBackClick = navController::navigateUp,
             )
         }

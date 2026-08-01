@@ -1,9 +1,9 @@
 package io.github.yashkasera.alohomora.desktop
 
 import io.github.yashkasera.alohomora.common.DateUtils
-import io.github.yashkasera.alohomora.common.Incident
+import io.github.yashkasera.alohomora.common.Error
+import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.Screen
-import io.github.yashkasera.alohomora.common.TelemetryEvent
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 /**
  * Every timestamp in this project is **milliseconds**.
  *
- * Two bugs came from not having that rule. Git `%ct` is seconds and both Chronicle screens
+ * Two bugs came from not having that rule. Git `%ct` is seconds and both GitHistory screens
  * formatted it as milliseconds, so every commit rendered as `1970-01-21`. And the entity `time`
  * defaults were `epochSeconds` while every explicit write used `toEpochMilliseconds()`, so
  * anything relying on a default sorted ~1000x too low and sank to the bottom of a
@@ -65,10 +65,10 @@ class TimestampUnitTest {
         val floor = 1_000_000_000_000L // year 2001 in millis; any seconds value is far below
 
         assertTrue(
-            TelemetryEvent(name = "e", properties = null).time > floor,
-            "TelemetryEvent.time default is not milliseconds",
+            Event(name = "e", properties = null).time > floor,
+            "Event.time default is not milliseconds",
         )
-        assertTrue(Incident(reason = "r").time > floor, "Incident.time default is not milliseconds")
+        assertTrue(Error(reason = "r").time > floor, "Error.time default is not milliseconds")
         assertTrue(Screen(name = "s").time > floor, "Screen.time default is not milliseconds")
     }
 
@@ -76,8 +76,8 @@ class TimestampUnitTest {
     fun `a defaulted entity sorts above an older explicit one`() {
         // The practical consequence of the old mismatch: a defaulted event looked ~55 years old
         // and sank to the bottom of a newest-first list.
-        val defaulted = TelemetryEvent(name = "now", properties = null)
-        val explicitlyOlder = TelemetryEvent(name = "old", properties = null, time = millis)
+        val defaulted = Event(name = "now", properties = null)
+        val explicitlyOlder = Event(name = "old", properties = null, time = millis)
 
         val sorted = listOf(explicitlyOlder, defaulted).sortedByDescending { it.time }
 

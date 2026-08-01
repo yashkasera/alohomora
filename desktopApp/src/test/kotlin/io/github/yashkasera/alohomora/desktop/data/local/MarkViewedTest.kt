@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.data.local
 
-import io.github.yashkasera.alohomora.common.TelemetryEvent
-import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.TrafficEntry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -16,14 +16,14 @@ import kotlin.test.assertTrue
 class MarkViewedTest {
 
     private fun trace(id: String, viewed: Boolean = false) =
-        TraceEntry(id = id, time = 1_000, isViewed = viewed)
+        TrafficEntry(id = id, time = 1_000, isViewed = viewed)
 
     private fun event(id: Long, viewed: Boolean = false) =
-        TelemetryEvent(id = id, name = "e$id", properties = null, time = 1_000, isViewed = viewed)
+        Event(id = id, name = "e$id", properties = null, time = 1_000, isViewed = viewed)
 
     @Test
-    fun `opening a trace marks only that trace`() {
-        val store = ApiLogStore()
+    fun `opening a traffic entry marks only that entry`() {
+        val store = TrafficStore()
         store.replace(listOf(trace("a"), trace("b")))
 
         store.markViewed("a")
@@ -33,8 +33,8 @@ class MarkViewedTest {
     }
 
     @Test
-    fun `marking a trace does not reorder the list`() {
-        val store = ApiLogStore()
+    fun `marking a traffic entry does not reorder the list`() {
+        val store = TrafficStore()
         store.replace(listOf(trace("c"), trace("b"), trace("a")))
 
         store.markViewed("b")
@@ -45,8 +45,8 @@ class MarkViewedTest {
     }
 
     @Test
-    fun `marking an unknown trace is a no-op`() {
-        val store = ApiLogStore()
+    fun `marking an unknown traffic entry is a no-op`() {
+        val store = TrafficStore()
         store.replace(listOf(trace("a")))
 
         store.markViewed("nope")
@@ -55,8 +55,8 @@ class MarkViewedTest {
     }
 
     @Test
-    fun `marking an already viewed trace changes nothing`() {
-        val store = ApiLogStore()
+    fun `marking an already viewed traffic entry changes nothing`() {
+        val store = TrafficStore()
         store.replace(listOf(trace("a", viewed = true)))
         val before = store.logs.value
 

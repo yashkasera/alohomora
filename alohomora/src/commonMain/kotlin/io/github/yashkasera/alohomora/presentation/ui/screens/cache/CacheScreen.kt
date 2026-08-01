@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.cache
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,11 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.lazy.rememberLazyListState
-import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,18 +27,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.yashkasera.alohomora.domain.model.PreferenceEntry
-import io.github.yashkasera.alohomora.domain.model.PreferenceType
+import io.github.yashkasera.alohomora.domain.model.CacheEntry
+import io.github.yashkasera.alohomora.domain.model.CacheType
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Search
-import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -132,7 +132,7 @@ private fun SearchTextField(
 
 @Composable
 private fun PreferencesList(
-    entries: List<PreferenceEntry>,
+    entries: List<CacheEntry>,
 ) {
     val listState = rememberLazyListState()
     Box(modifier = Modifier.fillMaxSize()) {
@@ -155,7 +155,7 @@ private fun PreferencesList(
 
 @Composable
 private fun PreferenceItem(
-    entry: PreferenceEntry,
+    entry: CacheEntry,
 ) {
     Column(
         modifier = Modifier
@@ -190,7 +190,7 @@ private fun PreferenceItem(
 
         // Value display with type-specific styling
         val valueColor = when (entry.type) {
-            PreferenceType.BOOLEAN -> MaterialTheme.colorScheme.tertiary
+            CacheType.BOOLEAN -> MaterialTheme.colorScheme.tertiary
             else -> MaterialTheme.colorScheme.onSurfaceVariant
         }
 

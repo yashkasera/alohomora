@@ -72,14 +72,14 @@ data class InitialStateMessage(
 @SerialName("STREAM_EVENT")
 data class StreamEventMessage(
     override val sequence: Long,
-    val event: TelemetryEvent,
+    val event: Event,
 ) : DevToolsMessage()
 
 @Serializable
-@SerialName("STREAM_API_LOG")
-data class StreamApiLogMessage(
+@SerialName("STREAM_TRAFFIC")
+data class StreamTrafficMessage(
     override val sequence: Long,
-    val log: TraceEntry,
+    val traffic: TrafficEntry,
 ) : DevToolsMessage()
 
 @Serializable
@@ -90,10 +90,10 @@ data class DatabaseSnapshotMessage(
 ) : DevToolsMessage()
 
 @Serializable
-@SerialName("SNAPSHOT_PREFS")
-data class PrefsSnapshotMessage(
+@SerialName("SNAPSHOT_CACHE")
+data class CacheSnapshotMessage(
     override val sequence: Long,
-    val payload: PrefsSnapshotPayload,
+    val payload: CacheSnapshotPayload,
 ) : DevToolsMessage()
 
 // ── Client → Server ──────────────────────────────────────────────────────────
@@ -152,8 +152,8 @@ data class RequestDatabaseTableMessage(
 ) : DevToolsMessage()
 
 @Serializable
-@SerialName("REQUEST_PREF_VALUE")
-data class RequestPrefValueMessage(
+@SerialName("REQUEST_CACHE_VALUE")
+data class RequestCacheValueMessage(
     override val sequence: Long = 0,
     val key: String,
 ) : DevToolsMessage()
@@ -176,12 +176,12 @@ data class RequestReplayTraceMessage(
  * Reports the fate of a [RequestReplayTraceMessage].
  *
  * The only desktop→device command with an explicit reply. Every other one either answers with a
- * snapshot or is unobservable, but a replay can fail before any trace exists — no handler
+ * snapshot or is unobservable, but a replay can fail before any traffic entry exists — no handler
  * registered, a hand-edited URL that will not parse, a refused connection — and with no reply the
- * desktop would sit waiting for a trace that is never coming.
+ * desktop would sit waiting for traffic that is never coming.
  *
- * [traceId] is set only when the handler could identify the resulting trace; the replay is still
- * successful without it, since the trace arrives over `STREAM_API_LOG` either way.
+ * [traceId] is set only when the handler could identify the resulting traffic; the replay is still
+ * successful without it, since the traffic arrives over `STREAM_TRAFFIC` either way.
  */
 @Serializable
 @SerialName("REPLAY_RESULT")
@@ -241,7 +241,7 @@ data class DatabaseSnapshotPayload(
 )
 
 @Serializable
-data class BuildInfoPayload(
+data class BuildMetadataPayload(
     val projectName: String,
     val packageName: String? = null,
     val versionName: String,
@@ -257,7 +257,7 @@ data class BuildInfoPayload(
 )
 
 @Serializable
-data class ChronicleCommitPayload(
+data class GitHistoryPayload(
     val sha: String,
     val author: String,
     val message: String,
@@ -265,21 +265,21 @@ data class ChronicleCommitPayload(
 )
 
 @Serializable
-data class PrefsSnapshotPayload(
+data class CacheSnapshotPayload(
     val keys: List<String> = emptyList(),
     val values: Map<String, String?> = emptyMap(),
 )
 
 @Serializable
 data class InitialStatePayload(
-    val events: List<TelemetryEvent>,
-    val apiLogs: List<TraceEntry>,
+    val events: List<Event>,
+    val traffic: List<TrafficEntry>,
     val databaseSchema: DatabaseSchemaSnapshot,
     val databases: List<AppDatabaseInfo> = emptyList(),
     val selectedDatabase: String? = null,
-    val preferenceKeys: List<String>,
-    val buildInfo: BuildInfoPayload? = null,
-    val chronicle: List<ChronicleCommitPayload> = emptyList(),
+    val cacheKeys: List<String>,
+    val buildMetadata: BuildMetadataPayload? = null,
+    val gitHistory: List<GitHistoryPayload> = emptyList(),
     /**
      * Whether the app on the other end registered a replay handler.
      *

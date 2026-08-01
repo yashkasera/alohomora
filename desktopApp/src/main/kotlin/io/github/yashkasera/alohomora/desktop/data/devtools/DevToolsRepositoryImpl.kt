@@ -4,50 +4,50 @@ import io.github.yashkasera.alohomora.common.AuthFailureMessage
 import io.github.yashkasera.alohomora.common.AuthOtpRequiredMessage
 import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.AuthSuccessMessage
+import io.github.yashkasera.alohomora.common.CacheSnapshotMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
+import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.InitialStateMessage
-import io.github.yashkasera.alohomora.common.PrefsSnapshotMessage
 import io.github.yashkasera.alohomora.common.ReplayResultMessage
+import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
-import io.github.yashkasera.alohomora.common.RequestPrefValueMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
-import io.github.yashkasera.alohomora.common.StreamApiLogMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
-import io.github.yashkasera.alohomora.common.TelemetryEvent
-import io.github.yashkasera.alohomora.common.TraceEntry
-import io.github.yashkasera.alohomora.desktop.data.local.ApiLogStore
-import io.github.yashkasera.alohomora.desktop.data.local.BuildInfoStore
-import io.github.yashkasera.alohomora.desktop.data.local.ChronicleStore
+import io.github.yashkasera.alohomora.common.StreamTrafficMessage
+import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.desktop.data.local.BuildMetadataStore
+import io.github.yashkasera.alohomora.desktop.data.local.CacheStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
-import io.github.yashkasera.alohomora.desktop.data.local.PrefsStore
+import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
+import io.github.yashkasera.alohomora.desktop.data.local.TrafficStore
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
-import io.github.yashkasera.alohomora.desktop.domain.model.ChronicleCommit
+import io.github.yashkasera.alohomora.desktop.domain.model.CacheState
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
-import io.github.yashkasera.alohomora.desktop.domain.model.PrefsState
+import io.github.yashkasera.alohomora.desktop.domain.model.GitHistoryCommit
 import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
 import io.github.yashkasera.alohomora.devtools.DevToolsSocket
 import io.github.yashkasera.alohomora.replay.ReplayRequest
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -56,11 +56,11 @@ import kotlinx.coroutines.sync.withLock
 class DevToolsRepositoryImpl(
     private val remoteDataSource: DevToolsRemoteDataSource,
     private val eventStore: EventStore,
-    private val apiLogStore: ApiLogStore,
+    private val trafficStore: TrafficStore,
     private val databaseStore: DatabaseSnapshotStore,
-    private val prefsStore: PrefsStore,
-    private val buildInfoStore: BuildInfoStore,
-    private val chronicleStore: ChronicleStore,
+    private val cacheStore: CacheStore,
+    private val buildMetadataStore: BuildMetadataStore,
+    private val gitHistoryStore: GitHistoryStore,
     private val replayStore: ReplayStore,
 ) : DevToolsRepository {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -71,12 +71,12 @@ class DevToolsRepositoryImpl(
     private val _switching = MutableStateFlow(false)
     override val switching: StateFlow<Boolean> = _switching.asStateFlow()
 
-    override val events: StateFlow<List<TelemetryEvent>> = eventStore.events
-    override val apiLogs: StateFlow<List<TraceEntry>> = apiLogStore.logs
+    override val events: StateFlow<List<Event>> = eventStore.events
+    override val traffic: StateFlow<List<TrafficEntry>> = trafficStore.logs
     override val databaseSnapshot: StateFlow<DatabaseSnapshot> = databaseStore.snapshot
-    override val prefsState: StateFlow<PrefsState> = prefsStore.state
-    override val buildInfo: StateFlow<BuildInfo?> = buildInfoStore.buildInfo
-    override val chronicle: StateFlow<List<ChronicleCommit>> = chronicleStore.commits
+    override val cacheState: StateFlow<CacheState> = cacheStore.state
+    override val buildInfo: StateFlow<BuildInfo?> = buildMetadataStore.buildInfo
+    override val gitHistory: StateFlow<List<GitHistoryCommit>> = gitHistoryStore.commits
     override val replayState: StateFlow<ReplayState> = replayStore.state
 
     @Volatile
@@ -227,7 +227,7 @@ class DevToolsRepositoryImpl(
         }
     }
 
-    override fun replayTrace(request: ReplayRequest) {
+    override fun replayTraffic(request: ReplayRequest) {
         // Marked in flight before the send so the button reflects the click immediately. The device
         // always answers with a ReplayResultMessage, success or failure, which clears it.
         replayStore.markInFlight(request.sourceTraceId)
@@ -246,8 +246,8 @@ class DevToolsRepositoryImpl(
         }
     }
 
-    override fun requestPrefValue(key: String) {
-        scope.launch { sendMessage(RequestPrefValueMessage(key = key)) }
+    override fun requestCacheValue(key: String) {
+        scope.launch { sendMessage(RequestCacheValueMessage(key = key)) }
     }
 
     override fun requestInitialState() {
@@ -257,12 +257,12 @@ class DevToolsRepositoryImpl(
     override fun clearCaptured(traces: Boolean, events: Boolean) {
         // Clear locally straight away so the UI responds immediately; the device's fresh snapshot
         // arrives moments later and is authoritative.
-        if (traces) apiLogStore.clear()
+        if (traces) trafficStore.clear()
         if (events) eventStore.clear()
         scope.launch { sendMessage(RequestClearMessage(traces = traces, events = events)) }
     }
 
-    override fun markTraceViewed(id: String) = apiLogStore.markViewed(id)
+    override fun markTrafficViewed(id: String) = trafficStore.markViewed(id)
 
     override fun markEventViewed(id: Long) = eventStore.markViewed(id)
 
@@ -308,15 +308,15 @@ class DevToolsRepositoryImpl(
             is InitialStateMessage -> {
                 val payload = message.payload
                 eventStore.replace(payload.events)
-                apiLogStore.replace(payload.apiLogs)
+                trafficStore.replace(payload.traffic)
                 databaseStore.replaceDatabases(
                     payload.databases.map { it.toDomain() },
                     payload.selectedDatabase,
                 )
                 databaseStore.replaceSchema(payload.databaseSchema.toDomain())
-                prefsStore.replaceKeys(payload.preferenceKeys)
-                buildInfoStore.replace(payload.buildInfo?.toDomain())
-                chronicleStore.replace(payload.chronicle.map { it.toDomain() })
+                cacheStore.replaceKeys(payload.cacheKeys)
+                buildMetadataStore.replace(payload.buildMetadata?.toDomain())
+                gitHistoryStore.replace(payload.gitHistory.map { it.toDomain() })
                 replayStore.setSupported(payload.replaySupported)
             }
 
@@ -335,7 +335,7 @@ class DevToolsRepositoryImpl(
 
             is StreamEventMessage -> eventStore.append(message.event)
 
-            is StreamApiLogMessage -> apiLogStore.append(message.log)
+            is StreamTrafficMessage -> trafficStore.append(message.traffic)
 
             is DatabaseSnapshotMessage -> {
                 databaseStore.applySnapshot(
@@ -344,8 +344,8 @@ class DevToolsRepositoryImpl(
                 )
             }
 
-            is PrefsSnapshotMessage -> {
-                prefsStore.applySnapshot(message.payload.keys, message.payload.values)
+            is CacheSnapshotMessage -> {
+                cacheStore.applySnapshot(message.payload.keys, message.payload.values)
             }
 
             else -> Unit
@@ -354,11 +354,11 @@ class DevToolsRepositoryImpl(
 
     private fun clearAll() {
         eventStore.clear()
-        apiLogStore.clear()
+        trafficStore.clear()
         databaseStore.clear()
-        prefsStore.clear()
-        buildInfoStore.clear()
-        chronicleStore.clear()
+        cacheStore.clear()
+        buildMetadataStore.clear()
+        gitHistoryStore.clear()
         replayStore.clear()
     }
 

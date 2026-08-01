@@ -1,0 +1,203 @@
+package io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.yashkasera.alohomora.presentation.ui.components.ReplayBottomSheet
+import io.github.yashkasera.alohomora.presentation.ui.components.ShareBottomSheet
+import io.github.yashkasera.alohomora.presentation.ui.components.SlackShareBottomSheet
+import io.github.yashkasera.alohomora.presentation.ui.components.SlackShareOption
+import io.github.yashkasera.alohomora.replay.ReplayRequest
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Copy
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Repeat
+import io.github.yashkasera.alohomora.ui.icons.Share
+import io.github.yashkasera.alohomora.ui.icons.Slack
+import io.github.yashkasera.alohomora.ui.theme.dimens
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun TrafficDetailsScreen(
+    traceId: String,
+    onBackClick: () -> Unit = {},
+    onOpenTrace: (String) -> Unit = {},
+) {
+    val viewModel = koinViewModel<TrafficDetailsViewModel> { parametersOf(traceId) }
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val trace = state.trace
+    // Held across recomposition: the sheet owns the user's edits from here on, so re-deriving the
+    // seed on every frame would reset the form under them.
+    var replayDraft by remember { mutableStateOf<ReplayRequest?>(null) }
+
+    if (trace == null) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = if (state.isLoading) "Loading trace..." else "Trace not found.",
+                color = if (state.isLoading) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+        return
+    }
+
+    Scaffold(
+        modifier = Modifier.systemBarsPadding(),
+        topBar = {
+            AlohomoraTopBar(
+                title = "API Request",
+                subtitle = state.trace?.path,
+                navigationIcon = {
+                    AlohomoraIconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.ArrowLeft,
+                            contentDescription = "back",
+                        )
+                    }
+                },
+                actions = {
+                    if (state.canReplay) {
+                        AlohomoraIconButton(
+                            onClick = { replayDraft = viewModel.startReplay() },
+                            content = {
+                                Icon(
+                                    imageVector = Icons.Repeat,
+                                    contentDescription = "Replay",
+                                )
+                            },
+                        )
+                    }
+                    if (state.isSlackConfigured) {
+                        AlohomoraIconButton(
+                            onClick = viewModel::showSlackSheet,
+                            content = {
+                                Icon(
+                                    imageVector = Icons.Slack,
+                                    contentDescription = "Slack",
+                                )
+                            },
+                        )
+                    }
+                    AlohomoraIconButton(
+                        onClick = viewModel::showShareSheet,
+                        content = {
+                            Icon(
+                                imageVector = Icons.Share,
+                                contentDescription = "Share",
+                            )
+                        },
+                    )
+                },
+            )
+        },
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding)) {
+            // Shown for replays triggered from the desktop too, not just from this screen: the
+            // result lands in the same place either way, and hiding it would make a desktop replay
+            // look like it produced nothing.
+            state.replayResultTraceId?.let { resultId ->
+                ReplayResultBanner(onClick = { onOpenTrace(resultId) })
+            }
+            TrafficDetailsContent(trace = trace)
+        }
+    }
+
+    if (state.showReplaySheet) {
+        replayDraft?.let { draft ->
+            ReplayBottomSheet(
+                initial = draft,
+                isReplaying = state.isReplaying,
+                error = state.replayError,
+                onDismiss = viewModel::hideReplaySheet,
+                onSend = viewModel::replay,
+            )
+        }
+    }
+
+    // Share Bottom Sheet
+    if (state.showShareSheet) {
+        ShareBottomSheet(
+            onDismiss = viewModel::hideShareSheet,
+            onShareCurl = viewModel::shareCurlViaSystem,
+            onShareText = viewModel::shareTextViaSystem,
+            onShareFile = viewModel::shareFileViaSystem,
+        )
+    }
+
+    // Slack Share Bottom Sheet
+    if (state.showSlackSheet) {
+        SlackShareBottomSheet(
+            title = "Share to Slack",
+            isConfigured = state.isSlackConfigured,
+            onDismiss = viewModel::hideSlackSheet,
+            shareOptions = listOf(
+                SlackShareOption(
+                    icon = Icons.Share,
+                    title = "Share cURL to Slack",
+                    subtitle = "Send curl command",
+                    onShare = viewModel::shareCurlToSlack,
+                ),
+                SlackShareOption(
+                    icon = Icons.Copy,
+                    title = "Share Text to Slack",
+                    subtitle = "Send raw transaction text",
+                    onShare = viewModel::shareTextToSlack,
+                ),
+            ),
+        )
+    }
+}
+
+/** Links a trace to the response its replay produced. */
+@Composable
+private fun ReplayResultBanner(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .padding(
+                horizontal = MaterialTheme.dimens.margin.lg,
+                vertical = MaterialTheme.dimens.margin.md,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Repeat,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+        )
+        Text(
+            text = "This request was replayed. Tap to open the result.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+    }
+}

@@ -103,7 +103,7 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
         val dirty = git(listOf("git", "status", "--porcelain")).isNotEmpty()
         // Milliseconds, like every other timestamp in the project. This used to be seconds,
         // which the desktop dashboard rendered with the format's implicit seconds default while
-        // the Chronicle panel had to override it — the sort of split that produced 1970 dates.
+        // the GitHistory panel had to override it — the sort of split that produced 1970 dates.
         val timestamp = System.currentTimeMillis()
         val isDebuggable = debuggable.getOrElse(false)
         val slackUrl = slackWebhookUrl.orNull?.takeIf { url ->
@@ -129,7 +129,7 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
             appendLine("package alohomora.generated")
             appendLine()
             appendLine("import io.github.yashkasera.alohomora.data.model.AlohomoraConfig")
-            appendLine("import io.github.yashkasera.alohomora.data.model.AlohomoraCommit")
+            appendLine("import io.github.yashkasera.alohomora.data.model.GitHistoryCommit")
             appendLine()
             appendLine("class AlohomoraBuildGenerationInfo : AlohomoraConfig {")
             appendLine()
@@ -162,7 +162,7 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
             appendLine()
             appendLine("    override val buildTimestampUtc: Long = ${timestamp}L")
             appendLine()
-            appendLine("    override val commits: List<AlohomoraCommit> = listOf(")
+            appendLine("    override val commits: List<GitHistoryCommit> = listOf(")
 
             commits.forEach { commit ->
                 val parts = commit.split("", limit = 4)
@@ -172,13 +172,13 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
                 val author = escape(parts[1], false)
                 val message = escape(parts[2], false)
                 // git %ct is epoch SECONDS; convert once here so nothing downstream has to
-                // remember that commits are the odd one out. Both Chronicle screens formatted
+                // remember that commits are the odd one out. Both GitHistory screens formatted
                 // this as milliseconds and rendered every commit as 1970-01-21.
                 val timestamp = parts[3].toLongOrNull()?.times(1_000) ?: 0L
 
                 appendLine(
                     """
-                AlohomoraCommit(
+                GitHistoryCommit(
                     sha = "$sha",
                     author = "$author",
                     message = "$message",

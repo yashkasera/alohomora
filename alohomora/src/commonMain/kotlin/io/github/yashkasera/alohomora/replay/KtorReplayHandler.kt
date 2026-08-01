@@ -10,7 +10,7 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 
 /**
- * A [TraceReplayHandler] that re-sends a captured request through [client].
+ * A [TrafficReplayHandler] that re-sends a captured request through [client].
  *
  * The point is that the call goes through the same [HttpClient] the app uses, so every plugin on it
  * runs again — a signing plugin recomputes the signature over the body being replayed rather than the
@@ -27,7 +27,7 @@ import io.ktor.http.contentType
  *
  * @param client the app's own client, complete with its plugins
  */
-fun ktorReplayHandler(client: HttpClient): TraceReplayHandler = TraceReplayHandler { replay ->
+fun ktorReplayHandler(client: HttpClient): TrafficReplayHandler = TrafficReplayHandler { replay ->
     try {
         client.request(replay.url) {
             // Trimmed here as well as in the editors: HttpMethod.parse throws on "POST " and a

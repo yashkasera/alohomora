@@ -60,7 +60,7 @@ class PostsViewModel(
     }
 
     fun onPostClicked(postId: Long) {
-        Alohomora.recordTelemetry("post_clicked", mapOf("postId" to postId.toString()))
+        Alohomora.recordEvent("post_clicked", mapOf("postId" to postId.toString()))
     }
 
     fun updateUsername(value: String) {

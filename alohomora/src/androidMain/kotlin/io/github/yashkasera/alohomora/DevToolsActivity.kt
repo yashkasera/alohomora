@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsControllerCompat
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.presentation.ui.AlohomoraApp
-import io.github.yashkasera.alohomora.trace.TraceNotificationHelper
+import io.github.yashkasera.alohomora.traffic.TrafficNotificationHelper
 
 class DevToolsActivity : ComponentActivity() {
     private var startDestination: Routes = Routes.Overview
@@ -24,7 +24,7 @@ class DevToolsActivity : ComponentActivity() {
         fun newIntent(context: Context, traceId: String): Intent {
             return Intent(context, DevToolsActivity::class.java).apply {
                 putExtra(EXTRA_TRACE_ID, traceId)
-                putExtra(TraceNotificationHelper.EXTRA_START_DESTINATION, TraceNotificationHelper.DESTINATION_TRACE)
+                putExtra(TrafficNotificationHelper.EXTRA_START_DESTINATION, TrafficNotificationHelper.DESTINATION_TRACE)
             }
         }
     }
@@ -47,11 +47,11 @@ class DevToolsActivity : ComponentActivity() {
     }
 
     private fun updateStartDestination(intent: Intent?) {
-        val destination = intent?.getStringExtra(TraceNotificationHelper.EXTRA_START_DESTINATION)
+        val destination = intent?.getStringExtra(TrafficNotificationHelper.EXTRA_START_DESTINATION)
         val traceId = intent?.getStringExtra(EXTRA_TRACE_ID)
         startDestination = when {
-            traceId != null -> Routes.TraceDetails(traceId)
-            destination == TraceNotificationHelper.DESTINATION_TRACE -> Routes.Trace
+            traceId != null -> Routes.TrafficDetails(traceId)
+            destination == TrafficNotificationHelper.DESTINATION_TRACE -> Routes.Traffic
             else -> Routes.Overview
         }
     }

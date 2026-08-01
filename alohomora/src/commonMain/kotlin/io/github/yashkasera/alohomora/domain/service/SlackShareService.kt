@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.domain.service
 
 import io.github.yashkasera.alohomora.Alohomora
-import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -19,7 +19,7 @@ internal class SlackShareService(
     private fun isConfigured(): Boolean = webhookUrl.isNullOrBlank().not()
 
     suspend fun shareCurl(
-        trace: TraceEntry,
+        trace: TrafficEntry,
         recipientEmail: String,
     ): Result<Unit> {
         val curlCommand = trace.curlCommand()
@@ -32,7 +32,7 @@ internal class SlackShareService(
     }
 
     suspend fun shareText(
-        trace: TraceEntry,
+        trace: TrafficEntry,
         recipientEmail: String,
     ): Result<Unit> {
         val rawText = trace.generateTransactionText()
@@ -58,7 +58,7 @@ internal class SlackShareService(
     }
 
     private fun buildSlackMessage(
-        trace: TraceEntry,
+        trace: TrafficEntry,
         recipientEmail: String,
         content: String,
     ): SlackMessage {

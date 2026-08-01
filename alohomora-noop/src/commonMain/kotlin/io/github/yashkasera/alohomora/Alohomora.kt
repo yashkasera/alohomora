@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora
 
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
-import io.github.yashkasera.alohomora.replay.TraceReplayHandler
+import io.github.yashkasera.alohomora.replay.TrafficReplayHandler
 import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 
@@ -36,7 +36,7 @@ object Alohomora {
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
-    fun recordTrace(
+    fun recordTraffic(
         id: String = "",
         status: Int? = null,
         url: String? = null,
@@ -63,7 +63,7 @@ object Alohomora {
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordTelemetry(name: String, properties: Map<String, String>? = null) {
+    fun recordEvent(name: String, properties: Map<String, String>? = null) {
         /* no-op */
     }
 
@@ -99,11 +99,11 @@ object Alohomora {
     }
 
     // ============================================================================
-    // Trace Replay - No-op
+    // Traffic Replay - No-op
     // ============================================================================
 
     @Suppress("UNUSED_PARAMETER")
-    fun registerReplayHandler(handler: TraceReplayHandler) {
+    fun registerReplayHandler(handler: TrafficReplayHandler) {
         /* no-op */
     }
 

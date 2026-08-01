@@ -7,16 +7,18 @@ import android.util.Log
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
+import io.github.yashkasera.alohomora.data.repository.CacheRepositoryImpl
+import io.github.yashkasera.alohomora.data.repository.DatabaseRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.PlatformDatabaseAccessor
-import io.github.yashkasera.alohomora.data.repository.VaultRepositoryImpl
 import io.github.yashkasera.alohomora.devtools.AndroidAppDatabaseProvider
-import io.github.yashkasera.alohomora.devtools.DevToolsAppDatabaseProvider
-import io.github.yashkasera.alohomora.devtools.AndroidPreferencesInspector
-import io.github.yashkasera.alohomora.devtools.DevToolsPreferencesInspector
+import io.github.yashkasera.alohomora.devtools.AndroidCacheInspector
 import io.github.yashkasera.alohomora.devtools.AndroidTrustStore
+import io.github.yashkasera.alohomora.devtools.DevToolsAppDatabaseProvider
+import io.github.yashkasera.alohomora.devtools.DevToolsCacheInspector
 import io.github.yashkasera.alohomora.devtools.DevToolsTcpServer
 import io.github.yashkasera.alohomora.devtools.DevToolsTrustStore
-import io.github.yashkasera.alohomora.domain.repository.VaultRepository
+import io.github.yashkasera.alohomora.domain.repository.CacheRepository
+import io.github.yashkasera.alohomora.domain.repository.DatabaseRepository
 import io.github.yashkasera.alohomora.presentation.ui.screens.navigation.NavigationHistoryViewModel
 import io.github.yashkasera.alohomora.utils.share.ShareManager
 import kotlinx.coroutines.Dispatchers
@@ -32,18 +34,18 @@ internal actual val platformModule = module {
             .build()
     }
     viewModel { NavigationHistoryViewModel() }
-    single<DevToolsPreferencesInspector> { AndroidPreferencesInspector(androidContext()) }
+    single<DevToolsCacheInspector> { AndroidCacheInspector(androidContext()) }
     single<DevToolsAppDatabaseProvider> { AndroidAppDatabaseProvider(androidContext()) }
     single { DevToolsTcpServer() }
     single<DevToolsTrustStore> { AndroidTrustStore(androidContext()) }
     single { ShareManager(androidContext()) }
-    single<VaultRepository> {
+    single<DatabaseRepository> {
         val accessor = PlatformDatabaseAccessor()
         accessor.setContext(androidContext())
-        VaultRepositoryImpl(accessor)
+        DatabaseRepositoryImpl(accessor)
     }
-    single<io.github.yashkasera.alohomora.domain.repository.PreferenceRepository> {
-        io.github.yashkasera.alohomora.data.repository.PreferenceRepositoryImpl(androidContext())
+    single<CacheRepository> {
+        CacheRepositoryImpl(androidContext())
     }
 }
 
