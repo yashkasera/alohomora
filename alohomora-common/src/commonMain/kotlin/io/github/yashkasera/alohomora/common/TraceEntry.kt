@@ -62,9 +62,15 @@ data class TraceEntry(
                 append(" \\\n  -X ${method?.shellEscape()}")
             }
 
-            requestHeaders?.forEach { (name, value) ->
-                if (contentType == null || !name.equals("Content-Type", ignoreCase = true))
-                    append(" \\\n  -H ${"$name: $value".shellEscape()}")
+            // Iterate the values. Interpolating the List directly emitted
+            // `Accept: [application/json]` — Kotlin's List.toString(), brackets included —
+            // producing a curl command that does not reproduce the request.
+            requestHeaders?.forEach { (name, values) ->
+                if (contentType == null || !name.equals("Content-Type", ignoreCase = true)) {
+                    values.forEach { value ->
+                        append(" \\\n  -H ${"$name: $value".shellEscape()}")
+                    }
+                }
             }
 
             if (contentType != null) {

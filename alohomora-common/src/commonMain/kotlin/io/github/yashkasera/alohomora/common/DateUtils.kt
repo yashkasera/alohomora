@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.common
 
 import kotlin.time.Instant
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
@@ -32,7 +33,15 @@ object DateUtils {
     /**
      * Predefined date and time formats.
      */
-    enum class Format(internal val defaultUnit: TimeUnit = TimeUnit.MILLISECONDS) {
+    /**
+     * Output shape only.
+     *
+     * Formats deliberately carry no default [TimeUnit]. They used to, and it meant picking a
+     * *look* silently picked an *input unit*: `READABLE_DATE_TIME` implied seconds, so callers
+     * holding milliseconds rendered 1970 dates unless they happened to override it. Every
+     * timestamp in this project is milliseconds — see [format].
+     */
+    enum class Format {
         /** HH:mm:ss - Example: "14:30:45" */
         HH_MM_SS,
 
@@ -49,10 +58,10 @@ object DateUtils {
         ISO_DATE_TIME,
 
         /** yyyy-MM-dd HH:mm:ss - Example: "2026-03-13 14:30:45" (typically for epoch seconds) */
-        ISO_DATE_TIME_SECONDS(TimeUnit.SECONDS),
+        ISO_DATE_TIME_SECONDS,
 
         /** MMM dd, yyyy • HH:mm - Example: "Jan 13, 2026 • 14:30" (typically for epoch seconds) */
-        READABLE_DATE_TIME(TimeUnit.SECONDS);
+        READABLE_DATE_TIME;
     }
 
     /**
@@ -60,13 +69,15 @@ object DateUtils {
      *
      * @param timestamp The timestamp value
      * @param format The desired output format
-     * @param unit The time unit of the input timestamp (defaults to format's default unit)
+     * @param unit Unit of [timestamp]. Defaults to milliseconds, which is what every timestamp
+     *   in this project uses; pass [TimeUnit.SECONDS] only for values from an external source
+     *   that are genuinely in seconds.
      * @return Formatted date-time string, or fallback value if formatting fails
      */
     fun format(
         timestamp: Long,
         format: Format,
-        unit: TimeUnit = format.defaultUnit
+        unit: TimeUnit = TimeUnit.MILLISECONDS
     ): String = try {
         val instant = when (unit) {
             TimeUnit.MILLISECONDS -> Instant.fromEpochMilliseconds(timestamp)
@@ -88,15 +99,15 @@ object DateUtils {
     }
 
     // Extension functions for concise formatting
-    private fun kotlinx.datetime.LocalDateTime.yyyy() = year.toString()
-    private fun kotlinx.datetime.LocalDateTime.monthNum() = (month.ordinal + 1).toString().padStart(2, '0')
-    private fun kotlinx.datetime.LocalDateTime.dd() = day.toString().padStart(2, '0')
-    private fun kotlinx.datetime.LocalDateTime.hh() = hour.toString().padStart(2, '0')
-    private fun kotlinx.datetime.LocalDateTime.mm() = minute.toString().padStart(2, '0')
-    private fun kotlinx.datetime.LocalDateTime.ss() = second.toString().padStart(2, '0')
-    private fun kotlinx.datetime.LocalDateTime.ms2() = (nanosecond / 1_000_000).toString().padStart(3, '0').take(2)
-    private fun kotlinx.datetime.LocalDateTime.ms3() = (nanosecond / 1_000_000).toString().padStart(3, '0')
-    private fun kotlinx.datetime.LocalDateTime.monthShort() = month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
+    private fun LocalDateTime.yyyy() = year.toString()
+    private fun LocalDateTime.monthNum() = (month.ordinal + 1).toString().padStart(2, '0')
+    private fun LocalDateTime.dd() = day.toString().padStart(2, '0')
+    private fun LocalDateTime.hh() = hour.toString().padStart(2, '0')
+    private fun LocalDateTime.mm() = minute.toString().padStart(2, '0')
+    private fun LocalDateTime.ss() = second.toString().padStart(2, '0')
+    private fun LocalDateTime.ms2() = (nanosecond / 1_000_000).toString().padStart(3, '0').take(2)
+    private fun LocalDateTime.ms3() = (nanosecond / 1_000_000).toString().padStart(3, '0')
+    private fun LocalDateTime.monthShort() = month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
 
     private val Format.fallback: String
         get() = when (this) {

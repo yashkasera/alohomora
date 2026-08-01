@@ -15,7 +15,12 @@ data class TelemetryEvent(
     val id: Long = 0,
     val name: String,
     val properties: JsonElement?,
-    val time: Long = Clock.System.now().epochSeconds,
+    // Milliseconds, matching every explicit write (recordTelemetry, the trace
+    // interceptors). This default was seconds, so anything relying on it sorted ~1000x too
+    // low and sank to the bottom of a time-ordered list.
+    val time: Long = Clock.System.now().toEpochMilliseconds(),
+    /** Set once the user opens the event, so the list can dim it. Mirrors TraceEntry.isViewed. */
+    val isViewed: Boolean = false,
 )
 
 class PropertiesConverter {

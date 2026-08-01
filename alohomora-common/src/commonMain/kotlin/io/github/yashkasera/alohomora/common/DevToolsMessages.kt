@@ -8,6 +8,18 @@ sealed class DevToolsMessage {
     abstract val sequence: Long
 }
 
+/**
+ * Sentinel for a message type this build does not recognise.
+ *
+ * The sealed hierarchy is closed, so kotlinx.serialization would otherwise throw on any
+ * unseen `@SerialName` — meaning a newer desktop client talking to an older app killed the
+ * read loop instead of being politely ignored. Registered as the polymorphic default in
+ * [DevToolsProtocol.json]; handlers should skip it.
+ */
+@Serializable
+@SerialName("UNKNOWN")
+data class UnknownMessage(override val sequence: Long = 0) : DevToolsMessage()
+
 // ── Server → Client ──────────────────────────────────────────────────────────
 
 @Serializable
@@ -16,7 +28,18 @@ data class AuthChallengeMessage(override val sequence: Long) : DevToolsMessage()
 
 @Serializable
 @SerialName("AUTH_SUCCESS")
-data class AuthSuccessMessage(override val sequence: Long) : DevToolsMessage()
+data class AuthSuccessMessage(
+    override val sequence: Long,
+    /**
+     * A trust token the client should persist and present on reconnect, letting a desktop that
+     * has already been approved skip the OTP prompt entirely.
+     *
+     * Null when the client authenticated *with* a token (there is nothing new to hand out) and
+     * on older devices that predate trust-on-first-use — hence nullable with a default, so an
+     * old client deserialising a new message and vice versa both keep working.
+     */
+    val token: String? = null,
+) : DevToolsMessage()
 
 @Serializable
 @SerialName("AUTH_FAILURE")
@@ -66,7 +89,31 @@ data class PrefsSnapshotMessage(
 @SerialName("AUTH_RESPONSE")
 data class AuthResponseMessage(
     override val sequence: Long = 0,
-    val otp: String,
+    /**
+     * The code the user read off the device screen. Empty when authenticating with [token].
+     */
+    val otp: String = "",
+    /**
+     * A token issued by this device on a previous successful pairing.
+     *
+     * Sent instead of an OTP so an already-approved desktop reconnects silently. Null on a first
+     * pairing, and from clients that predate trust-on-first-use.
+     */
+    val token: String? = null,
+) : DevToolsMessage()
+
+/**
+ * Asks the device to delete its captured traces and/or telemetry.
+ *
+ * Clearing only the desktop's local copy would look like it worked and then silently repopulate
+ * from the device snapshot on the next reconnect, so the delete has to happen at the source.
+ */
+@Serializable
+@SerialName("REQUEST_CLEAR")
+data class RequestClearMessage(
+    override val sequence: Long = 0,
+    val traces: Boolean = false,
+    val events: Boolean = false,
 ) : DevToolsMessage()
 
 @Serializable

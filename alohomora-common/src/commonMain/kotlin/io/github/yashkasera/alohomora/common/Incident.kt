@@ -10,6 +10,9 @@ data class Incident(
     val place: String? = null,
     val reason: String? = null,
     val stackTrace: String? = null,
-    val time: Long = Clock.System.now().epochSeconds,
+    // Milliseconds. Every explicit write in the project uses toEpochMilliseconds(); this
+    // default was epochSeconds, so anything relying on it was ~1000x too low and sank to the
+    // bottom of a newest-first list.
+    val time: Long = Clock.System.now().toEpochMilliseconds(),
     val isViewed: Boolean = false,
 )
