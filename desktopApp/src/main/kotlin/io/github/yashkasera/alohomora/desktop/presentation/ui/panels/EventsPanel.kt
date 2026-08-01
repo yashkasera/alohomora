@@ -15,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.material3.Icon
 import io.github.yashkasera.alohomora.ui.icons.Trash
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import androidx.compose.runtime.collectAsState
@@ -79,6 +81,13 @@ fun EventsPanel(devToolsViewModel: DevToolsViewModel) {
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
         Box(modifier = Modifier.padding(it).fillMaxSize()) {
+            if (events.isEmpty()) {
+                EmptyState(
+                    icon = Icons.ChartLine,
+                    title = "No telemetry yet",
+                    subtitle = "Events appear here as the connected app records them.",
+                )
+            } else {
             LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
                 items(events, key = { event -> event.id to event.time }) { event ->
                     TelemetryItem(
@@ -90,6 +99,7 @@ fun EventsPanel(devToolsViewModel: DevToolsViewModel) {
                 }
             }
             ScrollToTopButton(lazyListState)
+            }
         }
         // Follows only while the user is already at the top; see FollowNewest.
         FollowNewest(lazyListState, events.size)

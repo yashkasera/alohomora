@@ -32,6 +32,23 @@ internal enum class PreferenceType {
     JSON,
     UNKNOWN;
 
+    /**
+     * Label for the type chip.
+     *
+     * The UI rendered `name` directly, so STRING_SET appeared as "STRING_SET" — an enum
+     * constant with an underscore, shown to a user.
+     */
+    fun displayLabel(): String = when (this) {
+        STRING -> "TEXT"
+        BOOLEAN -> "BOOL"
+        INT -> "INT"
+        LONG -> "LONG"
+        FLOAT -> "FLOAT"
+        STRING_SET -> "SET"
+        JSON -> "JSON"
+        UNKNOWN -> "?"
+    }
+
     companion object {
         /**
          * Detects the type of value based on its content.

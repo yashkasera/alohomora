@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -45,6 +47,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.ConfirmationBottomSheet
 import io.github.yashkasera.alohomora.ui.components.ConfirmationConfig
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeftRight
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Trash
@@ -67,7 +70,7 @@ internal fun TraceScreen(
     ) { padding ->
         if (state.calls.isEmpty()) {
             EmptyState(
-                icon = Icons.Server,
+                icon = Icons.ArrowLeftRight,
                 title = "No Network Requests",
                 subtitle = "Network requests will appear here as your app makes API calls",
                 modifier = Modifier.padding(padding),
@@ -115,7 +118,10 @@ private fun TraceTopBar(
     val selectedMethod by viewModel.method.collectAsStateWithLifecycle()
     Column {
         AlohomoraTopBar(
-            title = "Traffic Logs",
+            // "Trace", matching the module card that navigates here. The screen called
+            // itself "Traffic Logs" while the card said "Trace", so the two never agreed.
+            title = "Trace",
+            subtitle = if (state.calls.isEmpty()) null else "${state.calls.size} REQUESTS",
             navigationIcon = {
                 AlohomoraIconButton(onClick = onBackClick) {
                     Icon(Icons.ArrowLeft, contentDescription = "back")
@@ -140,16 +146,20 @@ private fun TraceTopBar(
                 query = searchQuery,
                 onQueryChange = viewModel::setQuery,
                 modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = MaterialTheme.dimens.margin.xxl),
+                    .padding(horizontal = MaterialTheme.dimens.margin.xl),
                 placeholder = "Search endpoints",
             )
             Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
+            // FlowRow, not LazyRow. All five methods fit in two rows at any phone width; the
+            // scrolling row put DELETE past the right edge with no affordance saying so.
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = MaterialTheme.dimens.margin.xl),
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-                contentPadding = PaddingValues(horizontal = MaterialTheme.dimens.margin.xxl),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
             ) {
-                items(listOf("GET", "POST", "PUT", "PATCH", "DELETE")) { method ->
+                listOf("GET", "POST", "PUT", "PATCH", "DELETE").forEach { method ->
                     val isSelected = method.equals(selectedMethod, ignoreCase = true)
                     AlohomoraFilterChip(
                         label = method,
@@ -183,7 +193,7 @@ private fun TraceItem(call: TraceEntry, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth()
             .background(containerColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.lg),
+            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),

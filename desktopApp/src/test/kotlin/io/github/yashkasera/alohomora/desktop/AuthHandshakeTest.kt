@@ -1,11 +1,14 @@
 package io.github.yashkasera.alohomora.desktop
 
+import io.github.yashkasera.alohomora.common.AuthOtpRequiredMessage
 import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.AuthSuccessMessage
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -90,5 +93,32 @@ class AuthHandshakeTest {
 
         assertNull(decoded.token, "no token means fall back to prompting every time, not a crash")
         assertTrue(decoded.sequence == 7L)
+    }
+
+    @Test
+    fun `the device can say it wants a code`() {
+        // Without this signal the client cannot tell "still validating my token" from "type a
+        // code" — both are AWAITING_AUTH. The reconnect loop then parked the device window in
+        // AwaitingAuth with no input rendered and no way to recover the session.
+        val decoded = roundTrip(AuthOtpRequiredMessage(sequence = 3))
+
+        assertTrue(decoded is AuthOtpRequiredMessage)
+        assertEquals(3L, decoded.sequence)
+    }
+
+    @Test
+    fun `awaiting auth does not request a code until told`() {
+        // The default matters: a trusted machine passes through AwaitingAuth on its way to
+        // Connected, and defaulting to true would flash an auth prompt at every reconnect.
+        assertFalse(DevToolsConnection.AwaitingAuth("127.0.0.1", 53999).otpRequired)
+    }
+
+    @Test
+    fun `an old device that never sends the signal still connects`() {
+        // Pre-signal devices go straight from the probe to AUTH_SUCCESS. Nothing should block
+        // on a message that never arrives.
+        val decoded = decodePayload("""{"type":"AUTH_SUCCESS","sequence":1}""") as AuthSuccessMessage
+
+        assertNull(decoded.token)
     }
 }

@@ -3,7 +3,18 @@ package io.github.yashkasera.alohomora.desktop.domain.model
 sealed class DevToolsConnection {
     data object Disconnected : DevToolsConnection()
     data class Connecting(val host: String, val port: Int) : DevToolsConnection()
-    data class AwaitingAuth(val host: String, val port: Int) : DevToolsConnection()
+    /**
+     * Handshake in progress.
+     *
+     * @param otpRequired true once the device has said it wants a code. False means the token
+     *   probe is still being validated — prompting then would flash an auth dialog at users
+     *   whose machine is already trusted.
+     */
+    data class AwaitingAuth(
+        val host: String,
+        val port: Int,
+        val otpRequired: Boolean = false,
+    ) : DevToolsConnection()
     data class Connected(val host: String, val port: Int) : DevToolsConnection()
     /**
      * The device stopped answering and we are trying to get back in.

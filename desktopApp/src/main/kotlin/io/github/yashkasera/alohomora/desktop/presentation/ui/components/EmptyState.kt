@@ -22,15 +22,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
+/**
+ * Explains why a surface has nothing on it.
+ *
+ * @param action optional control rendered below the text — a retry or refresh, for the cases
+ *   where the user can do something about the emptiness.
+ */
 @Composable
 fun EmptyState(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    action: (@Composable () -> Unit)? = null,
 ) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        // fillMaxSize first, then the caller's modifier. The other order let fillMaxSize
+        // override any size the caller asked for, so an EmptyState could not be constrained
+        // to a card or a list slot.
+        modifier = Modifier.fillMaxSize().then(modifier),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -77,6 +87,11 @@ fun EmptyState(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
+            }
+
+            if (action != null) {
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
+                action()
             }
         }
     }

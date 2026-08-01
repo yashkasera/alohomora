@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.devtools
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.AuthChallengeMessage
 import io.github.yashkasera.alohomora.common.AuthFailureMessage
+import io.github.yashkasera.alohomora.common.AuthOtpRequiredMessage
 import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.AuthSuccessMessage
 import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
@@ -327,6 +328,7 @@ internal class DevToolsRuntime(
             delay(DevToolsDefaults.OTP_REVEAL_GRACE_MILLIS)
             if (!isAuthenticated && !closed && _serverState.value.pendingOtp == null) {
                 _serverState.value = _serverState.value.copy(pendingOtp = otp)
+                send(AuthOtpRequiredMessage(nextSequence()))
             }
         }
 
@@ -343,6 +345,7 @@ internal class DevToolsRuntime(
                 // wait for the user to type it.
                 message.otp.isEmpty() -> {
                     _serverState.value = _serverState.value.copy(pendingOtp = otp)
+                    send(AuthOtpRequiredMessage(nextSequence()))
                 }
 
                 message.otp == this.otp -> {

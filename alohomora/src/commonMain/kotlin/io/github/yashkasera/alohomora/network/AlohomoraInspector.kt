@@ -47,9 +47,16 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
                 requestSize = request.contentLength(),
             )
 
-            entity.requestBody = when (content) {
-                is String -> content.truncateForCapture()
-                is ByteArray -> content.decodeToString().truncateForCapture()
+            entity.requestBody = when {
+                content is String -> content.truncateForCapture()
+                content is ByteArray -> content.decodeToString().truncateForCapture()
+
+                // Null, not UNABLE_PARSE_MESSAGE: a GET has no body, and calling absence a
+                // parse failure made every bodyless request render "Cannot parse body".
+                // Checked via contentLength rather than Ktor's EmptyContent, which is not
+                // resolvable across the versions this plugin supports.
+                (request.contentLength() ?: 0L) == 0L -> null
+
                 // Deliberately not content.toString(): for any streaming/multipart
                 // OutgoingContent that yields a bare class name, which reads like a captured
                 // body but is not one.

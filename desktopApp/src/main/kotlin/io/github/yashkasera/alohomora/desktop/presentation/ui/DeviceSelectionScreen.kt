@@ -50,6 +50,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.theme.brand
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.theme.muted
 import io.github.yashkasera.alohomora.ui.theme.success
@@ -144,7 +145,6 @@ fun DeviceSelectionScreen(
                 AlohomoraTopBar(
                     title = "Device Selection",
                     subtitle = "Choose a device, then connect.",
-                    showDivider = false,
                 )
             },
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -325,7 +325,17 @@ fun DeviceSelectionScreen(
                                     vertical = 10.dp,
                                 ),
                             ) {
-                                Text(if (isConnecting) "Connecting..." else "Connect")
+                                if (isConnecting) {
+                                    // Beside the label, not instead of it: swapping the text
+                                    // was the only feedback, and a static word does not read
+                                    // as progress.
+                                    AlohomoraCircularProgressIndicator(
+                                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                                        strokeWidth = MaterialTheme.dimens.stroke.medium,
+                                    )
+                                    Spacer(Modifier.width(MaterialTheme.dimens.margin.sm))
+                                }
+                                Text(if (isConnecting) "Connecting" else "Connect")
                             }
                         }
                         val errorMessage =

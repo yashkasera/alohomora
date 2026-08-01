@@ -32,6 +32,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
@@ -185,6 +187,7 @@ private fun OverviewTab(trace: TraceEntry) {
 
 @Composable
 private fun RequestTab(trace: TraceEntry) {
+    val clipboard = LocalClipboardManager.current
     Column {
         // Method badge and endpoint
         MethodAndEndpointSection(
@@ -228,35 +231,48 @@ private fun RequestTab(trace: TraceEntry) {
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
         }
 
-        // Request body section
-        val requestFormat = detectFormatFromContentType(trace.requestContentType)
+        // Only rendered when there is a body. A GET has none, and showing an empty block plus
+        // a badge reading "*" (the subtype of a wildcard content type) made a normal request
+        // look like a capture failure.
+        val requestBody = trace.requestBody?.takeIf { it.isNotBlank() }
+        if (requestBody != null) {
+            val requestFormat = detectFormatFromContentType(trace.requestContentType)
+            val subtype = requestFormat.contentSubtype.uppercase()
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            SectionHeader(title = "REQUEST BODY")
-            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-            FormatBadge(format = requestFormat.contentSubtype.uppercase())
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SectionHeader(title = "REQUEST BODY")
+                // Omitted for a wildcard content type; "*" told the user nothing.
+                if (subtype != "*") {
+                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+                    FormatBadge(format = subtype)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+            AlohomoraCodeBlock(
+                content = requestBody,
+                isScrollable = false,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
         }
-
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
-        AlohomoraCodeBlock(
-            content = trace.requestBody ?: "{}",
-            isScrollable = false,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
         // Action buttons
         Row(modifier = Modifier.fillMaxWidth()) {
             AlohomoraOutlinedButton(
                 text = "Copy JSON",
-                onClick = { /* TODO */ },
+                onClick = {
+                    // The body as captured. Redaction has already been applied upstream, so
+                    // this cannot leak a header the UI is hiding.
+                    clipboard.setText(AnnotatedString(requestBody ?: trace.responseBody ?: ""))
+                },
                 modifier = Modifier.weight(1f),
             )
             Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
             AlohomoraOutlinedButton(
-                text = "Share",
-                onClick = { /* TODO */ },
+                text = "Copy cURL",
+                onClick = { clipboard.setText(AnnotatedString(trace.curlCommand())) },
                 modifier = Modifier.weight(1f),
             )
         }

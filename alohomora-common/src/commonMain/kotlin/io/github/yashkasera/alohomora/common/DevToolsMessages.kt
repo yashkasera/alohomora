@@ -41,6 +41,18 @@ data class AuthSuccessMessage(
     val token: String? = null,
 ) : DevToolsMessage()
 
+/**
+ * The device has displayed a code and is waiting for the user to type it.
+ *
+ * Sent only when a client's probe carried no usable trust token. Without it the client cannot
+ * tell "the device is still validating my token" from "the device wants a code from the user" —
+ * both look like AWAITING_AUTH — so it either prompts for a code that is never needed, or sits
+ * silently waiting for one it never asks for.
+ */
+@Serializable
+@SerialName("AUTH_OTP_REQUIRED")
+data class AuthOtpRequiredMessage(override val sequence: Long) : DevToolsMessage()
+
 @Serializable
 @SerialName("AUTH_FAILURE")
 data class AuthFailureMessage(

@@ -34,6 +34,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -54,6 +59,15 @@ import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
+import io.github.yashkasera.alohomora.ui.icons.ArrowRight
+import androidx.compose.foundation.layout.size
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeftRight
+import io.github.yashkasera.alohomora.ui.icons.CircleAlert
+import io.github.yashkasera.alohomora.ui.icons.Key
+import io.github.yashkasera.alohomora.ui.icons.Braces
+import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
+import io.github.yashkasera.alohomora.ui.icons.ClipboardList
+import io.github.yashkasera.alohomora.ui.icons.Layers
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Settings
@@ -73,48 +87,48 @@ private val builtInModules = listOf(
     OverviewModule(
         title = "Trace",
         subtitle = "LIVE STREAM",
-        icon = Icons.Server,
+        icon = Icons.ArrowLeftRight,
         isInverse = true,
         route = Routes.Trace,
     ),
     OverviewModule(
         title = "Telemetry",
         subtitle = "SYSTEM TRIGGERS",
-        icon = Icons.ChartLine,
+        icon = Icons.ClipboardList,
         isInverse = false,
         route = Routes.Telemetry,
     ),
     OverviewModule(
         title = "Vault",
-        subtitle = "Inspector",
+        subtitle = "INSPECTOR",
         icon = Icons.Database,
         isInverse = false,
         route = Routes.Vault,
     ),
     OverviewModule(
         title = "Incidents",
-        subtitle = "critical logs",
-        icon = Icons.HardDrive,
+        subtitle = "CRITICAL LOGS",
+        icon = Icons.CircleAlert,
         isInverse = false,
         route = Routes.Incident,
     ),
     OverviewModule(
         title = "Cache",
-        subtitle = "key-value store",
-        icon = Icons.HardDrive,
+        subtitle = "KEY-VALUE STORE",
+        icon = Icons.Braces,
         isInverse = false,
         route = Routes.Cache,
     ),
     OverviewModule(
         title = "Config",
-        subtitle = "build settings",
-        icon = Icons.Settings,
+        subtitle = "BUILD SETTINGS",
+        icon = Icons.SlidersHorizontal,
         isInverse = false,
         route = Routes.Config,
     ),
     OverviewModule(
         title = "Chronicle",
-        subtitle = "commit history",
+        subtitle = "COMMIT HISTORY",
         icon = Icons.GitGraph,
         isInverse = false,
         route = Routes.Chronicle,
@@ -142,9 +156,11 @@ internal fun OverviewScreen(
                 OverviewModule(
                     title = plugin.title,
                     subtitle = plugin.description ?: "",
-                    isInverse = plugin.priority > 5,
+                    // Never inverted. Emphasis is reserved for the first built-in module;
+                    // keying it off `priority` scattered white cards through the grid.
+                    isInverse = false,
                     route = Routes.Extension(extensionId = plugin.id),
-                    icon = plugin.icon ?: Icons.Server,
+                    icon = plugin.icon ?: Icons.Layers,
                 )
             }
             .partition { it.route is Routes.Extension }
@@ -209,7 +225,7 @@ internal fun OverviewScreen(
             columns = StaggeredGridCells.Fixed(2),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
             verticalItemSpacing = MaterialTheme.dimens.margin.lg,
-            contentPadding = PaddingValues(MaterialTheme.dimens.margin.xxl),
+            contentPadding = PaddingValues(MaterialTheme.dimens.margin.xl),
             state = lazyGridState,
         ) {
             item(span = StaggeredGridItemSpan.FullLine) {
@@ -262,7 +278,7 @@ private fun DevToolsStatusCard(
     Box(
         modifier = Modifier.fillMaxWidth().border(
             MaterialTheme.dimens.stroke.small, MaterialTheme.colorScheme.onBackground, RectangleShape,
-        ).background(MaterialTheme.colorScheme.background).padding(MaterialTheme.dimens.margin.xxl),
+        ).background(MaterialTheme.colorScheme.background).padding(MaterialTheme.dimens.margin.xl),
     ) {
         Column {
             Row(
@@ -272,7 +288,7 @@ private fun DevToolsStatusCard(
             ) {
                 Text(
                     "Server Status",
-                    style = MaterialTheme.typography.displaySmall,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontStyle = FontStyle.Italic,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
@@ -282,7 +298,7 @@ private fun DevToolsStatusCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -315,14 +331,20 @@ private fun DevToolsStatusCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         val dotState = when (state.deviceConnectionStatus) {
                             DevConnectionStatus.Connected -> ConnectionDotState.Connected
-                            DevConnectionStatus.AwaitingAuth,
-                            DevConnectionStatus.Disconnected -> ConnectionDotState.Reconnecting
+                            // Amber only while something is genuinely in progress.
+                            DevConnectionStatus.AwaitingAuth -> ConnectionDotState.Reconnecting
+                            DevConnectionStatus.Disconnected,
                             DevConnectionStatus.Off -> ConnectionDotState.Disconnected
                         }
                         ConnectionStatusDot(state = dotState)
                         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                         Text(
-                            state.deviceConnectionStatus.name,
+                            when (state.deviceConnectionStatus) {
+                                DevConnectionStatus.Connected -> "Connected"
+                                DevConnectionStatus.AwaitingAuth -> "Awaiting code"
+                                DevConnectionStatus.Disconnected -> "Waiting for client"
+                                DevConnectionStatus.Off -> "Server off"
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onBackground,
                         )
@@ -403,40 +425,97 @@ private fun ModuleCard(
 
     Box(
         modifier = Modifier
-            .height(IntrinsicSize.Max)
+            // Fixed, not wrap-content. The title sits at the bottom of the tile with open space
+            // above it, which needs a height to push against — and it keeps every tile in the
+            // staggered grid the same size instead of each sizing to its own text.
+            .height(CARD_HEIGHT)
             .border(
                 width = MaterialTheme.dimens.stroke.small,
                 color = borderColor,
                 shape = RectangleShape,
             )
             .background(backgroundColor)
-            .clickable {
-                onNavigate(overviewModule.route)
-            }
-            .padding(MaterialTheme.dimens.margin.xl),
+            .clickable { onNavigate(overviewModule.route) }
+            .padding(MaterialTheme.dimens.margin.lg),
     ) {
-        Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-            // Top Section (Icon + Arrow)
+        // Decorative corner mark, accent tile only, drawn behind the content.
+        if (overviewModule.isInverse) {
+            AccentCornerPattern(
+                color = contentColor,
+                modifier = Modifier.align(Alignment.TopEnd),
+            )
+        }
+
+        Column(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top,
             ) {
-                Text("→", color = contentColor)
+                Icon(
+                    imageVector = overviewModule.icon,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                )
+                Icon(
+                    imageVector = Icons.ArrowRight,
+                    contentDescription = null,
+                    tint = contentColor.copy(alpha = 0.6f),
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                )
             }
 
-            // Bottom Section (Text)
-            Column {
-                Text(
-                    overviewModule.title,
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontStyle = FontStyle.Italic,
-                    color = contentColor,
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+            // The open space that gives the tile its shape.
+            Spacer(modifier = Modifier.weight(1f))
+
+            Text(
+                overviewModule.title,
+                style = MaterialTheme.typography.headlineSmall,
+                fontStyle = FontStyle.Italic,
+                color = contentColor,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (overviewModule.subtitle.isNotBlank()) {
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
                 Text(
                     overviewModule.subtitle,
                     style = MaterialTheme.typography.labelSmall,
-                    color = contentColor.copy(0.7f),
+                    color = contentColor.copy(alpha = 0.7f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+/** Height of every module tile. See [ModuleCard] for why it is fixed rather than intrinsic. */
+private val CARD_HEIGHT = 168.dp
+
+/**
+ * Scattered squares in the accent tile's top corner.
+ *
+ * Purely decorative and deliberately faint — it marks the primary tile without competing with the
+ * label. Drawn in a Canvas rather than shipped as an asset so it inherits the content colour and
+ * works on either theme.
+ */
+@Composable
+private fun AccentCornerPattern(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(76.dp)) {
+        val cell = size.width / 7f
+        val square = cell * 0.52f
+        for (row in 0 until 7) {
+            for (col in 0 until 7) {
+                // Densest at the top-right, fading out along the diagonal.
+                val distance = (row + (6 - col)) / 12f
+                val alpha = (0.22f - distance * 0.24f).coerceAtLeast(0f)
+                if (alpha <= 0.01f) continue
+                drawRect(
+                    color = color.copy(alpha = alpha),
+                    topLeft = Offset(col * cell, row * cell),
+                    size = Size(square, square),
                 )
             }
         }

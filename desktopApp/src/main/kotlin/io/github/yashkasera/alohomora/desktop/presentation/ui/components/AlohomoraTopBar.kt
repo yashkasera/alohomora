@@ -26,7 +26,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 fun AlohomoraTopBar(
     title: String,
     subtitle: String? = null,
-    showDivider: Boolean,
+    showDivider: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     Column(
@@ -46,15 +46,17 @@ fun AlohomoraTopBar(
                     Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
                 }
             },
-            contentPadding = PaddingValues(vertical = MaterialTheme.dimens.margin.md, horizontal = MaterialTheme.dimens.margin.lg),
+            contentPadding = PaddingValues(
+                vertical = MaterialTheme.dimens.margin.md,
+                horizontal = MaterialTheme.dimens.margin.xxl,
+            ),
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer
             ),
             actions = actions
         )
-//        Spacer(Modifier.height(12.dp))
         if (showDivider) {
-//            AlohomoraHorizontalDivider()
+            AlohomoraHorizontalDivider()
         }
     }
 }

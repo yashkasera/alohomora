@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TelemetryEvent
+import kotlinx.serialization.json.JsonNull
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.presentation.ui.components.TelemetryEventBottomSheet
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
@@ -64,6 +65,7 @@ internal fun TelemetryScreen(onBackClick: () -> Unit) {
         topBar = {
             AlohomoraTopBar(
                 title = "Telemetry",
+                subtitle = if (state.events.isEmpty()) null else "${state.events.size} EVENTS",
                 navigationIcon = {
                     AlohomoraIconButton(onClick = onBackClick) {
                         Icon(Icons.ArrowLeft, contentDescription = "back")
@@ -198,9 +200,10 @@ internal fun TelemetryItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = event.name,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                    ),
+                    // titleMedium is the one list-row title style. Telemetry and Incidents used
+                    // titleLarge+Bold, Chronicle bodyLarge mono and Navigation headlineLarge
+                    // italic — four weights for four lists of the same shape.
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
             }
@@ -233,7 +236,12 @@ internal fun TelemetryItem(
                 }
 
                 Text(
-                    text = event.properties?.toString() ?: "{}",
+                    // JsonNull is not Kotlin null, so `?: "{}"` never fired for an event
+                    // recorded with no properties and the row rendered the word "null".
+                    text = event.properties
+                        ?.takeUnless { it is JsonNull }
+                        ?.toString()
+                        ?: "{}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier

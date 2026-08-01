@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import io.github.yashkasera.alohomora.common.DateUtils
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,7 +67,7 @@ internal fun ConfigScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = MaterialTheme.dimens.margin.xxl),
+                .padding(horizontal = MaterialTheme.dimens.margin.xl),
         ) {
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
 
@@ -114,8 +115,10 @@ private fun ConfigSection(
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            // tertiary, matching PORT/DEVICE/OTP on Overview and DATABASE/TABLES in the Vault.
+            // This screen was the only one rendering section labels in muted grey.
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.tertiary,
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
         content()
@@ -168,18 +171,11 @@ private fun BuildInfoGrid(buildConfig: BuildMetadata?) {
 
         InfoItem(
             label = "Build Time",
-            value =
-                buildConfig?.buildTimestampUtc?.let(Instant::fromEpochSeconds)
-                    ?.toLocalDateTime(TimeZone.currentSystemDefault())?.format(
-                        LocalDateTime.Format {
-                            monthNumber(); char('/');
-                            day(); char('/');
-                            year(); char(' ');
-                            hour(); char(':');
-                            minute(); char(':');
-                            second();
-                        },
-                    ),
+            // DateUtils, not a hand-rolled kotlinx.datetime call. This screen used
+            // fromEpochSeconds on a value that is milliseconds, rendering the year as +58553 —
+            // and being the one timestamp not going through DateUtils is why nothing caught it.
+            value = buildConfig?.buildTimestampUtc
+                ?.let { DateUtils.format(it, DateUtils.Format.ISO_DATE_TIME_SECONDS) },
             modifier = Modifier.fillMaxWidth(),
         )
 

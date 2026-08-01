@@ -62,6 +62,7 @@ internal fun IncidentScreen(
         topBar = {
             AlohomoraTopBar(
                 title = "Incidents",
+                subtitle = if (state.incidents.isEmpty()) null else "${state.incidents.size} OCCURRENCES",
                 navigationIcon = {
                     AlohomoraIconButton(onClick = onBackClick) {
                         Icon(Icons.ArrowLeft, contentDescription = "back")
@@ -78,16 +79,8 @@ internal fun IncidentScreen(
                 },
             )
         },
-        floatingActionButton = {
-            AlohomoraFloatingActionButton(
-                onClick = { /* TODO: Export incidents */ },
-                containerColor = MaterialTheme.colorScheme.inverseSurface,
-                contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-                shape = CircleShape,
-            ) {
-                Icon(Icons.Download, contentDescription = "Download incidents")
-            }
-        },
+        // An export FAB used to sit here with a TODO onClick — the only FAB in the console,
+        // and it did nothing. Removed; reinstate it when export exists.
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) { padding ->
@@ -102,23 +95,8 @@ internal fun IncidentScreen(
                     .background(MaterialTheme.colorScheme.surface)
                     .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
             ) {
-                Text(
-                    text = "Incident Logs",
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = "DIAGNOSTIC REPORT LIST",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        letterSpacing = 2.sp,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xl))
-
+                // No in-content title: the top bar already says "Incidents". This screen was
+                // the only one repeating its own name, which cost a third of the viewport.
                 AlohomoraSearchTextField(
                     query = state.searchQuery,
                     onQueryChange = { viewModel.onSearchQueryChange(it) },
@@ -140,19 +118,9 @@ internal fun IncidentScreen(
                         ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    AlohomoraOutlinedButton(
-                        text = "Live Session",
-                        onClick = { /* TODO: Filter live session */ },
-                        shape = RoundedCornerShape(MaterialTheme.dimens.corner.full),
-                    ) {
-                        Text(
-                            "LIVE SESSION",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp,
-                            ),
-                        )
-                    }
+                    // A "LIVE SESSION" pill used to sit here with a TODO onClick — it looked
+                    // like an active filter and did nothing. Removed rather than left in;
+                    // reinstate it when there is a predicate behind it.
                 }
             }
 
@@ -235,9 +203,8 @@ private fun IncidentListItem(
                     Text(
                         text = incident.reason?.substringAfterLast(".")?.substringBefore(":")
                             ?: "Unknown Exception",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                        ),
+                        // See TelemetryScreen: one list-row title style across the console.
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Box(

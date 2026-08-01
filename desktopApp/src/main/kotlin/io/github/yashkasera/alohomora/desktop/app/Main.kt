@@ -274,8 +274,8 @@ private fun LauncherScreen(
             }
 
             if (pendingSession != null) {
-                when (pendingConnectionState) {
-                    is DevToolsConnection.AwaitingAuth -> {
+                when (val pending = pendingConnectionState) {
+                    is DevToolsConnection.AwaitingAuth if pending.otpRequired -> {
                         Text(
                             "Authentication Required",
                             style = MaterialTheme.typography.headlineSmall,

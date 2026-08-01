@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.data.devtools
 
 import io.github.yashkasera.alohomora.common.AuthFailureMessage
+import io.github.yashkasera.alohomora.common.AuthOtpRequiredMessage
 import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.AuthSuccessMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
@@ -268,6 +269,13 @@ class DevToolsRepositoryImpl(
                 if (current is DevToolsConnection.AwaitingAuth) {
                     _state.value = DevToolsConnection.Connected(current.host, current.port)
                     scope.launch { sendMessage(RequestInitialStateMessage()) }
+                }
+            }
+
+            is AuthOtpRequiredMessage -> {
+                val current = _state.value
+                if (current is DevToolsConnection.AwaitingAuth) {
+                    _state.value = current.copy(otpRequired = true)
                 }
             }
 

@@ -127,8 +127,8 @@ fun ChroniclePanel(devToolsViewModel: DevToolsViewModel) {
             if (commits.isEmpty()) {
                 item {
                     EmptyState(
-                        modifier = Modifier
-                            .padding(it),
+                        // No .padding(it): the enclosing Box already applied the Scaffold
+                        // insets, so passing them again double-padded this.
                         icon = Icons.GitGraph,
                         title = "No Git Commits",
                         subtitle = "No commits available. Connect a device to load commit history.",

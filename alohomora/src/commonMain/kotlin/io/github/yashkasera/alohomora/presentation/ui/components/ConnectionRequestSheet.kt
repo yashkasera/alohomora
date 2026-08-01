@@ -100,7 +100,9 @@ internal fun ConnectionRequestSheetContent(
                     remember = !remember
                     onRememberChange(remember)
                 },
-            verticalAlignment = Alignment.CenterVertically,
+            // Top, not centre: the label wraps to two lines on a narrow screen and a centred
+            // checkbox then floats between them.
+            verticalAlignment = Alignment.Top,
         ) {
             Checkbox(
                 checked = remember,
@@ -117,7 +119,7 @@ internal fun ConnectionRequestSheetContent(
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Text(
-                    text = "Skip this code next time it connects.",
+                    text = "Skip the code next time",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary,
                 )

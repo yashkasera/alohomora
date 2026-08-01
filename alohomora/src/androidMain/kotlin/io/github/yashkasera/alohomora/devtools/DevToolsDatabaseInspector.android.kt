@@ -95,7 +95,10 @@ internal actual class DevToolsDatabaseInspector actual constructor(
 
     private fun queryTables(db: SQLiteDatabase): List<String> {
         val cursor = db.rawQuery(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'android_%' AND name NOT LIKE 'sqlite_%'",
+            "SELECT name FROM sqlite_master WHERE type='table' " +
+                "AND name NOT LIKE 'android_%' " +
+                "AND name NOT LIKE 'sqlite_%' " +
+                "AND name != 'room_master_table'",
             null
         )
         val tables = mutableListOf<String>()

@@ -18,6 +18,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.icons.Database
+import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
@@ -49,7 +52,6 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
             AlohomoraTopBar(
                 title = "Databases",
                 subtitle = "Manage your app databases",
-                showDivider = false,
             )
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -62,7 +64,12 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
         ) {
             Text(text = "Databases", style = MaterialTheme.typography.titleLarge)
             if (databases.isEmpty()) {
-                Text(text = "No app databases detected.")
+                EmptyState(
+                    icon = Icons.Database,
+                    title = "No databases",
+                    subtitle = "The connected app has no inspectable databases.",
+                )
+                return@Column
             } else {
                 FlowRow(
                     modifier = Modifier
@@ -82,10 +89,12 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
             }
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
             if (selectedDatabase == null) {
-                Text(
-                    text = "No database selected",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
+                // Not an error state — nothing has gone wrong, the user simply has not picked
+                // one yet. It was rendered in error red.
+                EmptyState(
+                    icon = Icons.Database,
+                    title = "Select a database",
+                    subtitle = "Choose one above to browse its tables.",
                 )
                 return@Column
             }
@@ -96,7 +105,7 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
                 Text(
                     text = "No tables found in this database.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 return@Column
             } else {

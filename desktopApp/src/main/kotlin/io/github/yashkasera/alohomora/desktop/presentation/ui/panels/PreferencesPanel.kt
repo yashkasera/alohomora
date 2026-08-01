@@ -36,7 +36,6 @@ fun PreferencesPanel(prefsViewModel: PrefsViewModel) {
             AlohomoraTopBar(
                 title = "Preferences",
                 subtitle = "Live keys and values from connected app",
-                showDivider = false,
             )
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,

@@ -61,10 +61,15 @@ import io.github.yashkasera.alohomora.desktop.util.pickSavePath
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.OtpPromptDialog
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.brand
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
+import androidx.compose.foundation.clickable
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import java.io.File
 import kotlinx.coroutines.delay
@@ -170,6 +175,7 @@ fun DevToolsDesktopApp(
                 }
             },
         ) {
+            Box(modifier = Modifier.fillMaxSize()) {
             if (!hasConnectedDevice) {
                 NoDevicePanel(onRefresh = { devicesViewModel.refreshDevices() })
             } else {
@@ -178,7 +184,7 @@ fun DevToolsDesktopApp(
                         devToolsViewModel = devToolsViewModel,
                         devicesViewModel = devicesViewModel,
                         selectedDevice = selectedDevice,
-                        recordLabel = if (isRecording) "Stop Recording" else "Start Recording",
+                        isRecording = isRecording,
                         onTakeScreenshot = screenshot@{
                             val timestamp = System.currentTimeMillis()
                             val defaultName = "alohomora_screenshot_${timestamp}.png"
@@ -210,28 +216,7 @@ fun DevToolsDesktopApp(
                                 recordingLocalPath = null
                             }
                         },
-                        onClearAppData = {
-                            val packageName = buildInfo?.packageName
-                            if (packageName.isNullOrBlank()) {
-                                devicesViewModel.setActionError("Build package name unavailable")
-                                return@DashboardContent
-                            }
-                            devicesViewModel.runCommand(
-                                selectedDeviceId,
-                                "shell pm clear $packageName",
-                            )
-                            devicesViewModel.setActionMessage("App data clear command sent")
-                        },
-                        onRestartAdb = {
-                            scope.launch {
-                                devicesViewModel.restartAdb { error ->
-                                    if (error == null) devicesViewModel.setActionMessage("ADB restarted")
-                                    else devicesViewModel.setActionError(error)
-                                }
-                            }
-                        },
                         onApiLogClick = { selectedTraceForDrawer = it },
-                        connection = devToolsState.connection,
                         onEventViewClick = {},
                         onTracesClick = { activeSection = DesktopSection.Traces },
                         onEventsClick = { activeSection = DesktopSection.TelemetryEvents },
@@ -261,6 +246,34 @@ fun DevToolsDesktopApp(
                     DesktopSection.Database -> DatabasePanel(databaseViewModel = databaseViewModel)
                 }
             }
+
+            // The reconnect loop lands here, not in the launcher, so this window needs its own
+            // way to answer. Gated on otpRequired rather than AwaitingAuth: a trusted machine
+            // passes through AwaitingAuth silently and must not be prompted.
+            val connection = devToolsState.connection
+            if (connection is DevToolsConnection.AwaitingAuth && connection.otpRequired) {
+                OtpPromptDialog(
+                    onSubmit = { devToolsViewModel.submitOtp(it) },
+                    onCancel = { devToolsViewModel.disconnect() },
+                )
+            }
+
+            // `switching` was computed in the ViewModel and never read, so changing device
+            // silently left the previous device's data frozen on screen with no indication
+            // that anything was happening.
+            if (devToolsState.switching) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
+                        // Swallows clicks so a half-switched panel cannot be interacted with.
+                        .clickable(indication = null, interactionSource = null) {},
+                    contentAlignment = Alignment.Center,
+                ) {
+                    AlohomoraCircularProgressIndicator()
+                }
+            }
+            }
         }
 
         TraceDetailsSideModal(
@@ -275,23 +288,14 @@ fun DevToolsDesktopApp(
 private fun NoDevicePanel(
     onRefresh: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(MaterialTheme.dimens.margin.xxl),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text("No device connected", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(
-            "Connect an Android device via USB or adb tcpip, then refresh devices.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.secondary,
-        )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
-        OutlinedButton(onClick = onRefresh) {
-            Text("Refresh devices")
-        }
-    }
+    EmptyState(
+        icon = Icons.HardDrive,
+        title = "No device connected",
+        subtitle = "Connect an Android device over USB or adb tcpip, or an iPhone over USB, then refresh.",
+        action = {
+            AlohomoraOutlinedButton(text = "Refresh devices", onClick = onRefresh)
+        },
+    )
 }
 
 @Composable

@@ -24,6 +24,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -49,6 +51,7 @@ internal fun IncidentDetailsScreen(
 ) {
     val viewModel = koinViewModel<IncidentDetailsViewModel> { parametersOf(incidentId) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val clipboard = LocalClipboardManager.current
 
     Scaffold(
         topBar = {
@@ -211,7 +214,11 @@ internal fun IncidentDetailsScreen(
                     Row(modifier = Modifier.fillMaxWidth()) {
                         AlohomoraOutlinedButton(
                             text = "Copy Trace",
-                            onClick = { /* TODO: Copy trace to clipboard */ },
+                            onClick = {
+                                clipboard.setText(
+                                    AnnotatedString(incident.stackTrace ?: incident.reason ?: ""),
+                                )
+                            },
                             modifier = Modifier.weight(1f),
                             shape = RectangleShape,
                             contentColor = MaterialTheme.colorScheme.onSurface,
@@ -234,8 +241,19 @@ internal fun IncidentDetailsScreen(
                         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
 
                         AlohomoraFilledButton(
-                            text = "Share Report",
-                            onClick = { /* TODO: Share report */ },
+                            text = "Copy Report",
+                            onClick = {
+                                clipboard.setText(
+                                    AnnotatedString(
+                                        buildString {
+                                            appendLine(incident.reason ?: "Unknown exception")
+                                            appendLine(incident.place ?: "")
+                                            appendLine()
+                                            append(incident.stackTrace ?: "")
+                                        },
+                                    ),
+                                )
+                            },
                             modifier = Modifier.weight(1f),
                             shape = RectangleShape,
                             containerColor = MaterialTheme.colorScheme.inverseSurface,

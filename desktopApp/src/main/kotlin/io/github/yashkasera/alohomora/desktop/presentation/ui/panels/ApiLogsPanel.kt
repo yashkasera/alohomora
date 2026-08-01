@@ -31,10 +31,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialShapes.Companion.Puffy
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,25 +48,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.ui.theme.dimens
-import androidx.graphics.shapes.RoundedPolygon
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TraceItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
-import io.github.yashkasera.alohomora.ui.components.FollowNewest
-import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
+import io.github.yashkasera.alohomora.ui.components.FollowNewest
+import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Slack
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.X
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -131,13 +130,21 @@ private fun ScaffoldContent(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
         Box(modifier = Modifier.padding(it).fillMaxSize()) {
-            LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
-                items(logs, key = { log -> log.id }) { log ->
-                    TraceItem(call = log, onClick = { onLogClick(log) })
-                    AlohomoraHorizontalDivider()
+            if (logs.isEmpty()) {
+                EmptyState(
+                    icon = Icons.Server,
+                    title = "No traces yet",
+                    subtitle = "Requests appear here as the connected app makes them.",
+                )
+            } else {
+                LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                    items(logs, key = { log -> log.id }) { log ->
+                        TraceItem(call = log, onClick = { onLogClick(log) })
+                        AlohomoraHorizontalDivider()
+                    }
                 }
+                ScrollToTopButton(lazyListState)
             }
-            ScrollToTopButton(lazyListState)
         }
         FollowNewest(lazyListState, logs.size)
     }

@@ -21,6 +21,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import io.github.yashkasera.alohomora.ui.icons.ArrowRight
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
@@ -73,7 +77,7 @@ internal fun NavigationHistoryScreen(onBackClick: () -> Unit = {}) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                    .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.xl),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column {
@@ -86,7 +90,7 @@ internal fun NavigationHistoryScreen(onBackClick: () -> Unit = {}) {
                         state.sessionDuration,
                         style = MaterialTheme.typography.displaySmall,
                         color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(top = 8.dp),
+                        modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
                     )
                 }
 
@@ -100,7 +104,7 @@ internal fun NavigationHistoryScreen(onBackClick: () -> Unit = {}) {
                         state.stackOperations.toString(),
                         style = MaterialTheme.typography.displaySmall,
                         color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(top = 8.dp),
+                        modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
                     )
                 }
             }
@@ -111,7 +115,7 @@ internal fun NavigationHistoryScreen(onBackClick: () -> Unit = {}) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = MaterialTheme.dimens.margin.xl),
         ) {
             // Timeline
             NavigationTimeline(events = state.timelineEvents)
@@ -125,13 +129,13 @@ private fun NavigationTimeline(events: List<ActivityTimelineItem>) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 48.dp),
+                .padding(vertical = MaterialTheme.dimens.margin.xs),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = "No navigation events recorded yet",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            EmptyState(
+                icon = Icons.Route,
+                title = "No navigation yet",
+                subtitle = "Screens appear here as the app navigates.",
             )
         }
         return
@@ -164,18 +168,18 @@ private fun TimelineItem(
     val hasExtras = !event.intentExtras.isNullOrEmpty()
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
     ) {
         // Timeline dot
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(24.dp),
+            modifier = Modifier.width(MaterialTheme.dimens.margin.xl),
         ) {
             Box(
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(MaterialTheme.dimens.margin.xl)
                     .border(
-                        width = 2.dp,
+                        width = MaterialTheme.dimens.stroke.medium,
                         color = if (event.isActive) MaterialTheme.colorScheme.onBackground
                         else MaterialTheme.colorScheme.outline,
                         shape = CircleShape,
@@ -193,7 +197,7 @@ private fun TimelineItem(
             modifier = Modifier
                 .weight(1f)
                 .border(
-                    width = if (event.isActive) 3.dp else 1.dp,
+                    width = if (event.isActive) MaterialTheme.dimens.stroke.medium else MaterialTheme.dimens.stroke.small,
                     color = MaterialTheme.colorScheme.onBackground,
                     shape = RectangleShape,
                 )
@@ -201,7 +205,7 @@ private fun TimelineItem(
                     color = if (event.isActive) MaterialTheme.colorScheme.background
                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                 )
-                .padding(20.dp),
+                .padding(MaterialTheme.dimens.margin.xl),
         ) {
             Column {
                 // Header row
@@ -213,7 +217,7 @@ private fun TimelineItem(
                     Column(modifier = Modifier.weight(1f)) {
                         // State label (RESUMED, POPPED SCREEN, etc)
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
@@ -231,7 +235,7 @@ private fun TimelineItem(
                                     modifier = Modifier
                                         .clip(MaterialTheme.shapes.extraSmall)
                                         .background(MaterialTheme.colorScheme.onBackground)
-                                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                                        .padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = MaterialTheme.dimens.margin.xs),
                                 ) {
                                     Text(
                                         text = event.badge,
@@ -244,7 +248,7 @@ private fun TimelineItem(
                     }
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         if (event.isActive) {
@@ -252,7 +256,7 @@ private fun TimelineItem(
                                 modifier = Modifier
                                     .clip(MaterialTheme.shapes.extraSmall)
                                     .background(MaterialTheme.colorScheme.onBackground)
-                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                                    .padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = MaterialTheme.dimens.margin.xs),
                             ) {
                                 Text(
                                     text = "ACTIVE",
@@ -264,35 +268,36 @@ private fun TimelineItem(
 
                         // Show arrow for PREVIOUS state
                         if (!event.isActive && hasExtras && event.intentData == null) {
-                            Text(
-                                text = "→",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            Icon(
+                                imageVector = Icons.ArrowRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
                 // Screen name
                 Text(
                     text = event.title,
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontStyle = FontStyle.Italic,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
 
                 // Intent Data Section (expandable)
                 if (hasIntentData) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { isIntentExpanded = !isIntentExpanded }
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            .padding(vertical = MaterialTheme.dimens.margin.xs),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
@@ -308,7 +313,7 @@ private fun TimelineItem(
                     }
 
                     if (isIntentExpanded) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
                         // Show intent extras
                         event.intentExtras?.forEach { (key, value) ->
@@ -354,7 +359,7 @@ private fun TimelineItem(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
                 // Metadata row
                 Row(
@@ -371,7 +376,7 @@ private fun TimelineItem(
                             text = event.timestamp,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(top = 4.dp),
+                            modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
                         )
                     }
 
@@ -386,7 +391,7 @@ private fun TimelineItem(
                                 text = event.duration,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.padding(top = 4.dp),
+                                modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
                             )
                         }
                     }
@@ -404,13 +409,13 @@ private fun TimelineConnector(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+            .padding(vertical = MaterialTheme.dimens.margin.sm),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
     ) {
         // Vertical line
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(24.dp),
+            modifier = Modifier.width(MaterialTheme.dimens.margin.xl),
         ) {
             Box(
                 modifier = Modifier
@@ -423,14 +428,15 @@ private fun TimelineConnector(
         // Arrow and label
         if (hasArrow && label != null) {
             Row(
-                modifier = Modifier.padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "←",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Icon(
+                    imageVector = Icons.ArrowLeft,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
                 )
                 Text(
                     text = label,

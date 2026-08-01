@@ -40,7 +40,6 @@ fun LogcatPanel(
             AlohomoraTopBar(
                 title = "Logcat",
                 subtitle = "Live device logs with filters",
-                showDivider = false,
                 actions = {
                     LogcatControls(
                         running = uiState.running,

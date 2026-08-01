@@ -182,7 +182,8 @@ private fun PreferenceItem(
             Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
 
             // Type chip
-            AlohomoraChip(label = entry.type.name)
+            // Was entry.type.name — a raw enum leaking into the UI.
+            AlohomoraChip(label = entry.type.displayLabel())
         }
 
         Spacer(modifier = Modifier.height(6.dp)) // 6.dp intentional: tight preference value gap

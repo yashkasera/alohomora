@@ -11,10 +11,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.size
+import io.github.yashkasera.alohomora.ui.icons.ChevronRight
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
@@ -56,6 +62,7 @@ internal fun LazyItemScope.JsonRow(
             .fillMaxWidth()
             .animateItem()
             .padding(start = indent, top = 2.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
 
         when (row.kind) {
@@ -65,13 +72,15 @@ internal fun LazyItemScope.JsonRow(
                     preview(node, visibleState.tree)
                 }
 
-                Text(
-                    text = "▶",
+                Icon(
+                    imageVector = Icons.ChevronRight,
+                    contentDescription = null,
                     modifier = Modifier
+                        .size(MaterialTheme.dimens.icon.xs)
                         .rotate(arrowRotation)
                         .clickable(enabled = isExpandable) { visibleState.toggle(node.path) }
                         .padding(end = 6.dp),
-                    color = if (isExpandable)
+                    tint = if (isExpandable)
                         Color(0xFF52525B) else Color(0xFFD4D4D8),
                 )
 

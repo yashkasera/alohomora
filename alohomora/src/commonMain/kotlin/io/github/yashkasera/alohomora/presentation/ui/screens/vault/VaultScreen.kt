@@ -31,7 +31,16 @@ import io.github.yashkasera.alohomora.common.DatabaseInfo
 import io.github.yashkasera.alohomora.common.TableData
 import io.github.yashkasera.alohomora.common.TableSchema
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.ChevronDown
+import io.github.yashkasera.alohomora.ui.icons.Play
+import io.github.yashkasera.alohomora.ui.icons.Check
+import androidx.compose.foundation.layout.size
+import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.theme.queryErrorContainer
@@ -63,11 +72,9 @@ internal fun VaultScreen(
                         Icon(Icons.ArrowLeft, contentDescription = "Back")
                     }
                 },
-                actions = {
-                    AlohomoraIconButton(onClick = { /* Settings */ }) {
-                        Icon(Icons.Settings, contentDescription = "Settings")
-                    }
-                }
+                // A settings gear used to sit here with an empty onClick. Removed rather than
+                // left looking functional — the same dead control that made the iOS console
+                // impossible to leave.
             )
         }
     ) { paddingValues ->
@@ -75,7 +82,7 @@ internal fun VaultScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = MaterialTheme.dimens.margin.lg)
+                .padding(horizontal = MaterialTheme.dimens.margin.xl)
         ) {
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
@@ -159,9 +166,11 @@ private fun DatabaseSelector(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = "▼",
-                    style = MaterialTheme.typography.bodyMedium
+                Icon(
+                    imageVector = Icons.ChevronDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
                 )
             }
         }
@@ -183,22 +192,19 @@ private fun TablesSection(
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md)
+        // Chips, not coloured text. Selection was signalled only by foreground-vs-tertiary
+        // colour, which is invisible to anyone who does not already know the convention — and
+        // AlohomoraFilterChip is what the trace method filters already use for this.
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
         ) {
             tables.forEach { table ->
-                Text(
-                    text = table,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (table == selectedTable) {
-                        MaterialTheme.colorScheme.onBackground
-                    } else {
-                        MaterialTheme.colorScheme.tertiary
-                    },
-                    modifier = Modifier.clickable { onTableSelected(table) }
+                AlohomoraFilterChip(
+                    label = table,
+                    selected = table == selectedTable,
+                    onClick = { onTableSelected(table) },
                 )
             }
         }
@@ -357,7 +363,15 @@ private fun QueryTabContent(
                         shape = RoundedCornerShape(MaterialTheme.dimens.corner.small),
                         text = "Run",
                     ) {
-                        Text("▶ RUN", style = MaterialTheme.typography.labelSmall)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Play,
+                                contentDescription = null,
+                                modifier = Modifier.size(MaterialTheme.dimens.icon.xs),
+                            )
+                            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.xs))
+                            Text("RUN", style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                 }
             }
@@ -391,10 +405,11 @@ private fun QueryTabContent(
                             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = MaterialTheme.dimens.margin.xs),
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs)
                         ) {
-                            Text(
-                                text = if (status.success) "✓" else "✗",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (status.success) {
+                            Icon(
+                                imageVector = if (status.success) Icons.Check else Icons.X,
+                                contentDescription = null,
+                                modifier = Modifier.size(MaterialTheme.dimens.icon.xs),
+                                tint = if (status.success) {
                                     MaterialTheme.colorScheme.success
                                 } else {
                                     MaterialTheme.colorScheme.error
@@ -419,7 +434,11 @@ private fun QueryTabContent(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Run a query to see results", style = MaterialTheme.typography.bodySmall)
+                    EmptyState(
+                        icon = Icons.Play,
+                        title = "No results yet",
+                        subtitle = "Write a query above and run it.",
+                    )
                 }
             }
         }
