@@ -7,13 +7,15 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.android.kmp.library)
     alias(libs.plugins.kotlinx.serialization)
+    // Published because :alohomora's POM lists it as a runtime dependency.
+    id("alohomora.publish")
 }
 
 kotlin {
     jvmToolchain(17)
     android {
         namespace = "io.github.yashkasera.alohomora.ui"
-        compileSdk = 36
+        compileSdk = 37
         minSdk = 24
         androidResources.enable = true
         compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
@@ -21,7 +23,6 @@ kotlin {
 
     jvm()
 
-    iosX64()
     iosArm64()
     iosSimulatorArm64()
 

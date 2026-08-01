@@ -23,5 +23,5 @@ gradlePlugin {
 }
 
 dependencies {
-    implementation("com.android.tools.build:gradle:8.13.2")
+    implementation("com.android.tools.build:gradle:9.2.1")
 }

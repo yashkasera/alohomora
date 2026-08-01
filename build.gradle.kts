@@ -1,5 +1,5 @@
 plugins {
-    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.18.1"
+    alias(libs.plugins.binary.compatibility.validator)
     alias(libs.plugins.kotlin.multiplatform).apply(false)
     alias(libs.plugins.compose.compiler).apply(false)
     alias(libs.plugins.compose.multiplatform).apply(false)
@@ -10,7 +10,6 @@ plugins {
     alias(libs.plugins.kotlinx.serialization).apply(false)
     alias(libs.plugins.room).apply(false)
     alias(libs.plugins.ksp).apply(false)
-    alias(libs.plugins.buildConfig).apply(false)
 }
 
 allprojects {
@@ -20,22 +19,29 @@ allprojects {
 
 apiValidation {
     ignoredProjects += listOf("showcaseApp", "desktopApp", "alohomora-common", "alohomora-ui")
+
+    // Without this, :alohomora:apiCheck is a no-op: BCV only dumps JVM targets by default,
+    // :alohomora has no jvm() target, and klib validation is disabled out of the box. The
+    // repo previously claimed apiCheck guarded the public surface while enforcing nothing.
+    @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+    klib {
+        enabled = true
+    }
 }
+
+// All four modules must ship together: :alohomora's POM lists :alohomora-common and
+// :alohomora-ui as runtime dependencies, so publishing only the first two leaves every
+// external consumer with unresolvable dependencies.
+val publishedProjects = listOf(":alohomora", ":alohomora-noop", ":alohomora-common", ":alohomora-ui")
 
 tasks.register("publishGithubPackages") {
     group = "publishing"
-    description = "Publishes alohomora and alohomora-noop artifacts to GitHub Packages"
-    dependsOn(
-        ":alohomora:publishAllPublicationsToGitHubPackagesRepository",
-        ":alohomora-noop:publishAllPublicationsToGitHubPackagesRepository",
-    )
+    description = "Publishes all Alohomora artifacts to GitHub Packages"
+    dependsOn(publishedProjects.map { "$it:publishAllPublicationsToGitHubPackagesRepository" })
 }
 
 tasks.register("verifyPublishingSetup") {
     group = "verification"
     description = "Verifies maven-publish wiring by publishing artifacts to Maven local"
-    dependsOn(
-        ":alohomora:publishToMavenLocal",
-        ":alohomora-noop:publishToMavenLocal",
-    )
+    dependsOn(publishedProjects.map { "$it:publishToMavenLocal" })
 }

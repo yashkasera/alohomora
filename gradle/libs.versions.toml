@@ -1,32 +1,37 @@
 [versions]
 
-desktopJvmMacosArm64 = "1.10.2"
-kotlin = "2.3.10"
-compose-multiplatform = "1.10.2"
-material3 = "1.10.0-alpha05"
-agp = "8.13.2"
+kotlin = "2.4.10"
+compose-multiplatform = "1.11.1"
+# material3 ships on its own release train, so it cannot share compose-multiplatform's
+# version ref — but it must stay on the SAME MINOR as ui/foundation. Pairing a 1.10.x
+# material3 with 1.11.x ui/foundation risks runtime breakage across their internal APIs.
+material3 = "1.11.0-alpha07"
+agp = "9.2.1"
 androidx-activityCompose = "1.13.0"
 kermit = "2.1.0"
-kotlinx-coroutines = "1.10.2"
-ktor = "3.5.0"
-androidx-nav3 = "1.1.0-alpha01"
-kotlinx-serialization = "1.10.0"
-coil = "3.4.0"
-kotlinx-datetime = "0.7.1"
+kotlinx-coroutines = "1.11.0"
+kotlinx-atomicfu = "0.33.0"
+ktor = "3.5.1"
+kotlinx-serialization = "1.11.0"
+coil = "3.5.0"
+kotlinx-datetime = "0.8.0"
 room = "2.8.4"
-ksp = "2.3.4"
-buildConfig = "6.0.9"
-koin = "4.1.1"
-logback = "1.5.32"
+ksp = "2.3.10"
+koin = "4.2.2"
+logback = "1.5.38"
 androidx-navigation = "2.9.2"
-sqlite = "2.6.2"
-paging = "3.3.0-alpha02-0.5.1"
+sqlite = "2.7.0"
 startupRuntime = "1.2.0"
+okhttp = "5.3.2"
+binaryCompatibilityValidator = "0.18.1"
 
 [libraries]
 androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startupRuntime" }
-desktop-jvm-macos-arm64 = { module = "org.jetbrains.compose.desktop:desktop-jvm-macos-arm64", version.ref = "desktopJvmMacosArm64" }
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
+
+# Declared explicitly (not just pulled in transitively by ktor-client-okhttp) because
+# :alohomora exposes okhttp3.Interceptor in its public API via TraceInterceptor.
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
@@ -42,6 +47,7 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "kotlinx-atomicfu" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-client-serialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktor" }
@@ -50,9 +56,6 @@ ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", 
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
-ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
-ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor" }
-ktor-client-winhttp = { module = "io.ktor:ktor-client-winhttp", version.ref = "ktor" }
 ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
@@ -90,4 +93,4 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 room = { id = "androidx.room", version.ref = "room" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-buildConfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildConfig" }
+binary-compatibility-validator ={ id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }

@@ -11,7 +11,7 @@ plugins {
 
 android {
     namespace = "io.github.yashkasera.alohomora.showcaseApp"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 24

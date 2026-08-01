@@ -1,5 +1,3 @@
-import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
@@ -11,31 +9,34 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.room)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.buildConfig)
-    `maven-publish`
+    id("alohomora.publish")
 }
 
 kotlin {
     jvmToolchain(17)
     android {
         namespace = "io.github.yashkasera.alohomora"
-        compileSdk = 36
+        compileSdk = 37
         minSdk = 24
         androidResources.enable = true
         compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
     }
 
-    iosX64()
+    // iosX64 is intentionally absent: Compose Multiplatform 1.11.x no longer publishes
+    // iosX64 variants, so declaring it produces a target that can never be compiled.
     iosArm64()
     iosSimulatorArm64()
 
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":alohomora-common"))
-            implementation(project(":alohomora-ui"))
+            // api, not implementation: these modules' types appear in Alohomora's public
+            // surface (TraceEntry from -common, ImageVector/theme from -ui via
+            // CustomScreenPlugin), so consumers need them on their compile classpath.
+            api(project(":alohomora-common"))
+            api(project(":alohomora-ui"))
+            api(libs.compose.ui)
 
             implementation(libs.compose.runtime)
-            implementation(libs.compose.ui)
             implementation(libs.compose.foundation)
             implementation(libs.compose.resources)
             implementation(libs.compose.ui.tooling.preview)
@@ -43,10 +44,10 @@ kotlin {
 
 
             implementation(libs.kermit)
+            implementation(libs.kotlinx.atomicfu)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.client.serialization)
             implementation(libs.ktor.serialization.json)
             implementation(libs.ktor.client.logging)
             implementation(libs.navigation.compose)
@@ -75,10 +76,14 @@ kotlin {
         }
 
         androidMain.dependencies {
+            // api: TraceInterceptor implements okhttp3.Interceptor publicly, so a consumer
+            // constructing it needs okhttp on their own compile classpath.
+            api(libs.okhttp)
+
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
-            implementation (libs.androidx.startup.runtime)
+            implementation(libs.androidx.startup.runtime)
         }
 
         iosMain.dependencies {
@@ -104,11 +109,6 @@ dependencies {
     androidRuntimeClasspath(libs.compose.ui.tooling)
 }
 
-buildConfig {
-    // BuildConfig configuration here.
-    // https://github.com/gmazzo/gradle-buildconfig-plugin#usage-in-kts
-}
-
 room {
     schemaDirectory("kspAndroidMain", "$projectDir/schemas/kspAndroidMain")
     schemaDirectory("$projectDir/schemas")
@@ -117,33 +117,7 @@ room {
 dependencies {
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspIosSimulatorArm64", libs.androidx.room.compiler)
-    add("kspIosX64", libs.androidx.room.compiler)
     add("kspIosArm64", libs.androidx.room.compiler)
 }
 
-publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            val githubOwner = providers.gradleProperty("github.owner").orNull ?: System.getenv("GITHUB_REPOSITORY_OWNER") ?: "yashkasera"
-            val githubRepo = providers.gradleProperty("github.repo").orNull ?: rootProject.name
-            url = uri("https://maven.pkg.github.com/$githubOwner/$githubRepo")
-            credentials {
-                username = providers.gradleProperty("gpr.user").orNull
-                    ?: System.getenv("GITHUB_ACTOR")
-                    ?: System.getenv("GITHUB_REPOSITORY_OWNER")
-                password = providers.gradleProperty("gpr.key").orNull
-                    ?: System.getenv("GH_PACKAGES_TOKEN")
-                    ?: System.getenv("GITHUB_TOKEN")
-            }
-        }
-    }
-
-    publications.withType<MavenPublication>().configureEach {
-        pom {
-            name.set(project.name)
-            description.set("Alohomora developer observability toolkit")
-            url.set("https://github.com/yashkasera/Alohomora")
-        }
-    }
-}
+// Repository + POM configuration comes from the `alohomora.publish` convention plugin.

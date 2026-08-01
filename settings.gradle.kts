@@ -12,8 +12,12 @@ pluginManagement {
         }
         gradlePluginPortal()
         mavenCentral()
-        includeBuild("alohomora-gradle-plugin")
     }
+
+    // Both are plugin-providing builds, so they belong directly under pluginManagement —
+    // not nested inside repositories {}, where they only resolved via Kotlin scope fallthrough.
+    includeBuild("alohomora-gradle-plugin")
+    includeBuild("build-logic")
 }
 
 dependencyResolutionManagement {
