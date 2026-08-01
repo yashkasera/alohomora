@@ -3,13 +3,15 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui
 import androidx.compose.ui.graphics.vector.ImageVector
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceCapability
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
-import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
-import io.github.yashkasera.alohomora.ui.icons.ChartLine
+import io.github.yashkasera.alohomora.ui.icons.Activity
 import io.github.yashkasera.alohomora.ui.icons.Database
+import io.github.yashkasera.alohomora.ui.icons.Gauge
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
-import io.github.yashkasera.alohomora.ui.icons.HardDrive
 import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.Server
+import io.github.yashkasera.alohomora.ui.icons.Key
+import io.github.yashkasera.alohomora.ui.icons.Route
+import io.github.yashkasera.alohomora.ui.icons.ScrollText
+import io.github.yashkasera.alohomora.ui.icons.Terminal
 
 enum class DesktopSection(
     val title: String,
@@ -24,16 +26,15 @@ enum class DesktopSection(
      */
     val requiredCapability: DeviceCapability? = null,
 ) {
-    // Dashboard needs DEVICE_METRICS: battery, memory, CPU and jank all come from dumpsys.
-    Dashboard("Dashboard", Icons.AlertTriangle, DeviceCapability.DEVICE_METRICS),
-    Logcat("Logcat", Icons.HardDrive, DeviceCapability.OS_LOG_STREAM),
-    Adb("ADB", Icons.Server, DeviceCapability.SHELL),
+    Dashboard("Dashboard", Icons.Gauge, DeviceCapability.DEVICE_METRICS),
+    Logcat("Logcat", Icons.ScrollText, DeviceCapability.OS_LOG_STREAM),
+    Adb("ADB", Icons.Terminal, DeviceCapability.SHELL),
 
     // Everything below is delivered over the DevTools protocol, so it is platform-agnostic.
-    Traffic("Traffic", Icons.Server),
-    Events("Events", Icons.ChartLine),
+    Traffic("Traffic", Icons.Route),
+    Events("Events", Icons.Activity),
     Database("Database", Icons.Database),
-    Cache("Cache", Icons.AlertTriangle),
+    Cache("Cache", Icons.Key),
     GitHistory("Git History", Icons.GitGraph),
     ;
 

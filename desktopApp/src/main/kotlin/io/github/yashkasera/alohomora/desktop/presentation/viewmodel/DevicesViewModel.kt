@@ -13,6 +13,7 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.UninstallPackageUse
 import io.github.yashkasera.alohomora.desktop.presentation.model.AdbCommandLogEntry
 import io.github.yashkasera.alohomora.desktop.presentation.model.DashboardUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
+import java.io.File
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -373,15 +374,16 @@ class DevicesViewModel(
         }
     }
 
-    fun takeScreenshot(deviceId: String?, devicePath: String, localPath: String) {
+    fun takeScreenshot(deviceId: String?, localPath: String) {
         if (deviceId.isNullOrBlank()) {
             setActionError("Select a device first")
             return
         }
-        if (devicePath.isBlank() || localPath.isBlank()) {
+        if (localPath.isBlank()) {
             setActionError("Screenshot paths missing")
             return
         }
+        val devicePath = "/sdcard/${File(localPath).name}"
         scope.launch {
             runLoggedBlocking(deviceId, listOf("shell", "screencap", "-p", devicePath))
             runLoggedBlocking(deviceId, listOf("pull", devicePath, localPath))

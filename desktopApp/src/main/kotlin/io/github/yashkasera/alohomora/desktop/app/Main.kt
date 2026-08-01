@@ -33,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
@@ -143,6 +145,20 @@ fun main() {
         sessions.toList().forEach { session ->
             key(session.id) {
                 val state = rememberWindowState(placement = WindowPlacement.Maximized)
+                var showHelp by remember { mutableStateOf(false) }
+                var showCommandPalette by remember { mutableStateOf(false) }
+
+                val closeWindow = {
+                    val devicesVm = session.composition.devicesViewModel
+                    val devToolsVm = session.composition.devToolsViewModel
+                    devicesVm.disconnectHost(session.host, session.hostPort)
+                    devicesVm.deactivateDevice(session.deviceId, session.hostPort)
+                    devToolsVm.disconnect()
+                    session.composition.close()
+                    sessions.removeAll { it.id == session.id }
+                    if (sessions.isEmpty()) launcherVisible = true
+                }
+
                 Window(
                     title = "Alohomora - ${session.deviceId}",
                     state = state,
@@ -156,11 +172,50 @@ fun main() {
                     AppTheme(isDarkState = sharedIsDark) {
                         MenuBar {
                             Menu("File") {
-                                Item("New Window", onClick = { launcherVisible = true })
+                                Item(
+                                    "New Window",
+                                    shortcut = KeyShortcut(Key.N, meta = isMacOs, ctrl = !isMacOs),
+                                    onClick = { launcherVisible = true },
+                                )
+                                Item(
+                                    "Close Window",
+                                    shortcut = KeyShortcut(Key.W, meta = isMacOs, ctrl = !isMacOs),
+                                    onClick = closeWindow,
+                                )
                                 Item("Exit", onClick = ::exitApplication)
                             }
                             Menu("View") {
-                                Item("Toggle Theme", onClick = { sharedIsDark.value = !sharedIsDark.value })
+                                Item(
+                                    "Toggle Theme",
+                                    shortcut = KeyShortcut(Key.T, meta = isMacOs, ctrl = !isMacOs),
+                                    onClick = { sharedIsDark.value = !sharedIsDark.value },
+                                )
+                            }
+                            Menu("Device") {
+                                Item(
+                                    "Take Screenshot",
+                                    shortcut = KeyShortcut(Key.S, shift = true, meta = isMacOs, ctrl = !isMacOs),
+                                    onClick = {
+                                        val timestamp = System.currentTimeMillis()
+                                        val defaultName = "alohomora_screenshot_${timestamp}.png"
+                                        val localPath = io.github.yashkasera.alohomora.desktop.util.pickSavePath(
+                                            defaultName, "Save Screenshot", ".png",
+                                        ) ?: return@Item
+                                        session.composition.devicesViewModel.takeScreenshot(session.deviceId, localPath)
+                                    },
+                                )
+                            }
+                            Menu("Help") {
+                                Item(
+                                    "Command Palette",
+                                    shortcut = KeyShortcut(Key.K, meta = isMacOs, ctrl = !isMacOs),
+                                    onClick = { showCommandPalette = true },
+                                )
+                                Item(
+                                    "Keyboard Shortcuts",
+                                    shortcut = KeyShortcut(Key.Slash, meta = isMacOs, ctrl = !isMacOs),
+                                    onClick = { showHelp = true },
+                                )
                             }
                         }
                         window.minimumSize = Dimension(1080, 600)
@@ -172,16 +227,14 @@ fun main() {
                             databaseViewModel = session.composition.databaseViewModel,
                             cacheViewModel = session.composition.cacheViewModel,
                             initialDeviceId = session.deviceId,
-                            onDisconnectWindow = {
-                                val devicesVm = session.composition.devicesViewModel
-                                val devToolsVm = session.composition.devToolsViewModel
-                                devicesVm.disconnectHost(session.host, session.hostPort)
-                                devicesVm.deactivateDevice(session.deviceId, session.hostPort)
-                                devToolsVm.disconnect()
-                                session.composition.close()
-                                sessions.removeAll { it.id == session.id }
-                                if (sessions.isEmpty()) launcherVisible = true
-                            },
+                            showHelp = showHelp,
+                            onShowHelp = { showHelp = true },
+                            onDismissHelp = { showHelp = false },
+                            showCommandPalette = showCommandPalette,
+                            onDismissCommandPalette = { showCommandPalette = false },
+                            onToggleTheme = { sharedIsDark.value = !sharedIsDark.value },
+                            isDark = sharedIsDark.value,
+                            onDisconnectWindow = closeWindow,
                         )
                     }
                 }

@@ -21,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,7 +49,6 @@ import io.github.yashkasera.alohomora.ui.theme.brand
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.theme.logError
 import io.github.yashkasera.alohomora.ui.theme.muted
-import io.github.yashkasera.alohomora.ui.theme.success
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -314,8 +312,7 @@ fun AdbToolsPanel(
                         val defaultName = "alohomora_screenshot_${timestamp}.png"
                         val localPath = pickSavePath(defaultName, "Save Screenshot", ".png")
                             ?: return@AdbActionButton
-                        val devicePath = "/sdcard/${File(localPath).name}"
-                        devicesViewModel.takeScreenshot(selectedDeviceId, devicePath, localPath)
+                        devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
                     },
                 )
             }

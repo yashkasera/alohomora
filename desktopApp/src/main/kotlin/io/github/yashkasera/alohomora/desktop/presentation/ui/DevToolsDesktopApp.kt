@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,16 +36,31 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.desktop.app.isClearShortcut
+import io.github.yashkasera.alohomora.desktop.app.isModifierKeyOnly
+import io.github.yashkasera.alohomora.desktop.app.isScreenshotShortcut
+import io.github.yashkasera.alohomora.desktop.app.matchesNavigation
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.CommandPalette
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.HelpDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.OtpPromptDialog
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.buildCommandActions
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.AdbToolsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.CachePanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DashboardContent
@@ -81,6 +97,13 @@ fun DevToolsDesktopApp(
     databaseViewModel: DatabaseViewModel,
     cacheViewModel: CacheViewModel,
     initialDeviceId: String? = null,
+    showHelp: Boolean = false,
+    onShowHelp: () -> Unit = {},
+    onDismissHelp: () -> Unit = {},
+    showCommandPalette: Boolean = false,
+    onDismissCommandPalette: () -> Unit = {},
+    onToggleTheme: () -> Unit = {},
+    isDark: Boolean = true,
     onDisconnectWindow: () -> Unit,
 ) {
     var activeSection by remember { mutableStateOf(DesktopSection.Traffic) }
@@ -96,6 +119,7 @@ fun DevToolsDesktopApp(
     var recordingLocalPath by remember { mutableStateOf<String?>(null) }
     var selectedTraceForDrawer by remember { mutableStateOf<TrafficEntry?>(null) }
     var selectedDeviceId by remember(initialDeviceId) { mutableStateOf(initialDeviceId) }
+    var isModifierHeld by remember { mutableStateOf(false) }
 
     val onlineDevices = devices.filter { it.state == DeviceState.DEVICE }
     val hasConnectedDevice = onlineDevices.isNotEmpty()
@@ -120,14 +144,20 @@ fun DevToolsDesktopApp(
 
     val selectedDevice = devices.firstOrNull { it.id == selectedDeviceId }
     val isConnected = devToolsState.connection is DevToolsConnection.Connected
+    val connectedPlatform = selectedDevice?.platform
+    val isAndroid = connectedPlatform == DevicePlatform.ANDROID
 
-    // Where to land, and where to fall back to. Must follow the platform: iOS has no Dashboard
-    // (it is dumpsys-backed), so defaulting there would leave every iOS window blank.
     val fallbackSection = DesktopSection.defaultFor(
-        selectedDevice?.platform ?: DevicePlatform.ANDROID,
+        connectedPlatform ?: DevicePlatform.ANDROID,
     )
 
-    LaunchedEffect(activeSection, isConnected, hasConnectedDevice, selectedDevice?.platform) {
+    val visibleSections = when {
+        !hasConnectedDevice -> emptyList()
+        connectedPlatform != null -> DesktopSection.forPlatform(connectedPlatform)
+        else -> DesktopSection.entries.toList()
+    }
+
+    LaunchedEffect(activeSection, isConnected, hasConnectedDevice, connectedPlatform) {
         val gatedSections = setOf(
             DesktopSection.Traffic,
             DesktopSection.Events,
@@ -144,8 +174,6 @@ fun DevToolsDesktopApp(
             activeSection = fallbackSection
         }
 
-        // The active section can become unavailable when switching from an Android device to an
-        // iOS one (e.g. Logcat). Move to something the new platform can actually serve.
         selectedDevice?.let { device ->
             if (!activeSection.isSupportedBy(device.capabilities)) {
                 activeSection = fallbackSection
@@ -153,7 +181,120 @@ fun DevToolsDesktopApp(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    val commandActions = buildCommandActions(
+        visibleSections = visibleSections,
+        activeSection = activeSection,
+        onSectionChange = { activeSection = it },
+        isConnected = isConnected,
+        packageName = buildInfo?.packageName,
+        selectedDeviceId = selectedDeviceId,
+        isAndroid = isAndroid,
+        onToggleTheme = onToggleTheme,
+        onShowHelp = {
+            onDismissCommandPalette()
+            onShowHelp()
+        },
+        onClearTraffic = { devToolsViewModel.clearTraffic() },
+        onClearEvents = { devToolsViewModel.clearEvents() },
+        onForceStop = {
+            buildInfo?.packageName?.let { pkg ->
+                devicesViewModel.runCommand(selectedDeviceId, "shell am force-stop $pkg")
+            }
+        },
+        onLaunchApp = {
+            buildInfo?.packageName?.let { pkg ->
+                devicesViewModel.runCommand(
+                    selectedDeviceId,
+                    "shell monkey -p $pkg -c android.intent.category.LAUNCHER 1",
+                )
+            }
+        },
+        onClearAppData = {
+            buildInfo?.packageName?.let { pkg ->
+                devicesViewModel.runCommand(selectedDeviceId, "shell pm clear $pkg")
+            }
+        },
+        onTakeScreenshot = {
+            val timestamp = System.currentTimeMillis()
+            val defaultName = "alohomora_screenshot_${timestamp}.png"
+            val localPath = pickSavePath(defaultName, "Save Screenshot", ".png") ?: return@buildCommandActions
+            devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
+        },
+        onRebootDevice = {
+            devicesViewModel.runCommand(selectedDeviceId, "reboot")
+        },
+        onToggleWifi = {
+            devicesViewModel.toggleWifi(selectedDeviceId)
+        },
+        onToggleMobileData = {
+            devicesViewModel.toggleMobileData(selectedDeviceId)
+        },
+        onClearLogcat = {
+            devicesViewModel.runCommand(selectedDeviceId, "logcat -c")
+        },
+    )
+
+    val rootFocus = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        rootFocus.requestFocus()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .focusRequester(rootFocus)
+            .focusable()
+            .onPreviewKeyEvent { event ->
+                if (event.isModifierKeyOnly()) {
+                    isModifierHeld = event.type == KeyEventType.KeyDown
+                    return@onPreviewKeyEvent false
+                }
+
+                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+
+                if (event.key == Key.Escape) {
+                    when {
+                        showCommandPalette -> { onDismissCommandPalette(); return@onPreviewKeyEvent true }
+                        showHelp -> { onDismissHelp(); return@onPreviewKeyEvent true }
+                        selectedTraceForDrawer != null -> { selectedTraceForDrawer = null; return@onPreviewKeyEvent true }
+                    }
+                    return@onPreviewKeyEvent false
+                }
+
+                val navIndex = event.matchesNavigation()
+                if (navIndex >= 0 && navIndex < visibleSections.size) {
+                    activeSection = visibleSections[navIndex]
+                    return@onPreviewKeyEvent true
+                }
+
+                if (event.isClearShortcut()) {
+                    when (activeSection) {
+                        DesktopSection.Traffic -> devToolsViewModel.clearTraffic()
+                        DesktopSection.Events -> devToolsViewModel.clearEvents()
+                        else -> {}
+                    }
+                    return@onPreviewKeyEvent true
+                }
+
+                if (event.isScreenshotShortcut() && isAndroid && !selectedDeviceId.isNullOrBlank()) {
+                    val timestamp = System.currentTimeMillis()
+                    val defaultName = "alohomora_screenshot_${timestamp}.png"
+                    val localPath = pickSavePath(defaultName, "Save Screenshot", ".png")
+                    if (localPath != null) {
+                        devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
+                    }
+                    return@onPreviewKeyEvent true
+                }
+
+                false
+            },
+    ) {
+        val contentModifier = if (showCommandPalette)
+            Modifier.fillMaxSize().blur(16.dp)
+            else Modifier.fillMaxSize()
+
+        Box(modifier = contentModifier) {
         PermanentNavigationDrawer(
             drawerContent = {
                 PermanentDrawerSheet(
@@ -169,6 +310,8 @@ fun DevToolsDesktopApp(
                         onRefreshDevices = { devicesViewModel.refreshDevices() },
                         onDisconnect = onDisconnectWindow,
                         onSectionClick = { activeSection = it },
+                        isModifierHeld = isModifierHeld,
+                        visibleSections = visibleSections,
                     )
                 }
             },
@@ -188,8 +331,7 @@ fun DevToolsDesktopApp(
                             val defaultName = "alohomora_screenshot_${timestamp}.png"
                             val localPath = pickSavePath(defaultName, "Save Screenshot", ".png")
                                 ?: return@screenshot
-                            val devicePath = "/sdcard/${File(localPath).name}"
-                            devicesViewModel.takeScreenshot(selectedDeviceId, devicePath, localPath)
+                            devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
                         },
                         onRecordScreen = record@{
                             if (!isRecording) {
@@ -245,9 +387,6 @@ fun DevToolsDesktopApp(
                 }
             }
 
-            // The reconnect loop lands here, not in the launcher, so this window needs its own
-            // way to answer. Gated on otpRequired rather than AwaitingAuth: a trusted machine
-            // passes through AwaitingAuth silently and must not be prompted.
             val connection = devToolsState.connection
             if (connection is DevToolsConnection.AwaitingAuth && connection.otpRequired) {
                 OtpPromptDialog(
@@ -256,15 +395,11 @@ fun DevToolsDesktopApp(
                 )
             }
 
-            // `switching` was computed in the ViewModel and never read, so changing device
-            // silently left the previous device's data frozen on screen with no indication
-            // that anything was happening.
             if (devToolsState.switching) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
-                        // Swallows clicks so a half-switched panel cannot be interacted with.
                         .clickable(indication = null, interactionSource = null) {},
                     contentAlignment = Alignment.Center,
                 ) {
@@ -278,6 +413,23 @@ fun DevToolsDesktopApp(
             trace = selectedTraceForDrawer,
             devToolsViewModel = devToolsViewModel,
             onDismiss = { selectedTraceForDrawer = null },
+        )
+        }
+
+        if (showCommandPalette) {
+            CommandPalette(
+                actions = commandActions,
+                onDismiss = onDismissCommandPalette,
+            )
+        }
+    }
+
+    if (showHelp) {
+        HelpDialog(
+            visibleSections = visibleSections,
+            actions = commandActions,
+            isDark = isDark,
+            onDismiss = onDismissHelp,
         )
     }
 }
@@ -306,6 +458,8 @@ fun Sidebar(
     selectedDeviceId: String?,
     hasConnectedDevice: Boolean,
     onRefreshDevices: () -> Unit,
+    isModifierHeld: Boolean = false,
+    visibleSections: List<DesktopSection> = emptyList(),
 ) {
     Row(
         modifier = Modifier
@@ -338,27 +492,37 @@ fun Sidebar(
         onDisconnect = onDisconnect,
     )
 
-    // Only show what the connected platform can actually serve. Logcat, ADB and the metrics
-    // Dashboard are all logcat/dumpsys/adb-shell backed and have no iOS equivalent, so for an
-    // iOS device they are omitted rather than rendered as controls that fail when used.
-    val connectedPlatform = devices.firstOrNull { it.id == selectedDeviceId }?.platform
-    val visibleSections = when {
-        !hasConnectedDevice -> emptyList()
-        connectedPlatform != null -> DesktopSection.forPlatform(connectedPlatform)
-        else -> DesktopSection.entries.toList()
-    }
-
     Column(
         modifier = Modifier.fillMaxSize().padding(MaterialTheme.dimens.margin.lg),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
     ) {
-        visibleSections.forEach { section ->
+        visibleSections.forEachIndexed { index, section ->
             NavigationDrawerItem(
                 label = {
-                    Text(
-                        text = section.title,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                    ) {
+                        Text(
+                            text = section.title,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (isModifierHeld && index < 8) {
+                            Text(
+                                text = "${index + 1}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .background(
+                                        MaterialTheme.colorScheme.primary,
+                                        RoundedCornerShape(MaterialTheme.dimens.corner.small),
+                                    )
+                                    .padding(horizontal = 6.dp, vertical = 1.dp),
+                            )
+                        }
+                    }
                 },
                 selected = activeSection == section,
                 icon = {
@@ -412,8 +576,6 @@ private fun SidebarConnectionCard(
                 is DevToolsConnection.Connecting -> "Connecting ${connection.host}:${connection.port}"
                 is DevToolsConnection.AwaitingAuth -> "Waiting for OTP"
                 is DevToolsConnection.Connected -> "Connected ${connection.host}:${connection.port}"
-                // Says why, because the usual cause is not a fault: the phone is in the user's
-                // pocket and iOS has suspended the app.
                 is DevToolsConnection.Reconnecting ->
                     "Device asleep — reconnecting (${connection.attempt})"
                 is DevToolsConnection.Failed -> "Failed: ${connection.reason}"
