@@ -26,7 +26,7 @@
       android:authorities="${applicationId}.alohomora.fileprovider"
       android:exported="false"
       android:grantUriPermissions="true"
-      android:name="androidx.core.content.FileProvider">
+      android:name=".utils.share.AlohomoraFileProvider">
       <meta-data
         android:name="android.support.FILE_PROVIDER_PATHS"
         android:resource="@xml/alohomora_file_paths" />
