@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.common
 
+import io.github.yashkasera.alohomora.replay.ReplayRequest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -157,6 +158,41 @@ data class RequestPrefValueMessage(
     val key: String,
 ) : DevToolsMessage()
 
+/**
+ * Asks the device to re-send a captured request through the host app's own HTTP client.
+ *
+ * Carries the whole request rather than just a trace id, because the desktop lets the user edit the
+ * URL, headers and payload before sending — the point of the feature is to change a payload and
+ * have the app re-sign it, so "replay trace X as captured" would not cover the use case.
+ */
+@Serializable
+@SerialName("REQUEST_REPLAY_TRACE")
+data class RequestReplayTraceMessage(
+    override val sequence: Long = 0,
+    val request: ReplayRequest,
+) : DevToolsMessage()
+
+/**
+ * Reports the fate of a [RequestReplayTraceMessage].
+ *
+ * The only desktop→device command with an explicit reply. Every other one either answers with a
+ * snapshot or is unobservable, but a replay can fail before any trace exists — no handler
+ * registered, a hand-edited URL that will not parse, a refused connection — and with no reply the
+ * desktop would sit waiting for a trace that is never coming.
+ *
+ * [traceId] is set only when the handler could identify the resulting trace; the replay is still
+ * successful without it, since the trace arrives over `STREAM_API_LOG` either way.
+ */
+@Serializable
+@SerialName("REPLAY_RESULT")
+data class ReplayResultMessage(
+    override val sequence: Long,
+    val sourceTraceId: String,
+    val sent: Boolean,
+    val traceId: String? = null,
+    val error: String? = null,
+) : DevToolsMessage()
+
 // ── Payload types (kept as named wrappers for complex payloads) ───────────────
 
 @Serializable
@@ -244,4 +280,13 @@ data class InitialStatePayload(
     val preferenceKeys: List<String>,
     val buildInfo: BuildInfoPayload? = null,
     val chronicle: List<ChronicleCommitPayload> = emptyList(),
+    /**
+     * Whether the app on the other end registered a replay handler.
+     *
+     * A session capability, not build metadata: replay depends on the host app having handed
+     * Alohomora its HTTP client at startup, which a device may simply not have done. Defaults to
+     * false so a desktop talking to an older app hides the action rather than offering one whose
+     * request would go nowhere.
+     */
+    val replaySupported: Boolean = false,
 )

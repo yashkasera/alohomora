@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora
 
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
+import io.github.yashkasera.alohomora.replay.TraceReplayHandler
 import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 
@@ -96,6 +97,21 @@ object Alohomora {
     fun clearAppDatabaseOverrides() {
         /* no-op */
     }
+
+    // ============================================================================
+    // Trace Replay - No-op
+    // ============================================================================
+
+    @Suppress("UNUSED_PARAMETER")
+    fun registerReplayHandler(handler: TraceReplayHandler) {
+        /* no-op */
+    }
+
+    fun clearReplayHandler() {
+        /* no-op */
+    }
+
+    val isReplaySupported: Boolean get() = false
 
     // ============================================================================
     // Plugin System - No-op

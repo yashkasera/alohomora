@@ -33,8 +33,18 @@ internal interface TraceDao {
     /**
      * Lists traces with pagination, filtering by path query and HTTP method.
      */
-    @Query("SELECT id, status, host, path, `query`, method, duration, time, isViewed FROM TraceEntry WHERE path LIKE '%' || :query || '%' AND method LIKE '%' || :method || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
+    @Query("SELECT id, status, host, path, `query`, method, duration, time, isViewed, replayOf, requestBodyTruncated, responseBodyTruncated FROM TraceEntry WHERE path LIKE '%' || :query || '%' AND method LIKE '%' || :method || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
     fun list(query: String?, method: String?, page: Int, pageSize: Int): Flow<List<TraceEntry>>
+
+    /**
+     * Observes the trace produced by replaying [sourceId], if one has landed yet.
+     *
+     * A Flow rather than a one-shot read on purpose: capture writes the trace from its own
+     * coroutine, so it is routinely not in the database at the moment the replay handler returns.
+     * Querying once would miss it and leave the console with nothing to show.
+     */
+    @Query("SELECT * FROM TraceEntry WHERE replayOf = :sourceId ORDER BY time DESC LIMIT 1")
+    fun observeReplayOf(sourceId: String): Flow<TraceEntry?>
 
     /**
      * Gets latest traces with full data.

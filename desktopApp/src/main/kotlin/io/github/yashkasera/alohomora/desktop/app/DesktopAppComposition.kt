@@ -11,6 +11,7 @@ import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.PrefsRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.local.PrefsStore
+import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
 import io.github.yashkasera.alohomora.desktop.data.logcat.LogcatRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.domain.service.SlackShareService
 import io.github.yashkasera.alohomora.desktop.domain.usecase.ClearLogcatUseCase
@@ -23,6 +24,7 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.RefreshDevicesUseCa
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseSchemaUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseTableUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestInitialStateUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.ReplayTraceUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestPrefValueUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RunAdbCommandUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.SelectDeviceUseCase
@@ -66,6 +68,7 @@ class DesktopAppComposition(
         val prefsStore = PrefsStore()
         val buildInfoStore = BuildInfoStore()
         val chronicleStore = ChronicleStore()
+        val replayStore = ReplayStore()
 
         val devToolsRepository = DevToolsRepositoryImpl(
             remoteDataSource = DevToolsRemoteDataSource(),
@@ -75,6 +78,7 @@ class DesktopAppComposition(
             prefsStore = prefsStore,
             buildInfoStore = buildInfoStore,
             chronicleStore = chronicleStore,
+            replayStore = replayStore,
         )
 
         devToolsRepositoryRef = devToolsRepository
@@ -94,6 +98,7 @@ class DesktopAppComposition(
         val requestDatabaseSchemaUseCase = RequestDatabaseSchemaUseCase(devToolsRepository)
         val requestDatabaseTableUseCase = RequestDatabaseTableUseCase(devToolsRepository)
         val requestPrefValueUseCase = RequestPrefValueUseCase(devToolsRepository)
+        val replayTraceUseCase = ReplayTraceUseCase(devToolsRepository)
 
         val observeLogcatUseCase = ObserveLogcatUseCase(logcatRepository)
         val startLogcatUseCase = StartLogcatUseCase(logcatRepository)
@@ -140,6 +145,7 @@ class DesktopAppComposition(
             requestDatabaseSchemaUseCase = requestDatabaseSchemaUseCase,
             requestDatabaseTableUseCase = requestDatabaseTableUseCase,
             requestPrefValueUseCase = requestPrefValueUseCase,
+            replayTraceUseCase = replayTraceUseCase,
             slackShareService = slackShareService,
         )
 

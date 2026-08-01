@@ -4,6 +4,7 @@ import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.AlohomoraInternal
 import io.github.yashkasera.alohomora.common.HeaderRedaction
 import io.github.yashkasera.alohomora.common.TraceEntry
+import io.github.yashkasera.alohomora.replay.ReplayMarker
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -34,6 +35,7 @@ import platform.Foundation.NSURLSessionResponseAllow
 import platform.Foundation.NSURLSessionTask
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.allHTTPHeaderFields
+import platform.Foundation.setAllHTTPHeaderFields
 import platform.Foundation.appendData
 import platform.Foundation.create
 
@@ -109,16 +111,33 @@ class AlohomoraURLProtocol :
     private var httpResponse: NSHTTPURLResponse? = null
     private var startTime = 0L
     private var traceId = ""
+    private var replayOf: String? = null
 
     @OptIn(ExperimentalUuidApi::class)
     override fun startLoading() {
         traceId = Uuid.random().toString()
         startTime = Clock.System.now().toEpochMilliseconds()
+        // Read off allHTTPHeaderFields rather than valueForHTTPHeaderField, which cinterop does not
+        // expose on NSURLRequest. Matched case-insensitively, as HTTP header names are.
+        replayOf = request.allHTTPHeaderFields
+            ?.entries
+            ?.firstOrNull { (k, _) -> (k as? String)?.equals(ReplayMarker.HEADER, true) == true }
+            ?.value as? String
 
         // Tag the request so canInitWithRequest returns false for this copy, preventing
         // infinite recursion when the internal session issues the same request.
         val tagged = (request.mutableCopy() as NSMutableURLRequest).also {
             NSURLProtocol.setProperty("1", forKey = HANDLED_KEY, inRequest = it)
+            // Alohomora injected this on the way in; it must not reach the server. Rewriting the
+            // whole dictionary rather than clearing the single field: cinterop's
+            // setValue:forHTTPHeaderField: overload collides with NSObject.setValue(_:forKey:).
+            if (replayOf != null) {
+                it.setAllHTTPHeaderFields(
+                    request.allHTTPHeaderFields?.filterKeys { key ->
+                        (key as? String)?.equals(ReplayMarker.HEADER, true) != true
+                    },
+                )
+            }
         }
 
         session = NSURLSession.sessionWithConfiguration(
@@ -190,6 +209,7 @@ class AlohomoraURLProtocol :
             req.allHTTPHeaderFields
                 ?.entries
                 ?.mapNotNull { (k, v) -> (k as? String)?.to(listOf(v as? String ?: "")) }
+                ?.filterNot { it.first.equals(ReplayMarker.HEADER, ignoreCase = true) }
                 ?.toMap()
                 ?: emptyMap(),
         ).orEmpty()
@@ -230,6 +250,7 @@ class AlohomoraURLProtocol :
                 responseContentType = responseHeaders["Content-Type"]?.firstOrNull(),
                 responseSize = accumulator.length.toLong(),
                 duration = endTime - startTime,
+                replayOf = replayOf,
             ),
         )
     }

@@ -19,12 +19,16 @@ import io.github.yashkasera.alohomora.common.RequestClearMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
+import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestPrefValueMessage
+import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
 import io.github.yashkasera.alohomora.common.StreamApiLogMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
 import io.github.yashkasera.alohomora.common.TelemetryEvent
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
+import io.github.yashkasera.alohomora.replay.ReplayOutcome
+import io.github.yashkasera.alohomora.replay.TraceReplayRegistry
 import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicLong
@@ -306,6 +310,7 @@ internal class DevToolsRuntime(
                             message.limit,
                         )
                         is RequestPrefValueMessage -> handlePreferenceRequest(message.key)
+                        is RequestReplayTraceMessage -> handleReplayRequest(message)
                         // Includes UnknownMessage from a newer peer: ignore, don't disconnect.
                         else -> Unit
                     }
@@ -386,6 +391,38 @@ internal class DevToolsRuntime(
             sendInitialState()
         }
 
+        /**
+         * Re-sends a captured request through the host app's client and reports the outcome.
+         *
+         * Launched on [connectionScope] rather than awaited inline: a replay is a real network call
+         * that can sit for the app's full read timeout, and awaiting it in [readerLoop] would stall
+         * every other command behind it — the desktop could not so much as refresh a table until it
+         * returned.
+         */
+        private fun handleReplayRequest(message: RequestReplayTraceMessage) {
+            connectionScope.launch {
+                val request = message.request
+                val outcome = TraceReplayRegistry.replay(request)
+                send(
+                    when (outcome) {
+                        is ReplayOutcome.Sent -> ReplayResultMessage(
+                            sequence = nextSequence(),
+                            sourceTraceId = request.sourceTraceId,
+                            sent = true,
+                            traceId = outcome.traceId,
+                        )
+
+                        is ReplayOutcome.Failed -> ReplayResultMessage(
+                            sequence = nextSequence(),
+                            sourceTraceId = request.sourceTraceId,
+                            sent = false,
+                            error = outcome.reason,
+                        )
+                    },
+                )
+            }
+        }
+
         private suspend fun sendInitialState() {
             val events = database.telemetryDao()
                 .getLatest(DevToolsDefaults.EVENT_SNAPSHOT_LIMIT)
@@ -413,6 +450,7 @@ internal class DevToolsRuntime(
                 preferenceKeys = preferenceKeys,
                 buildInfo = Alohomora.config?.toBuildInfoPayload(),
                 chronicle = Alohomora.config?.commits?.map { it.toChronicleCommitPayload() }.orEmpty(),
+                replaySupported = TraceReplayRegistry.isSupported,
             )
             eventAdapter.seed(events)
             seedApiLogSignatures(apiLogs)

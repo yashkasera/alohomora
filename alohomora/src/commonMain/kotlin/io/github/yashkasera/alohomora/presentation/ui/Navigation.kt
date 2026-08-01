@@ -59,6 +59,7 @@ internal fun AlohomoraNavHost(
             TraceDetailsScreen(
                 traceId = route.traceId,
                 onBackClick = navController::navigateUp,
+                onOpenTrace = { id -> navController.navigate(Routes.TraceDetails(id)) },
             )
         }
 

@@ -10,8 +10,10 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseTabl
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestInitialStateUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestPrefValueUseCase
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
+import io.github.yashkasera.alohomora.desktop.domain.usecase.ReplayTraceUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.SwitchDevToolsDeviceUseCase
 import io.github.yashkasera.alohomora.desktop.presentation.model.DevToolsUiState
+import io.github.yashkasera.alohomora.replay.ReplayRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,6 +33,7 @@ class DevToolsViewModel(
     private val requestDatabaseSchemaUseCase: RequestDatabaseSchemaUseCase,
     private val requestDatabaseTableUseCase: RequestDatabaseTableUseCase,
     private val requestPrefValueUseCase: RequestPrefValueUseCase,
+    private val replayTraceUseCase: ReplayTraceUseCase,
     private val slackShareService: SlackShareService,
 ) {
     private val job = SupervisorJob()
@@ -84,6 +87,17 @@ class DevToolsViewModel(
 
     fun requestPrefValue(key: String) = requestPrefValueUseCase(key)
 
+    /**
+     * Sends [request] to the device to be re-issued through the app's own HTTP client.
+     *
+     * Takes a whole [ReplayRequest] rather than a trace id because the caller has already let the
+     * user edit the URL, headers and payload. The response is not returned here — it arrives as a
+     * new trace in [apiLogs], stamped with `replayOf`.
+     */
+    fun replayTrace(request: ReplayRequest) = replayTraceUseCase(request)
+
+    fun dismissReplayError(sourceTraceId: String) = repository.dismissReplayError(sourceTraceId)
+
     private val _slackShareError = MutableStateFlow<String?>(null)
     val slackShareError: StateFlow<String?> = _slackShareError.asStateFlow()
 
@@ -127,4 +141,5 @@ class DevToolsViewModel(
     val prefsState = repository.prefsState
     val buildInfo = repository.buildInfo
     val chronicle = repository.chronicle
+    val replayState = repository.replayState
 }

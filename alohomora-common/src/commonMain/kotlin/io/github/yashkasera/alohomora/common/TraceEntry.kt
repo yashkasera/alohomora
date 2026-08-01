@@ -30,6 +30,22 @@ data class TraceEntry(
     var requestSize: Long? = null,
     var responseSize: Long? = null,
     var isViewed: Boolean = false,
+    /**
+     * True when [requestBody] holds only the leading part of a body that exceeded the capture cap.
+     *
+     * Tracked explicitly rather than sniffed from the `…truncated` suffix the capture appends: a
+     * body may legitimately contain that text, and replay has to be able to refuse a partial body
+     * with certainty. Sending one would put silently corrupted data on the wire.
+     */
+    var requestBodyTruncated: Boolean = false,
+    /** As [requestBodyTruncated], for the response. Display-only; nothing replays a response. */
+    var responseBodyTruncated: Boolean = false,
+    /**
+     * The id of the trace this one was replayed from, or null for an organically captured request.
+     *
+     * Lets the console show a replay next to its original instead of as an unexplained duplicate.
+     */
+    var replayOf: String? = null,
 ) {
 
     fun isShareable(): Boolean =

@@ -9,11 +9,13 @@ import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.PrefsSnapshotMessage
+import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestPrefValueMessage
+import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
 import io.github.yashkasera.alohomora.common.StreamApiLogMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
 import io.github.yashkasera.alohomora.common.TelemetryEvent
@@ -24,14 +26,17 @@ import io.github.yashkasera.alohomora.desktop.data.local.ChronicleStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.PrefsStore
+import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.github.yashkasera.alohomora.desktop.domain.model.ChronicleCommit
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.model.PrefsState
+import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
 import io.github.yashkasera.alohomora.devtools.DevToolsSocket
+import io.github.yashkasera.alohomora.replay.ReplayRequest
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancelAndJoin
@@ -56,6 +61,7 @@ class DevToolsRepositoryImpl(
     private val prefsStore: PrefsStore,
     private val buildInfoStore: BuildInfoStore,
     private val chronicleStore: ChronicleStore,
+    private val replayStore: ReplayStore,
 ) : DevToolsRepository {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val _state = MutableStateFlow<DevToolsConnection>(DevToolsConnection.Disconnected)
@@ -71,6 +77,7 @@ class DevToolsRepositoryImpl(
     override val prefsState: StateFlow<PrefsState> = prefsStore.state
     override val buildInfo: StateFlow<BuildInfo?> = buildInfoStore.buildInfo
     override val chronicle: StateFlow<List<ChronicleCommit>> = chronicleStore.commits
+    override val replayState: StateFlow<ReplayState> = replayStore.state
 
     @Volatile
     private var connection: DevToolsSocket? = null
@@ -185,6 +192,8 @@ class DevToolsRepositoryImpl(
             if (generation == myGeneration) {
                 connection = null
                 _switching.value = false
+                // The result messages these were waiting on died with the socket.
+                replayStore.abandonInFlight()
             }
         }
     }
@@ -217,6 +226,15 @@ class DevToolsRepositoryImpl(
             clearAll()
         }
     }
+
+    override fun replayTrace(request: ReplayRequest) {
+        // Marked in flight before the send so the button reflects the click immediately. The device
+        // always answers with a ReplayResultMessage, success or failure, which clears it.
+        replayStore.markInFlight(request.sourceTraceId)
+        scope.launch { sendMessage(RequestReplayTraceMessage(request = request)) }
+    }
+
+    override fun dismissReplayError(sourceTraceId: String) = replayStore.dismissError(sourceTraceId)
 
     override fun requestDatabaseSchema(databaseName: String) {
         scope.launch { sendMessage(RequestDatabaseSchemaMessage(databaseName = databaseName)) }
@@ -299,6 +317,20 @@ class DevToolsRepositoryImpl(
                 prefsStore.replaceKeys(payload.preferenceKeys)
                 buildInfoStore.replace(payload.buildInfo?.toDomain())
                 chronicleStore.replace(payload.chronicle.map { it.toDomain() })
+                replayStore.setSupported(payload.replaySupported)
+            }
+
+            is ReplayResultMessage -> {
+                if (message.sent) {
+                    // Nothing to render here: the replay's own trace arrives over STREAM_API_LOG
+                    // like any other request, carrying the status and response body.
+                    replayStore.markSucceeded(message.sourceTraceId)
+                } else {
+                    replayStore.markFailed(
+                        message.sourceTraceId,
+                        message.error ?: "Replay failed on the device.",
+                    )
+                }
             }
 
             is StreamEventMessage -> eventStore.append(message.event)
@@ -327,6 +359,7 @@ class DevToolsRepositoryImpl(
         prefsStore.clear()
         buildInfoStore.clear()
         chronicleStore.clear()
+        replayStore.clear()
     }
 
     /**

@@ -1,7 +1,10 @@
 package io.github.yashkasera.alohomora.showcaseApp
 
 import android.app.Application
+import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.replay.ktorReplayHandler
 import io.github.yashkasera.alohomora.showcaseApp.di.appModule
+import io.ktor.client.HttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -15,9 +18,19 @@ class AndroidApp : Application() {
         // Alohomora ever went back to `startKoin` this line would throw
         // KoinAppAlreadyStartedException. Do not replace it with loadKoinModules() — that
         // only worked because the library used to leak its container into GlobalContext.
-        startKoin {
+        val koin = startKoin {
             androidContext(this@AndroidApp)
             modules(appModule)
-        }
+        }.koin
+
+        // Hands Alohomora the app's own client so the console can re-send a captured request through
+        // it. Nothing else can: whatever this client's plugins derive per-request — signatures, auth
+        // tokens, pinning — is unavailable to a request the library assembles and sends itself, so an
+        // edited payload would go out carrying the signature captured from the original body.
+        //
+        // Resolved eagerly rather than inside the module: registration has to happen whether or not
+        // anything has made a request yet, and a lazy `single` would leave replay unavailable until
+        // the first one.
+        Alohomora.registerReplayHandler(ktorReplayHandler(koin.get<HttpClient>()))
     }
 }

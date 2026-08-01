@@ -6,6 +6,10 @@
 // - Show declarations: true
 
 // Library unique name: <io.github.yashkasera:alohomora-noop>
+abstract fun interface io.github.yashkasera.alohomora.replay/TraceReplayHandler { // io.github.yashkasera.alohomora.replay/TraceReplayHandler|null[0]
+    abstract suspend fun replay(io.github.yashkasera.alohomora.replay/ReplayRequest): io.github.yashkasera.alohomora.replay/ReplayOutcome // io.github.yashkasera.alohomora.replay/TraceReplayHandler.replay|replay(io.github.yashkasera.alohomora.replay.ReplayRequest){}[0]
+}
+
 abstract interface io.github.yashkasera.alohomora.plugin/CustomScreenPlugin { // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin|null[0]
     abstract val id // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.id|{}id[0]
         abstract fun <get-id>(): kotlin/String // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.id.<get-id>|<get-id>(){}[0]
@@ -27,8 +31,68 @@ abstract interface io.github.yashkasera.alohomora.plugin/CustomScreenPlugin { //
     open fun onScreenVisible() // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.onScreenVisible|onScreenVisible(){}[0]
 }
 
+sealed interface io.github.yashkasera.alohomora.replay/ReplayOutcome { // io.github.yashkasera.alohomora.replay/ReplayOutcome|null[0]
+    final class Failed : io.github.yashkasera.alohomora.replay/ReplayOutcome { // io.github.yashkasera.alohomora.replay/ReplayOutcome.Failed|null[0]
+        constructor <init>(kotlin/String) // io.github.yashkasera.alohomora.replay/ReplayOutcome.Failed.<init>|<init>(kotlin.String){}[0]
+
+        final val reason // io.github.yashkasera.alohomora.replay/ReplayOutcome.Failed.reason|{}reason[0]
+            final fun <get-reason>(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayOutcome.Failed.reason.<get-reason>|<get-reason>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayOutcome.Failed.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): io.github.yashkasera.alohomora.replay/ReplayOutcome.Failed // io.github.yashkasera.alohomora.replay/ReplayOutcome.Failed.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yashkasera.alohomora.replay/ReplayOutcome.Failed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yashkasera.alohomora.replay/ReplayOutcome.Failed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayOutcome.Failed.toString|toString(){}[0]
+    }
+
+    final class Sent : io.github.yashkasera.alohomora.replay/ReplayOutcome { // io.github.yashkasera.alohomora.replay/ReplayOutcome.Sent|null[0]
+        constructor <init>(kotlin/String? = ...) // io.github.yashkasera.alohomora.replay/ReplayOutcome.Sent.<init>|<init>(kotlin.String?){}[0]
+
+        final val traceId // io.github.yashkasera.alohomora.replay/ReplayOutcome.Sent.traceId|{}traceId[0]
+            final fun <get-traceId>(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayOutcome.Sent.traceId.<get-traceId>|<get-traceId>(){}[0]
+
+        final fun component1(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayOutcome.Sent.component1|component1(){}[0]
+        final fun copy(kotlin/String? = ...): io.github.yashkasera.alohomora.replay/ReplayOutcome.Sent // io.github.yashkasera.alohomora.replay/ReplayOutcome.Sent.copy|copy(kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yashkasera.alohomora.replay/ReplayOutcome.Sent.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yashkasera.alohomora.replay/ReplayOutcome.Sent.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayOutcome.Sent.toString|toString(){}[0]
+    }
+}
+
+final class io.github.yashkasera.alohomora.replay/ReplayRequest { // io.github.yashkasera.alohomora.replay/ReplayRequest|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.yashkasera.alohomora.replay/ReplayRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>;kotlin.String?;kotlin.String?){}[0]
+
+    final val body // io.github.yashkasera.alohomora.replay/ReplayRequest.body|{}body[0]
+        final fun <get-body>(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayRequest.body.<get-body>|<get-body>(){}[0]
+    final val contentType // io.github.yashkasera.alohomora.replay/ReplayRequest.contentType|{}contentType[0]
+        final fun <get-contentType>(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayRequest.contentType.<get-contentType>|<get-contentType>(){}[0]
+    final val headers // io.github.yashkasera.alohomora.replay/ReplayRequest.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> // io.github.yashkasera.alohomora.replay/ReplayRequest.headers.<get-headers>|<get-headers>(){}[0]
+    final val method // io.github.yashkasera.alohomora.replay/ReplayRequest.method|{}method[0]
+        final fun <get-method>(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayRequest.method.<get-method>|<get-method>(){}[0]
+    final val sourceTraceId // io.github.yashkasera.alohomora.replay/ReplayRequest.sourceTraceId|{}sourceTraceId[0]
+        final fun <get-sourceTraceId>(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayRequest.sourceTraceId.<get-sourceTraceId>|<get-sourceTraceId>(){}[0]
+    final val url // io.github.yashkasera.alohomora.replay/ReplayRequest.url|{}url[0]
+        final fun <get-url>(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayRequest.url.<get-url>|<get-url>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayRequest.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayRequest.component2|component2(){}[0]
+    final fun component3(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayRequest.component3|component3(){}[0]
+    final fun component4(): kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> // io.github.yashkasera.alohomora.replay/ReplayRequest.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayRequest.component5|component5(){}[0]
+    final fun component6(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayRequest.component6|component6(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.yashkasera.alohomora.replay/ReplayRequest // io.github.yashkasera.alohomora.replay/ReplayRequest.copy|copy(kotlin.String;kotlin.String;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>;kotlin.String?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yashkasera.alohomora.replay/ReplayRequest.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yashkasera.alohomora.replay/ReplayRequest.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayRequest.toString|toString(){}[0]
+}
+
 final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.alohomora/Alohomora|null[0]
+    final val isReplaySupported // io.github.yashkasera.alohomora/Alohomora.isReplaySupported|{}isReplaySupported[0]
+        final fun <get-isReplaySupported>(): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.isReplaySupported.<get-isReplaySupported>|<get-isReplaySupported>(){}[0]
+
     final fun clearAppDatabaseOverrides() // io.github.yashkasera.alohomora/Alohomora.clearAppDatabaseOverrides|clearAppDatabaseOverrides(){}[0]
+    final fun clearReplayHandler() // io.github.yashkasera.alohomora/Alohomora.clearReplayHandler|clearReplayHandler(){}[0]
     final fun excludeAppDatabase(kotlin/String) // io.github.yashkasera.alohomora/Alohomora.excludeAppDatabase|excludeAppDatabase(kotlin.String){}[0]
     final fun getPlugins(): kotlin.collections/List<io.github.yashkasera.alohomora.plugin/CustomScreenPlugin> // io.github.yashkasera.alohomora/Alohomora.getPlugins|getPlugins(){}[0]
     final fun init() // io.github.yashkasera.alohomora/Alohomora.init|init(){}[0]
@@ -36,6 +100,7 @@ final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.
     final fun recordTrace(kotlin/String = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>>? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>>? = ..., kotlin/Long? = ..., kotlin/Long? = ...) // io.github.yashkasera.alohomora/Alohomora.recordTrace|recordTrace(kotlin.String;kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Long?;kotlin.Long?;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>?;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>?;kotlin.Long?;kotlin.Long?){}[0]
     final fun registerAppDatabase(kotlin/String, kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.registerAppDatabase|registerAppDatabase(kotlin.String;kotlin.String?){}[0]
     final fun registerPlugin(io.github.yashkasera.alohomora.plugin/CustomScreenPlugin) // io.github.yashkasera.alohomora/Alohomora.registerPlugin|registerPlugin(io.github.yashkasera.alohomora.plugin.CustomScreenPlugin){}[0]
+    final fun registerReplayHandler(io.github.yashkasera.alohomora.replay/TraceReplayHandler) // io.github.yashkasera.alohomora/Alohomora.registerReplayHandler|registerReplayHandler(io.github.yashkasera.alohomora.replay.TraceReplayHandler){}[0]
     final fun startDevToolsServer(kotlin/Int = ...): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.startDevToolsServer|startDevToolsServer(kotlin.Int){}[0]
     final fun stopDevToolsServer() // io.github.yashkasera.alohomora/Alohomora.stopDevToolsServer|stopDevToolsServer(){}[0]
     final fun unregisterPlugin(kotlin/String): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.unregisterPlugin|unregisterPlugin(kotlin.String){}[0]
@@ -43,6 +108,13 @@ final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.
 
 final val io.github.yashkasera.alohomora.network/AlohomoraInspector // io.github.yashkasera.alohomora.network/AlohomoraInspector|{}AlohomoraInspector[0]
     final fun <get-AlohomoraInspector>(): io.ktor.client.plugins.api/ClientPlugin<kotlin/Unit> // io.github.yashkasera.alohomora.network/AlohomoraInspector.<get-AlohomoraInspector>|<get-AlohomoraInspector>(){}[0]
+final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop[0]
+final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop[0]
+final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop[0]
 final val io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop // io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop|#static{}io_github_yashkasera_alohomora_Alohomora$stableprop[0]
 
+final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter(){}[0]
+final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop_getter(){}[0]
+final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop_getter(){}[0]
+final fun io.github.yashkasera.alohomora.replay/ktorReplayHandler(io.ktor.client/HttpClient): io.github.yashkasera.alohomora.replay/TraceReplayHandler // io.github.yashkasera.alohomora.replay/ktorReplayHandler|ktorReplayHandler(io.ktor.client.HttpClient){}[0]
 final fun io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop_getter|io_github_yashkasera_alohomora_Alohomora$stableprop_getter(){}[0]

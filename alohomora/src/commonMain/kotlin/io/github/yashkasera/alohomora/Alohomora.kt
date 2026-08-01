@@ -12,6 +12,8 @@ import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
+import io.github.yashkasera.alohomora.replay.TraceReplayHandler
+import io.github.yashkasera.alohomora.replay.TraceReplayRegistry
 import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 import kotlin.time.Clock
@@ -242,6 +244,48 @@ object Alohomora {
     fun clearAppDatabaseOverrides() {
         DevToolsDatabaseOverrides.clear()
     }
+
+    // ============================================================================
+    // Trace Replay
+    // ============================================================================
+
+    /**
+     * Registers the client Alohomora should use to re-send a captured request.
+     *
+     * Alohomora never sends replays itself, and this is not an implementation shortcut. Everything
+     * a request needs in order to be accepted — a payload signature, a fresh bearer token,
+     * certificate pinning — is derived by the host app's own interceptor chain. A request that
+     * Alohomora assembled and sent would carry the signature captured from the *original* body,
+     * so the moment a payload is edited the server would reject it. Re-entering the app's chain is
+     * what makes an edited payload arrive correctly signed.
+     *
+     * On Android with OkHttp, pass the ready-made handler:
+     * ```kotlin
+     * Alohomora.registerReplayHandler(okHttpReplayHandler(myOkHttpClient))
+     * ```
+     *
+     * Anywhere else, or when signing happens above the client, supply your own:
+     * ```kotlin
+     * Alohomora.registerReplayHandler { request ->
+     *     val response = myClient.send(request.method, request.url, request.headers, request.body)
+     *     ReplayOutcome.Sent()
+     * }
+     * ```
+     *
+     * Until a handler is registered, [isReplaySupported] is false and both consoles hide the replay
+     * action instead of offering one that cannot work.
+     */
+    fun registerReplayHandler(handler: TraceReplayHandler) {
+        TraceReplayRegistry.register(handler)
+    }
+
+    /** Removes the registered replay handler, disabling replay in both consoles. */
+    fun clearReplayHandler() {
+        TraceReplayRegistry.clear()
+    }
+
+    /** True when a replay handler is registered and captured requests can be re-sent. */
+    val isReplaySupported: Boolean get() = TraceReplayRegistry.isSupported
 
     // ============================================================================
     // Plugin System - Custom Screens

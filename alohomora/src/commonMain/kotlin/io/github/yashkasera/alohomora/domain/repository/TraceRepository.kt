@@ -24,4 +24,13 @@ internal interface TraceRepository : Repository<TraceEntry, String> {
         page: Int = 0,
         pageSize: Int = 20,
     ): Flow<List<TraceEntry>>
+
+    /**
+     * Observes the trace produced by replaying [sourceId].
+     *
+     * A Flow, not a suspend read: capture persists the replay from its own coroutine, so it is
+     * routinely absent at the moment the replay handler returns. A one-shot read would report
+     * nothing and the console would look like the replay never happened.
+     */
+    fun observeReplayOf(sourceId: String): Flow<TraceEntry?>
 }

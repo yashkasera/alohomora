@@ -8,6 +8,8 @@ import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.model.PrefsState
+import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
+import io.github.yashkasera.alohomora.replay.ReplayRequest
 import kotlinx.coroutines.flow.StateFlow
 
 interface DevToolsRepository {
@@ -21,6 +23,7 @@ interface DevToolsRepository {
     val prefsState: StateFlow<PrefsState>
     val buildInfo: StateFlow<BuildInfo?>
     val chronicle: StateFlow<List<ChronicleCommit>>
+    val replayState: StateFlow<ReplayState>
 
     fun connect(target: DevToolsTarget)
     fun switchDevice(target: DevToolsTarget, deviceId: String? = null)
@@ -46,6 +49,17 @@ interface DevToolsRepository {
 
     /** Dims a telemetry event the user opened in this window. */
     fun markEventViewed(id: Long)
+
+    /**
+     * Asks the device to re-send [request] through the host app's own HTTP client.
+     *
+     * The whole request travels, not just a trace id: the user may have edited the URL, headers or
+     * payload, and having the app re-sign an edited payload is the point of the feature.
+     */
+    fun replayTrace(request: ReplayRequest)
+
+    /** Clears a replay failure the user has acknowledged. */
+    fun dismissReplayError(sourceTraceId: String)
 
     fun requestDatabaseSchema(databaseName: String)
     fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int = 200)

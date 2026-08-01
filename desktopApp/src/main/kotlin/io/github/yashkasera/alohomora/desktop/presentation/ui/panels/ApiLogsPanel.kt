@@ -37,6 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +55,8 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCa
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TraceItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
+import io.github.yashkasera.alohomora.replay.replayBlockedReason
+import io.github.yashkasera.alohomora.replay.toReplayRequest
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
@@ -63,6 +66,7 @@ import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Repeat
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Slack
 import io.github.yashkasera.alohomora.ui.icons.Trash
@@ -156,10 +160,24 @@ fun TraceDetailsSideModal(
     devToolsViewModel: DevToolsViewModel,
     onDismiss: () -> Unit,
 ) {
-    var showSlackShareDialog by remember { mutableStateOf(false) }
+    // Keyed on the trace, not bare `remember`: this composable is reused as the selection changes,
+    // so an un-keyed flag stays true across the switch and the dialog reopens for whichever trace
+    // was clicked next. For replay that means a request the user never composed, pre-filled and one
+    // click from being sent for real.
+    var showSlackShareDialog by remember(trace?.id) { mutableStateOf(false) }
+    var showReplayDialog by remember(trace?.id) { mutableStateOf(false) }
     val slackShareError by devToolsViewModel.slackShareError.collectAsState()
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()
+    val replayState by devToolsViewModel.replayState.collectAsState()
     val isSlackConfigured = buildInfo?.slackWebhookUrl.isNullOrBlank().not()
+
+    // Null when the device cannot replay at all, or when this particular trace cannot be
+    // reproduced — a truncated or multipart body. Both cases hide the action rather than offering
+    // one that would send wrong data.
+    val replayRequest = trace
+        ?.takeIf { replayState.supported }
+        ?.toReplayRequest()
+    val replayBlockedReason = trace?.replayBlockedReason()
 
     AnimatedVisibility(
         trace != null,
@@ -212,6 +230,21 @@ fun TraceDetailsSideModal(
                                         overflow = TextOverflow.Ellipsis,
                                     )
                                 }
+                                if (replayState.supported) {
+                                    AlohomoraIconButton(
+                                        onClick = { showReplayDialog = true },
+                                        enabled = replayRequest != null &&
+                                            !replayState.isInFlight(trace.id),
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Repeat,
+                                            // Names the blocker, so an unavailable action explains
+                                            // itself instead of just looking broken.
+                                            contentDescription = replayBlockedReason?.message
+                                                ?: "Replay this request",
+                                        )
+                                    }
+                                }
                                 AlohomoraIconButton(onClick = { showSlackShareDialog = true }) {
                                     Icon(
                                         imageVector = Icons.Slack,
@@ -232,6 +265,31 @@ fun TraceDetailsSideModal(
                 }
             }
         }
+    }
+
+    // Closes the dialog once a replay comes back clean, so success needs no extra click. A failure
+    // leaves it open with the error and the user's edits intact — the usual cause is something in
+    // the form itself.
+    val replayInFlight = trace != null && replayState.isInFlight(trace.id)
+    val replayError = trace?.let { replayState.errorFor(it.id) }
+    LaunchedEffect(replayInFlight, replayError) {
+        if (showReplayDialog && !replayInFlight && replayError == null) showReplayDialog = false
+    }
+
+    if (showReplayDialog && replayRequest != null && trace != null) {
+        ReplayRequestDialog(
+            initial = replayRequest,
+            inFlight = replayState.isInFlight(trace.id),
+            error = replayState.errorFor(trace.id),
+            onDismiss = {
+                showReplayDialog = false
+                devToolsViewModel.dismissReplayError(trace.id)
+            },
+            // Deliberately stays open: the device answers with a failure often enough — a hand-edited
+            // URL, a refused connection — that closing on send would throw away both the error and
+            // the edits that produced it.
+            onSend = devToolsViewModel::replayTrace,
+        )
     }
 
     trace?.let {

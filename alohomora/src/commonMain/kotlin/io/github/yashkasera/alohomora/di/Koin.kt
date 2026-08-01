@@ -11,6 +11,8 @@ import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import io.github.yashkasera.alohomora.domain.usecase.cache.GetPreferencesUseCase
 import io.github.yashkasera.alohomora.domain.usecase.trace.GetTraceDetailsUseCase
 import io.github.yashkasera.alohomora.domain.usecase.trace.MarkTraceAsViewedUseCase
+import io.github.yashkasera.alohomora.domain.usecase.trace.ObserveReplayResultUseCase
+import io.github.yashkasera.alohomora.domain.usecase.trace.ReplayTraceUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.GetIncidentDetailsUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.MarkIncidentAsViewedUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.ClearIncidentsUseCase
@@ -68,6 +70,8 @@ internal val appModule = module {
     factory { ClearIncidentsUseCase(get()) }
     factory { GetTraceDetailsUseCase(get()) }
     factory { MarkTraceAsViewedUseCase(get()) }
+    factory { ReplayTraceUseCase() }
+    factory { ObserveReplayResultUseCase(get()) }
     factory { GetPreferencesUseCase(get()) }
 
     single {
@@ -84,7 +88,9 @@ internal val appModule = module {
     // ViewModels
     viewModel { OverviewViewModel(get()) }
     viewModel { TraceViewModel(get()) }
-    viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get(), get(), get(), get()) }
+    viewModel { (traceId: String) ->
+        TraceDetailsViewModel(traceId, get(), get(), get(), get(), get(), get())
+    }
     viewModel { TelemetryViewModel(get()) }
     viewModel { VaultViewModel(get()) }
     viewModel { CacheViewModel(get()) }

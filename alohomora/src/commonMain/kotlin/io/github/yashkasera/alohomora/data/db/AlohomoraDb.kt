@@ -21,7 +21,8 @@ import io.github.yashkasera.alohomora.data.datasource.local.ScreenDao
 @Database(
     entities = [TelemetryEvent::class, TraceEntry::class, Incident::class, Screen::class],
     // 2: TelemetryEvent.isViewed added.
-    version = 2,
+    // 3: TraceEntry.requestBodyTruncated, responseBodyTruncated and replayOf added.
+    version = 3,
     exportSchema = false,
 )
 @ConstructedBy(AlohomoraDbConstructor::class)

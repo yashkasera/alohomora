@@ -56,6 +56,12 @@ Alohomora.stopDevToolsServer()
 Alohomora.registerAppDatabase(name = "app.db")
 Alohomora.excludeAppDatabase(name = "cache.db")
 Alohomora.clearAppDatabaseOverrides()
+
+// Lets the console re-send a captured request through your client, so your
+// interceptors re-sign an edited payload. See "Trace Replay" below.
+Alohomora.registerReplayHandler(ktorReplayHandler(myHttpClient))
+Alohomora.clearReplayHandler()
+val canReplay = Alohomora.isReplaySupported
 ```
 
 ### 4) Plugin APIs
@@ -189,15 +195,72 @@ Instead of asking “why did this crash?”, developers can ask:
 - What assumptions were violated?
 - Where did reality diverge from expectation?
 
-### Replay & Simulation (Planned / Optional)
+### Trace Replay
 
-For supported environments, the system can:
+Open any captured request, edit the method, URL, headers or payload, and send it again — from the
+console on the device or from the desktop app.
 
-- Replay API requests or events
-- Simulate workflows using recorded inputs
-- Test fixes against real historical scenarios
+The request is re-issued **by your app, through your own HTTP client**. That distinction is the whole
+feature. Anything your client derives per-request — a payload signature, a fresh bearer token,
+certificate pinning — is regenerated for the payload you just edited, so changing a body produces a
+matching signature instead of a 401. A request that Alohomora built and sent itself could not do
+this: it would carry the signature captured from the original body, and secret headers are stored
+redacted, so they are not recoverable from a trace at all.
 
-This is not about load testing. It’s about time travel for debugging.
+Register your client once at startup:
+
+```kotlin
+// Ktor (Android and iOS)
+Alohomora.registerReplayHandler(ktorReplayHandler(myHttpClient))
+
+// OkHttp
+Alohomora.registerReplayHandler(okHttpReplayHandler(myOkHttpClient))
+
+// Anything else, or when signing happens above the client
+Alohomora.registerReplayHandler { request ->
+    myApi.send(request.method, request.url, request.headers, request.body)
+    ReplayOutcome.Sent()
+}
+```
+
+Pass the client you use for the endpoint being replayed. One without the signing interceptor produces
+authentic-looking auth failures.
+
+#### Retrofit
+
+Retrofit has no interceptors of its own — it delegates to OkHttp. Yours live on the `OkHttpClient` you
+hand to `Retrofit.Builder()`, which is exactly why replay has to go through that client. Register it,
+not the `Retrofit` instance:
+
+```kotlin
+val client = OkHttpClient.Builder()
+    .addInterceptor(SigningInterceptor())   // your signing, auth, pinning…
+    .addInterceptor(TraceInterceptor())     // Alohomora capture
+    .build()
+
+val retrofit = Retrofit.Builder()
+    .client(client)
+    .baseUrl("https://api.example.com/")
+    .build()
+
+Alohomora.registerReplayHandler(okHttpReplayHandler(client))
+```
+
+Interceptor order does not matter for replay: the marker linking a replay to its original travels in
+an OkHttp request tag, not a header, so nothing Alohomora adds can end up inside a signature.
+
+If your signing happens *above* OkHttp — in a repository, or a Retrofit `CallAdapter`, or a manual
+`sign(payload)` call in your data layer — no client-level handler can regenerate it. Use the lambda
+form and call your own signing code inside it.
+
+Until a handler is registered the action is hidden in both consoles rather than offered and broken.
+It is also hidden per-request for anything that cannot be faithfully reproduced: bodies too large to
+have been captured in full, and multipart or streaming bodies. Replaying a truncated body would send
+silently corrupted data and make your server look at fault.
+
+Replay is a real request with real side effects. There is no dry run.
+
+This is not load testing. It is time travel for debugging.
 
 ### Developer-Centric UI
 

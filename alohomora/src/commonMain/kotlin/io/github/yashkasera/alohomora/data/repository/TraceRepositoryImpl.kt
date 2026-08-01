@@ -22,6 +22,8 @@ internal class TraceRepositoryImpl(private val dao: TraceDao) : TraceRepository 
 
     override fun getById(id: String): Flow<TraceEntry?> = dao.getById(id)
 
+    override fun observeReplayOf(sourceId: String): Flow<TraceEntry?> = dao.observeReplayOf(sourceId)
+
     override suspend fun save(item: TraceEntry): String {
         dao.insert(item)
         return item.id
