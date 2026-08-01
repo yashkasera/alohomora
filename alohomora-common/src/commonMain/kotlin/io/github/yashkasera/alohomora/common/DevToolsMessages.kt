@@ -193,6 +193,27 @@ data class ReplayResultMessage(
     val error: String? = null,
 ) : DevToolsMessage()
 
+/**
+ * Reports that the device failed to service a desktop command.
+ *
+ * Exists because the alternative is silence. A handler that threw used to escape the device's
+ * reader loop and close the socket, so a database the app could not read surfaced on the desktop
+ * as an unexplained disconnect/reconnect cycle with the real cause only in `logcat`/Xcode. The
+ * reader now survives a failed handler, which makes this the only way the desktop learns that the
+ * answer it is waiting for is never coming.
+ *
+ * Advisory, not terminal: the connection stays up and other commands keep working.
+ *
+ * @param request the [SerialName] of the command that failed, so the console can say what broke.
+ */
+@Serializable
+@SerialName("DEVICE_ERROR")
+data class DeviceErrorMessage(
+    override val sequence: Long,
+    val request: String,
+    val message: String,
+) : DevToolsMessage()
+
 // ── Payload types (kept as named wrappers for complex payloads) ───────────────
 
 @Serializable

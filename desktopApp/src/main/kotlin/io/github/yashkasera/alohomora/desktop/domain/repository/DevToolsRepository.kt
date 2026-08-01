@@ -25,6 +25,15 @@ interface DevToolsRepository {
     val gitHistory: StateFlow<List<GitHistoryCommit>>
     val replayState: StateFlow<ReplayState>
 
+    /**
+     * The device's last reported command failure, or null once acknowledged.
+     *
+     * Separate from [connectionState]: the session is fine, one request could not be served. Folding
+     * it into [DevToolsConnection.Failed] would claim the connection had dropped and send the UI
+     * back to a reconnect state it is not in.
+     */
+    val deviceError: StateFlow<String?>
+
     fun connect(target: DevToolsTarget)
     fun switchDevice(target: DevToolsTarget, deviceId: String? = null)
 
@@ -60,6 +69,9 @@ interface DevToolsRepository {
 
     /** Clears a replay failure the user has acknowledged. */
     fun dismissReplayError(sourceTraceId: String)
+
+    /** Clears the [deviceError] banner the user has acknowledged. */
+    fun dismissDeviceError()
 
     fun requestDatabaseSchema(databaseName: String)
     fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int = 200)

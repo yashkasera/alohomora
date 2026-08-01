@@ -6,6 +6,7 @@ import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.AuthSuccessMessage
 import io.github.yashkasera.alohomora.common.CacheSnapshotMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
+import io.github.yashkasera.alohomora.common.DeviceErrorMessage
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.Event
@@ -71,6 +72,8 @@ class DevToolsRepositoryImpl(
     override val currentDeviceId: StateFlow<String?> = _currentDeviceId.asStateFlow()
     private val _switching = MutableStateFlow(false)
     override val switching: StateFlow<Boolean> = _switching.asStateFlow()
+    private val _deviceError = MutableStateFlow<String?>(null)
+    override val deviceError: StateFlow<String?> = _deviceError.asStateFlow()
 
     override val events: StateFlow<List<Event>> = eventStore.events
     override val traffic: StateFlow<List<TrafficEntry>> = trafficStore.logs
@@ -185,9 +188,10 @@ class DevToolsRepositoryImpl(
             remoteDataSource.processConnection(socket, ::handleMessage)
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             // Swallowed on purpose: the caller retries, and surfacing every failed attempt as
             // Failed would flicker the UI between error and reconnecting once a second.
+            println("[Alohomora] Connection dropped: ${e::class.simpleName}: ${e.message}")
         } finally {
             socket?.close()
             if (generation == myGeneration) {
@@ -236,6 +240,10 @@ class DevToolsRepositoryImpl(
     }
 
     override fun dismissReplayError(sourceTraceId: String) = replayStore.dismissError(sourceTraceId)
+
+    override fun dismissDeviceError() {
+        _deviceError.value = null
+    }
 
     override fun requestDatabaseSchema(databaseName: String) {
         scope.launch { sendMessage(RequestDatabaseSchemaMessage(databaseName = databaseName)) }
@@ -365,11 +373,20 @@ class DevToolsRepositoryImpl(
                 }
             }
 
+            is DeviceErrorMessage -> {
+                // Not a connection failure: the socket is healthy, one command could not be
+                // served. Surfaced so a device that cannot read its own database says so instead
+                // of looking like an idle console.
+                println("[Alohomora] Device failed ${message.request}: ${message.message}")
+                _deviceError.value = "${message.request} failed on the device: ${message.message}"
+            }
+
             else -> Unit
         }
     }
 
     private fun clearAll() {
+        _deviceError.value = null
         eventStore.clear()
         trafficStore.clear()
         databaseStore.clear()

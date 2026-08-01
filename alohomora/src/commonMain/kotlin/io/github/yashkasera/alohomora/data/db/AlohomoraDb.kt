@@ -20,7 +20,7 @@ import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 
 @Database(
     entities = [Event::class, TrafficEntry::class, Error::class, Screen::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 @ConstructedBy(AlohomoraDbConstructor::class)

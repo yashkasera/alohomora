@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -25,7 +26,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.PermanentNavigationDrawer
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -112,6 +115,7 @@ fun DevToolsDesktopApp(
     val adbCommandHistory by devicesViewModel.adbCommandHistory.collectAsState()
     val devToolsState by devToolsViewModel.uiState.collectAsState()
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()
+    val deviceError by devToolsViewModel.deviceError.collectAsState()
 
     val scope = rememberCoroutineScope()
     var isRecording by remember { mutableStateOf(false) }
@@ -387,6 +391,16 @@ fun DevToolsDesktopApp(
                 }
             }
 
+            // Overlaid rather than inserted into the layout: it appears mid-session and must not
+            // reflow the panel underneath it.
+            deviceError?.let { error ->
+                DeviceErrorBanner(
+                    message = error,
+                    onDismiss = { devToolsViewModel.dismissDeviceError() },
+                    modifier = Modifier.align(Alignment.TopCenter),
+                )
+            }
+
             val connection = devToolsState.connection
             if (connection is DevToolsConnection.AwaitingAuth && connection.otpRequired) {
                 OtpPromptDialog(
@@ -638,5 +652,47 @@ private fun SidebarConnectionCard(
             }
         }
 
+    }
+}
+
+/**
+ * Advisory banner for a command the device could not serve.
+ *
+ * Deliberately dismissible and non-blocking: the session is still live and every other panel keeps
+ * working, so this must not become a modal that hides the console. It exists because the failure it
+ * reports used to be completely silent on this side.
+ */
+@Composable
+private fun DeviceErrorBanner(
+    message: String,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .padding(MaterialTheme.dimens.margin.md)
+            .widthIn(max = 720.dp),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        tonalElevation = MaterialTheme.dimens.margin.xs,
+    ) {
+        Row(
+            modifier = Modifier.padding(
+                horizontal = MaterialTheme.dimens.margin.md,
+                vertical = MaterialTheme.dimens.margin.sm,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+        ) {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            TextButton(onClick = onDismiss) {
+                Text("Dismiss", color = MaterialTheme.colorScheme.onErrorContainer)
+            }
+        }
     }
 }

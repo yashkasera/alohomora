@@ -11,6 +11,7 @@ import io.github.yashkasera.alohomora.common.CacheSnapshotPayload
 import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
+import io.github.yashkasera.alohomora.common.DeviceErrorMessage
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.Event
@@ -33,6 +34,7 @@ import io.github.yashkasera.alohomora.replay.TrafficReplayRegistry
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -280,12 +282,19 @@ internal class DevToolsRuntime(
                         ?: break
                     socket.write(DevToolsProtocol.encodeEnvelope(message))
                 }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // A half-closed peer (laptop asleep, adb forward removed) surfaces here. Worth a
+                // line: the session otherwise just stops with no explanation on either side.
+                println("[Alohomora] DevTools write failed, closing session: $e")
             } finally {
                 // A dead writer must tear down the whole connection. connectionScope is a
                 // SupervisorJob, so without this a failed write (half-closed peer — laptop
                 // asleep, adb forward removed) killed only this loop, leaving readerLoop
                 // parked in readFully forever with no socket timeout to rescue it: a session
                 // reporting "Connected" with zero throughput.
+                println("[Alohomora] Device: Connection closing")
                 close()
             }
         }
@@ -300,19 +309,35 @@ internal class DevToolsRuntime(
                         if (message is AuthResponseMessage) handleAuthResponse(message)
                         continue
                     }
-                    when (message) {
-                        is RequestInitialStateMessage -> sendInitialState()
-                        is RequestClearMessage -> handleClear(message)
-                        is RequestDatabaseSchemaMessage -> handleDatabaseSchemaRequest(message.databaseName)
-                        is RequestDatabaseTableMessage -> handleDatabaseRequest(
-                            message.databaseName,
-                            message.tableName,
-                            message.limit,
+                    try {
+                        when (message) {
+                            is RequestInitialStateMessage -> sendInitialState()
+                            is RequestClearMessage -> handleClear(message)
+                            is RequestDatabaseSchemaMessage -> handleDatabaseSchemaRequest(message.databaseName)
+                            is RequestDatabaseTableMessage -> handleDatabaseRequest(
+                                message.databaseName,
+                                message.tableName,
+                                message.limit,
+                            )
+                            is RequestCacheValueMessage -> handleCacheRequest(message.key)
+                            is RequestReplayTraceMessage -> handleReplayRequest(message)
+                            // Includes UnknownMessage from a newer peer: ignore, don't disconnect.
+                            else -> Unit
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        val request = message::class.simpleName ?: "unknown request"
+                        println("[Alohomora] DevTools handler failed for $request: $e")
+                        // Tell the desktop. It is waiting on a reply that is no longer coming, and
+                        // without this it waits forever with nothing to show the developer.
+                        send(
+                            DeviceErrorMessage(
+                                sequence = nextSequence(),
+                                request = request,
+                                message = e.message ?: e.toString(),
+                            ),
                         )
-                        is RequestCacheValueMessage -> handleCacheRequest(message.key)
-                        is RequestReplayTraceMessage -> handleReplayRequest(message)
-                        // Includes UnknownMessage from a newer peer: ignore, don't disconnect.
-                        else -> Unit
                     }
                 }
             } finally {

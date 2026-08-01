@@ -55,6 +55,11 @@ class DevToolsViewModel(
         )
     )
 
+    /** The device's last command failure. Advisory: the session is still up. */
+    val deviceError: StateFlow<String?> = repository.deviceError
+
+    fun dismissDeviceError() = repository.dismissDeviceError()
+
     fun connect(host: String, port: Int) = connectUseCase(host, port)
 
     fun disconnect() = disconnectUseCase()
