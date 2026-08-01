@@ -1,0 +1,48 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.yashkasera:alohomora-noop>
+abstract interface io.github.yashkasera.alohomora.plugin/CustomScreenPlugin { // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin|null[0]
+    abstract val id // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.id|{}id[0]
+        abstract fun <get-id>(): kotlin/String // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.id.<get-id>|<get-id>(){}[0]
+    abstract val title // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.title|{}title[0]
+        abstract fun <get-title>(): kotlin/String // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.title.<get-title>|<get-title>(){}[0]
+    open val description // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.description|{}description[0]
+        open fun <get-description>(): kotlin/String? // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.description.<get-description>|<get-description>(){}[0]
+    open val icon // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.icon|{}icon[0]
+        open fun <get-icon>(): androidx.compose.ui.graphics.vector/ImageVector? // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.icon.<get-icon>|<get-icon>(){}[0]
+    open val priority // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.priority|{}priority[0]
+        open fun <get-priority>(): kotlin/Int // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.priority.<get-priority>|<get-priority>(){}[0]
+    open val showInDashboard // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.showInDashboard|{}showInDashboard[0]
+        open fun <get-showInDashboard>(): kotlin/Boolean // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.showInDashboard.<get-showInDashboard>|<get-showInDashboard>(){}[0]
+    open val showInNavigation // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.showInNavigation|{}showInNavigation[0]
+        open fun <get-showInNavigation>(): kotlin/Boolean // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.showInNavigation.<get-showInNavigation>|<get-showInNavigation>(){}[0]
+
+    abstract fun Content(kotlin/Function0<kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.Content|Content(kotlin.Function0<kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    open fun onScreenHidden() // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.onScreenHidden|onScreenHidden(){}[0]
+    open fun onScreenVisible() // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.onScreenVisible|onScreenVisible(){}[0]
+}
+
+final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.alohomora/Alohomora|null[0]
+    final fun clearAppDatabaseOverrides() // io.github.yashkasera.alohomora/Alohomora.clearAppDatabaseOverrides|clearAppDatabaseOverrides(){}[0]
+    final fun excludeAppDatabase(kotlin/String) // io.github.yashkasera.alohomora/Alohomora.excludeAppDatabase|excludeAppDatabase(kotlin.String){}[0]
+    final fun getPlugins(): kotlin.collections/List<io.github.yashkasera.alohomora.plugin/CustomScreenPlugin> // io.github.yashkasera.alohomora/Alohomora.getPlugins|getPlugins(){}[0]
+    final fun init() // io.github.yashkasera.alohomora/Alohomora.init|init(){}[0]
+    final fun recordTelemetry(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String>? = ...) // io.github.yashkasera.alohomora/Alohomora.recordTelemetry|recordTelemetry(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
+    final fun recordTrace(kotlin/String = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>>? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>>? = ..., kotlin/Long? = ..., kotlin/Long? = ...) // io.github.yashkasera.alohomora/Alohomora.recordTrace|recordTrace(kotlin.String;kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Long?;kotlin.Long?;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>?;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>?;kotlin.Long?;kotlin.Long?){}[0]
+    final fun registerAppDatabase(kotlin/String, kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.registerAppDatabase|registerAppDatabase(kotlin.String;kotlin.String?){}[0]
+    final fun registerPlugin(io.github.yashkasera.alohomora.plugin/CustomScreenPlugin) // io.github.yashkasera.alohomora/Alohomora.registerPlugin|registerPlugin(io.github.yashkasera.alohomora.plugin.CustomScreenPlugin){}[0]
+    final fun startDevToolsServer(kotlin/Int = ...): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.startDevToolsServer|startDevToolsServer(kotlin.Int){}[0]
+    final fun stopDevToolsServer() // io.github.yashkasera.alohomora/Alohomora.stopDevToolsServer|stopDevToolsServer(){}[0]
+    final fun unregisterPlugin(kotlin/String): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.unregisterPlugin|unregisterPlugin(kotlin.String){}[0]
+}
+
+final val io.github.yashkasera.alohomora.network/AlohomoraInspector // io.github.yashkasera.alohomora.network/AlohomoraInspector|{}AlohomoraInspector[0]
+    final fun <get-AlohomoraInspector>(): io.ktor.client.plugins.api/ClientPlugin<kotlin/Unit> // io.github.yashkasera.alohomora.network/AlohomoraInspector.<get-AlohomoraInspector>|<get-AlohomoraInspector>(){}[0]
+final val io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop // io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop|#static{}io_github_yashkasera_alohomora_Alohomora$stableprop[0]
+
+final fun io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop_getter|io_github_yashkasera_alohomora_Alohomora$stableprop_getter(){}[0]

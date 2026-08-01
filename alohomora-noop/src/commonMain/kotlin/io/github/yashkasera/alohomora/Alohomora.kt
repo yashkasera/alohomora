@@ -1,7 +1,8 @@
 package io.github.yashkasera.alohomora
 
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
-import org.koin.dsl.KoinAppDeclaration
+import kotlin.jvm.JvmOverloads
+import kotlin.jvm.JvmStatic
 
 /**
  * No-op implementation of Alohomora for release builds.
@@ -16,11 +17,15 @@ import org.koin.dsl.KoinAppDeclaration
  *     releaseImplementation("io.github.yashkasera:alohomora-noop:1.0.0")
  * }
  * ```
+ *
+ * **Every member here must mirror `:alohomora`'s `Alohomora` object exactly** — same names,
+ * same parameter lists and order, same defaults, same JVM annotations. A consumer compiles
+ * one call site against both artifacts, so any divergence is a release-only build failure.
+ * `:consumerParity` in the root build enforces this; do not hand-edit one side alone.
  */
 object Alohomora {
 
-    @Suppress("UNUSED_PARAMETER")
-    fun init(appDeclaration: KoinAppDeclaration = {}) {
+    fun init() {
         /* no-op */
     }
 
@@ -29,7 +34,9 @@ object Alohomora {
     // ============================================================================
 
     @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
     fun recordTrace(
+        id: String = "",
         status: Int? = null,
         url: String? = null,
         message: String? = null,
@@ -53,6 +60,8 @@ object Alohomora {
     }
 
     @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    @JvmOverloads
     fun recordTelemetry(name: String, properties: Map<String, String>? = null) {
         /* no-op */
     }
@@ -62,7 +71,7 @@ object Alohomora {
     // ============================================================================
 
     @Suppress("UNUSED_PARAMETER")
-    fun startDevToolsServer(port: Int = -1): Boolean {
+    fun startDevToolsServer(port: Int = 53999): Boolean {
         return false
     }
 

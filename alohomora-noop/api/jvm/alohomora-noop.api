@@ -4,14 +4,12 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public final fun clearAppDatabaseOverrides ()V
 	public final fun excludeAppDatabase (Ljava/lang/String;)V
 	public final fun getPlugins ()Ljava/util/List;
-	public final fun init (Lkotlin/jvm/functions/Function1;)V
-	public static synthetic fun init$default (Lio/github/yashkasera/alohomora/Alohomora;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
-	public final fun log (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
-	public static synthetic fun log$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)V
-	public final fun recordTelemetry (Ljava/lang/String;Ljava/util/Map;)V
-	public static synthetic fun recordTelemetry$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
-	public final fun recordTrace (Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;)V
-	public static synthetic fun recordTrace$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;ILjava/lang/Object;)V
+	public final fun init ()V
+	public static final fun recordTelemetry (Ljava/lang/String;)V
+	public static final fun recordTelemetry (Ljava/lang/String;Ljava/util/Map;)V
+	public static synthetic fun recordTelemetry$default (Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
+	public static final fun recordTrace (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;)V
+	public static synthetic fun recordTrace$default (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;ILjava/lang/Object;)V
 	public final fun registerAppDatabase (Ljava/lang/String;Ljava/lang/String;)V
 	public static synthetic fun registerAppDatabase$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
 	public final fun registerPlugin (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)V
@@ -21,10 +19,14 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public final fun unregisterPlugin (Ljava/lang/String;)Z
 }
 
+public final class io/github/yashkasera/alohomora/network/AlohomoraInspectorKt {
+	public static final fun getAlohomoraInspector ()Lio/ktor/client/plugins/api/ClientPlugin;
+}
+
 public abstract interface class io/github/yashkasera/alohomora/plugin/CustomScreenPlugin {
 	public abstract fun Content (Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V
 	public fun getDescription ()Ljava/lang/String;
-	public fun getIcon ()Ljava/lang/Object;
+	public fun getIcon ()Landroidx/compose/ui/graphics/vector/ImageVector;
 	public abstract fun getId ()Ljava/lang/String;
 	public fun getPriority ()I
 	public fun getShowInDashboard ()Z
@@ -36,7 +38,7 @@ public abstract interface class io/github/yashkasera/alohomora/plugin/CustomScre
 
 public final class io/github/yashkasera/alohomora/plugin/CustomScreenPlugin$DefaultImpls {
 	public static fun getDescription (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)Ljava/lang/String;
-	public static fun getIcon (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)Ljava/lang/Object;
+	public static fun getIcon (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)Landroidx/compose/ui/graphics/vector/ImageVector;
 	public static fun getPriority (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)I
 	public static fun getShowInDashboard (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)Z
 	public static fun getShowInNavigation (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)Z
