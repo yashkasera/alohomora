@@ -6,7 +6,7 @@ import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileWriter
 
-actual class ShareManager(private val context: Context) {
+internal actual class ShareManager(private val context: Context) {
     actual fun shareText(text: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"

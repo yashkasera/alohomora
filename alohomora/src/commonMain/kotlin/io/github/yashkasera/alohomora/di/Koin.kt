@@ -10,6 +10,7 @@ import io.github.yashkasera.alohomora.domain.repository.TelemetryRepository
 import io.github.yashkasera.alohomora.domain.repository.TraceRepository
 import io.github.yashkasera.alohomora.domain.usecase.cache.GetPreferencesUseCase
 import io.github.yashkasera.alohomora.domain.usecase.trace.GetTraceDetailsUseCase
+import io.github.yashkasera.alohomora.domain.usecase.trace.MarkTraceAsViewedUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.GetIncidentDetailsUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.MarkIncidentAsViewedUseCase
 import io.github.yashkasera.alohomora.domain.usecase.incident.ClearIncidentsUseCase
@@ -22,16 +23,26 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.incident.list.Inci
 import io.github.yashkasera.alohomora.presentation.ui.screens.vault.VaultViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.chronicle.ChronicleViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.overview.OverviewViewModel
-import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.KoinAppDeclaration
+import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import io.github.yashkasera.alohomora.domain.service.SlackShareService
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json as KJson
-internal fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
+/**
+ * Builds Alohomora's **isolated** Koin container.
+ *
+ * Deliberately `koinApplication`, not `startKoin`: `startKoin` writes to Koin's
+ * `GlobalContext` and throws `KoinAppAlreadyStartedException` if it is already set. Since
+ * `AlohomoraInitializer` runs from a ContentProvider — before `Application.onCreate` — the
+ * library would always win that race and break every host app that starts its own Koin.
+ * Nothing here touches `GlobalContext`; the instance is held privately by `Alohomora` and
+ * handed to Compose via `KoinIsolatedContext`.
+ */
+internal fun initKoin(appDeclaration: KoinAppDeclaration = {}) = koinApplication {
     appDeclaration()
     modules(appModule, platformModule)
 }
@@ -48,7 +59,7 @@ internal val appModule = module {
     single<IncidentRepository> { IncidentRepositoryImpl(get()) }
     // PreferenceRepository is provided in platformModule
 
-    single { DevToolsRuntime(get(), get(), get(), get(), get()) }
+    single { DevToolsRuntime(get(), get(), get(), get(), get(), get()) }
 
 
     // UseCases
@@ -56,6 +67,7 @@ internal val appModule = module {
     factory { MarkIncidentAsViewedUseCase(get()) }
     factory { ClearIncidentsUseCase(get()) }
     factory { GetTraceDetailsUseCase(get()) }
+    factory { MarkTraceAsViewedUseCase(get()) }
     factory { GetPreferencesUseCase(get()) }
 
     single {
@@ -72,7 +84,7 @@ internal val appModule = module {
     // ViewModels
     viewModel { OverviewViewModel(get()) }
     viewModel { TraceViewModel(get()) }
-    viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get(), get(), get()) }
+    viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get(), get(), get(), get()) }
     viewModel { TelemetryViewModel(get()) }
     viewModel { VaultViewModel(get()) }
     viewModel { CacheViewModel(get()) }
@@ -82,4 +94,4 @@ internal val appModule = module {
 }
 
 
-expect val platformModule: org.koin.core.module.Module
+internal expect val platformModule: org.koin.core.module.Module

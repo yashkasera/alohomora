@@ -17,13 +17,16 @@ import kotlin.jvm.JvmStatic
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.atomicfu.locks.ReentrantLock
+import kotlinx.atomicfu.locks.withLock
+import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
-import org.koin.core.Koin
+import org.koin.core.KoinApplication
 import org.koin.dsl.KoinAppDeclaration
 
 /**
@@ -53,7 +56,17 @@ import org.koin.dsl.KoinAppDeclaration
  */
 object Alohomora {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private var koin: Koin? = null
+    private val initLock = ReentrantLock()
+
+    /**
+     * Alohomora's isolated Koin container. Never registered in Koin's `GlobalContext`, so
+     * a host app is free to run its own `startKoin`. See [initKoin].
+     */
+    @Volatile
+    internal var koinApplication: KoinApplication? = null
+        private set
+
+    private val koin get() = koinApplication?.koin
 
     /**
      * Latest commits baked into this build.
@@ -79,16 +92,36 @@ object Alohomora {
         }
     }
 
-    // Initialize the library.
-    // On Android, pass { androidContext(context) } in appDeclaration
-    fun init(appDeclaration: KoinAppDeclaration = {}) {
-        AlohomoraInternal.init(config = null, appDeclaration = appDeclaration)
+    /**
+     * Initialize the library.
+     *
+     * **On Android this is not needed** — `AlohomoraInitializer` (AndroidX Startup) runs it
+     * automatically at process start with the application `Context` already wired in. Call
+     * this only on platforms without an auto-initializer, such as iOS.
+     *
+     * Takes no Koin declaration: Alohomora's container is isolated and internal, so there
+     * is nothing for a consumer to contribute to it.
+     */
+    fun init() {
+        try {
+            AlohomoraInternal.init(config = null)
+        } catch (e: Throwable) {
+            println("[Alohomora] init failed: ${e.message}")
+        }
     }
 
+    /**
+     * Once-only initialization, guarded by [initLock].
+     *
+     * [config] is assigned only on the initializing call: a later `init()` with a null
+     * config must not wipe the build metadata discovered by `AlohomoraInitializer`.
+     */
     internal fun initInternal(config: AlohomoraConfig? = null, appDeclaration: KoinAppDeclaration = {}) {
-        this.config = config
-        if (koin != null) return
-        koin = initKoin(appDeclaration).koin
+        initLock.withLock {
+            if (koinApplication != null) return
+            this.config = config
+            koinApplication = initKoin(appDeclaration)
+        }
     }
 
     // ============================================================================
@@ -119,8 +152,12 @@ object Alohomora {
         requestSize: Long? = null,
         responseSize: Long? = null,
     ) {
-        val repo = koin?.get<TraceRepository>() ?: return
+        // Resolution happens inside the coroutine on purpose: building TraceRepository
+        // transitively opens AlohomoraDb, which runs a synchronous SQLite open plus
+        // `PRAGMA quick_check`. Doing that eagerly would charge it to whichever thread
+        // recorded the first trace — typically an OkHttp dispatcher thread, or main.
         scope.launch {
+            val repo = koin?.get<TraceRepository>() ?: return@launch
             val trace = TraceEntry(
                 id = id,
                 status = status,
@@ -152,16 +189,22 @@ object Alohomora {
         }
     }
 
+    @JvmStatic
+    @JvmOverloads
     fun recordTelemetry(name: String, properties: Map<String, String>? = null) {
-        val repo = koin?.get<TelemetryRepository>() ?: return
         scope.launch {
-            repo.save(
-                TelemetryEvent(
-                    time = Clock.System.now().toEpochMilliseconds(),
-                    name = name,
-                    properties = Json.encodeToJsonElement(properties),
-                ),
-            )
+            val repo = koin?.get<TelemetryRepository>() ?: return@launch
+            try {
+                repo.save(
+                    TelemetryEvent(
+                        time = Clock.System.now().toEpochMilliseconds(),
+                        name = name,
+                        properties = Json.encodeToJsonElement(properties),
+                    ),
+                )
+            } catch (e: Exception) {
+                Logger.d { "[Alohomora] Failed to record telemetry: ${e.message}" }
+            }
         }
     }
 
@@ -170,8 +213,13 @@ object Alohomora {
     // ============================================================================
 
     fun startDevToolsServer(port: Int = DevToolsDefaults.DEFAULT_PORT): Boolean {
-        val runtime = koin?.get<DevToolsRuntime>() ?: return false
-        return runtime.start(port)
+        return try {
+            val runtime = koin?.get<DevToolsRuntime>() ?: return false
+            runtime.start(port)
+        } catch (e: Throwable) {
+            println("[Alohomora] startDevToolsServer failed: ${e.message}")
+            false
+        }
     }
 
     fun stopDevToolsServer() {

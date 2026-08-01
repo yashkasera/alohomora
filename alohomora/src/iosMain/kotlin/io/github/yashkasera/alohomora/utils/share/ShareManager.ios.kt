@@ -2,20 +2,16 @@ package io.github.yashkasera.alohomora.utils.share
 
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
-import platform.Foundation.NSURL
-import platform.Foundation.NSData
 import platform.Foundation.NSString
-import platform.Foundation.NSUTF8StringEncoding
-import platform.Foundation.stringWithContentsOfFile
-import platform.UIKit.UIActivityViewController
-import platform.UIKit.UIApplication
-import platform.UIKit.UIViewController
 import platform.Foundation.NSTemporaryDirectory
-import platform.Foundation.NSFileManager
+import platform.Foundation.NSURL
+import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.create
 import platform.Foundation.writeToFile
+import platform.UIKit.UIActivityViewController
+import platform.UIKit.UIApplication
 
-actual class ShareManager {
+internal actual class ShareManager {
     actual fun shareText(text: String) {
         val activityItems = listOf(text)
         val activityViewController = UIActivityViewController(activityItems, null)

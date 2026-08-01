@@ -17,8 +17,7 @@ class AlohomoraInitializer : Initializer<Unit> {
             androidContext(context)
         }
         Alohomora.registerPlugin(NavigationPlugin)
-        val app = context.applicationContext as Application
-        app.registerActivityLifecycleCallbacks(ActivityTracker)
+        ActivityTracker.attach(context.applicationContext as Application)
     }
 
     fun discoverConfig(context: Context): AlohomoraConfig? {
