@@ -48,7 +48,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.selects.select
 
 internal object DevToolsDefaults {
@@ -295,12 +294,8 @@ internal class DevToolsRuntime(
             try {
                 while (true) {
                     // null means EOF, bad magic, version mismatch, over-size payload, or
-                    // undecodable JSON — all terminal for this connection. Timeout ensures that
-                    // a stalled desktop (blocking in message handler) doesn't hang forever; if
-                    // the desktop doesn't send anything for 5s, reconnect.
-                    val message = withTimeoutOrNull(5000L) {
-                        DevToolsProtocol.readEnvelope(socket)
-                    } ?: break
+                    // undecodable JSON — all terminal for this connection.
+                    val message = DevToolsProtocol.readEnvelope(socket) ?: break
                     if (!isAuthenticated) {
                         if (message is AuthResponseMessage) handleAuthResponse(message)
                         continue
