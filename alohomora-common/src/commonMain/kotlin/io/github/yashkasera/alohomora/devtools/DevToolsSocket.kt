@@ -56,13 +56,21 @@ private class KtorByteChannel(private val socket: Socket) : DevToolsByteChannel 
         try {
             input.readFully(dest, offset, length)
             true
-        } catch (e: EOFException) {
+        } catch (e: Exception) {
+            // Catch all exceptions (EOFException, ClosedChannelException, socket errors, etc.)
+            // to cleanly close the connection on any read failure.
             false
         }
 
     override suspend fun write(bytes: ByteArray) {
-        output.writeFully(bytes, 0, bytes.size)
-        output.flush()
+        try {
+            output.writeFully(bytes, 0, bytes.size)
+            output.flush()
+        } catch (e: Exception) {
+            // Log and propagate write failures so the reader loop detects socket closure.
+            println("[Alohomora] Write failed: ${e.message}")
+            throw e
+        }
     }
 
     override fun close() {

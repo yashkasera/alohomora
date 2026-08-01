@@ -52,6 +52,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 class DevToolsRepositoryImpl(
     private val remoteDataSource: DevToolsRemoteDataSource,
@@ -277,7 +278,7 @@ class DevToolsRepositoryImpl(
         }
     }
 
-    private fun handleMessage(message: DevToolsMessage) {
+    private suspend fun handleMessage(message: DevToolsMessage) {
         when (message) {
             is AuthSuccessMessage -> {
                 // Non-null only after a fresh OTP pairing; a token-authenticated reconnect
@@ -306,18 +307,20 @@ class DevToolsRepositoryImpl(
             }
 
             is InitialStateMessage -> {
-                val payload = message.payload
-                eventStore.replace(payload.events)
-                trafficStore.replace(payload.traffic)
-                databaseStore.replaceDatabases(
-                    payload.databases.map { it.toDomain() },
-                    payload.selectedDatabase,
-                )
-                databaseStore.replaceSchema(payload.databaseSchema.toDomain())
-                cacheStore.replaceKeys(payload.cacheKeys)
-                buildMetadataStore.replace(payload.buildMetadata?.toDomain())
-                gitHistoryStore.replace(payload.gitHistory.map { it.toDomain() })
-                replayStore.setSupported(payload.replaySupported)
+                withContext(Dispatchers.Default) {
+                    val payload = message.payload
+                    eventStore.replace(payload.events)
+                    trafficStore.replace(payload.traffic)
+                    databaseStore.replaceDatabases(
+                        payload.databases.map { it.toDomain() },
+                        payload.selectedDatabase,
+                    )
+                    databaseStore.replaceSchema(payload.databaseSchema.toDomain())
+                    cacheStore.replaceKeys(payload.cacheKeys)
+                    buildMetadataStore.replace(payload.buildMetadata?.toDomain())
+                    gitHistoryStore.replace(payload.gitHistory.map { it.toDomain() })
+                    replayStore.setSupported(payload.replaySupported)
+                }
             }
 
             is ReplayResultMessage -> {
@@ -333,19 +336,33 @@ class DevToolsRepositoryImpl(
                 }
             }
 
-            is StreamEventMessage -> eventStore.append(message.event)
+            is StreamEventMessage -> {
+                // Dispatch to Default dispatcher to prevent blocking on large batches.
+                withContext(Dispatchers.Default) {
+                    eventStore.append(message.event)
+                }
+            }
 
-            is StreamTrafficMessage -> trafficStore.append(message.traffic)
+            is StreamTrafficMessage -> {
+                // Dispatch to Default dispatcher to prevent blocking on large batches.
+                withContext(Dispatchers.Default) {
+                    trafficStore.append(message.traffic)
+                }
+            }
 
             is DatabaseSnapshotMessage -> {
-                databaseStore.applySnapshot(
-                    message.payload.schema?.toDomain(),
-                    message.payload.table?.toDomain(),
-                )
+                withContext(Dispatchers.Default) {
+                    databaseStore.applySnapshot(
+                        message.payload.schema?.toDomain(),
+                        message.payload.table?.toDomain(),
+                    )
+                }
             }
 
             is CacheSnapshotMessage -> {
-                cacheStore.applySnapshot(message.payload.keys, message.payload.values)
+                withContext(Dispatchers.Default) {
+                    cacheStore.applySnapshot(message.payload.keys, message.payload.values)
+                }
             }
 
             else -> Unit

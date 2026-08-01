@@ -45,7 +45,7 @@ open class DevToolsRemoteDataSource(
 
     open suspend fun processConnection(
         connection: DevToolsSocket,
-        onMessage: (DevToolsMessage) -> Unit,
+        onMessage: suspend (DevToolsMessage) -> Unit,
     ) {
         while (true) {
             val message = DevToolsProtocol.readEnvelope(connection) ?: break
