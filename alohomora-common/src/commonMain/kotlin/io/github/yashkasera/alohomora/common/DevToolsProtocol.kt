@@ -5,9 +5,54 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
+/**
+ * The outcome of reading one frame.
+ *
+ * A sealed result rather than a nullable message because the three ways a read can stop needing
+ * very different handling, and collapsing them into `null` cost real debugging time: a desktop
+ * paired with an app speaking a different wire version looked exactly like a random disconnect,
+ * and the desktop retried it forever at the backoff cap with nothing on screen to explain why.
+ */
+sealed interface EnvelopeRead {
+    /** A frame was read and decoded. */
+    data class Message(val message: DevToolsMessage) : EnvelopeRead
+
+    /** The peer closed, or vanished mid-frame. Ordinary, and the caller should just tear down. */
+    data object EndOfStream : EnvelopeRead
+
+    /**
+     * The peer speaks a different wire protocol. Terminal: retrying cannot help, only upgrading
+     * one side can, so the caller must say so rather than reconnect.
+     */
+    data class VersionMismatch(val peerVersion: Int, val localVersion: Int) : EnvelopeRead
+
+    /** Bad magic, an impossible payload length, or undecodable JSON. */
+    data class Malformed(val reason: String) : EnvelopeRead
+}
+
 object DevToolsProtocol {
     private const val MAGIC_VALUE = 0x414C4F48
+
+    /**
+     * Wire protocol version. Bump only for a breaking change to framing or message semantics.
+     *
+     * Additive changes do not need it: an unknown message type deserializes to [UnknownMessage] and
+     * is ignored, unknown fields are dropped by `ignoreUnknownKeys`, and a new capability should
+     * default to "unsupported" the way [InitialStatePayload.replaySupported] does. Bumping this
+     * breaks interop with every existing build, so it should happen close to never.
+     */
     const val VERSION: Byte = 1
+
+    /**
+     * Header layout: magic (4 bytes), version (1), payload length (4). **Frozen. Never change it.**
+     *
+     * This is the only part of the protocol two mismatched builds are guaranteed to agree on, and
+     * therefore the only reason they can discover that they disagree at all: [readEnvelope] reads
+     * the version byte out of a header it can always parse, and reports [EnvelopeRead.VersionMismatch]
+     * instead of dropping the connection unexplained. Change the header shape and a version
+     * mismatch degrades back into an unreadable stream, which is indistinguishable from corruption.
+     * A breaking change belongs in the payload, behind a [VERSION] bump.
+     */
     private const val HEADER_LENGTH = 9
 
     /**
@@ -72,28 +117,37 @@ object DevToolsProtocol {
     }
 
     /**
-     * Reads one framed message, or null on clean EOF / unusable frame.
+     * Reads one framed message.
      *
-     * A null return means "stop reading" — the caller must tear the connection down.
+     * Anything other than [EnvelopeRead.Message] means "stop reading" and the caller must tear the
+     * connection down. Which of them it is decides what the user is told: see [EnvelopeRead].
      */
-    suspend fun readEnvelope(socket: DevToolsSocket): DevToolsMessage? {
-        val header = socket.readExact(HEADER_LENGTH) ?: return null
+    suspend fun readEnvelope(socket: DevToolsSocket): EnvelopeRead {
+        val header = socket.readExact(HEADER_LENGTH) ?: return EnvelopeRead.EndOfStream
         val magic = readInt(header, 0)
-        if (magic != MAGIC_VALUE) return null
+        if (magic != MAGIC_VALUE) {
+            return EnvelopeRead.Malformed("bad magic 0x${magic.toString(16)}")
+        }
+        // Checked before the length so a peer whose header layout we cannot trust is reported as a
+        // version mismatch rather than as a nonsense payload size.
         val version = header[4]
         if (version != VERSION) {
-            println("[Alohomora] DevTools protocol mismatch: peer sent v$version, expected v$VERSION")
-            return null
+            return EnvelopeRead.VersionMismatch(
+                peerVersion = version.toInt(),
+                localVersion = VERSION.toInt(),
+            )
         }
         val length = readInt(header, 5)
         // Both bounds matter: negative is a malformed/hostile header, and over-max would
         // otherwise become an unbounded ByteArray allocation. See MAX_PAYLOAD_BYTES.
         if (length !in 0..MAX_PAYLOAD_BYTES) {
-            println("[Alohomora] Rejecting DevTools frame with payload length $length")
-            return null
+            return EnvelopeRead.Malformed("payload length $length outside 0..$MAX_PAYLOAD_BYTES")
         }
-        val jsonBytes = socket.readExact(length) ?: return null
-        return decodeEnvelope(jsonBytes)
+        val jsonBytes = socket.readExact(length) ?: return EnvelopeRead.EndOfStream
+        // decodeEnvelope has already logged the specific serialization error.
+        val message = decodeEnvelope(jsonBytes)
+            ?: return EnvelopeRead.Malformed("undecodable payload")
+        return EnvelopeRead.Message(message)
     }
 
     private fun writeInt(buffer: ByteArray, offset: Int, value: Int) {

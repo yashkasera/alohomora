@@ -15,6 +15,7 @@ import io.github.yashkasera.alohomora.common.DeviceErrorMessage
 import io.github.yashkasera.alohomora.common.DevToolsHeartbeat
 import io.github.yashkasera.alohomora.common.DevToolsLiveness
 import io.github.yashkasera.alohomora.common.DevToolsMessage
+import io.github.yashkasera.alohomora.common.EnvelopeRead
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.InitialStateMessage
@@ -324,10 +325,24 @@ internal class DevToolsRuntime(
                 while (true) {
                     // null means EOF, bad magic, version mismatch, over-size payload, or
                     // undecodable JSON — all terminal for this connection.
-                    val message = DevToolsProtocol.readEnvelope(socket) ?: break
-                    // Before the auth gate: any frame at all proves the peer is alive, including
-                    // a PONG from a client still waiting for the user to type its code.
-                    liveness.recordSignOfLife()
+                    val message = when (val read = DevToolsProtocol.readEnvelope(socket)) {
+                        is EnvelopeRead.Message -> read.message
+                        is EnvelopeRead.EndOfStream -> break
+                        is EnvelopeRead.Malformed -> {
+                            println("[Alohomora] DevTools dropping connection: ${read.reason}")
+                            break
+                        }
+                        // Reported on the device too, not just to the desktop. The developer is
+                        // holding the phone, and "your desktop app is too old" is only actionable
+                        // if someone says it.
+                        is EnvelopeRead.VersionMismatch -> {
+                            val reason = "Desktop speaks DevTools protocol v${read.peerVersion}, " +
+                                "this app speaks v${read.localVersion}. Update the older of the two."
+                            println("[Alohomora] $reason")
+                            _serverState.value = _serverState.value.copy(lastError = reason)
+                            break
+                        }
+                    }
                     if (!isAuthenticated) {
                         if (message is AuthResponseMessage) handleAuthResponse(message)
                         continue

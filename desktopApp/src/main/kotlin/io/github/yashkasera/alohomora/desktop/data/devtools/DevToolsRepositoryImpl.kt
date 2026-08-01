@@ -11,6 +11,7 @@ import io.github.yashkasera.alohomora.common.DevToolsHeartbeat
 import io.github.yashkasera.alohomora.common.DevToolsLiveness
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
+import io.github.yashkasera.alohomora.common.EnvelopeRead
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.PingMessage
@@ -129,10 +130,21 @@ class DevToolsRepositoryImpl(
                     // means the reconnect needs no OTP, so a resume can be invisible.
                     var attempt = 0
                     while (isActive && generation == myGeneration) {
-                        val established = runSession(target, host, port, myGeneration)
+                        val outcome = runSession(target, host, port, myGeneration)
                         if (generation != myGeneration || !isActive) return@launch
 
-                        attempt = nextReconnectAttempt(attempt, established)
+                        // Some failures cannot be retried into working. Reconnecting on a wire
+                        // version mismatch just hides the one thing the developer needs to read.
+                        if (outcome is SessionOutcome.Fatal) {
+                            _state.value = DevToolsConnection.Failed(outcome.reason)
+                            return@launch
+                        }
+                        // A handler already reported something terminal, an invalid OTP being the
+                        // one that matters. Without this the Failed state it set was immediately
+                        // overwritten with Reconnecting and the rejection flickered past unread.
+                        if (_state.value is DevToolsConnection.Failed) return@launch
+
+                        attempt += 1
                         _state.value = DevToolsConnection.Reconnecting(host, port, attempt)
                         // Capped backoff. The common case is a foregrounded app coming straight
                         // back, so the first retries are quick; the cap keeps a genuinely dead
@@ -159,10 +171,19 @@ class DevToolsRepositoryImpl(
     }
 
 
+    /** Whether the caller should reconnect, or stop and show the user why. */
+    private sealed interface SessionOutcome {
+        /** An ordinary drop. Worth another attempt. */
+        data object Retryable : SessionOutcome
+
+        /** Reconnecting cannot succeed; only a change on one side can. */
+        data class Fatal(val reason: String) : SessionOutcome
+    }
+
     /**
      * Runs one connection attempt to completion.
      *
-     * Returns when the socket closes for any reason; the caller decides whether to retry. Never
+     * Returns when the socket closes for any reason, reporting whether a retry could help. Never
      * throws for an ordinary drop — a failed attempt is normal here, not exceptional.
      *
      * @return whether this attempt reached AUTH_SUCCESS. A bare TCP connect is not proof of a
@@ -175,7 +196,7 @@ class DevToolsRepositoryImpl(
         host: String,
         port: Int,
         myGeneration: Int,
-    ): Boolean {
+    ): SessionOutcome {
         var socket: DevToolsSocket? = null
         var established = false
         try {
@@ -188,8 +209,8 @@ class DevToolsRepositoryImpl(
             }
             socket = live
             // A newer connect may have superseded us while we were connecting.
-            if (generation != myGeneration) return false
-            connection = live
+            if (generation != myGeneration) return SessionOutcome.Retryable
+            connection = socket
             _state.value = DevToolsConnection.AwaitingAuth(host, port)
             _switching.value = false
             // Offer whatever token we hold for this device before the user is asked for
@@ -205,26 +226,21 @@ class DevToolsRepositoryImpl(
                     heartbeatSupported = true,
                 ),
             )
+            return when (val read = remoteDataSource.processConnection(socket, ::handleMessage)) {
+                is EnvelopeRead.VersionMismatch -> SessionOutcome.Fatal(
+                    "This app's Alohomora SDK speaks DevTools protocol v${read.peerVersion}, " +
+                        "this desktop speaks v${read.localVersion}. " +
+                        "Update whichever of the two is older.",
+                )
 
-            val liveness = DevToolsLiveness()
-            val firstPing = CompletableDeferred<Unit>()
-            coroutineScope {
-                val watchdog = launch { watchSessionForSilence(liveness, firstPing, live) }
-                try {
-                    remoteDataSource.processConnection(live) { message ->
-                        liveness.recordSignOfLife()
-                        if (message is AuthSuccessMessage) established = true
-                        if (message is PingMessage) {
-                            firstPing.complete(Unit)
-                            sendMessage(PongMessage(sequence = message.sequence))
-                        }
-                        handleMessage(message)
-                    }
-                } finally {
-                    // coroutineScope waits for its children, so the watchdog has to be stopped
-                    // explicitly or a finished session would never return.
-                    watchdog.cancel()
+                // Retryable on purpose. A desynced or truncated frame is usually transient, and a
+                // reconnect resynchronises; only a version difference is known to be permanent.
+                is EnvelopeRead.Malformed -> {
+                    println("[Alohomora] Connection dropped, malformed frame: ${read.reason}")
+                    SessionOutcome.Retryable
                 }
+
+                else -> SessionOutcome.Retryable
             }
         } catch (e: CancellationException) {
             throw e
@@ -232,6 +248,7 @@ class DevToolsRepositoryImpl(
             // Swallowed on purpose: the caller retries, and surfacing every failed attempt as
             // Failed would flicker the UI between error and reconnecting once a second.
             println("[Alohomora] Connection dropped: ${e::class.simpleName}: ${e.message}")
+            return SessionOutcome.Retryable
         } finally {
             socket?.close()
             if (generation == myGeneration) {

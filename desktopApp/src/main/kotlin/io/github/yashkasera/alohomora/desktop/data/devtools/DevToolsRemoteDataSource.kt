@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.desktop.data.devtools
 
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
+import io.github.yashkasera.alohomora.common.EnvelopeRead
 import io.github.yashkasera.alohomora.desktop.data.ios.UsbmuxByteChannel
 import io.github.yashkasera.alohomora.desktop.data.ios.UsbmuxClient
 import io.github.yashkasera.alohomora.devtools.DevToolsSocket
@@ -43,13 +44,21 @@ open class DevToolsRemoteDataSource(
             DevToolsSocket.over(UsbmuxByteChannel(channel))
         }
 
+    /**
+     * Pumps frames until the stream stops, and returns why.
+     *
+     * The reason is the return value because the caller has to choose between reconnecting and
+     * giving up: an ordinary drop is worth retrying, a wire-version mismatch never is.
+     */
     open suspend fun processConnection(
         connection: DevToolsSocket,
         onMessage: suspend (DevToolsMessage) -> Unit,
-    ) {
+    ): EnvelopeRead {
         while (true) {
-            val message = DevToolsProtocol.readEnvelope(connection) ?: break
-            onMessage(message)
+            when (val read = DevToolsProtocol.readEnvelope(connection)) {
+                is EnvelopeRead.Message -> onMessage(read.message)
+                else -> return read
+            }
         }
     }
 
