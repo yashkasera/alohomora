@@ -67,7 +67,7 @@ internal interface VaultRepository {
 /**
  * Result of executing a SQL query.
  */
-data class QueryResult(
+internal data class QueryResult(
     val data: TableData,
     val executionTimeMs: Long,
     val rowsAffected: Int,

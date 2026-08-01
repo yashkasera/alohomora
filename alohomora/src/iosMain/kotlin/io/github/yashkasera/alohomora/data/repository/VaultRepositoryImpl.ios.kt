@@ -1,9 +1,9 @@
 package io.github.yashkasera.alohomora.data.repository
 
+import io.github.yashkasera.alohomora.common.DatabaseInfo
+import io.github.yashkasera.alohomora.common.TableData
+import io.github.yashkasera.alohomora.common.TableSchema
 import io.github.yashkasera.alohomora.domain.repository.QueryResult
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.DatabaseInfo
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.TableData
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.TableSchema
 
 /**
  * iOS implementation of platform-specific database accessor.
@@ -24,7 +24,7 @@ internal actual suspend fun PlatformDatabaseAccessor.listTables(databasePath: St
 internal actual suspend fun PlatformDatabaseAccessor.getTableData(
     databasePath: String,
     tableName: String,
-    limit: Int
+    limit: Int,
 ): TableData {
     // TODO: Implement iOS-specific table data retrieval
     return TableData(emptyList(), emptyList())
@@ -32,15 +32,20 @@ internal actual suspend fun PlatformDatabaseAccessor.getTableData(
 
 internal actual suspend fun PlatformDatabaseAccessor.getTableSchema(
     databasePath: String,
-    tableName: String
+    tableName: String,
 ): TableSchema {
     // TODO: Implement iOS-specific schema retrieval
-    return TableSchema(name = tableName, columns = emptyList(), primaryKey = null, indexes = emptyList())
+    return TableSchema(
+        name = tableName,
+        columns = emptyList(),
+        primaryKey = null,
+        indexes = emptyList(),
+    )
 }
 
 internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
     databasePath: String,
-    query: String
+    query: String,
 ): QueryResult {
     // TODO: Implement iOS-specific query execution
     return QueryResult(
@@ -48,6 +53,6 @@ internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
         executionTimeMs = 0,
         rowsAffected = 0,
         success = false,
-        errorMessage = "iOS database access not yet implemented"
+        errorMessage = "iOS database access not yet implemented",
     )
 }

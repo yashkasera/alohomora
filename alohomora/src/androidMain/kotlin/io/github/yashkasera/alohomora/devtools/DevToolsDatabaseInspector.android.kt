@@ -38,7 +38,18 @@ internal actual class DevToolsDatabaseInspector actual constructor(
         val path = appDatabaseProvider.resolvePath(databaseName) ?: return emptyTable(databaseName, tableName)
         val db = openDatabase(path) ?: return emptyTable(databaseName, tableName)
         return try {
-            val cursor = db.rawQuery("SELECT * FROM `$tableName` LIMIT $limit", null)
+            // tableName arrives straight off the socket. SQLite has no bind parameter for
+            // identifiers and backtick-quoting is not escaping, so the only safe check is an
+            // allowlist against the tables we ourselves enumerated. This also blocks reading
+            // sqlite_master / android_* directly, which queryTables deliberately filters out.
+            if (tableName !in queryTables(db)) {
+                println("[Alohomora] Rejecting DevTools request for unknown table '$tableName'")
+                return emptyTable(databaseName, tableName)
+            }
+            // Clamped because a negative limit becomes `LIMIT -1`, i.e. unbounded — a
+            // peer-triggered full-table dump into memory.
+            val safeLimit = limit.coerceIn(1, MAX_ROW_LIMIT)
+            val cursor = db.rawQuery("SELECT * FROM `$tableName` LIMIT $safeLimit", null)
             val columns = (0 until cursor.columnCount).map { index -> cursor.getColumnName(index) }
             val rows = mutableListOf<Map<String, String?>>()
             while (cursor.moveToNext()) {
@@ -158,5 +169,9 @@ internal actual class DevToolsDatabaseInspector actual constructor(
             columns = emptyList(),
             rows = emptyList(),
         )
+    }
+
+    private companion object {
+        const val MAX_ROW_LIMIT = 1000
     }
 }

@@ -4,11 +4,11 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import io.github.yashkasera.alohomora.common.DatabaseInfo
+import io.github.yashkasera.alohomora.common.TableColumn
+import io.github.yashkasera.alohomora.common.TableData
+import io.github.yashkasera.alohomora.common.TableSchema
 import io.github.yashkasera.alohomora.domain.repository.QueryResult
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.DatabaseInfo
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.TableColumn
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.TableData
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.TableSchema
 import kotlin.system.measureTimeMillis
 
 private const val TAG = "VaultRepository"

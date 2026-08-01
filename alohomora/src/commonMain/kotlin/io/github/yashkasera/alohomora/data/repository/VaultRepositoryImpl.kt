@@ -1,10 +1,10 @@
 package io.github.yashkasera.alohomora.data.repository
 
+import io.github.yashkasera.alohomora.common.DatabaseInfo
+import io.github.yashkasera.alohomora.common.TableData
+import io.github.yashkasera.alohomora.common.TableSchema
 import io.github.yashkasera.alohomora.domain.repository.QueryResult
 import io.github.yashkasera.alohomora.domain.repository.VaultRepository
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.DatabaseInfo
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.TableData
-import io.github.yashkasera.alohomora.presentation.ui.screens.vault.TableSchema
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -21,7 +21,7 @@ internal expect class PlatformDatabaseAccessor()
  * Implementation of [VaultRepository] that provides database browsing capabilities.
  */
 internal class VaultRepositoryImpl(
-    private val platformAccessor: PlatformDatabaseAccessor = PlatformDatabaseAccessor()
+    private val platformAccessor: PlatformDatabaseAccessor = PlatformDatabaseAccessor(),
 ) : VaultRepository {
 
     override fun listDatabases(): Flow<List<DatabaseInfo>> = flow {
@@ -37,7 +37,7 @@ internal class VaultRepositoryImpl(
     override fun getTableData(
         databasePath: String,
         tableName: String,
-        limit: Int
+        limit: Int,
     ): Flow<TableData> = flow {
         val data = platformAccessor.getTableData(databasePath, tableName, limit)
         emit(data)
@@ -45,7 +45,7 @@ internal class VaultRepositoryImpl(
 
     override fun getTableSchema(
         databasePath: String,
-        tableName: String
+        tableName: String,
     ): Flow<TableSchema> = flow {
         val schema = platformAccessor.getTableSchema(databasePath, tableName)
         emit(schema)
@@ -53,7 +53,7 @@ internal class VaultRepositoryImpl(
 
     override fun executeQuery(
         databasePath: String,
-        query: String
+        query: String,
     ): Flow<QueryResult> = flow {
         try {
             val result = platformAccessor.executeQuery(databasePath, query)
@@ -65,8 +65,8 @@ internal class VaultRepositoryImpl(
                     executionTimeMs = 0,
                     rowsAffected = 0,
                     success = false,
-                    errorMessage = e.message ?: "Unknown error occurred"
-                )
+                    errorMessage = e.message ?: "Unknown error occurred",
+                ),
             )
         }
     }.flowOn(Dispatchers.IO)
@@ -81,15 +81,15 @@ internal expect suspend fun PlatformDatabaseAccessor.listTables(databasePath: St
 internal expect suspend fun PlatformDatabaseAccessor.getTableData(
     databasePath: String,
     tableName: String,
-    limit: Int
+    limit: Int,
 ): TableData
 
 internal expect suspend fun PlatformDatabaseAccessor.getTableSchema(
     databasePath: String,
-    tableName: String
+    tableName: String,
 ): TableSchema
 
 internal expect suspend fun PlatformDatabaseAccessor.executeQuery(
     databasePath: String,
-    query: String
+    query: String,
 ): QueryResult
