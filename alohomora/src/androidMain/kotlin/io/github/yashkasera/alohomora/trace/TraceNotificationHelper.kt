@@ -6,13 +6,17 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import io.github.yashkasera.alohomora.DevToolsActivity
 import io.github.yashkasera.alohomora.common.TraceEntry
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal class TraceNotificationHelper(
     private val context: Context,
@@ -23,8 +27,13 @@ internal class TraceNotificationHelper(
         }
     }
 
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    fun showLatest(items: List<TraceEntry>) {
+    suspend fun showLatest(items: List<TraceEntry>) = withContext(Dispatchers.Main) {
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) return@withContext
+
         val summaries = items
             .take(MAX_LINES)
             .map { request ->
@@ -51,9 +60,7 @@ internal class TraceNotificationHelper(
             .setOnlyAlertOnce(true)
             .setAutoCancel(false)
             .build()
-
         NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
-
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

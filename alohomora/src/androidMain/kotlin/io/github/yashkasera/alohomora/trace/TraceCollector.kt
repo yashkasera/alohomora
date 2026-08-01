@@ -6,49 +6,51 @@ import android.content.pm.PackageManager
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.TraceEntry
 import io.github.yashkasera.alohomora.data.datasource.local.TraceDao
-import io.github.yashkasera.alohomora.trace.TraceInjector.context
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 /**
  * The collector responsible for collecting data from a [TraceInterceptor] and
- * storing it/displaying push notification. You need to instantiate one of those and
- * provide it to
- *
- * @param context An Android Context
+ * storing it/displaying push notification.
  */
-
-private object TraceInjector : KoinComponent {
-    val dao: TraceDao by inject()
-    val context: Context by inject()
-}
-
 class TraceCollector(
     private val showNotification: Boolean = true,
 ) {
-    private val notificationHelper: TraceNotificationHelper =
-        TraceNotificationHelper(TraceInjector.context)
-    private val scope = MainScope()
+    // Resolved lazily from Alohomora's isolated Koin container rather than through
+    // KoinComponent/GlobalContext, which the library no longer populates. Lazy also means
+    // `TraceInterceptor()` can be constructed before Alohomora.init() without throwing.
+    private val dao: TraceDao? get() = Alohomora.koinApplication?.koin?.get()
+    private val context: Context? get() = Alohomora.koinApplication?.koin?.get()
+
+    private val notificationHelper: TraceNotificationHelper? by lazy {
+        context?.let(::TraceNotificationHelper)
+    }
+
+    // Not MainScope(): nothing here touches the UI, and posting DB work through the main
+    // thread put a Room call on it for every single response.
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     /**
      * Check if notification permission is granted.
      * On Android 13+ (API 33+), this requires explicit user permission.
      */
-    fun hasNotificationPermission() =
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+    fun hasNotificationPermission(): Boolean {
+        val ctx = context ?: return false
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
-                context,
+                ctx,
                 Manifest.permission.POST_NOTIFICATIONS,
             ) == PackageManager.PERMISSION_GRANTED
         } else {
             true // Permission not required on older Android versions
         }
+    }
 
     /**
      * Call this method when you send an HTTP request.
@@ -56,9 +58,8 @@ class TraceCollector(
      */
     internal fun onRequestSent(transaction: TraceEntry) {
         scope.launch {
-            withContext(Dispatchers.IO) {
-                TraceInjector.dao.insert(transaction)
-            }
+            runCatching { dao?.insert(transaction) }
+                .onFailure { println("[Alohomora] Failed to record request: ${it.message}") }
         }
     }
 
@@ -67,20 +68,16 @@ class TraceCollector(
      * It must be called after [TraceCollector.onRequestSent].
      * @param transaction The sent HTTP transaction completed with the response
      */
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     internal fun onResponseReceived(transaction: TraceEntry) {
-        scope.launch  {
-            TraceInjector.dao.update(transaction)
-            val latest = withContext(Dispatchers.IO) {
-                if (showNotification) {
-                    TraceInjector.dao.getLatest(5)
-                } else {
-                    emptyList()
-                }
-            }
-            if (showNotification && latest.isNotEmpty() && hasNotificationPermission()) {
-                notificationHelper.showLatest(latest)
-            }
+        scope.launch {
+            runCatching {
+                val traceDao = dao ?: return@runCatching
+                traceDao.update(transaction)
+                if (!showNotification || !hasNotificationPermission()) return@runCatching
+                val latest = traceDao.getLatest(5)
+                if (latest.isEmpty()) return@runCatching
+                notificationHelper?.showLatest(latest)
+            }.onFailure { println("[Alohomora] Failed to record response: ${it.message}") }
         }
     }
 }
