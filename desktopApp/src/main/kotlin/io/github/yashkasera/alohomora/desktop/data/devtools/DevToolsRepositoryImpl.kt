@@ -12,6 +12,7 @@ import io.github.yashkasera.alohomora.common.DevToolsLiveness
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.EnvelopeRead
+import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.PingMessage
@@ -23,12 +24,14 @@ import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
+import io.github.yashkasera.alohomora.common.StreamErrorMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
 import io.github.yashkasera.alohomora.common.StreamTrafficMessage
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.data.local.BuildMetadataStore
 import io.github.yashkasera.alohomora.desktop.data.local.CacheStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
+import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
@@ -66,6 +69,7 @@ import kotlinx.coroutines.withContext
 class DevToolsRepositoryImpl(
     private val remoteDataSource: DevToolsRemoteDataSource,
     private val eventStore: EventStore,
+    private val errorStore: ErrorStore,
     private val trafficStore: TrafficStore,
     private val databaseStore: DatabaseSnapshotStore,
     private val cacheStore: CacheStore,
@@ -84,6 +88,7 @@ class DevToolsRepositoryImpl(
     override val deviceError: StateFlow<String?> = _deviceError.asStateFlow()
 
     override val events: StateFlow<List<Event>> = eventStore.events
+    override val errors: StateFlow<List<Error>> = errorStore.errors
     override val traffic: StateFlow<List<TrafficEntry>> = trafficStore.logs
     override val databaseSnapshot: StateFlow<DatabaseSnapshot> = databaseStore.snapshot
     override val cacheState: StateFlow<CacheState> = cacheStore.state
@@ -198,7 +203,6 @@ class DevToolsRepositoryImpl(
         myGeneration: Int,
     ): SessionOutcome {
         var socket: DevToolsSocket? = null
-        var established = false
         try {
             val live = when (target) {
                 is DevToolsTarget.Tcp -> remoteDataSource.connect(target.host, target.port)
@@ -258,7 +262,6 @@ class DevToolsRepositoryImpl(
                 replayStore.abandonInFlight()
             }
         }
-        return established
     }
 
     /**
@@ -354,17 +357,22 @@ class DevToolsRepositoryImpl(
         scope.launch { sendMessage(RequestInitialStateMessage()) }
     }
 
-    override fun clearCaptured(traces: Boolean, events: Boolean) {
+    override fun clearCaptured(traces: Boolean, events: Boolean, errors: Boolean) {
         // Clear locally straight away so the UI responds immediately; the device's fresh snapshot
         // arrives moments later and is authoritative.
         if (traces) trafficStore.clear()
         if (events) eventStore.clear()
-        scope.launch { sendMessage(RequestClearMessage(traces = traces, events = events)) }
+        if (errors) errorStore.clear()
+        scope.launch {
+            sendMessage(RequestClearMessage(traces = traces, events = events, errors = errors))
+        }
     }
 
     override fun markTrafficViewed(id: String) = trafficStore.markViewed(id)
 
     override fun markEventViewed(id: Long) = eventStore.markViewed(id)
+
+    override fun markErrorViewed(id: Long) = errorStore.markViewed(id)
 
     override fun submitOtp(otp: String) {
         scope.launch { sendMessage(AuthResponseMessage(otp = otp, heartbeatSupported = true)) }
@@ -409,6 +417,7 @@ class DevToolsRepositoryImpl(
                 withContext(Dispatchers.Default) {
                     val payload = message.payload
                     eventStore.replace(payload.events)
+                errorStore.replace(payload.errors)
                     trafficStore.replace(payload.traffic)
                     databaseStore.replaceDatabases(
                         payload.databases.map { it.toDomain() },
@@ -439,6 +448,12 @@ class DevToolsRepositoryImpl(
                 // Dispatch to Default dispatcher to prevent blocking on large batches.
                 withContext(Dispatchers.Default) {
                     eventStore.append(message.event)
+                }
+            }
+
+            is StreamErrorMessage -> {
+                withContext(Dispatchers.Default) {
+                    errorStore.append(message.error)
                 }
             }
 

@@ -16,6 +16,7 @@ import io.github.yashkasera.alohomora.common.DevToolsHeartbeat
 import io.github.yashkasera.alohomora.common.DevToolsLiveness
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.EnvelopeRead
+import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.InitialStateMessage
@@ -28,6 +29,7 @@ import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
+import io.github.yashkasera.alohomora.common.StreamErrorMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
 import io.github.yashkasera.alohomora.common.StreamTrafficMessage
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -60,6 +62,12 @@ internal object DevToolsDefaults {
     const val DEFAULT_PORT: Int = 53999
     const val EVENT_SNAPSHOT_LIMIT: Int = 500
     const val TRAFFIC_SNAPSHOT_LIMIT: Int = 200
+
+    /**
+     * Deliberately far below the event and traffic limits: every error carries a full stack trace,
+     * so a row here is an order of magnitude heavier than either of those.
+     */
+    const val ERROR_SNAPSHOT_LIMIT: Int = 100
     const val STREAM_BUFFER_CAPACITY: Int = 1024
 
     /**
@@ -246,6 +254,9 @@ internal class DevToolsRuntime(
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
         )
         private val eventAdapter = DevToolsStreamAdapter { event: Event -> event.time }
+        // Keyed on `id`, not `time`: ids are monotonic, so two errors recorded inside the same
+        // millisecond are still ordered and neither is silently dropped as "not newer".
+        private val errorAdapter = DevToolsStreamAdapter { error: Error -> error.id }
         private val trafficSignatures = linkedMapOf<String, Int>()
         private val otp = (1000..9999).random().toString()
         private var isAuthenticated = false
@@ -483,6 +494,7 @@ internal class DevToolsRuntime(
             send(AuthSuccessMessage(nextSequence(), token = issuedToken))
             connectionScope.launch { streamEvents() }
             connectionScope.launch { streamTraffic() }
+            connectionScope.launch { streamErrors() }
             connectionScope.launch { sendInitialState() }
         }
 
@@ -495,6 +507,7 @@ internal class DevToolsRuntime(
         private suspend fun handleClear(message: RequestClearMessage) {
             if (message.traces) database.trafficDao().clearAll()
             if (message.events) database.eventDao().clearAll()
+            if (message.errors) database.errorDao().clearAll()
             sendInitialState()
         }
 
@@ -535,6 +548,8 @@ internal class DevToolsRuntime(
                 .getLatest(DevToolsDefaults.EVENT_SNAPSHOT_LIMIT)
             val traffic = database.trafficDao()
                 .getLatest(DevToolsDefaults.TRAFFIC_SNAPSHOT_LIMIT)
+            val errors = database.errorDao()
+                .getLatest(DevToolsDefaults.ERROR_SNAPSHOT_LIMIT)
             val databases = databaseInspector.listDatabases()
             val selectedDatabase = databases.firstOrNull()?.name
             defaultDatabaseName = selectedDatabase
@@ -551,6 +566,7 @@ internal class DevToolsRuntime(
             val payload = InitialStatePayload(
                 events = events,
                 traffic = traffic,
+                errors = errors,
                 databaseSchema = schema,
                 databases = databases,
                 selectedDatabase = selectedDatabase,
@@ -560,6 +576,7 @@ internal class DevToolsRuntime(
                 replaySupported = TrafficReplayRegistry.isSupported,
             )
             eventAdapter.seed(events)
+            errorAdapter.seed(errors)
             seedTrafficSignatures(traffic)
             send(InitialStateMessage(nextSequence(), payload))
         }
@@ -571,6 +588,20 @@ internal class DevToolsRuntime(
                     sendStream(StreamEventMessage(nextSequence(), item))
                 }
             }
+        }
+
+        /**
+         * Streams straight off the DAO rather than through `ErrorRepository.list`, which projects
+         * `stackTrace` away for the mobile list — a desktop row without its trace would be useless
+         * and there is no follow-up request to fetch one.
+         */
+        private suspend fun streamErrors() {
+            database.errorDao().observeLatest(DevToolsDefaults.ERROR_SNAPSHOT_LIMIT)
+                .collect { errors ->
+                    errorAdapter.filterNew(errors).forEach { item ->
+                        sendStream(StreamErrorMessage(nextSequence(), item))
+                    }
+                }
         }
 
         private suspend fun streamTraffic() {

@@ -7,6 +7,7 @@ import io.github.yashkasera.alohomora.desktop.data.local.BuildMetadataStore
 import io.github.yashkasera.alohomora.desktop.data.local.CacheRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.local.CacheStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
+import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
@@ -62,6 +63,7 @@ class DesktopAppComposition(
 
     init {
         val eventStore = EventStore()
+        val errorStore = ErrorStore()
         val trafficStore = TrafficStore()
         val databaseSnapshotStore = DatabaseSnapshotStore()
         val cacheStore = CacheStore()
@@ -72,6 +74,7 @@ class DesktopAppComposition(
         val devToolsRepository = DevToolsRepositoryImpl(
             remoteDataSource = DevToolsRemoteDataSource(),
             eventStore = eventStore,
+            errorStore = errorStore,
             trafficStore = trafficStore,
             databaseStore = databaseSnapshotStore,
             cacheStore = cacheStore,

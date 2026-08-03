@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.domain.repository
 
+import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
@@ -18,6 +19,7 @@ interface DevToolsRepository {
     val switching: StateFlow<Boolean>
 
     val events: StateFlow<List<Event>>
+    val errors: StateFlow<List<Error>>
     val traffic: StateFlow<List<TrafficEntry>>
     val databaseSnapshot: StateFlow<DatabaseSnapshot>
     val cacheState: StateFlow<CacheState>
@@ -51,13 +53,15 @@ interface DevToolsRepository {
      * Device-side, not just local: a local-only clear repopulates from the device snapshot on the
      * next reconnect, which reads as the button not having worked.
      */
-    fun clearCaptured(traces: Boolean = false, events: Boolean = false)
+    fun clearCaptured(traces: Boolean = false, events: Boolean = false, errors: Boolean = false)
 
     /** Dims a traffic entry the user opened in this window. */
     fun markTrafficViewed(id: String)
 
     /** Dims an event the user opened in this window. */
     fun markEventViewed(id: Long)
+
+    fun markErrorViewed(id: Long)
 
     /**
      * Asks the device to re-send [request] through the host app's own HTTP client.

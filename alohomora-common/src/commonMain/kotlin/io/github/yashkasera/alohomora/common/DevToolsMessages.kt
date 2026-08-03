@@ -82,6 +82,20 @@ data class StreamTrafficMessage(
     val traffic: TrafficEntry,
 ) : DevToolsMessage()
 
+/**
+ * A recorded [Error] — a crash or a reported non-fatal — pushed as it happens.
+ *
+ * Distinct from [DeviceErrorMessage], which reports that a *desktop command* failed on the device.
+ * The names are close enough to be worth stating outright: nothing here is a transport problem,
+ * this is the app's own failure.
+ */
+@Serializable
+@SerialName("STREAM_ERROR")
+data class StreamErrorMessage(
+    override val sequence: Long,
+    val error: Error,
+) : DevToolsMessage()
+
 @Serializable
 @SerialName("SNAPSHOT_DATABASE")
 data class DatabaseSnapshotMessage(
@@ -167,6 +181,7 @@ data class RequestClearMessage(
     override val sequence: Long = 0,
     val traces: Boolean = false,
     val events: Boolean = false,
+    val errors: Boolean = false,
 ) : DevToolsMessage()
 
 @Serializable
@@ -335,6 +350,11 @@ data class CacheSnapshotPayload(
 data class InitialStatePayload(
     val events: List<Event>,
     val traffic: List<TrafficEntry>,
+    /**
+     * Defaults to empty so a newer desktop talking to an app that predates error capture renders an
+     * empty Errors panel instead of failing to decode the entire snapshot.
+     */
+    val errors: List<Error> = emptyList(),
     val databaseSchema: DatabaseSchemaSnapshot,
     val databases: List<AppDatabaseInfo> = emptyList(),
     val selectedDatabase: String? = null,

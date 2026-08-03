@@ -80,9 +80,13 @@ class DevToolsViewModel(
 
     fun markEventViewed(id: Long) = repository.markEventViewed(id)
 
+    fun markErrorViewed(id: Long) = repository.markErrorViewed(id)
+
     fun clearTraffic() = repository.clearCaptured(traces = true)
 
     fun clearEvents() = repository.clearCaptured(events = true)
+
+    fun clearErrors() = repository.clearCaptured(errors = true)
 
     fun requestDatabaseSchema(databaseName: String) = requestDatabaseSchemaUseCase(databaseName)
 
@@ -141,6 +145,7 @@ class DevToolsViewModel(
     }
 
     val events = repository.events
+    val errors = repository.errors
     val traffic = repository.traffic
     val databaseSnapshot = repository.databaseSnapshot
     val cacheState = repository.cacheState

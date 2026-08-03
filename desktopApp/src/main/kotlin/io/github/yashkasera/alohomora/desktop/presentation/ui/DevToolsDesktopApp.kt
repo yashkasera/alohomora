@@ -7,6 +7,8 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -18,6 +20,8 @@ import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -49,6 +53,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.app.isClearShortcut
@@ -69,6 +74,8 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.CachePanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DashboardContent
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DatabasePanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ConfigPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceDetailsSideModal
@@ -83,9 +90,10 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressInd
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
+import io.github.yashkasera.alohomora.ui.icons.Android
+import io.github.yashkasera.alohomora.ui.icons.Apple
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
 import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.brand
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -221,7 +229,8 @@ fun DevToolsDesktopApp(
         onTakeScreenshot = {
             val timestamp = System.currentTimeMillis()
             val defaultName = "alohomora_screenshot_${timestamp}.png"
-            val localPath = pickSavePath(defaultName, "Save Screenshot", ".png") ?: return@buildCommandActions
+            val localPath =
+                pickSavePath(defaultName, "Save Screenshot", ".png") ?: return@buildCommandActions
             devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
         },
         onRebootDevice = {
@@ -259,9 +268,17 @@ fun DevToolsDesktopApp(
 
                 if (event.key == Key.Escape) {
                     when {
-                        showCommandPalette -> { onDismissCommandPalette(); return@onPreviewKeyEvent true }
-                        showHelp -> { onDismissHelp(); return@onPreviewKeyEvent true }
-                        selectedTraceForDrawer != null -> { selectedTraceForDrawer = null; return@onPreviewKeyEvent true }
+                        showCommandPalette -> {
+                            onDismissCommandPalette(); return@onPreviewKeyEvent true
+                        }
+
+                        showHelp -> {
+                            onDismissHelp(); return@onPreviewKeyEvent true
+                        }
+
+                        selectedTraceForDrawer != null -> {
+                            selectedTraceForDrawer = null; return@onPreviewKeyEvent true
+                        }
                     }
                     return@onPreviewKeyEvent false
                 }
@@ -296,138 +313,143 @@ fun DevToolsDesktopApp(
     ) {
         val contentModifier = if (showCommandPalette)
             Modifier.fillMaxSize().blur(16.dp)
-            else Modifier.fillMaxSize()
+        else Modifier.fillMaxSize()
 
         Box(modifier = contentModifier) {
-        PermanentNavigationDrawer(
-            drawerContent = {
-                PermanentDrawerSheet(
-                    modifier = Modifier.fillMaxWidth(0.2f),
-                    windowInsets = WindowInsets.safeContent,
-                ) {
-                    Sidebar(
-                        connection = devToolsState.connection,
-                        activeSection = activeSection,
-                        devices = devices,
-                        selectedDeviceId = selectedDeviceId,
-                        hasConnectedDevice = hasConnectedDevice,
-                        onRefreshDevices = { devicesViewModel.refreshDevices() },
-                        onDisconnect = onDisconnectWindow,
-                        onSectionClick = { activeSection = it },
-                        isModifierHeld = isModifierHeld,
-                        visibleSections = visibleSections,
-                    )
+            PermanentNavigationDrawer(
+                drawerContent = {
+                    PermanentDrawerSheet(
+                        modifier = Modifier.fillMaxWidth(0.2f),
+                        windowInsets = WindowInsets.safeContent,
+                    ) {
+                        Sidebar(
+                            connection = devToolsState.connection,
+                            activeSection = activeSection,
+                            devices = devices,
+                            selectedDeviceId = selectedDeviceId,
+                            hasConnectedDevice = hasConnectedDevice,
+                            onDisconnect = onDisconnectWindow,
+                            onSectionClick = { activeSection = it },
+                            isModifierHeld = isModifierHeld,
+                            visibleSections = visibleSections,
+                        )
+                    }
+                },
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (!hasConnectedDevice) {
+                        NoDevicePanel(onRefresh = { devicesViewModel.refreshDevices() })
+                    } else {
+                        when (activeSection) {
+                            DesktopSection.Dashboard -> DashboardContent(
+                                devToolsViewModel = devToolsViewModel,
+                                devicesViewModel = devicesViewModel,
+                                selectedDevice = selectedDevice,
+                                isRecording = isRecording,
+                                onTakeScreenshot = screenshot@{
+                                    val timestamp = System.currentTimeMillis()
+                                    val defaultName = "alohomora_screenshot_${timestamp}.png"
+                                    val localPath =
+                                        pickSavePath(defaultName, "Save Screenshot", ".png")
+                                            ?: return@screenshot
+                                    devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
+                                },
+                                onRecordScreen = record@{
+                                    if (!isRecording) {
+                                        val timestamp = System.currentTimeMillis()
+                                        val defaultName = "alohomora_record_${timestamp}.mp4"
+                                        val localPath =
+                                            pickSavePath(defaultName, "Save Recording", ".mp4")
+                                                ?: return@record
+                                        val devicePath = "/sdcard/${File(localPath).name}"
+                                        recordingDevicePath = devicePath
+                                        recordingLocalPath = localPath
+                                        isRecording = true
+                                        devicesViewModel.startScreenRecord(
+                                            selectedDeviceId,
+                                            devicePath,
+                                        )
+                                    } else {
+                                        devicesViewModel.stopScreenRecord(
+                                            selectedDeviceId,
+                                            recordingDevicePath,
+                                            recordingLocalPath,
+                                        )
+                                        isRecording = false
+                                        recordingDevicePath = null
+                                        recordingLocalPath = null
+                                    }
+                                },
+                                onTrafficItemClick = { selectedTraceForDrawer = it },
+                                onEventViewClick = {},
+                                onTrafficClick = { activeSection = DesktopSection.Traffic },
+                                onEventsClick = { activeSection = DesktopSection.Events },
+                            )
+
+                            DesktopSection.Logcat -> LogcatPanel(
+                                devicesViewModel = devicesViewModel,
+                                logcatViewModel = logcatViewModel,
+                                selectedDeviceId = selectedDeviceId,
+                            )
+
+                            DesktopSection.Adb -> AdbToolsPanel(
+                                devicesViewModel = devicesViewModel,
+                                selectedDeviceId = selectedDeviceId,
+                                adbCommandHistory = adbCommandHistory,
+                                buildInfo = buildInfo,
+                            )
+
+                            DesktopSection.Traffic -> TrafficPanel(
+                                devToolsViewModel = devToolsViewModel,
+                                onLogClick = { selectedTraceForDrawer = it },
+                            )
+
+                            DesktopSection.Events -> EventsPanel(devToolsViewModel = devToolsViewModel)
+                            DesktopSection.Cache -> CachePanel(cacheViewModel = cacheViewModel)
+                            DesktopSection.Errors -> ErrorsPanel(devToolsViewModel = devToolsViewModel)
+                            DesktopSection.Config -> ConfigPanel(devToolsViewModel = devToolsViewModel)
+                            DesktopSection.GitHistory -> GitHistoryPanel(devToolsViewModel = devToolsViewModel)
+                            DesktopSection.Database -> DatabasePanel(databaseViewModel = databaseViewModel)
+                        }
+                    }
+
+                    // Overlaid rather than inserted into the layout: it appears mid-session and must not
+                    // reflow the panel underneath it.
+                    deviceError?.let { error ->
+                        DeviceErrorBanner(
+                            message = error,
+                            onDismiss = { devToolsViewModel.dismissDeviceError() },
+                            modifier = Modifier.align(Alignment.TopCenter),
+                        )
+                    }
+
+                    val connection = devToolsState.connection
+                    if (connection is DevToolsConnection.AwaitingAuth && connection.otpRequired) {
+                        OtpPromptDialog(
+                            onSubmit = { devToolsViewModel.submitOtp(it) },
+                            onCancel = { devToolsViewModel.disconnect() },
+                        )
+                    }
+
+                    if (devToolsState.switching) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
+                                .clickable(indication = null, interactionSource = null) {},
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            AlohomoraCircularProgressIndicator()
+                        }
+                    }
                 }
-            },
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-            if (!hasConnectedDevice) {
-                NoDevicePanel(onRefresh = { devicesViewModel.refreshDevices() })
-            } else {
-                when (activeSection) {
-                    DesktopSection.Dashboard -> DashboardContent(
-                        devToolsViewModel = devToolsViewModel,
-                        devicesViewModel = devicesViewModel,
-                        selectedDevice = selectedDevice,
-                        isRecording = isRecording,
-                        onTakeScreenshot = screenshot@{
-                            val timestamp = System.currentTimeMillis()
-                            val defaultName = "alohomora_screenshot_${timestamp}.png"
-                            val localPath = pickSavePath(defaultName, "Save Screenshot", ".png")
-                                ?: return@screenshot
-                            devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
-                        },
-                        onRecordScreen = record@{
-                            if (!isRecording) {
-                                val timestamp = System.currentTimeMillis()
-                                val defaultName = "alohomora_record_${timestamp}.mp4"
-                                val localPath =
-                                    pickSavePath(defaultName, "Save Recording", ".mp4")
-                                        ?: return@record
-                                val devicePath = "/sdcard/${File(localPath).name}"
-                                recordingDevicePath = devicePath
-                                recordingLocalPath = localPath
-                                isRecording = true
-                                devicesViewModel.startScreenRecord(selectedDeviceId, devicePath)
-                            } else {
-                                devicesViewModel.stopScreenRecord(
-                                    selectedDeviceId,
-                                    recordingDevicePath,
-                                    recordingLocalPath,
-                                )
-                                isRecording = false
-                                recordingDevicePath = null
-                                recordingLocalPath = null
-                            }
-                        },
-                        onTrafficItemClick = { selectedTraceForDrawer = it },
-                        onEventViewClick = {},
-                        onTrafficClick = { activeSection = DesktopSection.Traffic },
-                        onEventsClick = { activeSection = DesktopSection.Events },
-                    )
-
-                    DesktopSection.Logcat -> LogcatPanel(
-                        devicesViewModel = devicesViewModel,
-                        logcatViewModel = logcatViewModel,
-                        selectedDeviceId = selectedDeviceId,
-                    )
-
-                    DesktopSection.Adb -> AdbToolsPanel(
-                        devicesViewModel = devicesViewModel,
-                        selectedDeviceId = selectedDeviceId,
-                        adbCommandHistory = adbCommandHistory,
-                        buildInfo = buildInfo,
-                    )
-
-                    DesktopSection.Traffic -> TrafficPanel(
-                        devToolsViewModel = devToolsViewModel,
-                        onLogClick = { selectedTraceForDrawer = it },
-                    )
-
-                    DesktopSection.Events -> EventsPanel(devToolsViewModel = devToolsViewModel)
-                    DesktopSection.Cache -> CachePanel(cacheViewModel = cacheViewModel)
-                    DesktopSection.GitHistory -> GitHistoryPanel(devToolsViewModel = devToolsViewModel)
-                    DesktopSection.Database -> DatabasePanel(databaseViewModel = databaseViewModel)
-                }
             }
 
-            // Overlaid rather than inserted into the layout: it appears mid-session and must not
-            // reflow the panel underneath it.
-            deviceError?.let { error ->
-                DeviceErrorBanner(
-                    message = error,
-                    onDismiss = { devToolsViewModel.dismissDeviceError() },
-                    modifier = Modifier.align(Alignment.TopCenter),
-                )
-            }
-
-            val connection = devToolsState.connection
-            if (connection is DevToolsConnection.AwaitingAuth && connection.otpRequired) {
-                OtpPromptDialog(
-                    onSubmit = { devToolsViewModel.submitOtp(it) },
-                    onCancel = { devToolsViewModel.disconnect() },
-                )
-            }
-
-            if (devToolsState.switching) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
-                        .clickable(indication = null, interactionSource = null) {},
-                    contentAlignment = Alignment.Center,
-                ) {
-                    AlohomoraCircularProgressIndicator()
-                }
-            }
-            }
-        }
-
-        TraceDetailsSideModal(
-            trace = selectedTraceForDrawer,
-            devToolsViewModel = devToolsViewModel,
-            onDismiss = { selectedTraceForDrawer = null },
-        )
+            TraceDetailsSideModal(
+                trace = selectedTraceForDrawer,
+                devToolsViewModel = devToolsViewModel,
+                onDismiss = { selectedTraceForDrawer = null },
+            )
         }
 
         if (showCommandPalette) {
@@ -463,7 +485,7 @@ private fun NoDevicePanel(
 }
 
 @Composable
-fun Sidebar(
+fun ColumnScope.Sidebar(
     activeSection: DesktopSection,
     onDisconnect: () -> Unit,
     onSectionClick: (DesktopSection) -> Unit,
@@ -471,7 +493,6 @@ fun Sidebar(
     devices: List<DeviceUi>,
     selectedDeviceId: String?,
     hasConnectedDevice: Boolean,
-    onRefreshDevices: () -> Unit,
     isModifierHeld: Boolean = false,
     visibleSections: List<DesktopSection> = emptyList(),
 ) {
@@ -502,15 +523,16 @@ fun Sidebar(
         devices = devices,
         selectedDeviceId = selectedDeviceId,
         hasConnectedDevice = hasConnectedDevice,
-        onRefreshDevices = onRefreshDevices,
         onDisconnect = onDisconnect,
     )
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(MaterialTheme.dimens.margin.lg),
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(MaterialTheme.dimens.margin.lg),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
     ) {
-        visibleSections.forEachIndexed { index, section ->
+        itemsIndexed(visibleSections, key = { _, section -> section.title }) { index, section ->
             NavigationDrawerItem(
                 label = {
                     Row(
@@ -558,7 +580,6 @@ private fun SidebarConnectionCard(
     devices: List<DeviceUi>,
     selectedDeviceId: String?,
     hasConnectedDevice: Boolean,
-    onRefreshDevices: () -> Unit,
     onDisconnect: () -> Unit,
 ) {
     val onlineDevices = devices.filter { it.state == DeviceState.DEVICE }
@@ -568,55 +589,16 @@ private fun SidebarConnectionCard(
     Column(
         modifier = Modifier
             .padding(horizontal = MaterialTheme.dimens.margin.lg)
-            .border(MaterialTheme.dimens.stroke.small, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small)
+            .border(
+                MaterialTheme.dimens.stroke.small,
+                MaterialTheme.colorScheme.outline,
+                MaterialTheme.shapes.small,
+            )
             .background(MaterialTheme.colorScheme.surfaceContainer, MaterialTheme.shapes.small)
             .fillMaxWidth()
             .padding(MaterialTheme.dimens.margin.md),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            val dotState = when (connection) {
-                DevToolsConnection.Disconnected -> ConnectionDotState.Disconnected
-                is DevToolsConnection.Connecting -> ConnectionDotState.Reconnecting
-                is DevToolsConnection.AwaitingAuth -> ConnectionDotState.Reconnecting
-                is DevToolsConnection.Connected -> ConnectionDotState.Connected
-                is DevToolsConnection.Reconnecting -> ConnectionDotState.Reconnecting
-                is DevToolsConnection.Failed -> ConnectionDotState.Disconnected
-            }
-            ConnectionStatusDot(state = dotState)
-            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-            val connectionText = when (connection) {
-                DevToolsConnection.Disconnected -> "Disconnected"
-                is DevToolsConnection.Connecting -> "Connecting ${connection.host}:${connection.port}"
-                is DevToolsConnection.AwaitingAuth -> "Waiting for OTP"
-                is DevToolsConnection.Connected -> "Connected ${connection.host}:${connection.port}"
-                is DevToolsConnection.Reconnecting ->
-                    "Device asleep — reconnecting (${connection.attempt})"
-                is DevToolsConnection.Failed -> "Failed: ${connection.reason}"
-            }
-            Text(
-                connectionText,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.secondary,
-            )
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "Current Device",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.secondary,
-            )
-            IconButton(onClick = onRefreshDevices) {
-                Icon(Icons.RefreshCw, contentDescription = "Refresh devices")
-            }
-            if (connection is DevToolsConnection.Connected) {
-                IconButton(onClick = onDisconnect) {
-                    Icon(Icons.X, contentDescription = "Disconnect")
-                }
-            }
-        }
-
         if (!hasConnectedDevice || selectedOnlineDevice == null) {
             Text(
                 text = "No online devices found",
@@ -624,6 +606,33 @@ private fun SidebarConnectionCard(
                 color = MaterialTheme.colorScheme.secondary,
             )
         } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val dotState = when (connection) {
+                    DevToolsConnection.Disconnected -> ConnectionDotState.Disconnected
+                    is DevToolsConnection.Connecting -> ConnectionDotState.Reconnecting
+                    is DevToolsConnection.AwaitingAuth -> ConnectionDotState.Reconnecting
+                    is DevToolsConnection.Connected -> ConnectionDotState.Connected
+                    is DevToolsConnection.Reconnecting -> ConnectionDotState.Reconnecting
+                    is DevToolsConnection.Failed -> ConnectionDotState.Disconnected
+                }
+                ConnectionStatusDot(state = dotState)
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+                val connectionText = when (connection) {
+                    DevToolsConnection.Disconnected -> "Disconnected"
+                    is DevToolsConnection.Connecting -> "Connecting ${connection.host}:${connection.port}"
+                    is DevToolsConnection.AwaitingAuth -> "Waiting for OTP"
+                    is DevToolsConnection.Connected -> "Connected"
+                    is DevToolsConnection.Reconnecting ->
+                        "Device asleep — reconnecting (${connection.attempt})"
+
+                    is DevToolsConnection.Failed -> "Failed: ${connection.reason}"
+                }
+                Text(
+                    connectionText,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -633,8 +642,14 @@ private fun SidebarConnectionCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    imageVector = Icons.HardDrive,
+                    imageVector =
+                        if (selectedOnlineDevice.platform.isIos)
+                            Icons.Apple
+                        else Icons.Android,
                     contentDescription = null,
+                    modifier = Modifier
+                        .padding(MaterialTheme.dimens.margin.sm)
+                        .size(24.dp),
                     tint = MaterialTheme.colorScheme.primary,
                 )
                 Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
@@ -642,12 +657,21 @@ private fun SidebarConnectionCard(
                     Text(
                         text = selectedOnlineDevice.model ?: selectedOnlineDevice.id,
                         style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = selectedOnlineDevice.id,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.secondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
+                }
+                if (connection is DevToolsConnection.Connected) {
+                    IconButton(onClick = onDisconnect) {
+                        Icon(Icons.X, contentDescription = "Disconnect")
+                    }
                 }
             }
         }

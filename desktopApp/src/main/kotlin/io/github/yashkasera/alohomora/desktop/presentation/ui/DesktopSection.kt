@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceCapability
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.ui.icons.Activity
+import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.Gauge
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
@@ -11,6 +12,7 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Key
 import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.icons.ScrollText
+import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.icons.Terminal
 
 enum class DesktopSection(
@@ -35,6 +37,11 @@ enum class DesktopSection(
     Events("Events", Icons.Activity),
     Database("Database", Icons.Database),
     Cache("Cache", Icons.Key),
+    Errors("Errors", Icons.AlertTriangle),
+    // Config and Git History both read build metadata, and Config used to have nowhere to live:
+    // its card was rendered inside Git History and inside the Dashboard, and the Dashboard is
+    // gated off for iOS — so on an iOS device the build metadata was effectively unreachable.
+    Config("Config", Icons.Settings),
     GitHistory("Git History", Icons.GitGraph),
     ;
 
