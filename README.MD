@@ -70,6 +70,10 @@ Alohomora.init()
 
 Alohomora.recordEvent(name = "screen_opened", properties = mapOf("screen" to "home"))
 
+// Uncaught exceptions are captured automatically; this is for ones you caught.
+// See "Errors" below, including the Swift form.
+Alohomora.recordError(throwable, place = "SyncWorker")
+
 // Only for clients Alohomora does not intercept — OkHttp and Ktor capture
 // automatically. See "Traffic Capture & Inspection" below.
 Alohomora.recordTraffic(
@@ -307,7 +311,8 @@ Injected at build time — see [Build metadata (Android)](#build-metadata-androi
 
 ### Desktop-only panels
 
-The desktop app adds three panels that need host-side tooling, so they are gated on device capability
+Traffic, Events, Database, Cache, Errors, Config and Git History all work for any connected device.
+The desktop app adds three more that need host-side tooling, so they are gated on device capability
 and hidden for an iOS device:
 
 - **Dashboard** — live device metrics
@@ -316,13 +321,43 @@ and hidden for an iOS device:
 
 ### Errors
 
-Scaffolding, not a feature yet. The mobile console has an Errors screen with search, a stack-trace
-detail view, copy-to-clipboard and clear — but **nothing writes to it**. There is no public
-`recordError` API and no installed uncaught-exception handler, so it is empty in practice, and the
-desktop app has no Errors panel at all.
+Uncaught exceptions are captured automatically — nothing to install. The handler goes in at init and
+records the exception before the app dies, with search, a stack-trace detail view,
+copy-to-clipboard and clear in the console.
 
-There is also **no logging API**. `Alohomora.recordEvent` is the only way to get an application-authored
-entry into the console; there are no log levels.
+Caught failures you still want to see, you report:
+
+```kotlin
+try {
+    sync()
+} catch (e: IOException) {
+    Alohomora.recordError(e)                          // place defaults to the top stack frame
+    Alohomora.recordError(e, place = "SyncWorker")    // …or say something more useful
+}
+```
+
+```swift
+// Swift has no KotlinThrowable, so iOS uses the string form
+Alohomora.shared.recordError(
+    reason: "DecodingError: \(error)",
+    stackTrace: Thread.callStackSymbols.joined(separator: "\n"),
+    place: "PostsRepository"
+)
+```
+
+**Alohomora chains to the crash handler it replaced**, so your Crashlytics or Sentry keeps working.
+It never swallows the exception and the app crashes exactly as it would have.
+
+Two limits worth knowing:
+
+- **iOS covers Kotlin exceptions only.** An `NSException` or a Swift `fatalError` bypasses it.
+  Alohomora deliberately does not install `NSSetUncaughtExceptionHandler` or signal handlers —
+  competing for those is how a debug library breaks your real crash reporter.
+- **Errors reach the desktop app too**, in an Errors panel with the stack trace, and mirrored into
+  the Events timeline as `App.Exception` so the failure also appears in sequence.
+
+There is still **no logging API**: `recordEvent` and `recordError` are the only ways to author a
+console entry, and there are no log levels.
 
 ### Traffic Replay
 

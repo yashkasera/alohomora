@@ -11,7 +11,8 @@ Alohomora is a developer observability and debugging toolkit for Android/iOS app
 ```bash
 ./gradlew assemble                    # Build all modules
 ./gradlew test                        # Run all tests
-./gradlew :alohomora:test             # Tests for library module only
+./gradlew :alohomora:iosSimulatorArm64Test   # Library tests, iOS  (commonTest + iosTest)
+./gradlew :alohomora:testAndroidHostTest     # Library tests, Android host (commonTest + androidHostTest)
 ./gradlew :desktopApp:run             # Run the desktop companion app
 
 # Packaging
@@ -83,11 +84,25 @@ The Android `actual` returns null on purpose: `AlohomoraInitializer` runs first 
 
 Note `apiDump` after adding an internal `@Serializable` class to `:alohomora`: the Compose compiler's `$stableprop` symbols leak into the klib dump even for internal types, so `klibApiCheck` fails on what is not an API change at all.
 
+### Error capture
+
+`Alohomora.recordError(...)` for caught failures, plus a crash handler installed once from
+`initInternal` (`installCrashHandler`, `expect`/`actual`). Four constraints, none cosmetic:
+
+- **Chain, never replace.** Each actual keeps the handler it displaced and calls it in a `finally`. Alohomora arrives via `debugImplementation`, so swallowing the exception would disable the host app's Crashlytics/Sentry *in debug builds only* — a symptom nobody traces back to a debugging library. `CrashHandlerTest` guards this.
+- **Persist synchronously, but bounded.** The process is one stack unwind from death, so `scope.launch` would never be scheduled; the actuals use `runBlocking`. `ErrorCapture.FATAL_TIMEOUT_MILLIS` caps it, because a SQLite write can block on another thread's lock and an unbounded wait on the crashing thread turns a crash into an ANR — no stack trace *and* a hang.
+- **`claimFatal()` is one-shot and never reset.** A crash raised by the crash handler would otherwise re-enter forever.
+- **Write both an `Error` row and an `App.Exception` event.** The row owns the stack trace; the event puts the failure in sequence next to the traffic around it. `EventsScreen` renders that exact name with a fatal accent bar. Errors additionally reach the desktop on their own `STREAM_ERROR` message — the event mirror predates it and is kept because the timeline position is worth having.
+
+`ErrorCapture.toError` formats `reason` as `SimpleName: message` — `simpleName`, not `qualifiedName`, because the latter is not universally supported on Kotlin/Native and a reflection failure *inside a crash handler* would replace the app's real crash with ours. Read it back with `Error.exceptionTypeName()`, never by hand: the two error screens used to inline `substringAfterLast(".").substringBefore(":")`, whose order made any message containing a period render a blank title.
+
+iOS covers **Kotlin exceptions only**. `NSException` and Swift `fatalError` need `NSSetUncaughtExceptionHandler` / signal handlers, which Alohomora deliberately does not install — competing for those is how a debug library breaks a host app's crash reporter. Swift callers use the `recordError(reason:stackTrace:place:)` overload, which exists because a Swift `Error` is not a `KotlinThrowable`.
+
 ### DevTools TCP protocol
 
 Custom framed binary protocol defined in `alohomora-common`: 9-byte header (`magic=0x414C4F48`, `version=1`, `payloadLength`) + JSON payload → `DevToolsEnvelope(type, sequence, payload)`. **`alohomora-common` is a shared protocol contract** — changes here affect both the in-app library and the desktop app.
 
-Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_PREFS`, `REQUEST_INITIAL_STATE`, `REQUEST_DATABASE_SCHEMA`, `REQUEST_DATABASE_TABLE`, `REQUEST_PREF_VALUE`, `REQUEST_CLEAR`, `REQUEST_REPLAY_TRACE`, `REPLAY_RESULT`, `PING`, `PONG`.
+Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_PREFS`, `REQUEST_INITIAL_STATE`, `REQUEST_DATABASE_SCHEMA`, `REQUEST_DATABASE_TABLE`, `REQUEST_PREF_VALUE`, `REQUEST_CLEAR`, `REQUEST_REPLAY_TRACE`, `REPLAY_RESULT`, `PING`, `PONG`, `STREAM_ERROR`.
 
 **Liveness (`PING`/`PONG`):** the device pings an idle client every `DevToolsHeartbeat.PING_INTERVAL_MILLIS` and reaps `activeConnection` once the client has sent nothing for `SILENCE_TIMEOUT_MILLIS`. The desktop mirrors it, dropping the session when the device stops pinging. Both use the shared `DevToolsLiveness`, and both count *any* inbound frame — the ping exists only to manufacture one on an otherwise idle session.
 
@@ -96,6 +111,16 @@ This is not interchangeable with a socket read timeout, and one must not be adde
 The device pings only a client that sets `AuthResponseMessage.heartbeatSupported`, and the desktop arms its watchdog only after the first `PING` arrives. Both gates default to the old behaviour, because a peer predating the heartbeat ignores `PING` as an unknown type — indistinguishable from a dead one. **Never enforce silence against an unarmed peer.**
 
 `REPLAY_RESULT` is the only reply to a desktop→device command. Every other command either answers with a snapshot or is unobservable, but a replay can fail before any traffic exists (no handler registered, an unparseable hand-edited URL, a refused connection), and with no reply the desktop would wait forever on a traffic entry that is never coming. Device-side capabilities that a client must not assume — currently `InitialStatePayload.replaySupported` — default to `false`, so a newer desktop hides the action against an older app rather than sending into a void.
+
+### Adding a DevTools message type
+
+`STREAM_ERROR` is the worked example. **Do not bump `DevToolsProtocol.VERSION`** — additive changes do not need it, and bumping breaks interop with every existing build. What makes additive safe, and what a new type must preserve:
+
+- An unknown type deserializes to `UnknownMessage` and both sides ignore it (`else -> Unit`). Never disconnect on one.
+- A new field on an existing payload needs a **default**, so a peer that omits it still decodes. `InitialStatePayload.errors` defaults to empty and `RequestClearMessage.errors` to false for exactly this reason.
+- A new device capability defaults to *unsupported*, the way `replaySupported` does, so a newer desktop hides an action rather than sending into a void.
+
+`ErrorStreamProtocolTest` covers all three directions: round-trip, a snapshot from an older app with the field absent, and an unknown type degrading. That last one has to use a fictional type name — the current build knows its own types, so it cannot impersonate an older peer any other way.
 
 ### Library internals
 
@@ -218,7 +243,7 @@ To add a new icon: find it on [https://lucide.dev/icons/](https://lucide.dev/ico
 
 - **`expect`/`actual` boundaries:** `DevToolsDatabaseInspector`, `DevToolsTcpServer`, `isDebugBuild`, `platformModule`, `CacheRepositoryImpl`, `DatabaseRepositoryImpl`, `ShareManager` all have platform-specific `actual` implementations. **When modifying these, update all three (Android, iOS, Desktop).**
 - **API validation:** Only `alohomora` and `alohomora-noop` are API-validated (not `desktopApp`, `showcaseApp`, `alohomora-common`, `alohomora-ui`). Run `./gradlew apiCheck` before any commit that changes the public surface; run `./gradlew apiDump` to update the `.api` golden files.
-- **Noop parity is not enforced by any build task.** `apiCheck` validates each module against its *own* golden file, so it happily passes while the two `Alohomora` objects have diverged — the failure surfaces only in a consumer's release build. After changing the public surface, diff the two `.api` files by hand. Types `alohomora` re-exports from `alohomora-common` (`ReplayRequest`, `CustomScreenPlugin`) appear in the noop dump but not in `alohomora`'s; that asymmetry is expected. What must match exactly is the member list of the `Alohomora` object itself.
+- **Noop parity is enforced by `./gradlew consumerParity`**, which the root `check` depends on. It diffs the `Alohomora` object's member list out of both klib dumps and fails on divergence, so a mismatch no longer waits for a consumer's release build to surface. It depends on both `apiCheck` tasks, because comparing two stale dumps would report parity that does not exist — so run `apiDump` after any public change, then `consumerParity`. Types `alohomora` re-exports from `alohomora-common` (`ReplayRequest`, `CustomScreenPlugin`) appear in the noop dump but not in `alohomora`'s; that asymmetry is fine, the task only compares the object's own members.
 - **Room migrations:** `AlohomoraDb` sets `exportSchema = false` and both platforms use `fallbackToDestructiveMigration(true)`, so there are no schema JSON files to update and no migrations to write — but **bumping `version` wipes every captured traffic, event and error on the next launch.** Bump it (with a comment saying what changed) whenever an entity gains or loses a column; skipping the bump crashes at startup instead.
 - **Slack integration** exists in both `alohomora` (mobile) and `desktopApp` via `SlackShareService`.
 - **Naming:** The console uses consistent terminology across all three platforms (Traffic, Events, Database, Errors, Cache, Config, Git History). Names should not be repeated in UI (e.g., top bar says "Traffic", content should not re-title itself).
@@ -227,7 +252,7 @@ To add a new icon: find it on [https://lucide.dev/icons/](https://lucide.dev/ico
   - Re-sending a captured traffic = **Replay** (not "resend", "retry" or "relay")
   - User/system events = **Events** (not "Telemetry")
   - Database + key-value store = **Database** (not "Vault")
-  - Crashes/exceptions = **Errors** (not "Errors")
+  - Crashes/exceptions = **Errors** (not "Crashes" or "Exceptions")
   - Preferences/SharedPreferences/UserDefaults = **Cache**
   - Build metadata = **BuildMetadata** (or **Config**)
   - Git history = **GitHistory** (records are `GitHistoryCommit`)
@@ -247,8 +272,12 @@ The console implements trust-on-first-use (TOFU) authentication:
 
 ## Testing Notes
 
-- **Unit tests:** Run with `./gradlew test` or `./gradlew :alohomora:test` for the library only
+- **There is no `:alohomora:test` task.** The library is a KMP module with no JVM target, so its tests run per platform:
+  - `./gradlew :alohomora:iosSimulatorArm64Test` — `commonTest` + `iosTest`
+  - `./gradlew :alohomora:testAndroidHostTest` — `commonTest` + `androidHostTest`
+- **`commonTest` only reaches Android because `withHostTest {}` is set** on the android target in `alohomora/build.gradle.kts`. Without it the build emits a *warning* and silently compiles `commonTest` for iOS alone, so the Android half of every `expect`/`actual` pair goes untested. If you add a platform actual, add a test that runs on that platform — `CrashHandlerTest` is in `androidHostTest` precisely because `Thread.setDefaultUncaughtExceptionHandler` has no iOS analogue.
+- **Compose UI tests cannot live in `commonTest`.** `runComposeUiTest` reads `android.os.Build.FINGERPRINT` on the Android host and NPEs in a plain JVM unit test; `ComposeTest` is in `iosTest` for that reason. Robolectric would be the alternative and is not worth a test-only Android runtime in the library.
+- **Process-global one-shot state needs a test reset.** `ErrorCapture.claimFatal()` is deliberately never reset in production, so `resetFatalClaimForTest()` exists and both error tests call it in `@BeforeTest`. Without that, whichever test ran a crash handler first decided the other's result.
 - **Desktop tests:** `./gradlew :desktopApp:test` (includes connection and message serialization tests)
-- **iOS:** Tests run on physical device via `./gradlew :alohomora:iosSimulatorArm64Test` (note: **Simulator only** for unit tests; integration tests require a physical device)
 - **Flaky UI tests:** The Compose test harness can be brittle with timing. If a test flakes, increase timeouts or break the assertion into smaller steps
 - **Message round-trips:** Use `DevToolsProtocol.encodeEnvelope()` and `decodeFrame()` to verify message serialization round-trips (see `AuthHandshakeTest` for the pattern)
