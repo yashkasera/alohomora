@@ -51,17 +51,17 @@ class PostsViewModel: ObservableObject {
     func load() async {
         isLoading = true
         errorMessage = nil
-       Alohomora.shared.recordTelemetry(name: "posts_refresh_start", properties: nil)
+       Alohomora.shared.recordEvent(name: "posts_refresh_start", properties: nil)
 
         do {
             posts = try await PostsService.shared.fetchPosts()
-           Alohomora.shared.recordTelemetry(
+           Alohomora.shared.recordEvent(
                name: "posts_refresh_success",
                properties: ["count": String(posts.count)]
            )
         } catch {
             errorMessage = error.localizedDescription
-           Alohomora.shared.recordTelemetry(
+           Alohomora.shared.recordEvent(
                name: "posts_refresh_failure",
                properties: ["error": error.localizedDescription]
            )
@@ -71,7 +71,7 @@ class PostsViewModel: ObservableObject {
     }
 
     func onPostTapped(_ post: Post) {
-       Alohomora.shared.recordTelemetry(
+       Alohomora.shared.recordEvent(
            name: "post_clicked",
            properties: ["postId": String(post.id)]
        )
@@ -91,7 +91,7 @@ class PreferencesViewModel: ObservableObject {
     @Published var autoRefresh: Bool {
         didSet {
             defaults.set(autoRefresh, forKey: "auto_refresh")
-           Alohomora.shared.recordTelemetry(
+           Alohomora.shared.recordEvent(
                name: "auto_refresh_toggled",
                properties: ["enabled": autoRefresh ? "true" : "false"]
            )
@@ -111,7 +111,7 @@ class PreferencesViewModel: ObservableObject {
 
     func commitUsername() {
         defaults.set(username, forKey: "username")
-       Alohomora.shared.recordTelemetry(name: "username_updated", properties: nil)
+       Alohomora.shared.recordEvent(name: "username_updated", properties: nil)
     }
 
     func markRefreshed() {
