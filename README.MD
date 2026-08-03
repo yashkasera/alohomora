@@ -6,16 +6,16 @@ Modern applications fail less often because of syntax errors and more often beca
 
 This tool exists to collapse that distance.
 
-It provides a unified environment for inspecting APIs, databases, events, background jobs, and application state in real time—without requiring invasive instrumentation, fragile dashboards, or postmortem archaeology.
+It provides a unified environment for inspecting network traffic, databases, events and application state in real time—without requiring invasive instrumentation, fragile dashboards, or postmortem archaeology.
 
 The goal is not monitoring theater.
 The goal is understanding.
 
-## Installation & Gradle Setup (`build.gradle.kts`)
+## Installation & Setup
 
 Alohomora is designed for **full observability in debug builds** and **zero-overhead behavior in release builds**.
 
-### 1) Add variant-specific dependencies
+### Dependencies
 
 ```kotlin
 dependencies {
@@ -27,7 +27,7 @@ dependencies {
 }
 ```
 
-### 2) GitHub Packages setup
+### GitHub Packages
 
 Publish and consume from GitHub Packages:
 
@@ -36,7 +36,33 @@ Publish and consume from GitHub Packages:
   - `gpr.user` / `GITHUB_ACTOR`
   - `gpr.key` / `GH_PACKAGES_TOKEN` / `GITHUB_TOKEN`
 
-### 3) Public API quick usage
+### Build metadata (Android)
+
+Apply the Gradle plugin to your app module. It runs `git log`, `git rev-parse` and
+`git status --porcelain` at build time and code-generates an `AlohomoraConfig` that Alohomora picks up
+automatically, feeding the Config and Git History panels. Without it those panels show `unknown`.
+
+```kotlin
+plugins {
+    id("io.github.yashkasera.alohomora")
+}
+
+alohomora {
+    enabledVariants = setOf("debug")   // default: setOf("debug")
+    maxCommits = 50                    // default: 10
+    versionName = project.version.toString()
+    versionCode = 1
+    slackWebhookUrl = "https://hooks.slack.com/services/…"   // optional
+}
+```
+
+`versionName` has no default and the generator task requires it, so leave it out and the build fails.
+`slackWebhookUrl` is emitted as a plaintext constant and is **dropped for any non-debuggable variant**
+— it would otherwise be recoverable from release dex with `strings`.
+
+For the iOS equivalent, see [iOS build metadata](#ios-build-metadata-xcode-run-script-phase).
+
+### Public API
 
 ```kotlin
 // Android auto-initializes via AndroidX Startup; call this only on iOS.
@@ -67,7 +93,7 @@ Alohomora.clearReplayHandler()
 val canReplay = Alohomora.isReplaySupported
 ```
 
-### 4) Plugin APIs
+### Custom screen plugins
 
 ```kotlin
 Alohomora.registerPlugin(plugin)
@@ -75,7 +101,88 @@ Alohomora.unregisterPlugin(pluginId = "my-plugin")
 val plugins = Alohomora.getPlugins()
 ```
 
-### 5) iOS build metadata (Xcode run-script phase)
+### iOS setup
+
+Nothing on iOS is automatic. There is no AndroidX Startup equivalent, and traffic is not captured
+unless your app uses a session Alohomora hands you.
+
+The library ships as a **static framework named `AlohomoraKit`, built by Gradle**. There is no
+podspec and no `Package.swift` yet, so the app target links it from the Gradle output directory.
+`showcaseIosApp` is a working reference for all of this. Add a Run Script phase before *Compile
+Sources*:
+
+```sh
+cd "$SRCROOT/.."
+./gradlew :alohomora:embedAndSignAppleFrameworkForXcode
+```
+
+and point the target at what it produces:
+
+```
+FRAMEWORK_SEARCH_PATHS = $(SRCROOT)/../alohomora/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+```
+
+Initialize at launch. **Kotlin default arguments do not become Swift defaults**, so every parameter is
+required at the Swift call site — and `init()` is exported as `doInit()` because Swift reserves
+`init`:
+
+```swift
+import AlohomoraKit
+
+@main
+struct MyApp: App {
+    init() {
+        Alohomora.shared.doInit()
+        _ = Alohomora.shared.startDevToolsServer(port: 53999)
+    }
+    // …
+}
+```
+
+#### Traffic capture
+
+`URLSession.shared` **cannot** be intercepted: its configuration is immutable, and capture requires
+Alohomora's protocol class to appear in a session's own `protocolClasses`. Build your session from
+Alohomora's configuration instead:
+
+```swift
+let session = URLSession(configuration: Alohomora.shared.alohomoraURLSessionConfiguration())
+
+// …or wrap a configuration you already customize
+let session = URLSession(
+    configuration: Alohomora.shared.alohomoraURLSessionConfiguration(base: myConfig)
+)
+```
+
+Ktor's Darwin engine is not captured automatically either — pass the same configuration into its
+engine config.
+
+`registerURLProtocol()` hooks only the legacy `NSURLConnection` loading system, which URLSession
+ignores, so it is not a substitute for the above. Background upload/download tasks and WebSocket
+frames are not captured at all.
+
+#### Presenting the console
+
+`MainViewController` is a top-level function, so Swift reaches it through `MainKt`:
+
+```swift
+struct ConsoleView: UIViewControllerRepresentable {
+    let onClose: () -> Void
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        MainKt.MainViewController(onClose: onClose)
+    }
+
+    func updateUIViewController(_ controller: UIViewController, context: Context) {}
+}
+```
+
+**Always pass `onClose` when presenting modally.** iOS has no system back button, and a Compose view
+inside a SwiftUI sheet consumes the vertical drag gesture, so the sheet's swipe-to-dismiss never
+fires. With no handler there is no way out of the console. Pair it with
+`.presentationDragIndicator(.visible)` for a second escape route.
+
+### iOS build metadata (Xcode run-script phase)
 
 On Android the Gradle plugin code-generates branch, commit sha, dirty flag and recent commits into the
 build, and Alohomora picks them up automatically. An iOS app built from an `.xcodeproj` has no Gradle
@@ -128,109 +235,94 @@ The tool favors explanation over aggregation, structure over noise, and develope
 
 All outbound network activity is captured as structured, queryable data.
 
-This includes:
+Every entry carries:
 
-- Request and response bodies (with configurable redaction)
-- Headers and metadata
-- Timing and latency breakdowns
-- Error states and retries
-- Correlation IDs across services
+- Method, URL, status, latency and response size
+- Request and response headers, with secrets redacted at capture
+- Request and response bodies, the response rendered as a navigable JSON tree
+- Scheme, host, query and timestamp
 
-Instead of scrolling through text logs, developers can:
+What you can do with one:
 
-- Inspect individual requests as first-class objects
-- Compare multiple requests side by side
-- Trace a single request across internal boundaries
-- Replay requests in a controlled environment
+- Open it in a detail view split across Overview, Request and Response tabs
+- Search the list, and clear it
+- Share it to Slack as text or as a ready-to-run cURL command
+- **Replay** it — edit the method, URL, headers or body and send it again through your own client
+  (see below)
 
-The system treats API calls as events with context, not lines of text.
+Capture is automatic for OkHttp (`TrafficInterceptor`) and Ktor (`AlohomoraInspector`). On iOS it
+requires the session configuration described above. `Alohomora.recordTraffic(...)` covers clients
+Alohomora does not intercept.
 
-### Database Inspection & State Diffing
+### Database Inspection
 
-Databases are not black boxes here.
+Both Alohomora's own capture database and databases your app registers are browsable live.
 
-The tool provides:
+- Pick a database, then a table, and page through rows
+- Run arbitrary SQL and see results with execution time
+- Read the schema: columns, types, primary keys, indexes
 
-- Live inspection of database state
-- Query-level visibility (including generated ORM queries)
-- Before/after snapshots for writes
-- Visual diffs of record mutations
-- Relationship-aware navigation between entities
+Register the databases you want visible:
 
-Rather than asking “what query ran?”, developers can ask:
+```kotlin
+Alohomora.registerAppDatabase(name = "app.db")
+Alohomora.excludeAppDatabase(name = "cache.db")
+```
 
-- What changed?
-- When did it change?
-- What triggered the change?
-- What else changed as a result?
+Inspection is **read-only**. There is no row editing, no write history, and no before/after diffing —
+you see current state, and SQL you run yourself.
 
-This is especially useful for debugging cascading updates, background jobs, and race conditions.
+### Events
 
-### Event Visualizer
+Events are the app's own narration: a name, a timestamp, and optional string properties.
 
-At the heart of the project is an event-first mental model.
+```kotlin
+Alohomora.recordEvent(name = "checkout_started", properties = mapOf("cart_size" to "3"))
+```
 
-Everything—API calls, database writes, background jobs, cache updates, messages, webhooks—is treated as an event in time.
+The panel lists them newest-first with search by name, a toggle to expand properties inline, and
+clear. It is a searchable log of what your app said happened, in order — not an inferred causal graph.
 
-The event visualizer provides:
+### Cache
 
-- A timeline view of system activity
-- Causal chains between events
-- Grouping by request, user action, or workflow
-- Zoomable, filterable views from milliseconds to minutes
-- The ability to “scrub” through execution history
+Key-value state, read live off the device.
 
-This makes asynchronous systems understandable as stories, not mysteries.
+- **Android:** `SharedPreferences` files, including `EncryptedSharedPreferences` (already decrypted by
+  the system when read, and flagged as encrypted in the listing)
+- **iOS:** `NSUserDefaults`
 
-### Request & Workflow Tracing
+Keys load lazily — click one to fetch its value. Read-only; there is no editing or deletion.
 
-The tool automatically builds traces that follow execution across:
+### Config & Git History
 
-- Services
-- Queues
-- Workers
-- Scheduled jobs
-- External integrations
+Which build you are actually looking at, which is the first question worth asking when a bug will not
+reproduce.
 
-Traces are not just performance metrics. They are narratives:
+- **Config:** project name, variant, version name and code, branch, commit sha, dirty flag, build
+  timestamp
+- **Git History:** the last N commits compiled into the build — sha, author, subject, timestamp
 
-- What started the workflow
-- What steps occurred
-- Where decisions were made
-- Where things slowed down or failed
+Injected at build time — see [Build metadata (Android)](#build-metadata-android) and
+[iOS build metadata](#ios-build-metadata-xcode-run-script-phase).
 
-This is particularly useful for systems built around events, queues, or serverless functions where traditional stack traces fall apart.
+### Desktop-only panels
 
-### Structured Logging (Without the Pain)
+The desktop app adds three panels that need host-side tooling, so they are gated on device capability
+and hidden for an iOS device:
 
-Logs are treated as structured data by default.
+- **Dashboard** — live device metrics
+- **Logcat** — streamed device log
+- **ADB** — an embedded terminal (pty4j)
 
-Features include:
+### Errors
 
-- Schema-aware log entries
-- Automatic correlation with requests and events
-- Log levels that actually mean something
-- Filtering without regex spelunking
-- Context propagation without manual plumbing
+Scaffolding, not a feature yet. The mobile console has an Errors screen with search, a stack-trace
+detail view, copy-to-clipboard and clear — but **nothing writes to it**. There is no public
+`recordError` API and no installed uncaught-exception handler, so it is empty in practice, and the
+desktop app has no Errors panel at all.
 
-Plain text logs are supported, but they are not the primary interface. The system assumes logs should be queryable artifacts, not prose.
-
-### Error & Anomaly Exploration
-
-Errors are elevated to first-class citizens.
-
-The tool provides:
-
-- Grouping of related failures
-- Visibility into surrounding system state
-- The ability to jump from an error to the exact events that caused it
-- Detection of “weird but not broken” behavior (unexpected but valid states)
-
-Instead of asking “why did this crash?”, developers can ask:
-
-- Why did the system think this was reasonable?
-- What assumptions were violated?
-- Where did reality diverge from expectation?
+There is also **no logging API**. `Alohomora.recordEvent` is the only way to get an application-authored
+entry into the console; there are no log levels.
 
 ### Traffic Replay
 
@@ -338,9 +430,9 @@ The UI assumes curiosity and rewards exploration.
 
 - Debugging “it only happens sometimes” bugs
 - Understanding unfamiliar legacy systems
-- Tracing data corruption or phantom updates
-- Inspecting third-party API behavior
-- Making asynchronous workflows comprehensible
+- Answering “which build is this, and what changed in it?”
+- Inspecting third-party API behavior, and replaying a request until it works
+- Checking what the app actually persisted, without a rebuild
 - Teaching junior developers how the system actually behaves
 
 ## What This Tool Is Not
