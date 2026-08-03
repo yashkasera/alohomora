@@ -7,6 +7,13 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public final fun getPlugins ()Ljava/util/List;
 	public final fun init ()V
 	public final fun isReplaySupported ()Z
+	public static final fun recordError (Ljava/lang/String;)V
+	public static final fun recordError (Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun recordError (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun recordError (Ljava/lang/Throwable;)V
+	public static final fun recordError (Ljava/lang/Throwable;Ljava/lang/String;)V
+	public static synthetic fun recordError$default (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public static synthetic fun recordError$default (Ljava/lang/Throwable;Ljava/lang/String;ILjava/lang/Object;)V
 	public static final fun recordEvent (Ljava/lang/String;)V
 	public static final fun recordEvent (Ljava/lang/String;Ljava/util/Map;)V
 	public static synthetic fun recordEvent$default (Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V

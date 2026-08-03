@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora
 import co.touchlab.kermit.Logger
 import io.github.yashkasera.alohomora.Alohomora.initLock
 import io.github.yashkasera.alohomora.Alohomora.isReplaySupported
+import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
@@ -11,8 +12,11 @@ import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.di.initKoin
+import io.github.yashkasera.alohomora.domain.repository.ErrorRepository
 import io.github.yashkasera.alohomora.domain.repository.EventsRepository
 import io.github.yashkasera.alohomora.domain.repository.TrafficRepository
+import io.github.yashkasera.alohomora.error.ErrorCapture
+import io.github.yashkasera.alohomora.error.installCrashHandler
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.replay.TrafficReplayHandler
@@ -130,6 +134,7 @@ object Alohomora {
             if (koinApplication != null) return
             this.config = config
             koinApplication = initKoin(appDeclaration)
+            installCrashHandler()
         }
     }
 
@@ -215,6 +220,88 @@ object Alohomora {
                 Logger.d { "[Alohomora] Failed to record telemetry: ${e.message}" }
             }
         }
+    }
+
+    // ============================================================================
+    // Error Recording
+    // ============================================================================
+
+    /**
+     * Records a caught, non-fatal [throwable] in the Errors console.
+     *
+     * Uncaught exceptions are captured automatically — see `installCrashHandler`. Use this for the
+     * ones you handled but still want to see, the `catch` blocks that would otherwise swallow a
+     * problem silently.
+     *
+     * @param place where the failure happened. Defaults to the top stack frame, which is usually
+     *   what you want; pass something meaningful ("SyncWorker", "checkout") when the frame is a
+     *   generic helper and tells you nothing.
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun recordError(throwable: Throwable, place: String? = null) {
+        val error = ErrorCapture.toError(throwable, place)
+        scope.launch {
+            try {
+                persistError(error)
+            } catch (e: Exception) {
+                Logger.d { "[Alohomora] Failed to record error: ${e.message}" }
+            }
+        }
+    }
+
+    /**
+     * Records an error from values you already have, for callers with no Kotlin [Throwable].
+     *
+     * This exists for Swift. A Swift `Error` or `NSError` is not a `KotlinThrowable`, so the
+     * overload above is unreachable from iOS host code — without this, an iOS app could not report
+     * its own caught failures at all.
+     *
+     * @param reason formatted `Type: message`. The console splits on the first `:` for the row
+     *   title, so `"DecodingError: keyNotFound(\"id\")"` reads correctly and a bare message does not.
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun recordError(reason: String, stackTrace: String? = null, place: String? = null) {
+        val error = Error(
+            place = place,
+            reason = reason,
+            stackTrace = stackTrace,
+            time = Clock.System.now().toEpochMilliseconds(),
+        )
+        scope.launch {
+            try {
+                persistError(error)
+            } catch (e: Exception) {
+                Logger.d { "[Alohomora] Failed to record error: ${e.message}" }
+            }
+        }
+    }
+
+    /**
+     * Writes [error] to the Errors table and mirrors it into the Events timeline.
+     *
+     * Both, not either: the Errors screen owns the stack trace, while the event is what puts the
+     * failure in sequence next to the traffic and events around it — and what carries it to the
+     * desktop app, whose protocol has no error message type.
+     *
+     * `suspend` rather than fire-and-forget because the crash handlers must be able to await it on
+     * a thread that is about to be torn down.
+     */
+    internal suspend fun persistError(error: Error) {
+        koin?.get<ErrorRepository>()?.save(error)
+        koin?.get<EventsRepository>()?.save(
+            Event(
+                time = error.time,
+                name = ErrorCapture.CRASH_EVENT_NAME,
+                properties = Json.encodeToJsonElement(
+                    buildMap {
+                        error.reason?.let { put("reason", it) }
+                        error.place?.let { put("place", it) }
+                    },
+                ),
+            ),
+        )
     }
 
     // ============================================================================

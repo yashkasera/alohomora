@@ -20,6 +20,11 @@ kotlin {
         minSdk = 24
         androidResources.enable = true
         compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
+        // Without this, `commonTest` compiles for iOS only and the Android half of every
+        // expect/actual pair goes unexercised — the build warned about it instead of failing, so
+        // the gap was invisible. `androidHostTest` is also the only place the crash-handler
+        // chaining test can live: `Thread.setDefaultUncaughtExceptionHandler` has no iOS analogue.
+        withHostTest {}
     }
 
     // iosX64 is intentionally absent: Compose Multiplatform 1.11.x no longer publishes

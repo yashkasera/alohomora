@@ -16,6 +16,15 @@ import androidx.compose.ui.test.runComposeUiTest
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import kotlin.test.Test
 
+/**
+ * Lives in `iosTest`, not `commonTest`.
+ *
+ * `runComposeUiTest` on the Android host needs a UI environment: it reads
+ * `android.os.Build.FINGERPRINT`, which is null in a plain JVM unit test, and dies with an NPE
+ * inside Compose's Robolectric idling strategy. Pulling Robolectric in to host one smoke test is a
+ * poor trade — iOS already covers this path, and before `withHostTest {}` was enabled this test only
+ * ever ran on iOS anyway.
+ */
 @OptIn(ExperimentalTestApi::class)
 class ComposeTest {
 

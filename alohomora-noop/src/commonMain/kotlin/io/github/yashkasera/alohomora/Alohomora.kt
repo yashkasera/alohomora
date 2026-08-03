@@ -68,6 +68,24 @@ object Alohomora {
     }
 
     // ============================================================================
+    // Error Recording - No-op
+    // ============================================================================
+
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    @JvmOverloads
+    fun recordError(throwable: Throwable, place: String? = null) {
+        /* no-op */
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    @JvmOverloads
+    fun recordError(reason: String, stackTrace: String? = null, place: String? = null) {
+        /* no-op */
+    }
+
+    // ============================================================================
     // DevTools TCP Server - No-op
     // ============================================================================
 

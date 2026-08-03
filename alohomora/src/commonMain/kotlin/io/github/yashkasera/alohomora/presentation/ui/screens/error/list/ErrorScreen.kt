@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Error
+import io.github.yashkasera.alohomora.common.exceptionTypeName
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
@@ -198,8 +199,7 @@ private fun ErrorListItem(
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                 ) {
                     Text(
-                        text = error.reason?.substringAfterLast(".")?.substringBefore(":")
-                            ?: "Unknown Exception",
+                        text = error.exceptionTypeName(),
                         // See EventsScreen: one list-row title style across the console.
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,

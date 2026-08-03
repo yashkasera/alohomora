@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
+import io.github.yashkasera.alohomora.common.exceptionTypeName
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
@@ -111,8 +112,7 @@ internal fun ErrorDetailsScreen(
                     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
                     Text(
-                        text = error.reason?.substringAfterLast(".")?.substringBefore(":")
-                            ?: "Unknown Exception",
+                        text = error.exceptionTypeName(),
                         style = MaterialTheme.typography.displaySmall.copy(
                             fontStyle = FontStyle.Italic,
                         ),
