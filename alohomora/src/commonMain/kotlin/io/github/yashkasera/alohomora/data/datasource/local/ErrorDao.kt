@@ -43,4 +43,19 @@ internal interface ErrorDao {
      */
     @Query("Update Error SET isViewed = 1 WHERE id = :id")
     suspend fun markAsViewed(id: Long)
+
+    /**
+     * Newest-first, **including `stackTrace`** — unlike [list], which projects it away to keep the
+     * console list cheap. The desktop snapshot needs the trace, because the desktop has no
+     * follow-up request for fetching one.
+     *
+     * Ordered by `id`, not `time`: ids are monotonic, so two errors recorded in the same
+     * millisecond still have a stable order, and the same key drives stream deduplication.
+     */
+    @Query("SELECT * FROM Error ORDER BY id DESC LIMIT :limit")
+    suspend fun getLatest(limit: Int): List<Error>
+
+    /** Reactive counterpart to [getLatest], for streaming newly recorded errors to the desktop. */
+    @Query("SELECT * FROM Error ORDER BY id DESC LIMIT :limit")
+    fun observeLatest(limit: Int): Flow<List<Error>>
 }

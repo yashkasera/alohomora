@@ -20,7 +20,10 @@ import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 
 @Database(
     entities = [Event::class, TrafficEntry::class, Error::class, Screen::class],
-    version = 2,
+    // 3: Error.id gained `autoGenerate`, which changes its column to AUTOINCREMENT. Required, not
+    // cosmetic — without it every insert used the default id 0 and `OnConflictStrategy.REPLACE`
+    // overwrote the previous row, so the table never held more than one error.
+    version = 3,
     exportSchema = false,
 )
 @ConstructedBy(AlohomoraDbConstructor::class)
