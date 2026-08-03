@@ -60,7 +60,7 @@ class AlohomoraPlugin : Plugin<Project> {
                 variantName.set(variant.name)
                 flavorName.set(variant.flavorName)
                 buildType.set(variant.buildType)
-                versionName.set(extension.versionName)
+                versionName.set(extension.versionName ?: project.version.toString())
                 versionCode.set(extension.versionCode)
                 val outputDirectory = project.layout.buildDirectory.dir(
                     "generated/alohomora/${variant.name}",

@@ -23,10 +23,11 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
 fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
-    val containerColor = if (call.isSuccessful().not())
-        MaterialTheme.colorScheme.errorContainer
-    else if(call.isViewed) MaterialTheme.colorScheme.surfaceVariant
-    else MaterialTheme.colorScheme.surfaceContainerLowest
+    val containerColor = when {
+        call.isSuccessful().not() -> MaterialTheme.colorScheme.errorContainer
+        call.isViewed -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MaterialTheme.colorScheme.background
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth()

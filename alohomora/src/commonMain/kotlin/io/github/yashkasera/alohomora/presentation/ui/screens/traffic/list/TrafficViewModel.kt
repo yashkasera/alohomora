@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @Immutable
-internal data class TraceState(
+internal data class TrafficState(
     val calls: List<TrafficEntry> = emptyList(),
     val isLoadingMore: Boolean = false,
     val error: String? = null,
@@ -48,14 +48,14 @@ internal class TrafficViewModel(
         },
     ).cachedIn(viewModelScope)
 
-    val state: StateFlow<TraceState> = combine(
+    val state: StateFlow<TrafficState   > = combine(
         pager.pagingData,
         query,
         method,
         showClearConfirmation,
         isClearing,
     ) { pagingData, _, _, showClear, clearing ->
-        TraceState(
+        TrafficState(
             calls = pagingData.items,
             isLoadingMore = pagingData.loadState is LoadState.Loading,
             error = (pagingData.loadState as? LoadState.Error)?.error?.message,
@@ -65,7 +65,7 @@ internal class TrafficViewModel(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = TraceState(),
+        initialValue = TrafficState(),
     )
 
     init {
@@ -94,7 +94,7 @@ internal class TrafficViewModel(
         showClearConfirmation.value = false
     }
 
-    fun clearAllTraces() {
+    fun clearAllTraffic() {
         viewModelScope.launch {
             isClearing.value = true
             try {

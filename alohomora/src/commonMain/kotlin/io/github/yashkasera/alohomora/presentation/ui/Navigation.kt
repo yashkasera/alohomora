@@ -45,7 +45,7 @@ internal fun AlohomoraNavHost(
 
         composable<Routes.Traffic> {
             TrafficScreen(
-                onTraceClick = { id -> navController.navigate(Routes.TrafficDetails(id)) },
+                onTrafficClick = { id -> navController.navigate(Routes.TrafficDetails(id)) },
                 onBackClick = navController::navigateUp
             )
         }

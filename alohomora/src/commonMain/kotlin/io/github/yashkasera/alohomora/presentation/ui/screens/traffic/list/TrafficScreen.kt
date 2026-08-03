@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
@@ -52,7 +52,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun TrafficScreen(
-    onTraceClick: (String) -> Unit,
+    onTrafficClick: (String) -> Unit,
     onBackClick: () -> Unit,
 ) {
     val viewModel = koinViewModel<TrafficViewModel>()
@@ -61,7 +61,7 @@ internal fun TrafficScreen(
     Scaffold(
         modifier = Modifier.systemBarsPadding(),
         topBar = {
-            TraceTopBar(onBackClick, state, viewModel)
+            TrafficTopBar(onBackClick, state, viewModel)
         },
     ) { padding ->
         if (state.calls.isEmpty()) {
@@ -77,7 +77,7 @@ internal fun TrafficScreen(
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                     items(state.calls, key = { it.id }) { call ->
-                        TraceItem(call = call, onClick = { onTraceClick(call.id) })
+                        TrafficItem(call = call, onClick = { onTrafficClick(call.id) })
                         AlohomoraHorizontalDivider()
                     }
                     // Spacer to avoid bottom bar overlap if scaffold padding isn't enough (usually it is)
@@ -91,13 +91,13 @@ internal fun TrafficScreen(
         if (state.showClearConfirmation) {
             ConfirmationBottomSheet(
                 config = ConfirmationConfig(
-                    title = "Clear All Traces",
-                    message = "Are you sure you want to delete all network request traces? This action cannot be undone.",
+                    title = "Clear All Traffic",
+                    message = "Are you sure you want to delete all network request traffic? This action cannot be undone.",
                     confirmButtonText = "Clear All",
                     dismissButtonText = "Cancel",
                     isDestructive = true,
                 ),
-                onConfirm = viewModel::clearAllTraces,
+                onConfirm = viewModel::clearAllTraffic,
                 onDismiss = viewModel::hideClearConfirmation,
             )
         }
@@ -105,18 +105,16 @@ internal fun TrafficScreen(
 }
 
 @Composable
-private fun TraceTopBar(
+private fun TrafficTopBar(
     onBackClick: () -> Unit,
-    state: TraceState,
+    state: TrafficState,
     viewModel: TrafficViewModel,
 ) {
     val searchQuery by viewModel.query.collectAsStateWithLifecycle()
     val selectedMethod by viewModel.method.collectAsStateWithLifecycle()
     Column {
         AlohomoraTopBar(
-            // "Trace", matching the module card that navigates here. The screen called
-            // itself "Traffic Logs" while the card said "Trace", so the two never agreed.
-            title = "Trace",
+            title = "Traffic",
             subtitle = if (state.calls.isEmpty()) null else "${state.calls.size} REQUESTS",
             navigationIcon = {
                 AlohomoraIconButton(onClick = onBackClick) {
@@ -124,7 +122,6 @@ private fun TraceTopBar(
                 }
             },
             actions = {
-                // Clear all button (only show if there are traces)
                 if (state.calls.isNotEmpty()) {
                     AlohomoraIconButton(
                         onClick = viewModel::showClearConfirmation,
@@ -146,16 +143,13 @@ private fun TraceTopBar(
                 placeholder = "Search endpoints",
             )
             Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
-            // FlowRow, not LazyRow. All five methods fit in two rows at any phone width; the
-            // scrolling row put DELETE past the right edge with no affordance saying so.
-            FlowRow(
+            LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = MaterialTheme.dimens.margin.xl),
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
             ) {
-                listOf("GET", "POST", "PUT", "PATCH", "DELETE").forEach { method ->
+                items(listOf("GET", "POST", "PUT", "PATCH", "DELETE")) { method ->
                     val isSelected = method.equals(selectedMethod, ignoreCase = true)
                     AlohomoraFilterChip(
                         label = method,
@@ -176,9 +170,7 @@ private fun TraceTopBar(
 }
 
 @Composable
-private fun TraceItem(call: TrafficEntry, onClick: () -> Unit) {
-    // Failures keep their red regardless of having been read — a viewed failure is still a
-    // failure. Everything else sinks to a dimmer surface once opened, matching the desktop row.
+private fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
     val containerColor = when {
         call.isSuccessful().not() -> MaterialTheme.colorScheme.errorContainer
         call.isViewed -> MaterialTheme.colorScheme.surfaceVariant
@@ -189,7 +181,10 @@ private fun TraceItem(call: TrafficEntry, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth()
             .background(containerColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
+            .padding(
+                horizontal = MaterialTheme.dimens.margin.xl,
+                vertical = MaterialTheme.dimens.margin.lg,
+            ),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
@@ -259,7 +254,6 @@ private fun TraceItem(call: TrafficEntry, onClick: () -> Unit) {
 
 @Composable
 private fun MethodBadge(method: String) {
-    // Design: POST/PUT/PATCH -> Black bg + White text. GET -> Border + Black text.
     val isWrite = method in listOf("POST", "PUT", "PATCH", "DELETE")
 
     val backgroundColor =

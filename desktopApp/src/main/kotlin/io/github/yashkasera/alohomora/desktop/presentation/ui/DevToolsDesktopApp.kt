@@ -71,11 +71,11 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.OtpProm
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.buildCommandActions
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.AdbToolsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.CachePanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ConfigPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DashboardContent
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DatabasePanel
-import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
-import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ConfigPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorsPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceDetailsSideModal
@@ -528,9 +528,9 @@ fun ColumnScope.Sidebar(
 
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(MaterialTheme.dimens.margin.lg),
+            .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+        contentPadding = PaddingValues(MaterialTheme.dimens.margin.lg)
     ) {
         itemsIndexed(visibleSections, key = { _, section -> section.title }) { index, section ->
             NavigationDrawerItem(

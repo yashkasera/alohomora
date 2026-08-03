@@ -79,7 +79,7 @@ private data class OverviewModule(
 
 private val builtInModules = listOf(
     OverviewModule(
-        title = "Trace",
+        title = "Traffic",
         subtitle = "LIVE STREAM",
         icon = Icons.ArrowLeftRight,
         isInverse = true,
