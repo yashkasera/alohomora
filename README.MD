@@ -39,18 +39,21 @@ Publish and consume from GitHub Packages:
 ### 3) Public API quick usage
 
 ```kotlin
+// Android auto-initializes via AndroidX Startup; call this only on iOS.
 Alohomora.init()
 
-Alohomora.log(message = "App started")
-Alohomora.recordTelemetry(name = "screen_opened", properties = mapOf("screen" to "home"))
+Alohomora.recordEvent(name = "screen_opened", properties = mapOf("screen" to "home"))
 
-Alohomora.recordTrace(
+// Only for clients Alohomora does not intercept — OkHttp and Ktor capture
+// automatically. See "Traffic Capture & Inspection" below.
+Alohomora.recordTraffic(
     status = 200,
     url = "https://api.example.com/users",
     method = "GET",
 )
 
-Alohomora.startDevToolsServer(8080)
+// Defaults to 53999, which is also what the desktop app defaults to.
+Alohomora.startDevToolsServer()
 Alohomora.stopDevToolsServer()
 
 Alohomora.registerAppDatabase(name = "app.db")
@@ -58,7 +61,7 @@ Alohomora.excludeAppDatabase(name = "cache.db")
 Alohomora.clearAppDatabaseOverrides()
 
 // Lets the console re-send a captured request through your client, so your
-// interceptors re-sign an edited payload. See "Trace Replay" below.
+// interceptors re-sign an edited payload. See "Traffic Replay" below.
 Alohomora.registerReplayHandler(ktorReplayHandler(myHttpClient))
 Alohomora.clearReplayHandler()
 val canReplay = Alohomora.isReplaySupported
@@ -71,6 +74,40 @@ Alohomora.registerPlugin(plugin)
 Alohomora.unregisterPlugin(pluginId = "my-plugin")
 val plugins = Alohomora.getPlugins()
 ```
+
+### 5) iOS build metadata (Xcode run-script phase)
+
+On Android the Gradle plugin code-generates branch, commit sha, dirty flag and recent commits into the
+build, and Alohomora picks them up automatically. An iOS app built from an `.xcodeproj` has no Gradle
+build for the plugin to hook, so the same metadata is collected by a script phase instead. Without it
+the Config panel shows `unknown` and GitHistory is empty; everything else works.
+
+Add a **Run Script** phase to your app target, placed **after** *Copy Bundle Resources*:
+
+```sh
+"$SRCROOT/../scripts/alohomora-build-info.sh"
+```
+
+Then:
+
+- **Untick "Based on dependency analysis"** and leave *Output Files* empty. Git state changes without
+  any input file changing, so a cached phase ships yesterday's commit sha.
+- **Set `ENABLE_USER_SCRIPT_SANDBOXING = NO`** if your project has it on (the Xcode 15+ template
+  default). The sandbox blocks reading `.git`, and the manifest ends up with no git metadata.
+- Nothing to add to *Copy Bundle Resources* — the script writes straight into the app bundle Xcode is
+  assembling, so nothing generated lands in git.
+
+Optional environment variables:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ALOHOMORA_MAX_COMMITS` | `50` | How much history GitHistory shows |
+| `ALOHOMORA_SLACK_WEBHOOK_URL` | unset | Enables Slack sharing. **Ignored unless `CONFIGURATION` is `Debug`** — it would otherwise ship as plaintext in the `.ipa`, recoverable with `unzip`. |
+
+`versionName`, `versionCode` and the bundle id are deliberately *not* injected: Alohomora reads them
+from `Bundle.main` at runtime, so `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` stay the single
+source of truth. A missing, stale or corrupt manifest is logged and ignored — it never fails
+`Alohomora.init()`.
 
 For deeper implementation details, see `NOOP_IMPLEMENTATION_GUIDE.md` (if present in your checkout).
 
@@ -87,9 +124,9 @@ The tool favors explanation over aggregation, structure over noise, and develope
 
 ## Key Features
 
-### API Logging & Inspection
+### Traffic Capture & Inspection
 
-All inbound and outbound API activity is captured as structured, queryable data.
+All outbound network activity is captured as structured, queryable data.
 
 This includes:
 
@@ -195,7 +232,7 @@ Instead of asking “why did this crash?”, developers can ask:
 - What assumptions were violated?
 - Where did reality diverge from expectation?
 
-### Trace Replay
+### Traffic Replay
 
 Open any captured request, edit the method, URL, headers or payload, and send it again — from the
 console on the device or from the desktop app.
@@ -205,7 +242,7 @@ feature. Anything your client derives per-request — a payload signature, a fre
 certificate pinning — is regenerated for the payload you just edited, so changing a body produces a
 matching signature instead of a 401. A request that Alohomora built and sent itself could not do
 this: it would carry the signature captured from the original body, and secret headers are stored
-redacted, so they are not recoverable from a trace at all.
+redacted, so they are not recoverable from a captured traffic entry at all.
 
 Register your client once at startup:
 
@@ -230,9 +267,9 @@ authentic-looking auth failures.
 
 Capture redacts `Authorization`, `Cookie`, `X-Api-Key` and a few others, and redacted values are
 dropped rather than replayed — your interceptor resupplies them. A bespoke `X-Signature` or
-`X-Timestamp` is *not* on that list, so it survives into the trace and would be forwarded verbatim.
-If your interceptor uses `addHeader` rather than `header`, the stale value then rides along beside the
-fresh one. Name them once at startup:
+`X-Timestamp` is *not* on that list, so it survives into the captured entry and would be forwarded
+verbatim. If your interceptor uses `addHeader` rather than `header`, the stale value then rides along
+beside the fresh one. Name them once at startup:
 
 ```kotlin
 ReplayHeaders.additionalStripList = setOf("X-Signature", "X-Timestamp", "X-Nonce")
@@ -256,7 +293,7 @@ not the `Retrofit` instance:
 ```kotlin
 val client = OkHttpClient.Builder()
     .addInterceptor(SigningInterceptor())   // your signing, auth, pinning…
-    .addInterceptor(TraceInterceptor())     // Alohomora capture
+    .addInterceptor(TrafficInterceptor())   // Alohomora capture
     .build()
 
 val retrofit = Retrofit.Builder()
