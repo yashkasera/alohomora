@@ -72,6 +72,17 @@ alohomora {
 }
 ```
 
+### iOS build-metadata injection
+
+The plugin has no iOS counterpart because an `.xcodeproj` build has no Gradle build to hook. `scripts/alohomora-build-info.sh` runs from an Xcode run-script phase and writes the same git metadata into the app bundle as `alohomora-build-info.json`; `discoverPlatformBuildConfig()` (`PlatformBuildConfig.ios.kt`) reads it at `Alohomora.init()`. **The shell script and `BundledBuildInfo` are one contract with no compiler between them** — `BundledBuildInfoTest` parses a verbatim copy of the script's output and is the only thing that catches a field rename on one side. Two rules the two producers share, both load-bearing:
+
+- **Commit timestamps are milliseconds.** `git log --pretty=%ct` emits seconds; both producers multiply once on the way out, or every commit renders as a 1970 date.
+- **The Slack webhook is Debug-only.** The script drops it unless `CONFIGURATION` is `Debug`, mirroring the Gradle task's `debuggable` gate — a plaintext resource in an `.ipa` is recoverable with `unzip`.
+
+The Android `actual` returns null on purpose: `AlohomoraInitializer` runs first with the `Context` and finds the plugin's generated config via `ServiceLoader`, and a bundled manifest must not beat it on the manual `init()` path. `versionName`, `versionCode`, `packageName` and `projectName` are read from `Bundle.main` rather than injected, so there is no second source of truth to drift.
+
+Note `apiDump` after adding an internal `@Serializable` class to `:alohomora`: the Compose compiler's `$stableprop` symbols leak into the klib dump even for internal types, so `klibApiCheck` fails on what is not an API change at all.
+
 ### DevTools TCP protocol
 
 Custom framed binary protocol defined in `alohomora-common`: 9-byte header (`magic=0x414C4F48`, `version=1`, `payloadLength`) + JSON payload → `DevToolsEnvelope(type, sequence, payload)`. **`alohomora-common` is a shared protocol contract** — changes here affect both the in-app library and the desktop app.

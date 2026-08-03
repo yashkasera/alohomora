@@ -6,6 +6,7 @@ import io.github.yashkasera.alohomora.Alohomora.isReplaySupported
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
+import io.github.yashkasera.alohomora.data.model.discoverPlatformBuildConfig
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
@@ -105,10 +106,14 @@ object Alohomora {
      *
      * Takes no Koin declaration: Alohomora's container is isolated and internal, so there
      * is nothing for a consumer to contribute to it.
+     *
+     * Build metadata is discovered, not passed in — see [discoverPlatformBuildConfig]. Accepting an
+     * `AlohomoraConfig` parameter here would have to be mirrored in `alohomora-noop`, and would put
+     * a Kotlin interface in front of Swift callers just to relay values the platform already knows.
      */
     fun init() {
         try {
-            AlohomoraInternal.init(config = null)
+            AlohomoraInternal.init(config = discoverPlatformBuildConfig())
         } catch (e: Throwable) {
             println("[Alohomora] init failed: ${e.message}")
         }
