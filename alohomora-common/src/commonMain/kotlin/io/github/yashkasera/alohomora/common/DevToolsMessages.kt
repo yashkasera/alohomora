@@ -96,6 +96,35 @@ data class CacheSnapshotMessage(
     val payload: CacheSnapshotPayload,
 ) : DevToolsMessage()
 
+/**
+ * Liveness probe. The client must answer with a [PongMessage].
+ *
+ * Sent by the device, not the client, because the device is the side that can be wedged by a
+ * peer that dies without a FIN: it allows one connection at a time and rejects every later
+ * client while the dead one is still attached, so the slot is unrecoverable short of restarting
+ * the app. Through an `adb forward` this is not hypothetical — the device's socket is to the
+ * on-device adb daemon and stays healthy after the host-side process is gone, so nothing at the
+ * TCP layer reveals the loss.
+ *
+ * Sent only to a client that set [AuthResponseMessage.heartbeatSupported]. A client that
+ * predates PING would decode this as [UnknownMessage] and correctly ignore it, which reads
+ * identically to a dead peer.
+ */
+@Serializable
+@SerialName("PING")
+data class PingMessage(override val sequence: Long) : DevToolsMessage()
+
+/**
+ * Answers a [PingMessage], echoing its sequence.
+ *
+ * Carries no payload and needs no handler beyond being received: the reply's arrival *is* the
+ * information. The sequence is echoed for log correlation, not matching — the device tracks how
+ * long its peer has been silent, not which individual ping went unanswered.
+ */
+@Serializable
+@SerialName("PONG")
+data class PongMessage(override val sequence: Long = 0) : DevToolsMessage()
+
 // ── Client → Server ──────────────────────────────────────────────────────────
 
 @Serializable
@@ -113,6 +142,17 @@ data class AuthResponseMessage(
      * pairing, and from clients that predate trust-on-first-use.
      */
     val token: String? = null,
+    /**
+     * Whether this client answers [PingMessage] with [PongMessage].
+     *
+     * Defaults to false so the device never pings a client that predates the heartbeat: such a
+     * client ignores the ping as an unknown type, which the device cannot tell from a dead peer
+     * and would reap on the session's first idle stretch. Declared here rather than in a
+     * post-auth message because the slot is held from the moment the socket is accepted — a
+     * client that goes silent while its OTP is still on screen wedges the device just as
+     * effectively as an authenticated one.
+     */
+    val heartbeatSupported: Boolean = false,
 ) : DevToolsMessage()
 
 /**

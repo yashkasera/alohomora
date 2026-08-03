@@ -12,11 +12,14 @@ import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
 import io.github.yashkasera.alohomora.common.DeviceErrorMessage
+import io.github.yashkasera.alohomora.common.DevToolsHeartbeat
+import io.github.yashkasera.alohomora.common.DevToolsLiveness
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.InitialStatePayload
+import io.github.yashkasera.alohomora.common.PingMessage
 import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
@@ -166,6 +169,17 @@ internal class DevToolsRuntime(
         // Reject rather than evict. The previous behaviour was last-writer-wins, which let
         // any unauthenticated peer repeatedly kick the developer's live session off (and
         // reset the displayed OTP each time) simply by reconnecting.
+        //
+        // Rejecting is only safe because the incumbent is reapable: an attached client that dies
+        // without a FIN used to hold this slot until the app was restarted. See
+        // DevToolsConnection.heartbeatLoop.
+        //
+        // One peer still escapes that: one which connects and then sends nothing at all, since the
+        // heartbeat is armed by the client's probe. A bound on pre-probe silence was considered and
+        // rejected — a client predating trust-on-first-use deliberately stays silent until the user
+        // types the OTP, so any bound short enough to be useful would drop it mid-pairing. Current
+        // clients send the probe unconditionally within milliseconds, which is also what the
+        // OTP_REVEAL_GRACE_MILLIS window already assumes.
         if (activeConnection != null) {
             println("[Alohomora] DevTools already has a client; rejecting additional connection.")
             socket.close()
@@ -234,6 +248,12 @@ internal class DevToolsRuntime(
         private val trafficSignatures = linkedMapOf<String, Int>()
         private val otp = (1000..9999).random().toString()
         private var isAuthenticated = false
+        private val liveness = DevToolsLiveness()
+
+        // Guards startHeartbeat against re-entry: the client sends an AuthResponseMessage twice
+        // on a first pairing (the token probe, then the code the user typed).
+        @Volatile
+        private var heartbeatStarted = false
 
         // Guards close() against re-entry: both loops call it from their finally blocks.
         @Volatile
@@ -305,6 +325,9 @@ internal class DevToolsRuntime(
                     // null means EOF, bad magic, version mismatch, over-size payload, or
                     // undecodable JSON — all terminal for this connection.
                     val message = DevToolsProtocol.readEnvelope(socket) ?: break
+                    // Before the auth gate: any frame at all proves the peer is alive, including
+                    // a PONG from a client still waiting for the user to type its code.
+                    liveness.recordSignOfLife()
                     if (!isAuthenticated) {
                         if (message is AuthResponseMessage) handleAuthResponse(message)
                         continue
@@ -363,6 +386,10 @@ internal class DevToolsRuntime(
         }
 
         private fun handleAuthResponse(message: AuthResponseMessage) {
+            // Started from the probe rather than from authenticate(): the connection slot is held
+            // from the moment the socket is accepted, so a client that dies while its code is on
+            // screen wedges the device exactly as thoroughly as an authenticated one.
+            if (message.heartbeatSupported) startHeartbeat()
             val token = message.token
             when {
                 // Known desktop: authenticate silently, show nothing, issue nothing new.
@@ -392,6 +419,46 @@ internal class DevToolsRuntime(
                     send(AuthFailureMessage(nextSequence(), "Invalid OTP"))
                     close()
                 }
+            }
+        }
+
+        /** Idempotent: only the first capable [AuthResponseMessage] starts the loop. */
+        private fun startHeartbeat() {
+            if (heartbeatStarted) return
+            heartbeatStarted = true
+            connectionScope.launch { heartbeatLoop() }
+        }
+
+        /**
+         * Pings the client and reclaims the connection once it stops answering.
+         *
+         * This is the only thing that can free the slot when a peer dies without a FIN — the case
+         * an `adb forward` produces routinely, because the device's socket is to the on-device adb
+         * daemon and stays healthy after the host process is gone. Neither existing loop notices:
+         * [readerLoop] is parked in a read with no timeout (deliberately — see [DevToolsLiveness]),
+         * and [writerLoop] only discovers a dead socket on a write it never makes while the app is
+         * idle. So [attachClient] went on rejecting every later client until the app was restarted.
+         *
+         * Reaping is by total silence, not by unanswered ping count: a session streaming traffic is
+         * already proving its liveness, and only an idle one needs provoking.
+         */
+        private suspend fun heartbeatLoop() {
+            while (true) {
+                delay(DevToolsHeartbeat.PING_INTERVAL_MILLIS)
+                // Checked before sending, so the ping about to go out is never counted as one the
+                // client failed to answer.
+                if (liveness.isPeerSilent()) {
+                    println(
+                        "[Alohomora] DevTools client silent for ${liveness.silentForMillis()}ms; " +
+                            "reclaiming the connection.",
+                    )
+                    close()
+                    return
+                }
+                // Queued, not written here. If the socket is already unwritable the writer is stuck
+                // and these accumulate in the unbounded control channel — bounded in practice by
+                // the handful of intervals it takes the check above to fire and close() to run.
+                send(PingMessage(nextSequence()))
             }
         }
 

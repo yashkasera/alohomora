@@ -76,7 +76,13 @@ alohomora {
 
 Custom framed binary protocol defined in `alohomora-common`: 9-byte header (`magic=0x414C4F48`, `version=1`, `payloadLength`) + JSON payload → `DevToolsEnvelope(type, sequence, payload)`. **`alohomora-common` is a shared protocol contract** — changes here affect both the in-app library and the desktop app.
 
-Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_PREFS`, `REQUEST_INITIAL_STATE`, `REQUEST_DATABASE_SCHEMA`, `REQUEST_DATABASE_TABLE`, `REQUEST_PREF_VALUE`, `REQUEST_CLEAR`, `REQUEST_REPLAY_TRACE`, `REPLAY_RESULT`.
+Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_PREFS`, `REQUEST_INITIAL_STATE`, `REQUEST_DATABASE_SCHEMA`, `REQUEST_DATABASE_TABLE`, `REQUEST_PREF_VALUE`, `REQUEST_CLEAR`, `REQUEST_REPLAY_TRACE`, `REPLAY_RESULT`, `PING`, `PONG`.
+
+**Liveness (`PING`/`PONG`):** the device pings an idle client every `DevToolsHeartbeat.PING_INTERVAL_MILLIS` and reaps `activeConnection` once the client has sent nothing for `SILENCE_TIMEOUT_MILLIS`. The desktop mirrors it, dropping the session when the device stops pinging. Both use the shared `DevToolsLiveness`, and both count *any* inbound frame — the ping exists only to manufacture one on an otherwise idle session.
+
+This is not interchangeable with a socket read timeout, and one must not be added: after auth the desktop legitimately sends nothing for minutes while it only receives streams, so a bare read timeout kills healthy idle sessions (it was tried and reverted). TCP keepalive is no help either — on an `adb forward` the device's socket is to the on-device adb daemon over loopback, and it stays genuinely healthy after the host process at the far end of the USB transport is gone. Only an end-to-end round trip separates "idle but alive" from "dead peer". Without one, the device held its single connection slot forever and rejected every later client until the app was restarted.
+
+The device pings only a client that sets `AuthResponseMessage.heartbeatSupported`, and the desktop arms its watchdog only after the first `PING` arrives. Both gates default to the old behaviour, because a peer predating the heartbeat ignores `PING` as an unknown type — indistinguishable from a dead one. **Never enforce silence against an unarmed peer.**
 
 `REPLAY_RESULT` is the only reply to a desktop→device command. Every other command either answers with a snapshot or is unobservable, but a replay can fail before any traffic exists (no handler registered, an unparseable hand-edited URL, a refused connection), and with no reply the desktop would wait forever on a traffic entry that is never coming. Device-side capabilities that a client must not assume — currently `InitialStatePayload.replaySupported` — default to `false`, so a newer desktop hides the action against an older app rather than sending into a void.
 

@@ -7,10 +7,14 @@ import io.github.yashkasera.alohomora.common.AuthSuccessMessage
 import io.github.yashkasera.alohomora.common.CacheSnapshotMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
 import io.github.yashkasera.alohomora.common.DeviceErrorMessage
+import io.github.yashkasera.alohomora.common.DevToolsHeartbeat
+import io.github.yashkasera.alohomora.common.DevToolsLiveness
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.InitialStateMessage
+import io.github.yashkasera.alohomora.common.PingMessage
+import io.github.yashkasera.alohomora.common.PongMessage
 import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
@@ -39,12 +43,15 @@ import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsReposito
 import io.github.yashkasera.alohomora.devtools.DevToolsSocket
 import io.github.yashkasera.alohomora.replay.ReplayRequest
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -122,10 +129,10 @@ class DevToolsRepositoryImpl(
                     // means the reconnect needs no OTP, so a resume can be invisible.
                     var attempt = 0
                     while (isActive && generation == myGeneration) {
-                        runSession(target, host, port, myGeneration)
+                        val established = runSession(target, host, port, myGeneration)
                         if (generation != myGeneration || !isActive) return@launch
 
-                        attempt += 1
+                        attempt = nextReconnectAttempt(attempt, established)
                         _state.value = DevToolsConnection.Reconnecting(host, port, attempt)
                         // Capped backoff. The common case is a foregrounded app coming straight
                         // back, so the first retries are quick; the cap keeps a genuinely dead
@@ -157,25 +164,32 @@ class DevToolsRepositoryImpl(
      *
      * Returns when the socket closes for any reason; the caller decides whether to retry. Never
      * throws for an ordinary drop — a failed attempt is normal here, not exceptional.
+     *
+     * @return whether this attempt reached AUTH_SUCCESS. A bare TCP connect is not proof of a
+     *   reachable device: an iOS app suspended in the background still has its socket bound, so
+     *   the connect completes out of the kernel's listen backlog and then hangs. Only the
+     *   handshake completing means something on the far side is running.
      */
     private suspend fun runSession(
         target: DevToolsTarget,
         host: String,
         port: Int,
         myGeneration: Int,
-    ) {
+    ): Boolean {
         var socket: DevToolsSocket? = null
+        var established = false
         try {
-            socket = when (target) {
+            val live = when (target) {
                 is DevToolsTarget.Tcp -> remoteDataSource.connect(target.host, target.port)
                 // usbmuxd hands back a socket already tunnelled to the device port, so there is
                 // no host-side forward to set up first.
                 is DevToolsTarget.Usbmux ->
                     remoteDataSource.connectOverUsbmux(target.usbmuxDeviceId, target.port)
             }
+            socket = live
             // A newer connect may have superseded us while we were connecting.
-            if (generation != myGeneration) return
-            connection = socket
+            if (generation != myGeneration) return false
+            connection = live
             _state.value = DevToolsConnection.AwaitingAuth(host, port)
             _switching.value = false
             // Offer whatever token we hold for this device before the user is asked for
@@ -183,9 +197,35 @@ class DevToolsRepositoryImpl(
             // display a code, so skipping it when we have no token would leave the prompt hidden
             // until the device's grace timer fired.
             sendMessage(
-                AuthResponseMessage(token = DesktopTrustPrefs.tokenFor(_currentDeviceId.value)),
+                AuthResponseMessage(
+                    token = DesktopTrustPrefs.tokenFor(_currentDeviceId.value),
+                    // Opts this session into PING/PONG. The device pings only a client that says
+                    // it will answer, so omitting this leaves the device unable to reclaim its
+                    // single connection slot when this process dies without a FIN.
+                    heartbeatSupported = true,
+                ),
             )
-            remoteDataSource.processConnection(socket, ::handleMessage)
+
+            val liveness = DevToolsLiveness()
+            val firstPing = CompletableDeferred<Unit>()
+            coroutineScope {
+                val watchdog = launch { watchSessionForSilence(liveness, firstPing, live) }
+                try {
+                    remoteDataSource.processConnection(live) { message ->
+                        liveness.recordSignOfLife()
+                        if (message is AuthSuccessMessage) established = true
+                        if (message is PingMessage) {
+                            firstPing.complete(Unit)
+                            sendMessage(PongMessage(sequence = message.sequence))
+                        }
+                        handleMessage(message)
+                    }
+                } finally {
+                    // coroutineScope waits for its children, so the watchdog has to be stopped
+                    // explicitly or a finished session would never return.
+                    watchdog.cancel()
+                }
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -199,6 +239,40 @@ class DevToolsRepositoryImpl(
                 _switching.value = false
                 // The result messages these were waiting on died with the socket.
                 replayStore.abandonInFlight()
+            }
+        }
+        return established
+    }
+
+    /**
+     * Drops the session once the device has gone silent, so the retry loop can rebuild it.
+     *
+     * The mirror image of the device's own reaper, and the same argument applies in reverse: a
+     * device that stops servicing its socket without closing it — an iOS app the OS suspended, a
+     * transport that went away — leaves this side parked in a read that never returns, showing
+     * "Connected" with zero throughput and no way back but a manual reconnect.
+     *
+     * Armed by the first PING rather than on connect. A device that predates the heartbeat sends
+     * nothing at all while idle, and enforcing silence against it would tear down healthy sessions
+     * every [DevToolsHeartbeat.SILENCE_TIMEOUT_MILLIS] for as long as nobody used the app.
+     */
+    private suspend fun watchSessionForSilence(
+        liveness: DevToolsLiveness,
+        firstPing: Deferred<Unit>,
+        socket: DevToolsSocket,
+    ) {
+        firstPing.await()
+        while (true) {
+            delay(DevToolsHeartbeat.PING_INTERVAL_MILLIS)
+            if (liveness.isPeerSilent()) {
+                println(
+                    "[Alohomora] Device silent for ${liveness.silentForMillis()}ms; " +
+                        "dropping the session to reconnect.",
+                )
+                // Closing is what ends the session: it fails the parked read, which returns from
+                // processConnection and hands control back to the retry loop.
+                socket.close()
+                return
             }
         }
     }
@@ -276,7 +350,7 @@ class DevToolsRepositoryImpl(
     override fun markEventViewed(id: Long) = eventStore.markViewed(id)
 
     override fun submitOtp(otp: String) {
-        scope.launch { sendMessage(AuthResponseMessage(otp = otp)) }
+        scope.launch { sendMessage(AuthResponseMessage(otp = otp, heartbeatSupported = true)) }
     }
 
     private suspend fun sendMessage(message: DevToolsMessage) {
@@ -425,3 +499,17 @@ private const val MAX_RECONNECT_DELAY_MS = 5_000L
 internal fun reconnectDelayMillis(attempt: Int): Long =
     (INITIAL_RECONNECT_DELAY_MS shl (attempt - 1).coerceIn(0, 4))
         .coerceAtMost(MAX_RECONNECT_DELAY_MS)
+
+/**
+ * The attempt number to pace the next reconnect by.
+ *
+ * A session that got as far as AUTH_SUCCESS proves the device is reachable, so the backoff starts
+ * over rather than continuing to climb. The counter used to live outside the retry loop and never
+ * reset, so a session that ran for an hour and then dropped resumed at the 5s cap — the slowest
+ * possible retry for the case with the best odds of succeeding immediately.
+ *
+ * Reset to 1, not 0: [reconnectDelayMillis] is 1-based, and the loop reports this number to the UI
+ * as "reconnecting (n)".
+ */
+internal fun nextReconnectAttempt(previous: Int, sessionEstablished: Boolean): Int =
+    if (sessionEstablished) 1 else previous + 1
