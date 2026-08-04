@@ -16,7 +16,13 @@ kotlin {
     jvmToolchain(17)
     android {
         namespace = "io.github.yashkasera.alohomora"
-        compileSdk = 37
+        // Deliberately not the newest SDK. A published library's compileSdk becomes a hard floor for
+        // every consumer via aar-metadata.properties: at 37 an app on AGP 8.13.2 fails
+        // checkDebugAarMetadata outright, because 36 is that AGP's ceiling. So compiling this against
+        // the newest SDK would silently require every consumer to be on AGP 9 — an absurd cost for a
+        // debug tool whose whole value is being easy to drop into an existing app. Raise it only when
+        // something here actually needs a newer API; nothing does today.
+        compileSdk = 36
         minSdk = 24
         androidResources.enable = true
         compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }

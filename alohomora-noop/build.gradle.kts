@@ -13,7 +13,8 @@ kotlin {
     jvmToolchain(17)
     android {
         namespace = "io.github.yashkasera.alohomora.noop"
-        compileSdk = 37
+        // Kept at the same floor as :alohomora — see the note there before raising it.
+        compileSdk = 36
         minSdk = 24
         compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
     }
