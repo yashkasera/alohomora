@@ -49,7 +49,12 @@ class EventStore {
         _events.value = emptyList()
     }
 
-    private companion object {
+    companion object {
+        /**
+         * Not private: the panel subtitle names this number when the store is full. The tail is dropped
+         * with no other signal, so a total that stalls at exactly the cap would otherwise be
+         * indistinguishable from a stalled stream.
+         */
         const val MAX_ENTRIES = 2000
     }
 }

@@ -1,6 +1,9 @@
 package io.github.yashkasera.alohomora.desktop.domain.service
 
+import io.github.yashkasera.alohomora.common.DateUtils
+import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.common.prettyProperties
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
@@ -40,6 +43,35 @@ class SlackShareService(
             buildInfo = buildInfo,
         )
         return postToWebhook(message, buildInfo?.slackWebhookUrl)
+    }
+
+    /**
+     * Posts one telemetry event, name and payload.
+     *
+     * Its own method rather than a generalised [buildTraceMessage]: an event has no method, status or
+     * duration, so the shared version would be four nullable fields wide to serve two callers.
+     */
+    suspend fun shareEvent(
+        event: Event,
+        recipientEmail: String,
+        buildInfo: BuildInfo?,
+    ): Result<Unit> {
+        val summary = buildString {
+            appendLine("📊 Event Shared")
+            appendLine()
+            appendLine("• Name: ${event.name}")
+            appendLine("• Time: ${DateUtils.format(event.time, DateUtils.Format.ISO_DATE_TIME)}")
+            appendLine()
+            appendLine("```\n${event.prettyProperties()}\n```")
+        }
+        return postToWebhook(
+            SlackMessage(
+                content = summary,
+                recipientEmail = recipientEmail,
+                buildIdentifier = buildInfo.toBuildIdentifier(),
+            ),
+            buildInfo?.slackWebhookUrl,
+        )
     }
 
     private fun buildTraceMessage(

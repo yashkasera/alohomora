@@ -20,9 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.prettyProperties
 import io.github.yashkasera.alohomora.ui.components.AlohomoraBottomSheetModal
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.icons.Copy
@@ -51,9 +51,7 @@ internal fun EventsDetailsSheet(
     )
     val clipboardManager = LocalClipboardManager.current
 
-    val formattedJson = remember(event.properties) {
-        formatJson(event.properties)
-    }
+    val formattedJson = remember(event) { event.prettyProperties() }
 
     val shareText = remember(event) {
         buildString {
@@ -133,27 +131,12 @@ internal fun EventsDetailsSheet(
                 modifier = Modifier.padding(bottom = 12.dp),
             )
 
-            // JSON code block
+            // Already indented by prettyProperties(), so no jsonPrettify: that would reparse the
+            // string back into a JsonElement to reformat what is already formatted.
             AlohomoraCodeBlock(
                 content = formattedJson,
                 isScrollable = true,
-                jsonPrettify = true,
             )
         }
-    }
-}
-
-/**
- * Formats a JSON element as a pretty-printed JSON string.
- */
-private fun formatJson(jsonElement: kotlinx.serialization.json.JsonElement?): String {
-    if (jsonElement == null) return "{}"
-    return try {
-        Alohomora.json.encodeToString(
-            kotlinx.serialization.json.JsonElement.serializer(),
-            jsonElement,
-        )
-    } catch (e: Exception) {
-        jsonElement.toString()
     }
 }

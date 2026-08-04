@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
+import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
@@ -115,6 +116,23 @@ class DevToolsViewModel(
     fun shareCurlToSlack(trace: TrafficEntry, email: String, onSuccess: () -> Unit = {}) {
         scope.launch {
             val result = slackShareService.shareCurl(trace, email, repository.buildInfo.value)
+            result.onSuccess {
+                _slackShareError.value = null
+                onSuccess()
+            }.onFailure { error ->
+                _slackShareError.value = error.message
+            }
+        }
+    }
+
+    /**
+     * Shares one event. Lives here rather than on [EventsViewModel] because the service and
+     * [slackShareError] already do, and the Events sheet reads that error the same way the traffic
+     * sheet does.
+     */
+    fun shareEventToSlack(event: Event, email: String, onSuccess: () -> Unit = {}) {
+        scope.launch {
+            val result = slackShareService.shareEvent(event, email, repository.buildInfo.value)
             result.onSuccess {
                 _slackShareError.value = null
                 onSuccess()

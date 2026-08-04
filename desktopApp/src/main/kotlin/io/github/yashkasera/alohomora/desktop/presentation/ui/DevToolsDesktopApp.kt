@@ -77,6 +77,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ConfigPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DashboardContent
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DatabasePanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorsPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
@@ -88,6 +89,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.CacheViewMo
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
@@ -113,6 +115,7 @@ fun DevToolsDesktopApp(
     databaseViewModel: DatabaseViewModel,
     cacheViewModel: CacheViewModel,
     tracesViewModel: TracesViewModel,
+    eventsViewModel: EventsViewModel,
     initialDeviceId: String? = null,
     showHelp: Boolean = false,
     onShowHelp: () -> Unit = {},
@@ -139,6 +142,9 @@ fun DevToolsDesktopApp(
     // Read from the view model rather than held here: the sheet's whole state (selection, collapse,
     // split) lives there, so a second copy of "which trace is open" could only ever disagree.
     val selectedTraceId by tracesViewModel.selectedTraceId.collectAsState()
+    // An id, not the Event, for the same reason as the trace above — and because markEventViewed
+    // replaces the instance in the store, so a captured copy would render a stale isViewed.
+    val selectedEventId by eventsViewModel.selectedEventId.collectAsState()
     var selectedDeviceId by remember(initialDeviceId) { mutableStateOf(initialDeviceId) }
     var isModifierHeld by remember { mutableStateOf(false) }
 
@@ -217,7 +223,7 @@ fun DevToolsDesktopApp(
         },
         onClearTraffic = { devToolsViewModel.clearTraffic() },
         onClearTraces = { tracesViewModel.clearTraces() },
-        onClearEvents = { devToolsViewModel.clearEvents() },
+        onClearEvents = { eventsViewModel.clearEvents() },
         onForceStop = {
             buildInfo?.packageName?.let { pkg ->
                 devicesViewModel.runCommand(selectedDeviceId, "shell am force-stop $pkg")
@@ -293,6 +299,10 @@ fun DevToolsDesktopApp(
                         selectedTraceId != null -> {
                             tracesViewModel.closeTrace(); return@onPreviewKeyEvent true
                         }
+
+                        selectedEventId != null -> {
+                            eventsViewModel.closeEvent(); return@onPreviewKeyEvent true
+                        }
                     }
                     return@onPreviewKeyEvent false
                 }
@@ -307,7 +317,7 @@ fun DevToolsDesktopApp(
                     when (activeSection) {
                         DesktopSection.Traffic -> devToolsViewModel.clearTraffic()
                         DesktopSection.Traces -> tracesViewModel.clearTraces()
-                        DesktopSection.Events -> devToolsViewModel.clearEvents()
+                        DesktopSection.Events -> eventsViewModel.clearEvents()
                         else -> {}
                     }
                     return@onPreviewKeyEvent true
@@ -429,7 +439,7 @@ fun DevToolsDesktopApp(
                                 onTraceClick = tracesViewModel::openTrace,
                             )
 
-                            DesktopSection.Events -> EventsPanel(devToolsViewModel = devToolsViewModel)
+                            DesktopSection.Events -> EventsPanel(eventsViewModel = eventsViewModel)
                             DesktopSection.Cache -> CachePanel(cacheViewModel = cacheViewModel)
                             DesktopSection.Errors -> ErrorsPanel(devToolsViewModel = devToolsViewModel)
                             DesktopSection.Config -> ConfigPanel(devToolsViewModel = devToolsViewModel)
@@ -479,6 +489,12 @@ fun DevToolsDesktopApp(
             TraceWaterfallSideSheet(
                 tracesViewModel = tracesViewModel,
                 onDismiss = tracesViewModel::closeTrace,
+            )
+
+            EventDetailsSideSheet(
+                eventsViewModel = eventsViewModel,
+                devToolsViewModel = devToolsViewModel,
+                onDismiss = eventsViewModel::closeEvent,
             )
         }
 

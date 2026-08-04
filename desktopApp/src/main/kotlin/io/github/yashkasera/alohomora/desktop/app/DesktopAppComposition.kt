@@ -8,10 +8,10 @@ import io.github.yashkasera.alohomora.desktop.data.local.CacheRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.local.CacheStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
-import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
+import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
 import io.github.yashkasera.alohomora.desktop.data.local.TrafficStore
 import io.github.yashkasera.alohomora.desktop.data.logcat.LogcatRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.domain.service.SlackShareService
@@ -36,9 +36,10 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.UninstallPackageUse
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.CacheViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
-import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -56,6 +57,7 @@ class DesktopAppComposition(
     val databaseViewModel: DatabaseViewModel
     val cacheViewModel: CacheViewModel
     val tracesViewModel: TracesViewModel
+    val eventsViewModel: EventsViewModel
 
     /** Everything [close] has to release. Held so per-window teardown is complete. */
     private val devToolsRepositoryRef: DevToolsRepositoryImpl
@@ -176,6 +178,7 @@ class DesktopAppComposition(
         )
 
         tracesViewModel = TracesViewModel(repository = devToolsRepository)
+        eventsViewModel = EventsViewModel(repository = devToolsRepository)
     }
 
     /**
@@ -193,6 +196,7 @@ class DesktopAppComposition(
         databaseViewModel.close()
         cacheViewModel.close()
         tracesViewModel.close()
+        eventsViewModel.close()
         devToolsRepositoryRef.close()
         // Only if we built it — a shared view model outlives this window.
         if (ownsDevicesViewModel) devicesViewModel.close()
