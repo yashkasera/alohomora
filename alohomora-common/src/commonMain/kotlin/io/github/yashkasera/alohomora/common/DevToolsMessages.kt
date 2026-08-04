@@ -96,6 +96,36 @@ data class StreamErrorMessage(
     val error: Error,
 ) : DevToolsMessage()
 
+/**
+ * One completed [Span], pushed as it is recorded.
+ *
+ * Per-span rather than per-completed-trace, because a trace has no observable end — it is finished
+ * when nobody starts another child, which is only knowable by timeout. Batching would mean either
+ * holding spans for seconds or guessing wrong on a long-running root, and "wait for the root" is the
+ * same lag by another name (`TraceSummary.rootSpanName`).
+ *
+ * The consequence the desktop must handle either way: a child can arrive before its parent, so it
+ * renders as a provisional root and re-parents itself later. `buildTraceTree` does that regardless,
+ * so batching by trace would buy nothing.
+ */
+@Serializable
+@SerialName("STREAM_SPAN")
+data class StreamSpanMessage(
+    override val sequence: Long,
+    val span: Span,
+) : DevToolsMessage()
+
+/**
+ * Answers [RequestTraceSpansMessage] with every span of one trace, ignoring the snapshot limit.
+ */
+@Serializable
+@SerialName("SNAPSHOT_TRACE_SPANS")
+data class TraceSpansSnapshotMessage(
+    override val sequence: Long,
+    val traceId: String,
+    val spans: List<Span>,
+) : DevToolsMessage()
+
 @Serializable
 @SerialName("SNAPSHOT_DATABASE")
 data class DatabaseSnapshotMessage(
@@ -182,6 +212,33 @@ data class RequestClearMessage(
     val traces: Boolean = false,
     val events: Boolean = false,
     val errors: Boolean = false,
+    /**
+     * Clears captured spans.
+     *
+     * Named `spans`, **not** `traces` — [traces] above already means *traffic* on this wire (see
+     * `DevToolsRuntime.handleClear`, which routes it to the traffic table), a misnomer that predates
+     * the vocabulary rule and is kept for interop. Reusing it for OpenTelemetry-style traces would
+     * silently wipe the wrong table.
+     */
+    val spans: Boolean = false,
+) : DevToolsMessage()
+
+/**
+ * Asks the device for every span of one trace.
+ *
+ * Needed because the snapshot truncates by rowid descending while a trace's spans are spread across
+ * rowids by *end* order: the root survives truncation — it ends last, so it has the highest rowid —
+ * while the earliest-finishing leaves are cut. A large trace would therefore render as a waterfall
+ * that looks complete and is not, which is worse than one that admits it is partial.
+ *
+ * Gate on [InitialStatePayload.spanCaptureSupported]: an app predating span capture decodes this as
+ * [UnknownMessage] and never replies, so an ungated request waits forever.
+ */
+@Serializable
+@SerialName("REQUEST_TRACE_SPANS")
+data class RequestTraceSpansMessage(
+    override val sequence: Long = 0,
+    val traceId: String,
 ) : DevToolsMessage()
 
 @Serializable
@@ -355,6 +412,11 @@ data class InitialStatePayload(
      * empty Errors panel instead of failing to decode the entire snapshot.
      */
     val errors: List<Error> = emptyList(),
+    /**
+     * Defaults to empty, as [errors] does, so a newer desktop talking to an app that predates span
+     * capture renders an empty Traces panel instead of failing to decode the entire snapshot.
+     */
+    val spans: List<Span> = emptyList(),
     val databaseSchema: DatabaseSchemaSnapshot,
     val databases: List<AppDatabaseInfo> = emptyList(),
     val selectedDatabase: String? = null,
@@ -370,4 +432,15 @@ data class InitialStatePayload(
      * request would go nowhere.
      */
     val replaySupported: Boolean = false,
+    /**
+     * Whether the app on the other end has span capture wired up — something has called
+     * `Alohomora.recordSpan` at least once.
+     *
+     * A session capability rather than build metadata, exactly like [replaySupported]: capture
+     * depends on the host app having registered a tracer adapter, which an app may simply not have
+     * done. Without it an empty Traces panel is indistinguishable from "no spans yet", and the
+     * desktop cannot tell whether [RequestTraceSpansMessage] will ever be answered. Defaults to
+     * false so a newer desktop degrades rather than sending into a void.
+     */
+    val spanCaptureSupported: Boolean = false,
 )

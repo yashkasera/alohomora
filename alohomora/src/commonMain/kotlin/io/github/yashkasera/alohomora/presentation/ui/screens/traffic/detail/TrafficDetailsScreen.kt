@@ -44,11 +44,11 @@ import org.koin.core.parameter.parametersOf
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun TrafficDetailsScreen(
-    traceId: String,
+    trafficId: String,
     onBackClick: () -> Unit = {},
-    onOpenTrace: (String) -> Unit = {},
+    onOpenTraffic: (String) -> Unit = {},
 ) {
-    val viewModel = koinViewModel<TrafficDetailsViewModel> { parametersOf(traceId) }
+    val viewModel = koinViewModel<TrafficDetailsViewModel> { parametersOf(trafficId) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val trace = state.trace
     // Held across recomposition: the sheet owns the user's edits from here on, so re-deriving the
@@ -121,7 +121,7 @@ internal fun TrafficDetailsScreen(
             // result lands in the same place either way, and hiding it would make a desktop replay
             // look like it produced nothing.
             state.replayResultTraceId?.let { resultId ->
-                ReplayResultBanner(onClick = { onOpenTrace(resultId) })
+                ReplayResultBanner(onClick = { onOpenTraffic(resultId) })
             }
             TrafficDetailsContent(trace = trace)
         }

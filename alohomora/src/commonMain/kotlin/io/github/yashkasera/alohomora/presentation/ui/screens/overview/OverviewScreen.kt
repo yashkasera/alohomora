@@ -61,6 +61,7 @@ import io.github.yashkasera.alohomora.ui.icons.Braces
 import io.github.yashkasera.alohomora.ui.icons.CircleAlert
 import io.github.yashkasera.alohomora.ui.icons.ClipboardList
 import io.github.yashkasera.alohomora.ui.icons.Database
+import io.github.yashkasera.alohomora.ui.icons.Waypoints
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Layers
@@ -86,6 +87,13 @@ private val builtInModules = listOf(
         route = Routes.Traffic,
     ),
     OverviewModule(
+        title = "Traces",
+        subtitle = "SPANS & LATENCY",
+        icon = Icons.Waypoints,
+        isInverse = false,
+        route = Routes.Traces,
+    ),
+    OverviewModule(
         title = "Events",
         subtitle = "SYSTEM TRIGGERS",
         icon = Icons.ClipboardList,
@@ -93,7 +101,7 @@ private val builtInModules = listOf(
         route = Routes.Events,
     ),
     OverviewModule(
-        title = "Vault",
+        title = "Database",
         subtitle = "INSPECTOR",
         icon = Icons.Database,
         isInverse = false,

@@ -82,6 +82,11 @@ Alohomora.recordTraffic(
     method = "GET",
 )
 
+// Alohomora ships no tracing SDK — you adapt whichever tracer you already run.
+// Timestamps are epoch NANOSECONDS. See "Traces" below.
+Alohomora.recordSpan(traceId, spanId, name = "GET /posts", startEpochNanos, endEpochNanos)
+Alohomora.recordSpan(name = "image_decode", durationNanos = elapsed)
+
 // Defaults to 53999, which is also what the desktop app defaults to.
 Alohomora.startDevToolsServer()
 Alohomora.stopDevToolsServer()
@@ -311,9 +316,9 @@ Injected at build time — see [Build metadata (Android)](#build-metadata-androi
 
 ### Desktop-only panels
 
-Traffic, Events, Database, Cache, Errors, Config and Git History all work for any connected device.
-The desktop app adds three more that need host-side tooling, so they are gated on device capability
-and hidden for an iOS device:
+Traffic, Events, Database, Cache, Errors, Config and Git History all work for any connected device,
+and so does Traces once the app has recorded a span. The desktop app adds three more that need
+host-side tooling, so they are gated on device capability and hidden for an iOS device:
 
 - **Dashboard** — live device metrics
 - **Logcat** — streamed device log
@@ -446,6 +451,206 @@ silently corrupted data and make your server look at fault.
 Replay is a real request with real side effects. There is no dry run.
 
 This is not load testing. It is time travel for debugging.
+
+### Traces
+
+Distributed traces from the tracer your app already runs, rendered as a waterfall in the desktop app:
+a trace groups spans by trace id, nests them by parent, and shows each one's name, kind, duration,
+status, attributes and events.
+
+**Alohomora depends on no tracing SDK.** It exposes one function, and you write a short adapter from
+whatever tracer you have:
+
+```kotlin
+Alohomora.recordSpan(
+    traceId = "4bf92f3577b34da6a3ce929d0e0e4736",   // W3C Trace Context, 32 hex chars
+    spanId = "00f067aa0ba902b7",                    // 16 hex chars
+    parentSpanId = null,                            // null, or 16 zeros, for a root
+    name = "GET /posts",
+    startEpochNanos = start,
+    endEpochNanos = end,
+    kind = "CLIENT",
+    statusCode = "ERROR",
+    statusDescription = "HTTP 404",
+    attributes = mapOf("http.response.status_code" to "404"),
+    events = listOf(SpanEvent("retry", epochNanos = start + 1_000_000, attributes = null)),
+    scopeName = "com.example.network",
+)
+
+// For timing one block with no surrounding trace. Renders as a single-span trace, and cannot
+// be parented — use the full form whenever the work is part of something larger.
+Alohomora.recordSpan(name = "image_decode", durationNanos = elapsed)
+```
+
+That inversion is deliberate, and it is the same reasoning as the deliberately absent
+[`retrofitReplayHandler`](#retrofit): every tracer's export hook is vendor-specific, so a
+library-side adapter would serve exactly one vendor while dragging its SDK into both published
+artifacts. Handing over strings and longs instead costs you fifteen lines and costs everyone else
+nothing.
+
+Two rules matter more than the rest.
+
+**Timestamps are epoch nanoseconds, and converting is the adapter's job.** OpenTelemetry emits
+nanoseconds already. Sentry emits fractional seconds as a `Double`, so multiply by `1e9`. Anything
+reporting milliseconds multiplies by `1_000_000`. Get it wrong and every span renders as a 1970 date.
+Nanoseconds rather than the milliseconds Alohomora uses everywhere else because a waterfall needs
+sub-millisecond resolution: at millisecond precision five sequential 200 µs spans render as five
+simultaneous ones, which is a wrong picture rather than a coarse one.
+
+**Put the adapter in `src/main`, not a debug-only source set.** `alohomora-noop` mirrors `recordSpan`
+as a no-op, so the same adapter compiles and runs in release and quietly discards every span — and
+R8 removes the call along with the argument construction. A `debugImplementation`-only adapter would
+mean maintaining a second tracer wiring for release to fall back to. This is the point of the
+inversion, not a workaround for it.
+
+`kind` and `statusCode` take your tracer's own vocabulary as free-form strings — OpenTelemetry
+`SpanKind` and `StatusCode` names, Sentry's `op` and `SpanStatus`, anything. Unrecognised values are
+stored as given rather than rejected, so a newer SDK's values round-trip. Use `"ERROR"` for
+`statusCode` to get the failure styling.
+
+The Traces panel stays hidden until the app has recorded its first span. Because Alohomora ships no
+tracer, there is nothing it could inspect to find out whether one is wired up, so an empty panel would
+be indistinguishable from an app that will never produce a trace.
+
+#### OpenTelemetry
+
+A `SpanExporter` is the whole adapter. `showcaseApp` runs exactly this one — see
+`showcaseApp/src/main/kotlin/.../tracing/`:
+
+```kotlin
+class AlohomoraSpanExporter : SpanExporter {
+
+    override fun export(spans: Collection<SpanData>): CompletableResultCode {
+        spans.forEach { span ->
+            Alohomora.recordSpan(
+                traceId = span.traceId,
+                spanId = span.spanId,
+                name = span.name,
+                // No conversion needed: OpenTelemetry already reports epoch nanoseconds.
+                startEpochNanos = span.startEpochNanos,
+                endEpochNanos = span.endEpochNanos,
+                // A root's parent is 16 zeros here, never null. Alohomora normalises that.
+                parentSpanId = span.parentSpanId,
+                kind = span.kind.name,
+                statusCode = span.status.statusCode.name,
+                statusDescription = span.status.description,
+                attributes = span.attributes.toStringMap(),
+                events = span.events.map { event ->
+                    SpanEvent(
+                        name = event.name,
+                        epochNanos = event.epochNanos,
+                        attributes = event.attributes.toStringMap(),
+                    )
+                },
+                scopeName = span.instrumentationScopeInfo.name,
+            )
+        }
+        // Success immediately, because recordSpan is fire-and-forget — there is nothing to
+        // await. Returning an *uncompleted* result is the trap: BatchSpanProcessor's worker
+        // waits on it and would stall for its full 30-second export timeout per batch.
+        return CompletableResultCode.ofSuccess()
+    }
+
+    override fun flush(): CompletableResultCode = CompletableResultCode.ofSuccess()
+
+    override fun shutdown(): CompletableResultCode = CompletableResultCode.ofSuccess()
+}
+
+// OTel attribute values are also Long, Double, Boolean and List; recordSpan takes strings.
+private fun Attributes.toStringMap(): Map<String, String> =
+    asMap().entries.associate { (key, value) -> key.key to value.toString() }
+```
+
+Register it as one processor among however many you already have, so the same spans still reach your
+collector:
+
+```kotlin
+SdkTracerProvider.builder()
+    .addSpanProcessor(BatchSpanProcessor.builder(AlohomoraSpanExporter()).build())
+    .addSpanProcessor(BatchSpanProcessor.builder(otlpExporter).build())
+    .build()
+```
+
+Declare the OpenTelemetry dependency in **your** module. Alohomora does not, and that is the proof
+nothing leaks:
+
+```kotlin
+implementation("io.opentelemetry:opentelemetry-sdk-trace:1.51.0")
+```
+
+#### Sentry
+
+Sentry has no exporter interface. The hook is `beforeSendTransaction`, which sees each finished
+transaction on its way out:
+
+```kotlin
+SentryAndroid.init(context) { options ->
+    // Two parameters, transaction and Hint — a single-parameter lambda will not compile.
+    options.setBeforeSendTransaction { txn, _ ->
+        txn.spans.forEach { span ->
+            Alohomora.recordSpan(
+                traceId = span.traceId.toString(),
+                spanId = span.spanId.toString(),
+                parentSpanId = span.parentSpanId?.toString(),
+                // op is the operation ("http.client", "db"); description is the detail.
+                name = span.description ?: span.op,
+                // Sentry reports FRACTIONAL SECONDS as a Double. This multiplication is the
+                // whole reason this adapter is longer than the OpenTelemetry one.
+                startEpochNanos = (span.startTimestamp * 1e9).toLong(),
+                // timestamp is null for an unfinished span; fall back to the start so it
+                // renders as instantaneous rather than in 1970.
+                endEpochNanos = span.timestamp?.let { (it * 1e9).toLong() }
+                    ?: (span.startTimestamp * 1e9).toLong(),
+                kind = span.op,
+                // SpanStatus is an enum with no isError() helper, and OK is the only value
+                // that is not a failure. An unset status is neither.
+                statusCode = when (span.status) {
+                    null -> "UNSET"
+                    SpanStatus.OK -> "OK"
+                    else -> "ERROR"
+                },
+                statusDescription = span.status?.apiName(),
+                attributes = span.data?.mapValues { it.value.toString() } ?: span.tags,
+                // events is left at its default. Sentry has no per-span event concept —
+                // breadcrumbs live on the transaction with no span association.
+                scopeName = span.origin,
+            )
+        }
+        // Returned unchanged. Alohomora observes; returning null here would drop the
+        // transaction and stop it reaching Sentry.
+        txn
+    }
+}
+```
+
+The transaction's own root span is not in `txn.spans` — read it off `txn.contexts.trace`
+(`getTraceId()`, `getSpanId()`, and `getOperation()`, *not* `getOp()`) with `txn.transaction` as the
+name and `txn.startTimestamp` / `txn.timestamp` as the bounds. Two caveats:
+`io.sentry.protocol.SentrySpan` is annotated `@ApiStatus.Internal` even though `txn.spans` is public,
+so keep the mapping in this one adapter rather than spreading the type around; and `txn.spans`
+returns the live backing list, so do not mutate it.
+
+#### Datadog and Firebase Performance
+
+Neither exposes a general span-export hook, so there is no adapter to write. Call `recordSpan` at the
+trace sites instead — the same place you start and stop the vendor's span:
+
+```kotlin
+val trace = FirebasePerformance.getInstance().newTrace("checkout")
+trace.start()
+val startNanos = System.nanoTime()
+try {
+    checkout()
+} finally {
+    trace.stop()
+    // nanoTime, not currentTimeMillis: this is a duration, and the wall clock can step
+    // mid-operation. The short overload stamps the wall-clock end itself.
+    Alohomora.recordSpan(name = "checkout", durationNanos = System.nanoTime() - startNanos)
+}
+```
+
+Spans stream to the desktop app over the DevTools protocol like everything else, and clearing the
+console clears them.
 
 ### Developer-Centric UI
 

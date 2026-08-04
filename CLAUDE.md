@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Is
 
-Alohomora is a developer observability and debugging toolkit for Android/iOS apps, delivered as a Kotlin Multiplatform library. It captures traffic, events, database state, cache, and errors from a running debug app and streams them in real time to a companion Compose Desktop app via a custom binary TCP protocol over ADB port forwarding.
+Alohomora is a developer observability and debugging toolkit for Android/iOS apps, delivered as a Kotlin Multiplatform library. It captures traffic, distributed traces, events, database state, cache, and errors from a running debug app and streams them in real time to a companion Compose Desktop app via a custom binary TCP protocol over ADB port forwarding.
 
 ## Build Commands
 
@@ -42,7 +42,7 @@ Alohomora is a developer observability and debugging toolkit for Android/iOS app
 | `alohomora` | KMP library (Android + iOS) | Full debug-time library: public API, Room DB, DevTools TCP server, Koin DI, Compose UI |
 | `alohomora-noop` | KMP library (Android + iOS + JVM) | Production no-op mirror of the same public API. Zero runtime overhead. |
 | `alohomora-common` | KMP library (Android + iOS + JVM) | Shared data models, Room entities, binary protocol types. Used by both `alohomora` and `desktopApp`. |
-| `alohomora-ui` | KMP library (Android + iOS + JVM) | Shared Compose UI components, icons, and theming. |
+| `alohomora-ui` | KMP library (Android + iOS + JVM) | Shared Compose UI components (incl. the trace waterfall), icons, and theming. Depends on `alohomora-common` for the models the waterfall renders. |
 | `alohomora-gradle-plugin` | Gradle plugin (included build) | Code-generates `AlohomoraBuildGenerationInfo` from Git metadata at build time. |
 | `desktopApp` | JVM Compose Desktop app | Standalone Mac/Windows/Linux companion. Connects via ADB, renders all captured data. |
 | `showcaseApp` | Android application | Sample integration. Uses `alohomora-noop` intentionally (plugin switches which lib is used per variant). |
@@ -98,11 +98,61 @@ Note `apiDump` after adding an internal `@Serializable` class to `:alohomora`: t
 
 iOS covers **Kotlin exceptions only**. `NSException` and Swift `fatalError` need `NSSetUncaughtExceptionHandler` / signal handlers, which Alohomora deliberately does not install — competing for those is how a debug library breaks a host app's crash reporter. Swift callers use the `recordError(reason:stackTrace:place:)` overload, which exists because a Swift `Error` is not a `KotlinThrowable`.
 
+### Trace capture
+
+`Alohomora.recordSpan(...)` is the entire ingestion surface. **Alohomora depends on no tracing SDK, and
+must not gain one.** The host app writes a ~15-line adapter from whatever tracer it already runs; the
+README carries ready-made ones for OpenTelemetry and Sentry, and `showcaseApp` wires the OTel one.
+
+This is the `registerReplayHandler` shape, not the `TrafficInterceptor` shape, and the distinction is the
+whole design. An interceptor exists because capture must happen *inside* the request pipeline — there is
+no other way to see a body. A tracer already holds the span data and only needs somewhere to hand it.
+Every candidate hook is vendor-specific (OTel `SpanExporter`, Sentry `beforeSendTransaction`, Datadog's
+own tracer, Firebase Performance with no export hook at all), so a library-side adapter would serve one
+vendor while dragging its SDK into two published modules — the same argument that keeps
+`retrofitReplayHandler` out. Shipping the adapter also bought a `CompletableResultCode` lifecycle
+(uncompleted results stall `BatchSpanProcessor` 30s per batch), a `compileOnly` dependency in both
+`:alohomora` and `:alohomora-noop`, hand-maintained noop parity for a class `apiCheck` cannot see, and two
+code paths where iOS needed `recordSpan` anyway. All of it evaporates because `recordSpan` is
+fire-and-forget, so an adapter's `export` can return `ofSuccess()` immediately.
+
+- **Timestamps are epoch nanoseconds, and the adapter converts.** The one domain that does not follow the
+  milliseconds rule. Milliseconds would be wrong twice: a sub-millisecond span is a zero-width waterfall
+  bar, and ordering *within* a millisecond collapses, so five sequential 200 µs calls render as five
+  simultaneous ones — a wrong picture, not a coarse one. There are already two producers that disagree
+  (OTel emits nanos, Sentry fractional seconds as a `Double`), which is why every field carries `Nanos` in
+  its name and why `TraceWindow`/`formatOffset` never see a bare `time`.
+- **`kind` and `statusCode` are `String`, not enums.** They carry the source tracer's vocabulary, so an
+  unrecognised value must round-trip rather than fail to decode. `spanBarColor` maps unknown kinds to the
+  internal colour for the same reason.
+- **Tree assembly is rebuilt, never mutated** (`buildTraceTree`). A parent span ends *after* its children
+  and export order is not guaranteed, so a child routinely arrives before its parent: orphans are promoted
+  to roots and flagged, and re-parent themselves for free on the next rebuild. Do not make this
+  incremental. Cycles terminate via a visited set, because `recordSpan` is public and a hand-written
+  adapter can produce one.
+- **Skew is surfaced, not corrected.** A span whose end precedes its start renders as instantaneous with a
+  `SKEW` chip; a child outside its parent's bounds is marked, never clamped. Clamping fabricates data and
+  hides the bug someone opened the panel to find.
+- **Bar geometry lives in `TraceWindow.barGeometry`, not in the draw scope.** The minimum-width clamp is
+  what keeps instantaneous and sub-pixel spans visible — most instrumented calls are under one pixel of a
+  1-second trace — and a draw scope is unreachable from a test.
+- **`SpanStore` evicts whole traces, never individual spans.** Trimming a flat list mid-trace leaves
+  survivors *permanently* parentless, since the parent was evicted rather than merely late. A partial
+  trace that looks live is worse than no trace.
+- **Trace grouping has exactly one implementation** (`List<Span>.toTraceSummaries()` in
+  `alohomora-common`). Deliberately no SQL aggregate on the device: the desktop has no database and must
+  group in Kotlin anyway, and two implementations of one definition is how the consoles came to disagree
+  on an error row's title before `exceptionTypeName()` was shared. The cost is that the mobile list covers
+  the latest `SPAN_SNAPSHOT_LIMIT` spans rather than all history, which is what the desktop already shows.
+- **`SpanCaptureRegistry` is a one-way latch** reported as `InitialStatePayload.spanCaptureSupported`.
+  Since no SDK can be inspected, it is the only way to tell "this app has no tracer" from "no traces yet",
+  and it gates `REQUEST_TRACE_SPANS` so a newer desktop never waits on an older app.
+
 ### DevTools TCP protocol
 
 Custom framed binary protocol defined in `alohomora-common`: 9-byte header (`magic=0x414C4F48`, `version=1`, `payloadLength`) + JSON payload → `DevToolsEnvelope(type, sequence, payload)`. **`alohomora-common` is a shared protocol contract** — changes here affect both the in-app library and the desktop app.
 
-Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_PREFS`, `REQUEST_INITIAL_STATE`, `REQUEST_DATABASE_SCHEMA`, `REQUEST_DATABASE_TABLE`, `REQUEST_PREF_VALUE`, `REQUEST_CLEAR`, `REQUEST_REPLAY_TRACE`, `REPLAY_RESULT`, `PING`, `PONG`, `STREAM_ERROR`.
+Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_PREFS`, `REQUEST_INITIAL_STATE`, `REQUEST_DATABASE_SCHEMA`, `REQUEST_DATABASE_TABLE`, `REQUEST_PREF_VALUE`, `REQUEST_CLEAR`, `REQUEST_REPLAY_TRACE`, `REPLAY_RESULT`, `PING`, `PONG`, `STREAM_ERROR`, `STREAM_SPAN`, `SNAPSHOT_TRACE_SPANS`, `REQUEST_TRACE_SPANS`.
 
 **Liveness (`PING`/`PONG`):** the device pings an idle client every `DevToolsHeartbeat.PING_INTERVAL_MILLIS` and reaps `activeConnection` once the client has sent nothing for `SILENCE_TIMEOUT_MILLIS`. The desktop mirrors it, dropping the session when the device stops pinging. Both use the shared `DevToolsLiveness`, and both count *any* inbound frame — the ping exists only to manufacture one on an otherwise idle session.
 
@@ -128,7 +178,7 @@ The device pings only a client that sets `AuthResponseMessage.heartbeatSupported
 
 **DI:** Koin `appModule` provides repositories, use cases, ViewModels, `DevToolsRuntime`, and `SlackShareService`. `platformModule` is `expect`/`actual` — Android provides Room database builder, `AndroidCacheInspector`, `AndroidAppDatabaseProvider`, `DevToolsTcpServer`, and `ShareManager`.
 
-**Persistence:** `AlohomoraDb : RoomDatabase` with four entities (`TrafficEntry`, `Event`, `Error`, `Screen`). Uses bundled SQLite. The database undergoes a `PRAGMA quick_check` health validation at startup; corrupt databases are deleted and recreated.
+**Persistence:** `AlohomoraDb : RoomDatabase` (currently `version = 4`) with five entities (`TrafficEntry`, `Event`, `Error`, `Screen`, `Span`). Uses bundled SQLite. The database undergoes a `PRAGMA quick_check` health validation at startup; corrupt databases are deleted and recreated.
 
 **Layering:** `data/datasource/local/` (Room DAOs) → `data/repository/` (impls) → `domain/repository/` (interfaces, base `Repository<T, ID>`) → `domain/usecase/` (one operation per class) → `presentation/ui/screens/` (Compose screens + Koin ViewModels).
 
@@ -244,11 +294,18 @@ To add a new icon: find it on [https://lucide.dev/icons/](https://lucide.dev/ico
 - **`expect`/`actual` boundaries:** `DevToolsDatabaseInspector`, `DevToolsTcpServer`, `isDebugBuild`, `platformModule`, `CacheRepositoryImpl`, `DatabaseRepositoryImpl`, `ShareManager` all have platform-specific `actual` implementations. **When modifying these, update all three (Android, iOS, Desktop).**
 - **API validation:** Only `alohomora` and `alohomora-noop` are API-validated (not `desktopApp`, `showcaseApp`, `alohomora-common`, `alohomora-ui`). Run `./gradlew apiCheck` before any commit that changes the public surface; run `./gradlew apiDump` to update the `.api` golden files.
 - **Noop parity is enforced by `./gradlew consumerParity`**, which the root `check` depends on. It diffs the `Alohomora` object's member list out of both klib dumps and fails on divergence, so a mismatch no longer waits for a consumer's release build to surface. It depends on both `apiCheck` tasks, because comparing two stale dumps would report parity that does not exist — so run `apiDump` after any public change, then `consumerParity`. Types `alohomora` re-exports from `alohomora-common` (`ReplayRequest`, `CustomScreenPlugin`) appear in the noop dump but not in `alohomora`'s; that asymmetry is fine, the task only compares the object's own members.
-- **Room migrations:** `AlohomoraDb` sets `exportSchema = false` and both platforms use `fallbackToDestructiveMigration(true)`, so there are no schema JSON files to update and no migrations to write — but **bumping `version` wipes every captured traffic, event and error on the next launch.** Bump it (with a comment saying what changed) whenever an entity gains or loses a column; skipping the bump crashes at startup instead.
+- **Room migrations:** `AlohomoraDb` sets `exportSchema = false` and both platforms use `fallbackToDestructiveMigration(true)`, so there are no schema JSON files to update and no migrations to write — but **bumping `version` wipes every captured traffic entry, event, error and span on the next launch.** Bump it (with a comment saying what changed) whenever an entity gains or loses a column; skipping the bump crashes at startup instead.
 - **Slack integration** exists in both `alohomora` (mobile) and `desktopApp` via `SlackShareService`.
-- **Naming:** The console uses consistent terminology across all three platforms (Traffic, Events, Database, Errors, Cache, Config, Git History). Names should not be repeated in UI (e.g., top bar says "Traffic", content should not re-title itself).
+- **Naming:** The console uses consistent terminology across all three platforms (Traffic, Traces, Events, Database, Errors, Cache, Config, Git History). Names should not be repeated in UI (e.g., top bar says "Traffic", content should not re-title itself).
 - **Vocabulary:** Use the same terms everywhere:
   - Network requests = **Traffic** (not "Trace", "API Logs", or "Traffic Logs")
+  - Distributed traces = **Traces**. One record is a **Trace** (every span sharing a `traceId`); its
+    parts are **Spans**. "Trace" now means *only* this. Identifiers that used `trace` to mean traffic
+    were renamed (`TrafficDetailsSideSheet`, `selectedTrafficForSheet`, `trafficId`); the wire names
+    `REQUEST_REPLAY_TRACE`, `RequestClearMessage.traces` and `ReplayResultMessage.sourceTraceId` keep
+    the old spelling for interop and are the **only** exceptions. Note the trap:
+    `RequestClearMessage.traces` clears *traffic* — spans are cleared by `.spans`.
+  - The time-sliced span view is the **waterfall** (not "gantt" or "timeline")
   - Re-sending a captured traffic = **Replay** (not "resend", "retry" or "relay")
   - User/system events = **Events** (not "Telemetry")
   - Database + key-value store = **Database** (not "Vault")
@@ -278,6 +335,9 @@ The console implements trust-on-first-use (TOFU) authentication:
 - **`commonTest` only reaches Android because `withHostTest {}` is set** on the android target in `alohomora/build.gradle.kts`. Without it the build emits a *warning* and silently compiles `commonTest` for iOS alone, so the Android half of every `expect`/`actual` pair goes untested. If you add a platform actual, add a test that runs on that platform — `CrashHandlerTest` is in `androidHostTest` precisely because `Thread.setDefaultUncaughtExceptionHandler` has no iOS analogue.
 - **Compose UI tests cannot live in `commonTest`.** `runComposeUiTest` reads `android.os.Build.FINGERPRINT` on the Android host and NPEs in a plain JVM unit test; `ComposeTest` is in `iosTest` for that reason. Robolectric would be the alternative and is not worth a test-only Android runtime in the library.
 - **Process-global one-shot state needs a test reset.** `ErrorCapture.claimFatal()` is deliberately never reset in production, so `resetFatalClaimForTest()` exists and both error tests call it in `@BeforeTest`. Without that, whichever test ran a crash handler first decided the other's result.
+- **No commas in backticked test names.** Kotlin/Native rejects them (`Name contains illegal characters: ","`), so any test in a source set that compiles for iOS — `commonTest` in either `:alohomora` or `:alohomora-common` — fails to compile while `jvmTest` passes happily. Reword rather than reach for a comma; only a full `check` (or an iOS target compile) catches it.
+- **`alohomora-common` now has a `commonTest` source set**, run with `./gradlew :alohomora-common:jvmTest`. Note there is **no `withHostTest {}`** on its android target, so those tests reach the JVM and iOS targets but *not* the Android host — fine for the pure trace logic that lives there (`TraceTree`, `TraceTimeScale`, `TraceSummary`, `SpanSelfTime`), but do not put an `expect`/`actual` test there expecting Android coverage.
+- **Prefer a pure test over a Compose one, and move the arithmetic out to make that possible.** The waterfall's minimum-bar-width clamp originally lived inside a `DrawScope`, where nothing could reach it; it moved to `TraceWindow.barGeometry` purely so `TraceTimeScaleTest` could assert it. `TraceWaterfallTest` is deliberately three tests covering only what a real composition can show (a zero-duration span still gets laid out, collapse hides a subtree, a click reports the right span).
 - **Desktop tests:** `./gradlew :desktopApp:test` (includes connection and message serialization tests)
 - **Flaky UI tests:** The Compose test harness can be brittle with timing. If a test flakes, increase timeouts or break the assertion into smaller steps
 - **Message round-trips:** Use `DevToolsProtocol.encodeEnvelope()` and `decodeFrame()` to verify message serialization round-trips (see `AuthHandshakeTest` for the pattern)

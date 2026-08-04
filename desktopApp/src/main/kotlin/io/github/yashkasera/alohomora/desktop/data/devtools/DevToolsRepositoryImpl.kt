@@ -24,14 +24,19 @@ import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
+import io.github.yashkasera.alohomora.common.RequestTraceSpansMessage
+import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.StreamErrorMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
+import io.github.yashkasera.alohomora.common.StreamSpanMessage
 import io.github.yashkasera.alohomora.common.StreamTrafficMessage
+import io.github.yashkasera.alohomora.common.TraceSpansSnapshotMessage
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.data.local.BuildMetadataStore
 import io.github.yashkasera.alohomora.desktop.data.local.CacheStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
+import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
@@ -70,6 +75,7 @@ class DevToolsRepositoryImpl(
     private val remoteDataSource: DevToolsRemoteDataSource,
     private val eventStore: EventStore,
     private val errorStore: ErrorStore,
+    private val spanStore: SpanStore,
     private val trafficStore: TrafficStore,
     private val databaseStore: DatabaseSnapshotStore,
     private val cacheStore: CacheStore,
@@ -89,6 +95,8 @@ class DevToolsRepositoryImpl(
 
     override val events: StateFlow<List<Event>> = eventStore.events
     override val errors: StateFlow<List<Error>> = errorStore.errors
+    override val spans: StateFlow<List<Span>> = spanStore.spans
+    override val spanCaptureSupported: StateFlow<Boolean> = spanStore.captureSupported
     override val traffic: StateFlow<List<TrafficEntry>> = trafficStore.logs
     override val databaseSnapshot: StateFlow<DatabaseSnapshot> = databaseStore.snapshot
     override val cacheState: StateFlow<CacheState> = cacheStore.state
@@ -357,14 +365,22 @@ class DevToolsRepositoryImpl(
         scope.launch { sendMessage(RequestInitialStateMessage()) }
     }
 
-    override fun clearCaptured(traces: Boolean, events: Boolean, errors: Boolean) {
+    override fun clearCaptured(traces: Boolean, events: Boolean, errors: Boolean, spans: Boolean) {
         // Clear locally straight away so the UI responds immediately; the device's fresh snapshot
         // arrives moments later and is authoritative.
         if (traces) trafficStore.clear()
         if (events) eventStore.clear()
         if (errors) errorStore.clear()
+        if (spans) spanStore.clear()
         scope.launch {
-            sendMessage(RequestClearMessage(traces = traces, events = events, errors = errors))
+            sendMessage(
+                RequestClearMessage(
+                    traces = traces,
+                    events = events,
+                    errors = errors,
+                    spans = spans,
+                ),
+            )
         }
     }
 
@@ -373,6 +389,15 @@ class DevToolsRepositoryImpl(
     override fun markEventViewed(id: Long) = eventStore.markViewed(id)
 
     override fun markErrorViewed(id: Long) = errorStore.markViewed(id)
+
+    override fun markTraceViewed(traceId: String) = spanStore.markTraceViewed(traceId)
+
+    override fun requestTraceSpans(traceId: String) {
+        // Gated: an app predating span capture decodes this as UnknownMessage and never answers,
+        // so an ungated request would leave the panel waiting on a reply that is not coming.
+        if (!spanStore.captureSupported.value) return
+        scope.launch { sendMessage(RequestTraceSpansMessage(traceId = traceId)) }
+    }
 
     override fun submitOtp(otp: String) {
         scope.launch { sendMessage(AuthResponseMessage(otp = otp, heartbeatSupported = true)) }
@@ -418,6 +443,8 @@ class DevToolsRepositoryImpl(
                     val payload = message.payload
                     eventStore.replace(payload.events)
                 errorStore.replace(payload.errors)
+                    spanStore.replace(payload.spans)
+                    spanStore.setCaptureSupported(payload.spanCaptureSupported)
                     trafficStore.replace(payload.traffic)
                     databaseStore.replaceDatabases(
                         payload.databases.map { it.toDomain() },
@@ -454,6 +481,18 @@ class DevToolsRepositoryImpl(
             is StreamErrorMessage -> {
                 withContext(Dispatchers.Default) {
                     errorStore.append(message.error)
+                }
+            }
+
+            is StreamSpanMessage -> {
+                withContext(Dispatchers.Default) {
+                    spanStore.append(message.span)
+                }
+            }
+
+            is TraceSpansSnapshotMessage -> {
+                withContext(Dispatchers.Default) {
+                    spanStore.mergeTrace(message.traceId, message.spans)
                 }
             }
 

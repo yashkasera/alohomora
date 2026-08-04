@@ -11,6 +11,7 @@ import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.model.GitHistoryCommit
 import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
 import io.github.yashkasera.alohomora.replay.ReplayRequest
+import io.github.yashkasera.alohomora.common.Span
 import kotlinx.coroutines.flow.StateFlow
 
 interface DevToolsRepository {
@@ -20,6 +21,10 @@ interface DevToolsRepository {
 
     val events: StateFlow<List<Event>>
     val errors: StateFlow<List<Error>>
+    val spans: StateFlow<List<Span>>
+
+    /** False until the device reports it, so the panel degrades against an app with no tracer. */
+    val spanCaptureSupported: StateFlow<Boolean>
     val traffic: StateFlow<List<TrafficEntry>>
     val databaseSnapshot: StateFlow<DatabaseSnapshot>
     val cacheState: StateFlow<CacheState>
@@ -53,7 +58,12 @@ interface DevToolsRepository {
      * Device-side, not just local: a local-only clear repopulates from the device snapshot on the
      * next reconnect, which reads as the button not having worked.
      */
-    fun clearCaptured(traces: Boolean = false, events: Boolean = false, errors: Boolean = false)
+    fun clearCaptured(
+        traces: Boolean = false,
+        events: Boolean = false,
+        errors: Boolean = false,
+        spans: Boolean = false,
+    )
 
     /** Dims a traffic entry the user opened in this window. */
     fun markTrafficViewed(id: String)
@@ -62,6 +72,18 @@ interface DevToolsRepository {
     fun markEventViewed(id: Long)
 
     fun markErrorViewed(id: Long)
+
+    /** Dims a whole trace once opened; viewing is a trace-level act. */
+    fun markTraceViewed(traceId: String)
+
+    /**
+     * Asks the device for every span of [traceId].
+     *
+     * Backfills a trace whose earliest spans fell outside the device's snapshot window. Only send
+     * this when the device reported `spanCaptureSupported` — an older app decodes it as an unknown
+     * type and never replies.
+     */
+    fun requestTraceSpans(traceId: String)
 
     /**
      * Asks the device to re-send [request] through the host app's own HTTP client.

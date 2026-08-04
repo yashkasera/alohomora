@@ -40,8 +40,28 @@ fun KeyEvent.matchesNavigation(): Int {
         Key.Seven -> 6
         Key.Eight -> 7
         Key.Nine -> 8
+        // Cmd/Ctrl+0 as the tenth slot, added when Traces landed between Traffic and Events and pushed
+        // the tail of the sidebar past the digits. Appending Traces at the end instead would have kept
+        // this map untouched, but that subordinates the information architecture to a keybinding table.
+        Key.Zero -> 9
         else -> -1
     }
+}
+
+/**
+ * How many sidebar positions are reachable by shortcut. Beyond this, sections are click-only.
+ *
+ * Shared with the command palette so the shortcut it *prints* cannot drift from the one that actually
+ * works — the palette stopped at 8 while [matchesNavigation] already handled 9.
+ */
+const val NAVIGATION_SHORTCUT_SLOTS: Int = 10
+
+/** Digit shown for the section at [index], or null when it has no shortcut. */
+fun navigationShortcutDigit(index: Int): String? = when {
+    index !in 0 until NAVIGATION_SHORTCUT_SLOTS -> null
+    // The tenth slot is Cmd+0, not Cmd+10.
+    index == NAVIGATION_SHORTCUT_SLOTS - 1 -> "0"
+    else -> "${index + 1}"
 }
 
 @OptIn(ExperimentalComposeUiApi::class)

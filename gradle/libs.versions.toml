@@ -24,6 +24,7 @@ sqlite = "2.7.0"
 startupRuntime = "1.2.0"
 okhttp = "5.3.2"
 binaryCompatibilityValidator = "0.18.1"
+opentelemetry = "1.51.0"
 
 [libraries]
 androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startupRuntime" }
@@ -75,6 +76,13 @@ koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
 koin-compose-viewmodel-navigation = { module = "io.insert-koin:koin-compose-viewmodel-navigation", version.ref = "koin" }
+
+# OpenTelemetry — :showcaseApp only, and it has to stay that way. `Alohomora.recordSpan` takes
+# strings, longs and maps, so no OTel type reaches the library; the showcase declaring this
+# coordinate itself is what proves it. Adding it to :alohomora or :alohomora-noop would ship one
+# vendor's SDK to every consumer. sdk-trace rather than the sdk aggregate: the aggregate also drags
+# in the metrics and logs SDKs, which nothing here uses.
+opentelemetry-sdk-trace = { module = "io.opentelemetry:opentelemetry-sdk-trace", version.ref = "opentelemetry" }
 
 # Ktor Server
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }

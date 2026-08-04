@@ -226,6 +226,7 @@ fun main() {
                             logcatViewModel = session.composition.logcatViewModel,
                             databaseViewModel = session.composition.databaseViewModel,
                             cacheViewModel = session.composition.cacheViewModel,
+                            tracesViewModel = session.composition.tracesViewModel,
                             initialDeviceId = session.deviceId,
                             showHelp = showHelp,
                             onShowHelp = { showHelp = true },

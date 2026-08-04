@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.app.displayModifier
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
+import io.github.yashkasera.alohomora.desktop.app.navigationShortcutDigit
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DesktopSection
 import io.github.yashkasera.alohomora.ui.icons.Activity
 import io.github.yashkasera.alohomora.ui.icons.Camera
@@ -321,6 +322,7 @@ fun buildCommandActions(
     onToggleTheme: () -> Unit,
     onShowHelp: () -> Unit,
     onClearTraffic: () -> Unit,
+    onClearTraces: () -> Unit,
     onClearEvents: () -> Unit,
     onForceStop: () -> Unit,
     onLaunchApp: () -> Unit,
@@ -340,7 +342,7 @@ fun buildCommandActions(
             label = section.title,
             category = ActionCategory.NAVIGATION,
             icon = section.icon,
-            shortcutDisplay = if (index < 8) "$mod+${index + 1}" else null,
+            shortcutDisplay = navigationShortcutDigit(index)?.let { "$mod+$it" },
             enabled = true,
             action = { onSectionChange(section) },
         )
@@ -441,6 +443,14 @@ fun buildCommandActions(
         icon = Icons.Trash,
         enabled = isConnected,
         action = onClearTraffic,
+    )
+    actions += CommandAction(
+        id = "data_clear_traces",
+        label = "Clear Traces",
+        category = ActionCategory.DATA,
+        icon = Icons.Trash,
+        enabled = isConnected,
+        action = onClearTraces,
     )
     actions += CommandAction(
         id = "data_clear_events",

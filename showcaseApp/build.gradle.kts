@@ -61,6 +61,11 @@ dependencies {
     // Serialization
     implementation(libs.kotlinx.serialization.json)
 
+    // OpenTelemetry. Declared here and nowhere else — see the catalog entry. `implementation`, not
+    // `debugImplementation`: the exporter adapter lives in src/main so it also compiles against
+    // alohomora-noop, where recordSpan is a no-op that discards what it is handed.
+    implementation(libs.opentelemetry.sdk.trace)
+
     ksp(libs.androidx.room.compiler)
 }
 

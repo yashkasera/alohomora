@@ -28,6 +28,13 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            // The waterfall renderer draws Span/TraceRow directly, and the tree assembly, time scaling
+            // and trace summarising behind it are pure shared logic that must not be written twice —
+            // once for the desktop panel and once for the mobile screen. Safe in both directions:
+            // :alohomora-common has no Compose dependency, so there is no cycle, and the target sets
+            // match exactly. Consumers already resolve it transitively via :alohomora, so the
+            // published POM gains a name rather than a jar.
+            api(project(":alohomora-common"))
             api(libs.compose.runtime)
             api(libs.compose.ui)
             api(libs.compose.foundation)

@@ -13,11 +13,15 @@ import io.github.yashkasera.alohomora.showcaseApp.domain.usecase.ObservePostsUse
 import io.github.yashkasera.alohomora.showcaseApp.domain.usecase.RefreshPostsUseCase
 import io.github.yashkasera.alohomora.showcaseApp.domain.usecase.UpdatePreferencesUseCase
 import io.github.yashkasera.alohomora.showcaseApp.presentation.PostsViewModel
+import io.github.yashkasera.alohomora.showcaseApp.tracing.SHOWCASE_TRACER_NAME
+import io.github.yashkasera.alohomora.showcaseApp.tracing.showcaseTracerProvider
 import io.github.yashkasera.alohomora.network.AlohomoraInspector
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
+import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.sdk.trace.SdkTracerProvider
 import kotlinx.serialization.json.Json
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -48,11 +52,17 @@ val appModule = module {
             .build()
     }
 
+    // The app's tracer, not Alohomora's — Alohomora ships no tracer and no tracing SDK. The only
+    // thing connecting the two is AlohomoraSpanExporter, registered as one of this provider's
+    // processors, so pointing the same spans at an OTLP collector is an added processor here.
+    single { showcaseTracerProvider() }
+    single<Tracer> { get<SdkTracerProvider>().get(SHOWCASE_TRACER_NAME) }
+
     single { get<AppDatabase>().postDao() }
     single { PreferencesDataSource(get()) }
     single { PostsApi(get()) }
 
-    single<PostRepository> { PostRepositoryImpl(get(), get(), get()) }
+    single<PostRepository> { PostRepositoryImpl(get(), get(), get(), get()) }
     single<PreferencesRepository> { PreferencesRepositoryImpl(get()) }
 
     factory { ObservePostsUseCase(get()) }

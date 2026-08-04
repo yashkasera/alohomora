@@ -3,10 +3,12 @@ package io.github.yashkasera.alohomora.di
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.data.repository.ErrorRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.EventsRepositoryImpl
+import io.github.yashkasera.alohomora.data.repository.SpanRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.TrafficRepositoryImpl
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.domain.repository.ErrorRepository
 import io.github.yashkasera.alohomora.domain.repository.EventsRepository
+import io.github.yashkasera.alohomora.domain.repository.SpanRepository
 import io.github.yashkasera.alohomora.domain.repository.TrafficRepository
 import io.github.yashkasera.alohomora.domain.service.SlackShareService
 import io.github.yashkasera.alohomora.domain.usecase.cache.GetCacheUseCase
@@ -24,6 +26,8 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.error.list.ErrorVi
 import io.github.yashkasera.alohomora.presentation.ui.screens.events.EventsViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.githistory.GitHistoryViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.overview.OverviewViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.traces.detail.TraceDetailsViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.traces.list.TracesViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail.TrafficDetailsViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.list.TrafficViewModel
 import io.ktor.client.HttpClient
@@ -56,11 +60,12 @@ internal val appModule = module {
     single { get<AlohomoraDb>().eventDao() }
     single { get<AlohomoraDb>().errorDao() }
     single { get<AlohomoraDb>().screenDao() }
+    single { get<AlohomoraDb>().spanDao() }
 
     single<TrafficRepository> { TrafficRepositoryImpl(get()) }
     single<EventsRepository> { EventsRepositoryImpl(get()) }
     single<ErrorRepository> { ErrorRepositoryImpl(get()) }
-    // CacheRepository is provided in platformModule
+    single<SpanRepository> { SpanRepositoryImpl(get()) }
 
     single { DevToolsRuntime(get(), get(), get(), get(), get(), get()) }
 
@@ -98,6 +103,8 @@ internal val appModule = module {
     viewModel { GitHistoryViewModel() }
     viewModel { ErrorViewModel(get()) }
     viewModel { (errorId: Long) -> ErrorDetailsViewModel(errorId, get(), get()) }
+    viewModel { TracesViewModel(get()) }
+    viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get()) }
 }
 
 

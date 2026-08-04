@@ -13,6 +13,12 @@ internal sealed interface Routes {
     data class TrafficDetails(val trafficId: String) : Routes
 
     @Serializable
+    data object Traces : Routes
+
+    @Serializable
+    data class TraceDetails(val traceId: String) : Routes
+
+    @Serializable
     data object Events : Routes
 
     @Serializable

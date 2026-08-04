@@ -42,6 +42,25 @@ private val CanvasLogErrorDark = Color(0xFFEF5350)
 private val CanvasLogFatalLight = Color(0xFF9C27B0)
 private val CanvasLogFatalDark = Color(0xFFCE93D8)
 
+// Span kinds, for waterfall bars. A categorical palette lives here rather than in the renderer for
+// the same reason the log levels do: composables stay token-only, and light/dark pairs are chosen
+// side by side instead of one at a time.
+//
+// Five hues rather than reusing the Material accent roles, of which there are three. Squeezing five
+// kinds into primary/secondary/tertiary makes CLIENT and PRODUCER identical, and telling an outbound
+// call from a queue publish is one of the few things a waterfall is actually read for. Kept clear of
+// the error red below, which overrides kind entirely.
+private val CanvasSpanInternalLight = Color(0xFF6366F1)
+private val CanvasSpanInternalDark = Color(0xFF818CF8)
+private val CanvasSpanServerLight = Color(0xFF0E7490)
+private val CanvasSpanServerDark = Color(0xFF22D3EE)
+private val CanvasSpanClientLight = Color(0xFF7C3AED)
+private val CanvasSpanClientDark = Color(0xFFA78BFA)
+private val CanvasSpanProducerLight = Color(0xFF047857)
+private val CanvasSpanProducerDark = Color(0xFF34D399)
+private val CanvasSpanConsumerLight = Color(0xFFB45309)
+private val CanvasSpanConsumerDark = Color(0xFFFBBF24)
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 val CanvasLightColorScheme = lightColorScheme(
 
@@ -160,6 +179,21 @@ val ColorScheme.logError: Color
 
 val ColorScheme.logFatal: Color
     get() = if (isDarkPalette) CanvasLogFatalDark else CanvasLogFatalLight
+
+val ColorScheme.spanInternal: Color
+    get() = if (isDarkPalette) CanvasSpanInternalDark else CanvasSpanInternalLight
+
+val ColorScheme.spanServer: Color
+    get() = if (isDarkPalette) CanvasSpanServerDark else CanvasSpanServerLight
+
+val ColorScheme.spanClient: Color
+    get() = if (isDarkPalette) CanvasSpanClientDark else CanvasSpanClientLight
+
+val ColorScheme.spanProducer: Color
+    get() = if (isDarkPalette) CanvasSpanProducerDark else CanvasSpanProducerLight
+
+val ColorScheme.spanConsumer: Color
+    get() = if (isDarkPalette) CanvasSpanConsumerDark else CanvasSpanConsumerLight
 
 val ColorScheme.querySuccessContainer: Color
     get() = success.copy(alpha = 0.12f)

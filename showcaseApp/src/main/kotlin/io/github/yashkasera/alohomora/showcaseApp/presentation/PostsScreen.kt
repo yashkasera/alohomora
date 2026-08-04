@@ -14,7 +14,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -29,8 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
-import io.github.yashkasera.alohomora.ui.icons.Icons
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -63,10 +60,10 @@ fun PostsScreen(
                     throw IllegalStateException()
                 },
             ) {
-                Icon(
-                    imageVector = Icons.AlertTriangle,
-                    contentDescription = null,
-                )
+                // A label rather than an icon from :alohomora-ui. This app compiles against
+                // alohomora-noop in release, and the no-op module deliberately does not depend on
+                // the design system, so an Alohomora ImageVector here breaks the release variant.
+                Text("Crash")
             }
         },
     ) { padding ->

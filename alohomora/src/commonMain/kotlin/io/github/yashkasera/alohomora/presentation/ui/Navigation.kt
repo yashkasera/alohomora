@@ -17,6 +17,8 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.events.EventsScree
 import io.github.yashkasera.alohomora.presentation.ui.screens.githistory.GitHistoryScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.overview.OverviewScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail.TrafficDetailsScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.traces.detail.TraceDetailsScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.traces.list.TracesScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.list.TrafficScreen
 
 // Need to detect platform - minimal expect/actual or just resizing for now
@@ -57,9 +59,9 @@ internal fun AlohomoraNavHost(
         composable<Routes.TrafficDetails> { backStackEntry ->
             val route: Routes.TrafficDetails = backStackEntry.toRoute()
             TrafficDetailsScreen(
-                traceId = route.trafficId,
+                trafficId = route.trafficId,
                 onBackClick = navController::navigateUp,
-                onOpenTrace = { id -> navController.navigate(Routes.TrafficDetails(id)) },
+                onOpenTraffic = { id -> navController.navigate(Routes.TrafficDetails(id)) },
             )
         }
 
@@ -93,6 +95,22 @@ internal fun AlohomoraNavHost(
             val route: Routes.ErrorDetails = backStackEntry.toRoute()
             ErrorDetailsScreen(
                 errorId = route.errorId,
+                onBackClick = navController::navigateUp,
+            )
+        }
+
+        composable<Routes.Traces> {
+            TracesScreen(
+                onBackClick = navController::navigateUp,
+                onNavigateToTrace = {
+                    navController.navigate(Routes.TraceDetails(it))
+                },
+            )
+        }
+        composable<Routes.TraceDetails> { backStackEntry ->
+            val route: Routes.TraceDetails = backStackEntry.toRoute()
+            TraceDetailsScreen(
+                traceId = route.traceId,
                 onBackClick = navController::navigateUp,
             )
         }

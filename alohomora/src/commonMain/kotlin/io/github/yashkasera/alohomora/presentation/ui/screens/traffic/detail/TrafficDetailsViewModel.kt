@@ -50,7 +50,7 @@ internal data class TraceDetailsState(
 }
 
 internal class TrafficDetailsViewModel(
-    private val traceId: String,
+    private val trafficId: String,
     private val shareManager: ShareManager,
     private val slackShareService: SlackShareService,
     getTraceDetailsUseCase: GetTrafficDetailsUseCase,
@@ -65,9 +65,9 @@ internal class TrafficDetailsViewModel(
     init {
         // Opening the detail screen is what "viewed" means here; the list dims the row on the
         // strength of it.
-        viewModelScope.launch { markTraceAsViewedUseCase(traceId) }
+        viewModelScope.launch { markTraceAsViewedUseCase(trafficId) }
 
-        getTraceDetailsUseCase(id = traceId)
+        getTraceDetailsUseCase(id = trafficId)
             .onEach { trace ->
                 _state.value = _state.value.copy(trace = trace, isLoading = false)
             }
@@ -75,7 +75,7 @@ internal class TrafficDetailsViewModel(
 
         // Collected from the start rather than only after a replay: a replay of this trace from the
         // *desktop* also lands here, and the mobile console should show the result either way.
-        observeReplayResultUseCase(traceId)
+        observeReplayResultUseCase(trafficId)
             .onEach { replay ->
                 _state.value = _state.value.copy(replayResultTraceId = replay?.id)
             }

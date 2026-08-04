@@ -5,7 +5,12 @@ import io.github.yashkasera.alohomora.Alohomora.initLock
 import io.github.yashkasera.alohomora.Alohomora.isReplaySupported
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.NANOS_PER_SECOND
+import io.github.yashkasera.alohomora.common.Span
+import io.github.yashkasera.alohomora.common.SpanEvent
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.common.normalizeSpanId
+import io.github.yashkasera.alohomora.common.spanAttributesToJson
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
 import io.github.yashkasera.alohomora.data.model.discoverPlatformBuildConfig
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
@@ -14,6 +19,7 @@ import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.di.initKoin
 import io.github.yashkasera.alohomora.domain.repository.ErrorRepository
 import io.github.yashkasera.alohomora.domain.repository.EventsRepository
+import io.github.yashkasera.alohomora.domain.repository.SpanRepository
 import io.github.yashkasera.alohomora.domain.repository.TrafficRepository
 import io.github.yashkasera.alohomora.error.ErrorCapture
 import io.github.yashkasera.alohomora.error.installCrashHandler
@@ -21,6 +27,7 @@ import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.replay.TrafficReplayHandler
 import io.github.yashkasera.alohomora.replay.TrafficReplayRegistry
+import io.github.yashkasera.alohomora.trace.SpanCaptureRegistry
 import kotlin.concurrent.Volatile
 import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
@@ -302,6 +309,122 @@ object Alohomora {
                 ),
             ),
         )
+    }
+
+    // ============================================================================
+    // Trace Recording
+    // ============================================================================
+
+    /**
+     * Records a completed span, so its trace shows up in the Traces console.
+     *
+     * Alohomora depends on **no tracing SDK**. Bridge whatever tracer the app already runs —
+     * OpenTelemetry, Sentry, Datadog, hand-rolled timing — with a short adapter in your own code; the
+     * README carries ready-made ones. Every tracer's export hook is vendor-specific, so shipping an
+     * adapter would serve one vendor while dragging its SDK into both published artifacts, the same
+     * reasoning as the deliberately absent `retrofitReplayHandler`.
+     *
+     * Pass the ids your tracer produced: sharing a [traceId] is what stitches spans into one trace.
+     * Both are lowercased on write, and an all-zero [parentSpanId] is treated as absent (how
+     * OpenTelemetry reports a root).
+     *
+     * **Timestamps are epoch nanoseconds, and the adapter converts.** OpenTelemetry emits nanos
+     * already; Sentry emits fractional seconds as a `Double`, so multiply by 1e9 once, at the adapter.
+     * Get it wrong and every span renders as a 1970 date. See [Span.startEpochNanos] for why this is
+     * the one domain that does not use milliseconds.
+     *
+     * [kind] and [statusCode] take your tracer's own vocabulary; unrecognised values are stored as
+     * given rather than rejected. Use `"ERROR"` for [statusCode] to get the failure styling.
+     *
+     * Fire-and-forget: returns immediately and persists on a background scope, so it is safe to call
+     * from a tracer's export thread.
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun recordSpan(
+        traceId: String,
+        spanId: String,
+        name: String,
+        startEpochNanos: Long,
+        endEpochNanos: Long,
+        parentSpanId: String? = null,
+        kind: String = Span.KIND_INTERNAL,
+        statusCode: String = Span.STATUS_UNSET,
+        statusDescription: String? = null,
+        attributes: Map<String, String>? = null,
+        events: List<SpanEvent> = emptyList(),
+        scopeName: String? = null,
+    ) {
+        val normalizedTraceId = normalizeSpanId(traceId)
+        val normalizedSpanId = normalizeSpanId(spanId)
+        if (normalizedTraceId == null || normalizedSpanId == null) {
+            // Dropped rather than stored: a span with no usable id cannot be grouped into a trace or
+            // parented, so it would sit in the table as a row no console can render.
+            Logger.d { "[Alohomora] Ignoring span '$name' with a blank trace or span id" }
+            return
+        }
+        SpanCaptureRegistry.markActive()
+        val span = Span(
+            traceId = normalizedTraceId,
+            spanId = normalizedSpanId,
+            parentSpanId = normalizeSpanId(parentSpanId),
+            name = name,
+            kind = kind,
+            startEpochNanos = startEpochNanos,
+            endEpochNanos = endEpochNanos,
+            statusCode = statusCode,
+            statusDescription = statusDescription?.takeIf { it.isNotBlank() },
+            attributes = spanAttributesToJson(attributes),
+            events = events,
+            scopeName = scopeName,
+        )
+        scope.launch {
+            try {
+                persistSpan(span)
+            } catch (e: Exception) {
+                Logger.d { "[Alohomora] Failed to record span: ${e.message}" }
+            }
+        }
+    }
+
+    /**
+     * Records a standalone span with generated ids, for timing one block with no surrounding trace.
+     *
+     * Renders as a single-span trace. Use the full overload whenever the work *is* part of a trace —
+     * a span recorded this way cannot be parented, so it will not appear inside the waterfall of the
+     * operation that caused it.
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    @JvmStatic
+    @JvmOverloads
+    fun recordSpan(name: String, durationNanos: Long, attributes: Map<String, String>? = null) {
+        val now = Clock.System.now()
+        val endEpochNanos = now.epochSeconds * NANOS_PER_SECOND + now.nanosecondsOfSecond
+        recordSpan(
+            // Hex halves of a random UUID, so the ids are the right shape and width for anything that
+            // later correlates them with a real tracer's output.
+            traceId = Uuid.random().toHexString(),
+            spanId = Uuid.random().toHexString().take(Span.SPAN_ID_HEX_LENGTH),
+            name = name,
+            startEpochNanos = endEpochNanos - durationNanos,
+            endEpochNanos = endEpochNanos,
+            attributes = attributes,
+        )
+    }
+
+    /** Writes [span] to the Span table. Split out to mirror [persistError]'s shape. */
+    internal suspend fun persistSpan(span: Span) {
+        koin?.get<SpanRepository>()?.save(span)
+    }
+
+    /**
+     * Writes a whole batch in one transaction, for a tracer that exports in batches.
+     *
+     * Worth having separately from [persistSpan]: a batch of 50 spans through the single-span path is
+     * 50 SQLite transactions, on a thread the host's export pipeline is waiting on.
+     */
+    internal suspend fun persistSpans(spans: List<Span>) {
+        koin?.get<SpanRepository>()?.saveAll(spans)
     }
 
     // ============================================================================

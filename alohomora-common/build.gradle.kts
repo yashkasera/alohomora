@@ -26,11 +26,19 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.kotlinx.serialization.json)
+            api(libs.kotlinx.serialization.json)
             implementation(libs.androidx.room.runtime)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.ktor.network)
             implementation(libs.kotlinx.datetime)
+        }
+
+        // Note there is no `withHostTest {}` on the android target here, unlike :alohomora — so
+        // commonTest runs under :alohomora-common:jvmTest and the iOS targets, but NOT on the
+        // Android host. Everything tested here is platform-free pure logic (trace assembly, time
+        // scaling), so that is fine; anything with an expect/actual must not be tested from here.
+        commonTest.dependencies {
+            implementation(kotlin("test"))
         }
     }
 }

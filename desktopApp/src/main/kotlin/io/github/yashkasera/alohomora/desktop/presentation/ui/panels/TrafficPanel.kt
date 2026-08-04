@@ -50,9 +50,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValueRow
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.replay.replayBlockedReason
@@ -154,136 +157,120 @@ private fun ScaffoldContent(
     }
 }
 
+/**
+ * Narrower than the Traces sheet: three tabs of key-value rows and a JSON tree need far less
+ * horizontal room than a waterfall, where width buys time resolution.
+ */
+private const val TRAFFIC_SHEET_WIDTH_FRACTION = 0.5f
+
 @Composable
-fun TraceDetailsSideModal(
-    trace: TrafficEntry?,
+fun TrafficDetailsSideSheet(
+    traffic: TrafficEntry?,
     devToolsViewModel: DevToolsViewModel,
     onDismiss: () -> Unit,
 ) {
-    // Keyed on the trace, not bare `remember`: this composable is reused as the selection changes,
-    // so an un-keyed flag stays true across the switch and the dialog reopens for whichever trace
+    // Keyed on the entry, not bare `remember`: this composable is reused as the selection changes,
+    // so an un-keyed flag stays true across the switch and the dialog reopens for whichever entry
     // was clicked next. For replay that means a request the user never composed, pre-filled and one
     // click from being sent for real.
-    var showSlackShareDialog by remember(trace?.id) { mutableStateOf(false) }
-    var showReplayDialog by remember(trace?.id) { mutableStateOf(false) }
+    var showSlackShareDialog by remember(traffic?.id) { mutableStateOf(false) }
+    var showReplayDialog by remember(traffic?.id) { mutableStateOf(false) }
     val slackShareError by devToolsViewModel.slackShareError.collectAsState()
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()
     val replayState by devToolsViewModel.replayState.collectAsState()
     val isSlackConfigured = buildInfo?.slackWebhookUrl.isNullOrBlank().not()
 
-    // Null when the device cannot replay at all, or when this particular trace cannot be
+    // Null when the device cannot replay at all, or when this particular entry cannot be
     // reproduced — a truncated or multipart body. Both cases hide the action rather than offering
     // one that would send wrong data.
-    val replayRequest = trace
+    val replayRequest = traffic
         ?.takeIf { replayState.supported }
         ?.toReplayRequest()
-    val replayBlockedReason = trace?.replayBlockedReason()
+    val replayBlockedReason = traffic?.replayBlockedReason()
 
-    AnimatedVisibility(
-        trace != null,
-        enter = fadeIn(),
-        exit = fadeOut(),
-    ) {
-        Row(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.30f))
-                    .clickable(
-                        indication = null,
-                        interactionSource = null,
-                        onClick = onDismiss,
-                    ),
-            )
-            AnimatedVisibility(
-                visible = true,
-                enter = fadeIn() + slideInHorizontally { -it },
-                exit = fadeOut() + slideOutHorizontally { it },
-            ) {
-                trace?.let {
-                    Surface(
-                        modifier = Modifier
-                            .width(620.dp)
-                            .fillMaxHeight(),
-                        color = MaterialTheme.colorScheme.background,
-                    ) {
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 20.dp, vertical = 14.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "API Request",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                    )
-                                    Text(
-                                        text = trace.path ?: trace.url ?: "-",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                }
-                                if (replayState.supported) {
-                                    AlohomoraIconButton(
-                                        onClick = { showReplayDialog = true },
-                                        enabled = replayRequest != null &&
-                                            !replayState.isInFlight(trace.id),
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Repeat,
-                                            // Names the blocker, so an unavailable action explains
-                                            // itself instead of just looking broken.
-                                            contentDescription = replayBlockedReason?.message
-                                                ?: "Replay this request",
-                                        )
-                                    }
-                                }
-                                AlohomoraIconButton(onClick = { showSlackShareDialog = true }) {
-                                    Icon(
-                                        imageVector = Icons.Slack,
-                                        contentDescription = "Share to Slack",
-                                    )
-                                }
-                                AlohomoraIconButton(onClick = onDismiss) {
-                                    Icon(imageVector = Icons.X, contentDescription = "Close")
-                                }
-                            }
-                            AlohomoraHorizontalDivider()
-                            DesktopTraceDetailsContent(
-                                trace = trace,
-                                modifier = Modifier.fillMaxSize(),
+    AlohomoraSideSheet(
+        visible = traffic != null,
+        onDismiss = onDismiss,
+        widthFraction = TRAFFIC_SHEET_WIDTH_FRACTION,
+        header = {
+            if (traffic != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = MaterialTheme.dimens.margin.xl,
+                            vertical = MaterialTheme.dimens.margin.md,
+                        ),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "API Request",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = traffic.path ?: traffic.url ?: "-",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (replayState.supported) {
+                        AlohomoraIconButton(
+                            onClick = { showReplayDialog = true },
+                            enabled = replayRequest != null &&
+                                !replayState.isInFlight(traffic.id),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Repeat,
+                                // Names the blocker, so an unavailable action explains
+                                // itself instead of just looking broken.
+                                contentDescription = replayBlockedReason?.message
+                                    ?: "Replay this request",
                             )
                         }
                     }
+                    AlohomoraIconButton(onClick = { showSlackShareDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Slack,
+                            contentDescription = "Share to Slack",
+                        )
+                    }
+                    AlohomoraIconButton(onClick = onDismiss) {
+                        Icon(imageVector = Icons.X, contentDescription = "Close")
+                    }
                 }
             }
+        },
+    ) {
+        if (traffic != null) {
+            DesktopTrafficDetailsContent(
+                traffic = traffic,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 
     // Closes the dialog once a replay comes back clean, so success needs no extra click. A failure
     // leaves it open with the error and the user's edits intact — the usual cause is something in
     // the form itself.
-    val replayInFlight = trace != null && replayState.isInFlight(trace.id)
-    val replayError = trace?.let { replayState.errorFor(it.id) }
+    val replayInFlight = traffic != null && replayState.isInFlight(traffic.id)
+    val replayError = traffic?.let { replayState.errorFor(it.id) }
     LaunchedEffect(replayInFlight, replayError) {
         if (showReplayDialog && !replayInFlight && replayError == null) showReplayDialog = false
     }
 
-    if (showReplayDialog && replayRequest != null && trace != null) {
+    if (showReplayDialog && replayRequest != null && traffic != null) {
         ReplayRequestDialog(
             initial = replayRequest,
-            inFlight = replayState.isInFlight(trace.id),
-            error = replayState.errorFor(trace.id),
+            inFlight = replayState.isInFlight(traffic.id),
+            error = replayState.errorFor(traffic.id),
             onDismiss = {
                 showReplayDialog = false
-                devToolsViewModel.dismissReplayError(trace.id)
+                devToolsViewModel.dismissReplayError(traffic.id)
             },
             // Deliberately stays open: the device answers with a failure often enough — a hand-edited
             // URL, a refused connection — that closing on send would throw away both the error and
@@ -292,7 +279,7 @@ fun TraceDetailsSideModal(
         )
     }
 
-    trace?.let {
+    traffic?.let {
         if (showSlackShareDialog) {
             SlackShareDialog(
                 isConfigured = isSlackConfigured,
@@ -303,12 +290,12 @@ fun TraceDetailsSideModal(
                     devToolsViewModel.clearSlackShareError()
                 },
                 onShareCurl = { email ->
-                    devToolsViewModel.shareCurlToSlack(trace, email) {
+                    devToolsViewModel.shareCurlToSlack(traffic, email) {
                         showSlackShareDialog = false
                     }
                 },
                 onShareText = { email ->
-                    devToolsViewModel.shareTextToSlack(trace, email) {
+                    devToolsViewModel.shareTextToSlack(traffic, email) {
                         showSlackShareDialog = false
                     }
                 },
@@ -320,8 +307,8 @@ fun TraceDetailsSideModal(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun DesktopTraceDetailsContent(
-    trace: TrafficEntry,
+fun DesktopTrafficDetailsContent(
+    traffic: TrafficEntry,
     modifier: Modifier = Modifier,
 ) {
     val tabs = listOf("Overview", "Request", "Response")
@@ -349,16 +336,16 @@ fun DesktopTraceDetailsContent(
             beyondViewportPageCount = 1,
         ) { page ->
             when (page) {
-                0 -> DesktopOverviewTab(trace = trace)
-                1 -> DesktopRequestTab(trace = trace)
-                else -> DesktopResponseTab(trace = trace)
+                0 -> DesktopOverviewTab(traffic = traffic)
+                1 -> DesktopRequestTab(traffic = traffic)
+                else -> DesktopResponseTab(traffic = traffic)
             }
         }
     }
 }
 
 @Composable
-private fun DesktopOverviewTab(trace: TrafficEntry) {
+private fun DesktopOverviewTab(traffic: TrafficEntry) {
     val scroll = rememberScrollState()
     Column(
         modifier = Modifier
@@ -367,26 +354,26 @@ private fun DesktopOverviewTab(trace: TrafficEntry) {
             .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
-        MethodChip(trace.method.orEmpty())
+        MethodChip(traffic.method.orEmpty())
         Text(
-            text = trace.pathWithQuery().ifBlank { trace.url.orEmpty() },
+            text = traffic.pathWithQuery().ifBlank { traffic.url.orEmpty() },
             style = MaterialTheme.typography.bodyMedium,
         )
         AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         OverviewStatRow(
-            status = trace.status?.toString() ?: "-",
-            duration = "${trace.duration ?: 0} ms",
-            size = "${trace.responseSize ?: 0} B",
+            status = traffic.status?.toString() ?: "-",
+            duration = "${traffic.duration ?: 0} ms",
+            size = "${traffic.responseSize ?: 0} B",
         )
-        KeyValueRow("Host", trace.host ?: "-")
-        KeyValueRow("Scheme", trace.scheme ?: "-")
-        KeyValueRow("Query", trace.query ?: "-")
-        KeyValueRow("Timestamp", (trace.time ?: 0L).toString())
+        KeyValueRow("Host", traffic.host ?: "-")
+        KeyValueRow("Scheme", traffic.scheme ?: "-")
+        KeyValueRow("Query", traffic.query ?: "-")
+        KeyValueRow("Timestamp", (traffic.time ?: 0L).toString())
     }
 }
 
 @Composable
-private fun DesktopRequestTab(trace: TrafficEntry) {
+private fun DesktopRequestTab(traffic: TrafficEntry) {
     val scroll = rememberScrollState()
     Column(
         modifier = Modifier
@@ -395,9 +382,9 @@ private fun DesktopRequestTab(trace: TrafficEntry) {
             .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
-        MethodChip(trace.method.orEmpty())
+        MethodChip(traffic.method.orEmpty())
         Text(
-            text = trace.url ?: "-",
+            text = traffic.url ?: "-",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -406,7 +393,7 @@ private fun DesktopRequestTab(trace: TrafficEntry) {
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         ) {
             Text(
-                text = trace.requestHeaders
+                text = traffic.requestHeaders
                     ?.flatMap { (key, values) -> values.map { "$key: $it" } }
                     ?.joinToString("\n")
                     .orEmpty()
@@ -420,7 +407,7 @@ private fun DesktopRequestTab(trace: TrafficEntry) {
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         ) {
             Text(
-                text = trace.requestBody.orEmpty().ifBlank { "{}" },
+                text = traffic.requestBody.orEmpty().ifBlank { "{}" },
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
             )
@@ -429,9 +416,9 @@ private fun DesktopRequestTab(trace: TrafficEntry) {
 }
 
 @Composable
-private fun DesktopResponseTab(trace: TrafficEntry) {
+private fun DesktopResponseTab(traffic: TrafficEntry) {
     JsonTreeView(
-        json = trace.responseBody.orEmpty().ifBlank { "{}" },
+        json = traffic.responseBody.orEmpty().ifBlank { "{}" },
         parentContent = {
             item(key = "response_summary") {
                 Row(
@@ -441,11 +428,11 @@ private fun DesktopResponseTab(trace: TrafficEntry) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = "Status: ${trace.status ?: "-"}",
+                        text = "Status: ${traffic.status ?: "-"}",
                         style = MaterialTheme.typography.labelMedium,
                     )
                     Text(
-                        text = "Duration: ${trace.duration ?: 0} ms",
+                        text = "Duration: ${traffic.duration ?: 0} ms",
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }
@@ -546,15 +533,6 @@ private fun SlackShareDialog(
 }
 
 @Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-}
-
-@Composable
 private fun MethodChip(method: String) {
     Text(
         text = method.ifBlank { "UNKNOWN" }.uppercase(),
@@ -586,15 +564,3 @@ private fun KeyValueColumn(label: String, value: String, modifier: Modifier = Mo
     }
 }
 
-@Composable
-private fun KeyValueRow(label: String, value: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        SectionLabel(label)
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(start = MaterialTheme.dimens.margin.md),
-        )
-    }
-}

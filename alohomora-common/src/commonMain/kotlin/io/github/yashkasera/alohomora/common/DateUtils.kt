@@ -27,7 +27,15 @@ object DateUtils {
      */
     enum class TimeUnit {
         MILLISECONDS,
-        SECONDS
+        SECONDS,
+
+        /**
+         * For [Span] timestamps, the only nanosecond values in this project.
+         *
+         * Spans need sub-millisecond resolution — see [Span.startEpochNanos] — so they are the one
+         * domain that deliberately does not follow the milliseconds rule below.
+         */
+        NANOSECONDS
     }
 
     /**
@@ -82,6 +90,13 @@ object DateUtils {
         val instant = when (unit) {
             TimeUnit.MILLISECONDS -> Instant.fromEpochMilliseconds(timestamp)
             TimeUnit.SECONDS -> Instant.fromEpochSeconds(timestamp)
+            // Split rather than divided down to millis, so a format asking for 3-digit fractional
+            // seconds still gets them. Dividing first would throw away the precision that is the
+            // whole reason spans are stored in nanoseconds.
+            TimeUnit.NANOSECONDS -> Instant.fromEpochSeconds(
+                epochSeconds = timestamp.floorDiv(NANOS_PER_SECOND),
+                nanosecondAdjustment = timestamp.mod(NANOS_PER_SECOND),
+            )
         }
         val dt = instant.toLocalDateTime(TimeZone.currentSystemDefault())
 

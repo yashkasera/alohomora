@@ -8,6 +8,7 @@ import io.github.yashkasera.alohomora.desktop.data.local.CacheRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.local.CacheStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
+import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
@@ -35,6 +36,7 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.UninstallPackageUse
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.CacheViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.ktor.client.HttpClient
@@ -53,6 +55,7 @@ class DesktopAppComposition(
     val logcatViewModel: LogcatViewModel
     val databaseViewModel: DatabaseViewModel
     val cacheViewModel: CacheViewModel
+    val tracesViewModel: TracesViewModel
 
     /** Everything [close] has to release. Held so per-window teardown is complete. */
     private val devToolsRepositoryRef: DevToolsRepositoryImpl
@@ -64,6 +67,7 @@ class DesktopAppComposition(
     init {
         val eventStore = EventStore()
         val errorStore = ErrorStore()
+        val spanStore = SpanStore()
         val trafficStore = TrafficStore()
         val databaseSnapshotStore = DatabaseSnapshotStore()
         val cacheStore = CacheStore()
@@ -75,6 +79,7 @@ class DesktopAppComposition(
             remoteDataSource = DevToolsRemoteDataSource(),
             eventStore = eventStore,
             errorStore = errorStore,
+            spanStore = spanStore,
             trafficStore = trafficStore,
             databaseStore = databaseSnapshotStore,
             cacheStore = cacheStore,
@@ -169,6 +174,8 @@ class DesktopAppComposition(
             repository = cacheRepository,
             requestCacheValueUseCase = requestCacheValueUseCase,
         )
+
+        tracesViewModel = TracesViewModel(repository = devToolsRepository)
     }
 
     /**
@@ -185,6 +192,7 @@ class DesktopAppComposition(
         logcatViewModel.close()
         databaseViewModel.close()
         cacheViewModel.close()
+        tracesViewModel.close()
         devToolsRepositoryRef.close()
         // Only if we built it — a shared view model outlives this window.
         if (ownsDevicesViewModel) devicesViewModel.close()

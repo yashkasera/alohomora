@@ -14,6 +14,7 @@ import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.icons.ScrollText
 import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.icons.Terminal
+import io.github.yashkasera.alohomora.ui.icons.Waypoints
 
 enum class DesktopSection(
     val title: String,
@@ -34,6 +35,9 @@ enum class DesktopSection(
 
     // Everything below is delivered over the DevTools protocol, so it is platform-agnostic.
     Traffic("Traffic", Icons.Route),
+    // Directly under Traffic because the two are read together — a trace explains where a request's
+    // time went. Platform-agnostic: spans arrive over the DevTools protocol like everything below.
+    Traces("Traces", Icons.Waypoints),
     Events("Events", Icons.Activity),
     Database("Database", Icons.Database),
     Cache("Cache", Icons.Key),

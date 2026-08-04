@@ -30,15 +30,21 @@ fun JsonTreeView(
     listState: LazyListState = rememberLazyListState(),
     parentContent: (LazyListScope.() -> Unit)? = null,
 ) {
-    val element: JsonElement? = remember {
+    // Keyed on `json`, and that key is load-bearing. Bare `remember` survives a change of argument in
+    // the same composition slot, so reusing this viewer for a second payload — switching traffic
+    // entries inside an open detail sheet, or selecting another span's attributes — kept showing the
+    // *previous* JSON. Silent, and indistinguishable from the device having sent the wrong body.
+    // The expansion state is keyed too: it indexes into `tree`, so keeping it across a new document
+    // would expand unrelated nodes.
+    val element: JsonElement? = remember(json) {
         try {
             Json.parseToJsonElement(json)
         } catch (e: Exception) {
             null
         }
     }
-    val tree = remember { element?.let(JsonTreeBuilder::build) }
-    val visibleState = remember { tree?.let(::VisibleTreeState) }
+    val tree = remember(element) { element?.let(JsonTreeBuilder::build) }
+    val visibleState = remember(tree) { tree?.let(::VisibleTreeState) }
 
     CompositionLocalProvider(
         LocalTextStyle provides MaterialTheme.typography.bodyMedium.copy(

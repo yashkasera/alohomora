@@ -80,13 +80,16 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
-import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceDetailsSideModal
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TrafficDetailsSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceWaterfallSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TracesPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TrafficPanel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.CacheViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
@@ -109,6 +112,7 @@ fun DevToolsDesktopApp(
     logcatViewModel: LogcatViewModel,
     databaseViewModel: DatabaseViewModel,
     cacheViewModel: CacheViewModel,
+    tracesViewModel: TracesViewModel,
     initialDeviceId: String? = null,
     showHelp: Boolean = false,
     onShowHelp: () -> Unit = {},
@@ -131,7 +135,10 @@ fun DevToolsDesktopApp(
     var isRecording by remember { mutableStateOf(false) }
     var recordingDevicePath by remember { mutableStateOf<String?>(null) }
     var recordingLocalPath by remember { mutableStateOf<String?>(null) }
-    var selectedTraceForDrawer by remember { mutableStateOf<TrafficEntry?>(null) }
+    var selectedTrafficForSheet by remember { mutableStateOf<TrafficEntry?>(null) }
+    // Read from the view model rather than held here: the sheet's whole state (selection, collapse,
+    // split) lives there, so a second copy of "which trace is open" could only ever disagree.
+    val selectedTraceId by tracesViewModel.selectedTraceId.collectAsState()
     var selectedDeviceId by remember(initialDeviceId) { mutableStateOf(initialDeviceId) }
     var isModifierHeld by remember { mutableStateOf(false) }
 
@@ -209,6 +216,7 @@ fun DevToolsDesktopApp(
             onShowHelp()
         },
         onClearTraffic = { devToolsViewModel.clearTraffic() },
+        onClearTraces = { tracesViewModel.clearTraces() },
         onClearEvents = { devToolsViewModel.clearEvents() },
         onForceStop = {
             buildInfo?.packageName?.let { pkg ->
@@ -278,8 +286,12 @@ fun DevToolsDesktopApp(
                             onDismissHelp(); return@onPreviewKeyEvent true
                         }
 
-                        selectedTraceForDrawer != null -> {
-                            selectedTraceForDrawer = null; return@onPreviewKeyEvent true
+                        selectedTrafficForSheet != null -> {
+                            selectedTrafficForSheet = null; return@onPreviewKeyEvent true
+                        }
+
+                        selectedTraceId != null -> {
+                            tracesViewModel.closeTrace(); return@onPreviewKeyEvent true
                         }
                     }
                     return@onPreviewKeyEvent false
@@ -294,6 +306,7 @@ fun DevToolsDesktopApp(
                 if (event.isClearShortcut()) {
                     when (activeSection) {
                         DesktopSection.Traffic -> devToolsViewModel.clearTraffic()
+                        DesktopSection.Traces -> tracesViewModel.clearTraces()
                         DesktopSection.Events -> devToolsViewModel.clearEvents()
                         else -> {}
                     }
@@ -387,7 +400,7 @@ fun DevToolsDesktopApp(
                                         recordingLocalPath = null
                                     }
                                 },
-                                onTrafficItemClick = { selectedTraceForDrawer = it },
+                                onTrafficItemClick = { selectedTrafficForSheet = it },
                                 onEventViewClick = {},
                                 onTrafficClick = { activeSection = DesktopSection.Traffic },
                                 onEventsClick = { activeSection = DesktopSection.Events },
@@ -408,7 +421,12 @@ fun DevToolsDesktopApp(
 
                             DesktopSection.Traffic -> TrafficPanel(
                                 devToolsViewModel = devToolsViewModel,
-                                onLogClick = { selectedTraceForDrawer = it },
+                                onLogClick = { selectedTrafficForSheet = it },
+                            )
+
+                            DesktopSection.Traces -> TracesPanel(
+                                tracesViewModel = tracesViewModel,
+                                onTraceClick = tracesViewModel::openTrace,
                             )
 
                             DesktopSection.Events -> EventsPanel(devToolsViewModel = devToolsViewModel)
@@ -452,10 +470,15 @@ fun DevToolsDesktopApp(
                 }
             }
 
-            TraceDetailsSideModal(
-                trace = selectedTraceForDrawer,
+            TrafficDetailsSideSheet(
+                traffic = selectedTrafficForSheet,
                 devToolsViewModel = devToolsViewModel,
-                onDismiss = { selectedTraceForDrawer = null },
+                onDismiss = { selectedTrafficForSheet = null },
+            )
+
+            TraceWaterfallSideSheet(
+                tracesViewModel = tracesViewModel,
+                onDismiss = tracesViewModel::closeTrace,
             )
         }
 

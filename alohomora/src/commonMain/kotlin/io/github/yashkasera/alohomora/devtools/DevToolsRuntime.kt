@@ -29,14 +29,19 @@ import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
+import io.github.yashkasera.alohomora.common.RequestTraceSpansMessage
+import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.StreamErrorMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
+import io.github.yashkasera.alohomora.common.StreamSpanMessage
 import io.github.yashkasera.alohomora.common.StreamTrafficMessage
+import io.github.yashkasera.alohomora.common.TraceSpansSnapshotMessage
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.domain.repository.EventsRepository
 import io.github.yashkasera.alohomora.replay.ReplayOutcome
 import io.github.yashkasera.alohomora.replay.TrafficReplayRegistry
+import io.github.yashkasera.alohomora.trace.SpanCaptureRegistry
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -68,6 +73,19 @@ internal object DevToolsDefaults {
      * so a row here is an order of magnitude heavier than either of those.
      */
     const val ERROR_SNAPSHOT_LIMIT: Int = 100
+
+    /**
+     * Above the event limit and far above [ERROR_SNAPSHOT_LIMIT], because the unit differs.
+     *
+     * A span row is cheap — two ids, two longs, a small attribute object — but a *trace* is 10-25 of
+     * them, so 1000 spans is only ~40-100 traces: the same order as [TRAFFIC_SNAPSHOT_LIMIT]'s 200
+     * requests, measured in the unit a developer actually thinks in.
+     *
+     * Frame budget: ~1000 x 600 B is ~600 KB, comfortably inside `DevToolsProtocol.MAX_PAYLOAD_BYTES`
+     * alongside the event and traffic snapshots — but that arithmetic only holds because
+     * `SPAN_ATTRIBUTE_VALUE_MAX_CHARS` bounds attribute values, which no tracer does on its own.
+     */
+    const val SPAN_SNAPSHOT_LIMIT: Int = 1000
     const val STREAM_BUFFER_CAPACITY: Int = 1024
 
     /**
@@ -257,6 +275,12 @@ internal class DevToolsRuntime(
         // Keyed on `id`, not `time`: ids are monotonic, so two errors recorded inside the same
         // millisecond are still ordered and neither is silently dropped as "not newer".
         private val errorAdapter = DevToolsStreamAdapter { error: Error -> error.id }
+
+        // Keyed on the rowid, not on either timestamp, and this one is not interchangeable: a parent
+        // span ends *after* its children, a later-started sibling can end before an earlier one, and
+        // two spans can share an end nanos. An end-ordered key would therefore both emit spans out of
+        // order and silently drop the ones that tie. Rowids are monotonic in insert order.
+        private val spanAdapter = DevToolsStreamAdapter { span: Span -> span.id }
         private val trafficSignatures = linkedMapOf<String, Int>()
         private val otp = (1000..9999).random().toString()
         private var isAuthenticated = false
@@ -370,6 +394,7 @@ internal class DevToolsRuntime(
                             )
                             is RequestCacheValueMessage -> handleCacheRequest(message.key)
                             is RequestReplayTraceMessage -> handleReplayRequest(message)
+                            is RequestTraceSpansMessage -> handleTraceSpansRequest(message.traceId)
                             // Includes UnknownMessage from a newer peer: ignore, don't disconnect.
                             else -> Unit
                         }
@@ -495,6 +520,7 @@ internal class DevToolsRuntime(
             connectionScope.launch { streamEvents() }
             connectionScope.launch { streamTraffic() }
             connectionScope.launch { streamErrors() }
+            connectionScope.launch { streamSpans() }
             connectionScope.launch { sendInitialState() }
         }
 
@@ -505,10 +531,25 @@ internal class DevToolsRuntime(
          * fresh snapshot the two sides would disagree until the next reconnect.
          */
         private suspend fun handleClear(message: RequestClearMessage) {
+            // `traces` means *traffic* — a misnomer predating the vocabulary rule, kept for interop.
+            // Spans have their own flag; see RequestClearMessage.spans.
             if (message.traces) database.trafficDao().clearAll()
             if (message.events) database.eventDao().clearAll()
             if (message.errors) database.errorDao().clearAll()
+            if (message.spans) database.spanDao().clearAll()
             sendInitialState()
+        }
+
+        /**
+         * Answers [RequestTraceSpansMessage] with every span of one trace.
+         *
+         * Exists because the snapshot truncates by rowid, which cuts a large trace's
+         * earliest-finishing leaves while keeping its root — so the desktop can hold what looks like a
+         * complete waterfall and is not. This lets it ask for the rest.
+         */
+        private suspend fun handleTraceSpansRequest(traceId: String) {
+            val spans = database.spanDao().getTrace(traceId)
+            send(TraceSpansSnapshotMessage(nextSequence(), traceId, spans))
         }
 
         /**
@@ -550,6 +591,8 @@ internal class DevToolsRuntime(
                 .getLatest(DevToolsDefaults.TRAFFIC_SNAPSHOT_LIMIT)
             val errors = database.errorDao()
                 .getLatest(DevToolsDefaults.ERROR_SNAPSHOT_LIMIT)
+            val spans = database.spanDao()
+                .getLatest(DevToolsDefaults.SPAN_SNAPSHOT_LIMIT)
             val databases = databaseInspector.listDatabases()
             val selectedDatabase = databases.firstOrNull()?.name
             defaultDatabaseName = selectedDatabase
@@ -567,6 +610,7 @@ internal class DevToolsRuntime(
                 events = events,
                 traffic = traffic,
                 errors = errors,
+                spans = spans,
                 databaseSchema = schema,
                 databases = databases,
                 selectedDatabase = selectedDatabase,
@@ -574,9 +618,11 @@ internal class DevToolsRuntime(
                 buildMetadata = Alohomora.config?.toBuildMetadataPayload(),
                 gitHistory = Alohomora.config?.commits?.map { it.toGitHistoryPayload() }.orEmpty(),
                 replaySupported = TrafficReplayRegistry.isSupported,
+                spanCaptureSupported = SpanCaptureRegistry.isSupported,
             )
             eventAdapter.seed(events)
             errorAdapter.seed(errors)
+            spanAdapter.seed(spans)
             seedTrafficSignatures(traffic)
             send(InitialStateMessage(nextSequence(), payload))
         }
@@ -600,6 +646,20 @@ internal class DevToolsRuntime(
                 .collect { errors ->
                     errorAdapter.filterNew(errors).forEach { item ->
                         sendStream(StreamErrorMessage(nextSequence(), item))
+                    }
+                }
+        }
+
+        /**
+         * Streams straight off the DAO rather than through `SpanRepository`, for the same reason as
+         * [streamErrors]: the desktop needs the whole row, attributes and events included, and has no
+         * follow-up request for an individual span.
+         */
+        private suspend fun streamSpans() {
+            database.spanDao().observeLatest(DevToolsDefaults.SPAN_SNAPSHOT_LIMIT)
+                .collect { spans ->
+                    spanAdapter.filterNew(spans).forEach { item ->
+                        sendStream(StreamSpanMessage(nextSequence(), item))
                     }
                 }
         }

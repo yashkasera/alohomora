@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora
 
+import io.github.yashkasera.alohomora.common.SpanEvent
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.replay.TrafficReplayHandler
 import kotlin.jvm.JvmOverloads
@@ -82,6 +83,48 @@ object Alohomora {
     @JvmStatic
     @JvmOverloads
     fun recordError(reason: String, stackTrace: String? = null, place: String? = null) {
+        /* no-op */
+    }
+
+    // ============================================================================
+    // Trace Recording - No-op
+    // ============================================================================
+
+    /**
+     * No-op mirror of `:alohomora`'s `recordSpan`.
+     *
+     * This being a no-op is what lets a host app register its tracer adapter from `src/main` rather
+     * than a debug-only source set: the adapter compiles and runs in release, and every span it hands
+     * over lands here and is discarded. R8 removes the call and the argument construction with it.
+     *
+     * The defaults are literals rather than `Span.KIND_INTERNAL` / `Span.STATUS_UNSET`, because
+     * `Span` lives in `:alohomora-common`, which this module deliberately does not depend on. They
+     * must match the real declaration's constants.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    @JvmOverloads
+    fun recordSpan(
+        traceId: String,
+        spanId: String,
+        name: String,
+        startEpochNanos: Long,
+        endEpochNanos: Long,
+        parentSpanId: String? = null,
+        kind: String = "INTERNAL",
+        statusCode: String = "UNSET",
+        statusDescription: String? = null,
+        attributes: Map<String, String>? = null,
+        events: List<SpanEvent> = emptyList(),
+        scopeName: String? = null,
+    ) {
+        /* no-op */
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    @JvmOverloads
+    fun recordSpan(name: String, durationNanos: Long, attributes: Map<String, String>? = null) {
         /* no-op */
     }
 
