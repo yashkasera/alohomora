@@ -61,11 +61,11 @@ import io.github.yashkasera.alohomora.ui.icons.Braces
 import io.github.yashkasera.alohomora.ui.icons.CircleAlert
 import io.github.yashkasera.alohomora.ui.icons.ClipboardList
 import io.github.yashkasera.alohomora.ui.icons.Database
-import io.github.yashkasera.alohomora.ui.icons.Waypoints
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Layers
 import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
+import io.github.yashkasera.alohomora.ui.icons.Waypoints
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
@@ -437,8 +437,7 @@ private fun ModuleCard(
                 shape = RectangleShape,
             )
             .background(backgroundColor)
-            .clickable { onNavigate(overviewModule.route) }
-            .padding(MaterialTheme.dimens.margin.lg),
+            .clickable { onNavigate(overviewModule.route) },
     ) {
         // Decorative corner mark, accent tile only, drawn behind the content.
         if (overviewModule.isInverse) {
@@ -448,7 +447,10 @@ private fun ModuleCard(
             )
         }
 
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(MaterialTheme.dimens.margin.lg)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -494,7 +496,7 @@ private fun ModuleCard(
 }
 
 /** Height of every module tile. See [ModuleCard] for why it is fixed rather than intrinsic. */
-private val CARD_HEIGHT = 168.dp
+private val CARD_HEIGHT = 128.dp
 
 /**
  * Scattered squares in the accent tile's top corner.
@@ -512,7 +514,7 @@ private fun AccentCornerPattern(color: Color, modifier: Modifier = Modifier) {
             for (col in 0 until 7) {
                 // Densest at the top-right, fading out along the diagonal.
                 val distance = (row + (6 - col)) / 12f
-                val alpha = (0.22f - distance * 0.24f).coerceAtLeast(0f)
+                val alpha = (0.18f - distance * 0.24f).coerceAtLeast(0f)
                 if (alpha <= 0.01f) continue
                 drawRect(
                     color = color.copy(alpha = alpha),

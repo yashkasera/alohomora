@@ -81,9 +81,9 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventDetail
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
-import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TrafficDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceWaterfallSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TracesPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TrafficDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TrafficPanel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.CacheViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
@@ -92,6 +92,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesView
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
@@ -116,6 +117,7 @@ fun DevToolsDesktopApp(
     cacheViewModel: CacheViewModel,
     tracesViewModel: TracesViewModel,
     eventsViewModel: EventsViewModel,
+    trafficViewModel: TrafficViewModel,
     initialDeviceId: String? = null,
     showHelp: Boolean = false,
     onShowHelp: () -> Unit = {},
@@ -221,7 +223,7 @@ fun DevToolsDesktopApp(
             onDismissCommandPalette()
             onShowHelp()
         },
-        onClearTraffic = { devToolsViewModel.clearTraffic() },
+        onClearTraffic = { trafficViewModel.clearTraffic() },
         onClearTraces = { tracesViewModel.clearTraces() },
         onClearEvents = { eventsViewModel.clearEvents() },
         onForceStop = {
@@ -315,7 +317,7 @@ fun DevToolsDesktopApp(
 
                 if (event.isClearShortcut()) {
                     when (activeSection) {
-                        DesktopSection.Traffic -> devToolsViewModel.clearTraffic()
+                        DesktopSection.Traffic -> trafficViewModel.clearTraffic()
                         DesktopSection.Traces -> tracesViewModel.clearTraces()
                         DesktopSection.Events -> eventsViewModel.clearEvents()
                         else -> {}
@@ -430,7 +432,7 @@ fun DevToolsDesktopApp(
                             )
 
                             DesktopSection.Traffic -> TrafficPanel(
-                                devToolsViewModel = devToolsViewModel,
+                                trafficViewModel = trafficViewModel,
                                 onLogClick = { selectedTrafficForSheet = it },
                             )
 

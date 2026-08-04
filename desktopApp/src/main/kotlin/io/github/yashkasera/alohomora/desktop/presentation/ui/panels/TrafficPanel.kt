@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -18,9 +19,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.desktop.presentation.model.TrafficUiState
+import io.github.yashkasera.alohomora.desktop.presentation.model.trafficSubtitle
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
@@ -45,17 +48,22 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.Section
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SlackShareDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
 import io.github.yashkasera.alohomora.replay.replayBlockedReason
 import io.github.yashkasera.alohomora.replay.toReplayRequest
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
+import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Repeat
+import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Slack
 import io.github.yashkasera.alohomora.ui.icons.Trash
@@ -63,55 +71,24 @@ import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TrafficPanel(
-    devToolsViewModel: DevToolsViewModel,
+    trafficViewModel: TrafficViewModel,
     onLogClick: (TrafficEntry) -> Unit,
 ) {
-    val logs by devToolsViewModel.traffic.collectAsState()
+    val uiState by trafficViewModel.uiState.collectAsState()
+    val query by trafficViewModel.query.collectAsState()
     val lazyListState = rememberLazyListState()
     var showClearConfirmation by remember { mutableStateOf(false) }
 
-    ScaffoldContent(
-        lazyListState = lazyListState,
-        logs = logs,
-        onLogClick = { log ->
-            // Dim the row as soon as it is opened; TrafficItem already styles on isViewed.
-            devToolsViewModel.markTrafficViewed(log.id)
-            onLogClick(log)
-        },
-        onClearRequested = { showClearConfirmation = true },
-    )
-
-    if (showClearConfirmation) {
-        ClearCapturedDialog(
-            title = "Clear all traffic?",
-            message = "Captured traffic will be deleted from the device. This cannot be undone.",
-            onConfirm = {
-                devToolsViewModel.clearTraffic()
-                showClearConfirmation = false
-            },
-            onDismiss = { showClearConfirmation = false },
-        )
-    }
-}
-
-@Composable
-private fun ScaffoldContent(
-    lazyListState: androidx.compose.foundation.lazy.LazyListState,
-    logs: List<TrafficEntry>,
-    onLogClick: (TrafficEntry) -> Unit,
-    onClearRequested: () -> Unit,
-) {
-    androidx.compose.material3.Scaffold(
+    Scaffold(
         topBar = {
             AlohomoraTopBar(
                 title = "Traffic",
-                subtitle = "Live traffic entries from connected app",
+                subtitle = trafficSubtitle(uiState),
                 showDivider = lazyListState.canScrollBackward,
                 actions = {
-                    AlohomoraIconButton(onClick = onClearRequested) {
+                    AlohomoraIconButton(onClick = { showClearConfirmation = true }) {
                         Icon(
                             imageVector = Icons.Trash,
                             contentDescription = "Clear all traffic",
@@ -121,25 +98,150 @@ private fun ScaffoldContent(
             )
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-    ) {
-        Box(modifier = Modifier.padding(it).fillMaxSize()) {
-            if (logs.isEmpty()) {
-                EmptyState(
-                    icon = Icons.Server,
-                    title = "No traffic yet",
-                    subtitle = "Requests appear here as the connected app makes them.",
-                )
-            } else {
-                LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
-                    items(logs, key = { log -> log.id }) { log ->
-                        TrafficItem(call = log, onClick = { onLogClick(log) })
-                        AlohomoraHorizontalDivider()
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+            TrafficFilters(
+                state = uiState,
+                query = query,
+                onQueryChange = trafficViewModel::onQueryChange,
+                onMethodToggle = trafficViewModel::onMethodToggle,
+                onErrorsOnlyChange = trafficViewModel::onErrorsOnlyChange,
+                onClearFilters = trafficViewModel::clearFilters,
+            )
+            AlohomoraHorizontalDivider()
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (uiState.entries.isEmpty()) {
+                    TrafficEmptyState(uiState, onClearFilters = trafficViewModel::clearFilters)
+                } else {
+                    LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                        items(uiState.entries, key = { log -> log.id }) { log ->
+                            TrafficItem(
+                                call = log,
+                                onClick = {
+                                    trafficViewModel.markViewed(log)
+                                    onLogClick(log)
+                                },
+                            )
+                            AlohomoraHorizontalDivider()
+                        }
                     }
+                    ScrollToTopButton(lazyListState)
                 }
-                ScrollToTopButton(lazyListState)
             }
         }
-        FollowNewest(lazyListState, logs.size)
+        FollowNewest(lazyListState, uiState.entries.size)
+    }
+
+    if (showClearConfirmation) {
+        ClearCapturedDialog(
+            title = "Clear all traffic?",
+            message = "Captured traffic will be deleted from the device. This cannot be undone.",
+            onConfirm = {
+                trafficViewModel.clearTraffic()
+                showClearConfirmation = false
+            },
+            onDismiss = { showClearConfirmation = false },
+        )
+    }
+}
+
+/**
+ * Search plus a method filter, laid out like the Traces and Events rows so the three panels read alike.
+ */
+@Composable
+private fun TrafficFilters(
+    state: TrafficUiState,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onMethodToggle: (String) -> Unit,
+    onErrorsOnlyChange: (Boolean) -> Unit,
+    onClearFilters: () -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = MaterialTheme.dimens.margin.xxl,
+                    vertical = MaterialTheme.dimens.margin.sm,
+                ),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AlohomoraSearchTextField(
+                query = query,
+                onQueryChange = onQueryChange,
+                // Names the three things matched. Bodies are not searched — see TrafficEntry.searchHaystack.
+                placeholder = "Filter by URL, method or status",
+                onClear = { onQueryChange("") },
+                modifier = Modifier.weight(1f),
+            )
+            // Counted in the label so the chip reports whether pressing it will show anything, rather than
+            // making the user press it to find out.
+            AlohomoraFilterChip(
+                label = if (state.errorCount > 0) "Errors · ${state.errorCount}" else "Errors",
+                selected = state.filters.errorsOnly,
+                uppercase = false,
+                onClick = { onErrorsOnlyChange(!state.filters.errorsOnly) },
+            )
+            if (state.filters.hasFilter) {
+                AlohomoraFilterChip(
+                    label = "Clear filters",
+                    selected = false,
+                    onClick = onClearFilters,
+                )
+            }
+        }
+
+        if (state.methods.isNotEmpty()) {
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = MaterialTheme.dimens.margin.xxl,
+                        end = MaterialTheme.dimens.margin.xxl,
+                        bottom = MaterialTheme.dimens.margin.sm,
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                items(state.methods, key = { it }) { method ->
+                    // An include set, so nothing selected shows everything: with no chip lit the list is
+                    // unfiltered rather than empty.
+                    AlohomoraFilterChip(
+                        label = "$method · ${state.methodCounts[method] ?: 0}",
+                        selected = method in state.filters.methods,
+                        uppercase = false,
+                        onClick = { onMethodToggle(method) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Distinguishes "nothing captured" from "the filters hid it all", the way the Traces panel does — the two
+ * need opposite actions from the reader.
+ */
+@Composable
+private fun TrafficEmptyState(state: TrafficUiState, onClearFilters: () -> Unit) {
+    if (state.totalCount == 0) {
+        EmptyState(
+            icon = Icons.Server,
+            title = "No traffic yet",
+            subtitle = "Requests appear here as the connected app makes them.",
+        )
+    } else {
+        EmptyState(
+            icon = Icons.Search,
+            title = "No requests match",
+            subtitle = "${state.totalCount} captured. Clear the filters to see them.",
+            action = {
+                AlohomoraOutlinedButton(text = "Clear filters", onClick = onClearFilters)
+            },
+        )
     }
 }
 

@@ -1,0 +1,94 @@
+package io.github.yashkasera.alohomora.desktop
+
+import io.github.yashkasera.alohomora.common.Error
+import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.Span
+import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
+import io.github.yashkasera.alohomora.desktop.domain.model.CacheState
+import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
+import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
+import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
+import io.github.yashkasera.alohomora.desktop.domain.model.GitHistoryCommit
+import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
+import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
+import io.github.yashkasera.alohomora.replay.ReplayRequest
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+/**
+ * An in-memory [DevToolsRepository] for driving whole panels in a composition.
+ *
+ * Worth its thirty-odd members exactly once: the Events sheet shipped a layout crash that only appeared
+ * when the real panel and the real sheet were composed together, and no pure test could reach it. Every
+ * command is recorded rather than ignored so a test can also assert what the UI asked the device to do.
+ */
+class FakeDevToolsRepository(
+    events: List<Event> = emptyList(),
+    cache: CacheState = CacheState(),
+) : DevToolsRepository {
+
+    private val _events = MutableStateFlow(events)
+    private val _cacheState = MutableStateFlow(cache)
+
+    override val events: StateFlow<List<Event>> = _events
+    override val cacheState: StateFlow<CacheState> = _cacheState
+
+    override val connectionState = MutableStateFlow<DevToolsConnection>(DevToolsConnection.Disconnected)
+    override val currentDeviceId = MutableStateFlow<String?>("test-device")
+    override val switching = MutableStateFlow(false)
+    override val errors = MutableStateFlow<List<Error>>(emptyList())
+    override val spans = MutableStateFlow<List<Span>>(emptyList())
+    override val spanCaptureSupported = MutableStateFlow(false)
+    override val traffic = MutableStateFlow<List<TrafficEntry>>(emptyList())
+    override val databaseSnapshot = MutableStateFlow(DatabaseSnapshot())
+    override val buildInfo = MutableStateFlow<BuildInfo?>(null)
+    override val gitHistory = MutableStateFlow<List<GitHistoryCommit>>(emptyList())
+    override val replayState = MutableStateFlow(ReplayState())
+    override val deviceError = MutableStateFlow<String?>(null)
+
+    /** Keys whose value the UI asked for, in order. */
+    val requestedCacheKeys = mutableListOf<String>()
+    val viewedEventIds = mutableListOf<Long>()
+    var clearedEvents = false
+        private set
+
+    /** Mirrors the real store: marking replaces the instance rather than mutating it. */
+    override fun markEventViewed(id: Long) {
+        viewedEventIds += id
+        _events.value = _events.value.map { if (it.id == id) it.copy(isViewed = true) else it }
+    }
+
+    override fun requestCacheValue(key: String) {
+        requestedCacheKeys += key
+    }
+
+    /** Answers a pending request, the way a `CacheSnapshotMessage` would. */
+    fun deliverCacheValue(key: String, value: String?) {
+        _cacheState.value = _cacheState.value.copy(
+            values = _cacheState.value.values + (key to value),
+        )
+    }
+
+    override fun clearCaptured(traces: Boolean, events: Boolean, errors: Boolean, spans: Boolean) {
+        if (events) {
+            clearedEvents = true
+            _events.value = emptyList()
+        }
+    }
+
+    override fun connect(target: DevToolsTarget) = Unit
+    override fun switchDevice(target: DevToolsTarget, deviceId: String?) = Unit
+    override fun disconnect() = Unit
+    override fun submitOtp(otp: String) = Unit
+    override fun markTrafficViewed(id: String) = Unit
+    override fun markErrorViewed(id: Long) = Unit
+    override fun markTraceViewed(traceId: String) = Unit
+    override fun requestTraceSpans(traceId: String) = Unit
+    override fun replayTraffic(request: ReplayRequest) = Unit
+    override fun dismissReplayError(sourceTraceId: String) = Unit
+    override fun dismissDeviceError() = Unit
+    override fun requestDatabaseSchema(databaseName: String) = Unit
+    override fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int) = Unit
+    override fun requestInitialState() = Unit
+}

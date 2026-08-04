@@ -22,15 +22,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -64,6 +68,20 @@ fun AlohomoraTextField(
     val isFocused by interactionSource.collectIsFocusedAsState()
     val currentBorderColor = if (isFocused) focusedBorderColor else borderColor
 
+    // The caret is remembered here; the text is not.
+    //
+    // `BasicTextField(value: String)` carries no selection, so it has to guess where the caret went
+    // whenever the value it is handed differs from what it last emitted. Every caller drives this field
+    // from a `StateFlow`, so the new value arrives a frame or a dispatcher hop late — and the guess lands
+    // on index 0. The symptom is a caret that jumps left on every keystroke, typing a word out backwards.
+    //
+    // Keeping only the selection local means [value] stays the single source of truth for the text, so
+    // there is no second copy to diverge from it, while the caret survives the round trip.
+    var selection by remember { mutableStateOf(TextRange(value.length)) }
+    // Coerced because the remembered caret can briefly outrun a lagging value, and a selection past the
+    // end of the text throws.
+    val fieldValue = TextFieldValue(text = value, selection = selection.coerceAtMostLength(value.length))
+
     Column(modifier = modifier) {
         label?.let {
             Text(
@@ -74,8 +92,12 @@ fun AlohomoraTextField(
             )
         }
         BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
+            value = fieldValue,
+            onValueChange = { updated ->
+                selection = updated.selection
+                // Only a text change is worth reporting; a bare caret move is nobody else's business.
+                if (updated.text != value) onValueChange(updated.text)
+            },
             enabled = enabled,
             readOnly = readOnly,
             singleLine = singleLine,
@@ -174,3 +196,17 @@ fun AlohomoraSearchTextField(
         keyboardActions = KeyboardActions(onSearch = { onSearch?.invoke() }),
     )
 }
+
+/**
+ * Clamps a remembered caret to [length].
+ *
+ * The caret is remembered independently of the text, so while a hoisted value is catching up the caret can
+ * point past the end of what is currently rendered — and `TextFieldValue` throws on an out-of-range
+ * selection rather than clamping.
+ */
+private fun TextRange.coerceAtMostLength(length: Int): TextRange =
+    if (start <= length && end <= length) {
+        this
+    } else {
+        TextRange(start.coerceAtMost(length), end.coerceAtMost(length))
+    }

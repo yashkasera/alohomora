@@ -10,8 +10,8 @@ import io.github.yashkasera.alohomora.devtools.DevToolsCacheInspector
 import io.github.yashkasera.alohomora.devtools.DevToolsTcpServer
 import io.github.yashkasera.alohomora.devtools.DevToolsTrustStore
 import io.github.yashkasera.alohomora.devtools.IosAppDatabaseProvider
-import io.github.yashkasera.alohomora.devtools.IosCacheInspector
 import io.github.yashkasera.alohomora.devtools.IosTrustStore
+import io.github.yashkasera.alohomora.devtools.RepositoryCacheInspector
 import io.github.yashkasera.alohomora.domain.repository.DatabaseRepository
 import io.github.yashkasera.alohomora.utils.share.ShareManager
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -37,7 +37,7 @@ internal actual val platformModule = module {
         val dbFilePath = requireNotNull(documentDirectory?.path) + "/$DATABASE_NAME"
         openDatabase(dbFilePath)
     }
-    single<DevToolsCacheInspector> { IosCacheInspector() }
+    single<DevToolsCacheInspector> { RepositoryCacheInspector(get()) }
     single<DevToolsAppDatabaseProvider> { IosAppDatabaseProvider() }
     single { DevToolsTcpServer() }
     single<DevToolsTrustStore> { IosTrustStore() }

@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora.desktop
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +16,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.runComposeUiTest
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
 import kotlin.math.abs
 import kotlin.test.Test
@@ -80,6 +83,53 @@ class AlohomoraSideSheetTest {
         assertTrue(abs(ratio - 0.5f) < 0.02f, "got ${(ratio * 100).toInt()}%")
     }
 
+    /**
+     * A scrollable code block in the content slot must lay out rather than throw.
+     *
+     * The exact shape the Events sheet shipped, and it crashed on opening any event: the sheet invokes
+     * `content()` inside a `Column`, a `Column` measures non-weighted children with an unbounded main
+     * axis, and `AlohomoraCodeBlock(isScrollable = true)` puts a `verticalScroll` at the bottom of that
+     * chain — which Compose rejects outright with "Vertically scrollable component was measured with an
+     * infinity maximum height constraints".
+     *
+     * Uses the real code block rather than a bare `Modifier.verticalScroll`, because the nesting is what
+     * decides this: a hand-rolled `Column(verticalScroll)` in the same slot does *not* reproduce it, so a
+     * simplified stand-in would pass while the shipped code crashed.
+     *
+     * The fix is available only because the slot is a `ColumnScope`, so content can take `weight(1f)`.
+     */
+    @Test
+    fun `a scrollable code block in the content slot lays out instead of throwing`() = runComposeUiTest {
+        setContent {
+            AlohomoraTheme {
+                AlohomoraSideSheet(
+                    visible = true,
+                    onDismiss = {},
+                    header = { Text("header") },
+                    modifier = Modifier.testTag("root"),
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                        AlohomoraCodeBlock(
+                            content = (1..SCROLL_OVERFLOW_LINES).joinToString("\n") { "line $it" },
+                            isScrollable = true,
+                            modifier = Modifier.weight(1f).testTag("block"),
+                        )
+                    }
+                }
+            }
+        }
+
+        val sheetHeight = onNodeWithTag("root").fetchSemanticsNode().size.height
+        val blockHeight = onNodeWithTag("block", useUnmergedTree = true).fetchSemanticsNode().size.height
+
+        assertTrue(blockHeight > 0, "the code block did not lay out")
+        assertTrue(
+            blockHeight <= sheetHeight,
+            "the block took $blockHeight against a $sheetHeight sheet, so it was measured unbounded " +
+                "rather than clamped to the space left by the header",
+        )
+    }
+
     @Test
     fun `nothing renders while the sheet is hidden`() = runComposeUiTest {
         var visible by mutableStateOf(false)
@@ -106,5 +156,10 @@ class AlohomoraSideSheetTest {
 
         onNodeWithText("body").assertIsDisplayed()
         onNodeWithText("header").assertIsDisplayed()
+    }
+
+    private companion object {
+        /** Comfortably more lines than a test window is tall. */
+        const val SCROLL_OVERFLOW_LINES = 200
     }
 }

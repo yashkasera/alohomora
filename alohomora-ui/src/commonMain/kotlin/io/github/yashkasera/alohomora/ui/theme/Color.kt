@@ -129,6 +129,9 @@ val CanvasDarkColorScheme = darkColorScheme(
     error = Color(0xFFE5484D),
     onError = Color(0xFF000000),
 
+    errorContainer = Color(0xFF8C1D18),
+    onErrorContainer = Color(0xFFF9DEDC),
+
     inverseSurface = Color(0xFFEDEDE9),
     inverseOnSurface = Color(0xFF111111),
 

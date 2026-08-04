@@ -12,12 +12,12 @@ import io.github.yashkasera.alohomora.data.repository.CacheRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.DatabaseRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.PlatformDatabaseAccessor
 import io.github.yashkasera.alohomora.devtools.AndroidAppDatabaseProvider
-import io.github.yashkasera.alohomora.devtools.AndroidCacheInspector
 import io.github.yashkasera.alohomora.devtools.AndroidTrustStore
 import io.github.yashkasera.alohomora.devtools.DevToolsAppDatabaseProvider
 import io.github.yashkasera.alohomora.devtools.DevToolsCacheInspector
 import io.github.yashkasera.alohomora.devtools.DevToolsTcpServer
 import io.github.yashkasera.alohomora.devtools.DevToolsTrustStore
+import io.github.yashkasera.alohomora.devtools.RepositoryCacheInspector
 import io.github.yashkasera.alohomora.domain.repository.CacheRepository
 import io.github.yashkasera.alohomora.domain.repository.DatabaseRepository
 import io.github.yashkasera.alohomora.presentation.ui.screens.navigation.NavigationHistoryViewModel
@@ -33,7 +33,7 @@ internal actual val platformModule = module {
         openDatabase(context)
     }
     viewModel { NavigationHistoryViewModel() }
-    single<DevToolsCacheInspector> { AndroidCacheInspector(androidContext()) }
+    single<DevToolsCacheInspector> { RepositoryCacheInspector(get()) }
     single<DevToolsAppDatabaseProvider> { AndroidAppDatabaseProvider(androidContext()) }
     single { DevToolsTcpServer() }
     single<DevToolsTrustStore> { AndroidTrustStore(androidContext()) }

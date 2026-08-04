@@ -40,6 +40,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesView
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -58,6 +59,7 @@ class DesktopAppComposition(
     val cacheViewModel: CacheViewModel
     val tracesViewModel: TracesViewModel
     val eventsViewModel: EventsViewModel
+    val trafficViewModel: TrafficViewModel
 
     /** Everything [close] has to release. Held so per-window teardown is complete. */
     private val devToolsRepositoryRef: DevToolsRepositoryImpl
@@ -179,6 +181,7 @@ class DesktopAppComposition(
 
         tracesViewModel = TracesViewModel(repository = devToolsRepository)
         eventsViewModel = EventsViewModel(repository = devToolsRepository)
+        trafficViewModel = TrafficViewModel(repository = devToolsRepository)
     }
 
     /**
@@ -197,6 +200,7 @@ class DesktopAppComposition(
         cacheViewModel.close()
         tracesViewModel.close()
         eventsViewModel.close()
+        trafficViewModel.close()
         devToolsRepositoryRef.close()
         // Only if we built it — a shared view model outlives this window.
         if (ownsDevicesViewModel) devicesViewModel.close()
