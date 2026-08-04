@@ -16,10 +16,10 @@ import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import java.io.File
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,7 +45,6 @@ class DevicesViewModel(
         .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyList())
 
     val selectedDeviceId: StateFlow<String?> = repository.selectedDeviceId
-    val lastCommandResult: StateFlow<CommandResult?> = repository.lastCommandResult
     val error: StateFlow<String?> = repository.error
 
     private val _adbCommandHistory = MutableStateFlow<List<AdbCommandLogEntry>>(emptyList())
@@ -56,9 +55,6 @@ class DevicesViewModel(
 
     private val _dataEnabled = MutableStateFlow<Boolean?>(null)
     val dataEnabled: StateFlow<Boolean?> = _dataEnabled.asStateFlow()
-
-    private val _activating = MutableStateFlow(false)
-    val activating: StateFlow<Boolean> = _activating.asStateFlow()
 
     private val _dashboardState = MutableStateFlow(DashboardUiState())
     val dashboardState: StateFlow<DashboardUiState> = _dashboardState.asStateFlow()
@@ -74,9 +70,7 @@ class DevicesViewModel(
         onError: (String?) -> Unit = {},
     ) {
         scope.launch {
-            _activating.value = true
             val error = selectDeviceUseCase(deviceId, hostPort, devicePort)
-            _activating.value = false
             onError(error)
         }
     }
@@ -90,9 +84,7 @@ class DevicesViewModel(
 
     fun connectOverTcp(deviceId: String, host: String, port: Int, onError: (String?) -> Unit = {}) {
         scope.launch {
-            _activating.value = true
             val error = repository.enableTcpAndConnect(deviceId, host, port)
-            _activating.value = false
             onError(error)
         }
     }

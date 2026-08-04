@@ -39,6 +39,7 @@ fun KeyEvent.matchesNavigation(): Int {
         Key.Six -> 5
         Key.Seven -> 6
         Key.Eight -> 7
+        Key.Nine -> 8
         else -> -1
     }
 }

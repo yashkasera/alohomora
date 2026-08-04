@@ -30,6 +30,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.PermanentNavigationDrawer
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -338,7 +340,12 @@ fun DevToolsDesktopApp(
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     if (!hasConnectedDevice) {
-                        NoDevicePanel(onRefresh = { devicesViewModel.refreshDevices() })
+                        Scaffold(
+                            snackbarHost = { SnackbarHost(hostState = devicesViewModel.snackbarHostState) },
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                        ) {
+                            NoDevicePanel(onRefresh = { devicesViewModel.refreshDevices() })
+                        }
                     } else {
                         when (activeSection) {
                             DesktopSection.Dashboard -> DashboardContent(
@@ -544,7 +551,7 @@ fun ColumnScope.Sidebar(
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.weight(1f),
                         )
-                        if (isModifierHeld && index < 8) {
+                        if (isModifierHeld && index < 9) {
                             Text(
                                 text = "${index + 1}",
                                 style = MaterialTheme.typography.labelSmall,

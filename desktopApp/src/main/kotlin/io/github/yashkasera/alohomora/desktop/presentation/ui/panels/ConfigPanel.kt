@@ -19,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
@@ -72,15 +71,15 @@ fun ConfigPanel(devToolsViewModel: DevToolsViewModel) {
                 ) {
                     ConfigCard(title = "Application") {
                         ConfigRow("Project", info.projectName)
-                        ConfigRow("Package", info.packageName, monospace = true)
+                        ConfigRow("Package", info.packageName)
                         ConfigRow("Version", "${info.versionName} (${info.versionCode})")
                         ConfigRow("Variant", info.variantName)
                         ConfigRow("Environment", buildEnvironment(info))
                     }
 
                     ConfigCard(title = "Source") {
-                        ConfigRow("Branch", info.branch, monospace = true)
-                        ConfigRow("Commit", info.commitSha, monospace = true)
+                        ConfigRow("Branch", info.branch)
+                        ConfigRow("Commit", info.commitSha)
                         WorkingTreeRow(isDirty = info.isDirty)
                         ConfigRow(
                             "Built",
@@ -132,7 +131,7 @@ private fun ConfigCard(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun ConfigRow(label: String, value: String?, monospace: Boolean = false) {
+private fun ConfigRow(label: String, value: String?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -145,8 +144,7 @@ private fun ConfigRow(label: String, value: String?, monospace: Boolean = false)
         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
         Text(
             text = value?.takeIf { it.isNotBlank() } ?: "-",
-            style = MaterialTheme.typography.bodyMedium,
-            fontFamily = if (monospace) FontFamily.Monospace else FontFamily.Default,
+            style = MaterialTheme.typography.labelMedium,
         )
     }
 }

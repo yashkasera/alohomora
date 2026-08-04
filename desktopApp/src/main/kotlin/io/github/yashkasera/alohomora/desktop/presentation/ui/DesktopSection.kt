@@ -38,9 +38,6 @@ enum class DesktopSection(
     Database("Database", Icons.Database),
     Cache("Cache", Icons.Key),
     Errors("Errors", Icons.AlertTriangle),
-    // Config and Git History both read build metadata, and Config used to have nowhere to live:
-    // its card was rendered inside Git History and inside the Dashboard, and the Dashboard is
-    // gated off for iOS — so on an iOS device the build metadata was effectively unreachable.
     Config("Config", Icons.Settings),
     GitHistory("Git History", Icons.GitGraph),
     ;
