@@ -62,6 +62,7 @@ import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateChecker
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AboutDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.UpdateBanner
 import java.awt.Dimension
 import java.util.UUID
@@ -106,6 +107,7 @@ fun main() {
         val sharedIsDark = remember { mutableStateOf(initialIsDark) }
         var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
         var updateDismissed by remember { mutableStateOf(false) }
+        var showAbout by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
             snapshotFlow { sharedIsDark.value }
@@ -118,6 +120,14 @@ fun main() {
             if (info != null && info.isUpdateAvailable) {
                 updateInfo = info
             }
+        }
+
+        if (showAbout) {
+            AboutDialog(
+                isDark = sharedIsDark.value,
+                updateInfo = updateInfo,
+                onDismiss = { showAbout = false },
+            )
         }
 
         if (launcherVisible) {
@@ -241,6 +251,10 @@ fun main() {
                                     "Keyboard Shortcuts",
                                     shortcut = KeyShortcut(Key.Slash, meta = isMacOs, ctrl = !isMacOs),
                                     onClick = { showHelp = true },
+                                )
+                                Item(
+                                    "About Alohomora",
+                                    onClick = { showAbout = true },
                                 )
                             }
                         }

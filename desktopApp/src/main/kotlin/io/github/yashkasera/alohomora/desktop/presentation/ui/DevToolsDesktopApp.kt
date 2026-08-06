@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -559,7 +560,7 @@ fun ColumnScope.Sidebar(
     Row(
         modifier = Modifier
             .padding(top = MaterialTheme.dimens.margin.xxl)
-            .padding(horizontal = MaterialTheme.dimens.margin.lg),
+            .padding(horizontal = MaterialTheme.dimens.margin.xxl),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -569,7 +570,7 @@ fun ColumnScope.Sidebar(
         )
         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
         Text(
-            "Alohomora.",
+            "Alohomora",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
         )
