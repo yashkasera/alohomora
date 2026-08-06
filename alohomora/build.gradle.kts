@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -35,6 +36,7 @@ kotlin {
 
     // iosX64 is intentionally absent: Compose Multiplatform 1.11.x no longer publishes
     // iosX64 variants, so declaring it produces a target that can never be compiled.
+    val xcf = XCFramework("AlohomoraKit")
     iosArm64()
     iosSimulatorArm64()
 
@@ -91,6 +93,7 @@ kotlin {
             // constructing it needs okhttp on their own compile classpath.
             api(libs.okhttp)
 
+            implementation(libs.androidx.core)
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
@@ -111,6 +114,7 @@ kotlin {
                 framework {
                     baseName = "AlohomoraKit"
                     isStatic = true
+                    xcf.add(this)
                 }
             }
         }

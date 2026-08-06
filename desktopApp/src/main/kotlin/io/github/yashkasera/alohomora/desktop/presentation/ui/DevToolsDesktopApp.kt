@@ -1,5 +1,8 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,7 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -98,12 +100,12 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressInd
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
+import io.github.yashkasera.alohomora.ui.icons.Alohomora
 import io.github.yashkasera.alohomora.ui.icons.Android
 import io.github.yashkasera.alohomora.ui.icons.Apple
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.X
-import io.github.yashkasera.alohomora.ui.theme.brand
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import java.io.File
 import kotlinx.coroutines.delay
@@ -173,6 +175,8 @@ fun DevToolsDesktopApp(
 
     val selectedDevice = devices.firstOrNull { it.id == selectedDeviceId }
     val isConnected = devToolsState.connection is DevToolsConnection.Connected
+    val isConnectedOrReconnecting = isConnected ||
+        devToolsState.connection is DevToolsConnection.Reconnecting
     val connectedPlatform = selectedDevice?.platform
     val isAndroid = connectedPlatform == DevicePlatform.ANDROID
 
@@ -186,7 +190,7 @@ fun DevToolsDesktopApp(
         else -> DesktopSection.entries.toList()
     }
 
-    LaunchedEffect(activeSection, isConnected, hasConnectedDevice, connectedPlatform) {
+    LaunchedEffect(activeSection, isConnectedOrReconnecting, hasConnectedDevice, connectedPlatform) {
         val gatedSections = setOf(
             DesktopSection.Traffic,
             DesktopSection.Events,
@@ -194,7 +198,7 @@ fun DevToolsDesktopApp(
             DesktopSection.Database,
             DesktopSection.GitHistory,
         )
-        if (activeSection in gatedSections && !isConnected) {
+        if (activeSection in gatedSections && !isConnectedOrReconnecting) {
             activeSection = fallbackSection
             devicesViewModel.setActionError("Connect a device first to open traffic, events, cache, database, and git history")
         }
@@ -450,8 +454,16 @@ fun DevToolsDesktopApp(
                         }
                     }
 
-                    // Overlaid rather than inserted into the layout: it appears mid-session and must not
-                    // reflow the panel underneath it.
+                    AnimatedVisibility(
+                        visible = devToolsState.connection is DevToolsConnection.Reconnecting,
+                        enter = expandVertically(),
+                        exit = shrinkVertically(),
+                        modifier = Modifier.align(Alignment.TopCenter),
+                    ) {
+                        val attempt = (devToolsState.connection as? DevToolsConnection.Reconnecting)?.attempt ?: 1
+                        ReconnectingBanner(attempt = attempt)
+                    }
+
                     deviceError?.let { error ->
                         DeviceErrorBanner(
                             message = error,
@@ -550,11 +562,10 @@ fun ColumnScope.Sidebar(
             .padding(horizontal = MaterialTheme.dimens.margin.lg),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(MaterialTheme.dimens.icon.standard)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.brand),
+        Icon(
+            imageVector = Icons.Alohomora,
+            contentDescription = null,
+            modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
         )
         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
         Text(
@@ -716,7 +727,7 @@ private fun SidebarConnectionCard(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                if (connection is DevToolsConnection.Connected) {
+                if (connection is DevToolsConnection.Connected || connection is DevToolsConnection.Reconnecting) {
                     IconButton(onClick = onDisconnect) {
                         Icon(Icons.X, contentDescription = "Disconnect")
                     }
@@ -765,6 +776,37 @@ private fun DeviceErrorBanner(
             TextButton(onClick = onDismiss) {
                 Text("Dismiss", color = MaterialTheme.colorScheme.onErrorContainer)
             }
+        }
+    }
+}
+
+@Composable
+private fun ReconnectingBanner(
+    attempt: Int,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .padding(MaterialTheme.dimens.margin.md)
+            .widthIn(max = 480.dp),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        tonalElevation = MaterialTheme.dimens.margin.xs,
+    ) {
+        Row(
+            modifier = Modifier.padding(
+                horizontal = MaterialTheme.dimens.margin.md,
+                vertical = MaterialTheme.dimens.margin.sm,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+        ) {
+            ConnectionStatusDot(state = ConnectionDotState.Reconnecting)
+            Text(
+                text = "Reconnecting (attempt $attempt)...",
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }

@@ -7,6 +7,7 @@ compose-multiplatform = "1.11.1"
 # material3 with 1.11.x ui/foundation risks runtime breakage across their internal APIs.
 material3 = "1.11.0-alpha07"
 agp = "9.2.1"
+androidx-core = "1.17.0"
 androidx-activityCompose = "1.13.0"
 kermit = "2.1.0"
 kotlinx-coroutines = "1.11.0"
@@ -27,6 +28,7 @@ binaryCompatibilityValidator = "0.18.1"
 opentelemetry = "1.51.0"
 
 [libraries]
+androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startupRuntime" }
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 

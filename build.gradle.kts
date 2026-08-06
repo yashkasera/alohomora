@@ -16,9 +16,11 @@ plugins {
     alias(libs.plugins.ksp).apply(false)
 }
 
+val libVersion = providers.gradleProperty("alohomora.version").getOrElse("1.0.0")
+
 allprojects {
     group = "io.github.yashkasera"
-    version = "1.0.0"
+    version = libVersion
 }
 
 apiValidation {

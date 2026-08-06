@@ -11,13 +11,13 @@ import io.github.yashkasera.alohomora.common.CacheSnapshotPayload
 import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
-import io.github.yashkasera.alohomora.common.DeviceErrorMessage
 import io.github.yashkasera.alohomora.common.DevToolsHeartbeat
 import io.github.yashkasera.alohomora.common.DevToolsLiveness
 import io.github.yashkasera.alohomora.common.DevToolsMessage
+import io.github.yashkasera.alohomora.common.DevToolsProtocol
+import io.github.yashkasera.alohomora.common.DeviceErrorMessage
 import io.github.yashkasera.alohomora.common.EnvelopeRead
 import io.github.yashkasera.alohomora.common.Error
-import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.InitialStatePayload
@@ -38,6 +38,8 @@ import io.github.yashkasera.alohomora.common.StreamTrafficMessage
 import io.github.yashkasera.alohomora.common.TraceSpansSnapshotMessage
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
+import io.github.yashkasera.alohomora.devtools.DevToolsDefaults.ERROR_SNAPSHOT_LIMIT
+import io.github.yashkasera.alohomora.devtools.DevToolsDefaults.TRAFFIC_SNAPSHOT_LIMIT
 import io.github.yashkasera.alohomora.domain.repository.EventsRepository
 import io.github.yashkasera.alohomora.replay.ReplayOutcome
 import io.github.yashkasera.alohomora.replay.TrafficReplayRegistry
@@ -128,6 +130,8 @@ internal class DevToolsRuntime(
 
     @Volatile
     private var isObservingOtp = false
+    @Volatile
+    private var isObservingServerActive = false
     private val _serverState = MutableStateFlow(DevToolsServerState())
     val serverState: StateFlow<DevToolsServerState> = _serverState.asStateFlow()
 
@@ -138,6 +142,10 @@ internal class DevToolsRuntime(
         if (!isObservingOtp) {
             isObservingOtp = true
             observePendingOtp()
+        }
+        if (!isObservingServerActive) {
+            isObservingServerActive = true
+            observeServerActive()
         }
         AppLifecycle.observeForeground(::rebindAfterForeground)
         listenPort = port
@@ -181,6 +189,7 @@ internal class DevToolsRuntime(
 
     fun stop() {
         AppLifecycle.stopObserving()
+        ServerActiveNotificationHost.dismiss()
         listenPort = null
         activeConnection?.close()
         activeConnection = null
@@ -249,6 +258,22 @@ internal class DevToolsRuntime(
                         ConnectionPromptHost.show(otp, onRememberChange = ::setRememberDevice)
                     } else {
                         ConnectionPromptHost.dismiss()
+                    }
+                }
+        }
+    }
+
+    private fun observeServerActive() {
+        scope.launch {
+            _serverState
+                .map { it.isRunning to it.hasClient }
+                .distinctUntilChanged()
+                .collect { (running, hasClient) ->
+                    if (running) {
+                        val port = listenPort ?: DevToolsDefaults.DEFAULT_PORT
+                        ServerActiveNotificationHost.show(port, hasClient)
+                    } else {
+                        ServerActiveNotificationHost.dismiss()
                     }
                 }
         }

@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
@@ -51,12 +52,17 @@ import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DevToolsDesktopApp
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
-import io.github.yashkasera.alohomora.ui.icons.HardDrive
+import io.github.yashkasera.alohomora.ui.icons.Alohomora
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
-import io.github.yashkasera.alohomora.ui.theme.brand
+import io.github.yashkasera.alohomora.ui.theme.dimens
+import io.github.yashkasera.alohomora.desktop.domain.service.UpdateChecker
+import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.UpdateBanner
 import java.awt.Dimension
 import java.util.UUID
 import kotlin.coroutines.resume
@@ -88,6 +94,7 @@ data class DeviceWindowSession(
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     val initialIsDark = DesktopThemePrefs.load()
+    System.setProperty("apple.awt.application.name", "Alohomora")
     System.setProperty(
         "apple.awt.application.appearance",
         if (initialIsDark) "NSAppearanceNameDarkAqua" else "NSAppearanceNameAqua",
@@ -97,6 +104,8 @@ fun main() {
         val sessions = remember { mutableStateListOf<DeviceWindowSession>() }
         var launcherVisible by remember { mutableStateOf(true) }
         val sharedIsDark = remember { mutableStateOf(initialIsDark) }
+        var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
+        var updateDismissed by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
             snapshotFlow { sharedIsDark.value }
@@ -104,10 +113,17 @@ fun main() {
                 .collect { DesktopThemePrefs.save(it) }
         }
 
+        LaunchedEffect(Unit) {
+            val info = UpdateChecker.check(DesktopBuildConfig.version)
+            if (info != null && info.isUpdateAvailable) {
+                updateInfo = info
+            }
+        }
+
         if (launcherVisible) {
             val state = rememberDialogState()
             DialogWindow(
-                title = "Alohomora Launcher",
+                title = "Alohomora",
                 state = state,
                 onCloseRequest = {
                     launcherVisible = false
@@ -118,26 +134,36 @@ fun main() {
                 AppTheme(isDarkState = sharedIsDark) {
                     window.minimumSize = Dimension(900, 560)
 
-                    LauncherScreen(
-                        sharedDevicesComposition = sharedComposition,
-                        onCloseLauncher = {
-                            launcherVisible = false
-                            if (sessions.isEmpty()) exitApplication()
-                        },
-                        onOpenDeviceWindow = { deviceId, host, hostPort, devicePort, composition ->
-                            val duplicate = sessions.any { it.deviceId == deviceId }
-                            if (!duplicate) {
-                                sessions += DeviceWindowSession(
-                                    deviceId = deviceId,
-                                    host = host,
-                                    hostPort = hostPort,
-                                    devicePort = devicePort,
-                                    composition = composition,
-                                )
-                            }
-                            launcherVisible = false
-                        },
-                    )
+                    Column {
+                        val pending = updateInfo
+                        if (pending != null && !updateDismissed) {
+                            UpdateBanner(
+                                updateInfo = pending,
+                                onDismiss = { updateDismissed = true },
+                            )
+                        }
+
+                        LauncherScreen(
+                            sharedDevicesComposition = sharedComposition,
+                            onCloseLauncher = {
+                                launcherVisible = false
+                                if (sessions.isEmpty()) exitApplication()
+                            },
+                            onOpenDeviceWindow = { deviceId, host, hostPort, devicePort, composition ->
+                                val duplicate = sessions.any { it.deviceId == deviceId }
+                                if (!duplicate) {
+                                    sessions += DeviceWindowSession(
+                                        deviceId = deviceId,
+                                        host = host,
+                                        hostPort = hostPort,
+                                        devicePort = devicePort,
+                                        composition = composition,
+                                    )
+                                }
+                                launcherVisible = false
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -220,25 +246,35 @@ fun main() {
                         }
                         window.minimumSize = Dimension(1080, 600)
 
-                        DevToolsDesktopApp(
-                            devToolsViewModel = session.composition.devToolsViewModel,
-                            devicesViewModel = session.composition.devicesViewModel,
-                            logcatViewModel = session.composition.logcatViewModel,
-                            databaseViewModel = session.composition.databaseViewModel,
-                            cacheViewModel = session.composition.cacheViewModel,
-                            tracesViewModel = session.composition.tracesViewModel,
-                            eventsViewModel = session.composition.eventsViewModel,
-                            trafficViewModel = session.composition.trafficViewModel,
-                            initialDeviceId = session.deviceId,
-                            showHelp = showHelp,
-                            onShowHelp = { showHelp = true },
-                            onDismissHelp = { showHelp = false },
-                            showCommandPalette = showCommandPalette,
-                            onDismissCommandPalette = { showCommandPalette = false },
-                            onToggleTheme = { sharedIsDark.value = !sharedIsDark.value },
-                            isDark = sharedIsDark.value,
-                            onDisconnectWindow = closeWindow,
-                        )
+                        Column {
+                            val pending = updateInfo
+                            if (pending != null && !updateDismissed) {
+                                UpdateBanner(
+                                    updateInfo = pending,
+                                    onDismiss = { updateDismissed = true },
+                                )
+                            }
+
+                            DevToolsDesktopApp(
+                                devToolsViewModel = session.composition.devToolsViewModel,
+                                devicesViewModel = session.composition.devicesViewModel,
+                                logcatViewModel = session.composition.logcatViewModel,
+                                databaseViewModel = session.composition.databaseViewModel,
+                                cacheViewModel = session.composition.cacheViewModel,
+                                tracesViewModel = session.composition.tracesViewModel,
+                                eventsViewModel = session.composition.eventsViewModel,
+                                trafficViewModel = session.composition.trafficViewModel,
+                                initialDeviceId = session.deviceId,
+                                showHelp = showHelp,
+                                onShowHelp = { showHelp = true },
+                                onDismissHelp = { showHelp = false },
+                                showCommandPalette = showCommandPalette,
+                                onDismissCommandPalette = { showCommandPalette = false },
+                                onToggleTheme = { sharedIsDark.value = !sharedIsDark.value },
+                                isDark = sharedIsDark.value,
+                                onDisconnectWindow = closeWindow,
+                            )
+                        }
                     }
                 }
             }
@@ -311,22 +347,21 @@ private fun LauncherScreen(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.HardDrive,
+                    imageVector = Icons.Alohomora,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.brand,
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    "Alohomora Launcher",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    modifier = Modifier.size(
+                        MaterialTheme.dimens.icon.standard
+                    ),
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                OutlinedButton(onClick = { devicesViewModel.refreshDevices() }) {
-                    Icon(Icons.RefreshCw, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Refresh")
-                }
+                AlohomoraOutlinedButton(
+                    text = "Refresh",
+                    leadingIcon = { Icon(
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                        imageVector = Icons.RefreshCw, contentDescription = null) },
+                    onClick = devicesViewModel::refreshDevices,
+                    size = AlohomoraButtonSize.SMALL
+                )
             }
 
             if (pendingSession != null) {
@@ -522,6 +557,13 @@ private fun LauncherScreen(
                     }
                 }
             }
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                text = "v${DesktopBuildConfig.version}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
         }
     }
 }

@@ -6,6 +6,8 @@
 .DS_Store
 build
 */build
+.build/
+
 captures
 .externalNativeBuild
 .cxx
@@ -15,3 +17,4 @@ Pods/
 *.jks
 *.gpg
 *yarn.lock
+

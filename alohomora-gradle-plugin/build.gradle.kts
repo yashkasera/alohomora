@@ -6,10 +6,10 @@ plugins {
 
 group = "io.github.yashkasera"
 
-// A literal, not `rootProject.version`: this is now a standalone build with its own settings file,
-// so `rootProject` is this project and the version would resolve to "unspecified". Keep in step with
-// the `allprojects` version in the root build.
-version = "1.0.0"
+// A literal fallback, not `rootProject.version`: this is a standalone build with its own settings
+// file, so `rootProject` is this project and the version would resolve to "unspecified". CI passes
+// -Palohomora.version on tag pushes; keep the default in step with the root build.
+version = providers.gradleProperty("alohomora.version").getOrElse("1.0.0")
 
 repositories {
     google()

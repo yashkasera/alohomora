@@ -11,6 +11,24 @@ kotlin {
     jvmToolchain(17)
 }
 
+val desktopVersion: String = providers.gradleProperty("alohomora.desktop.version")
+    .getOrElse("0.0.0")
+
+val generateVersionProperties by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/resources/version")
+    val version = desktopVersion
+    outputs.dir(outputDir)
+    doLast {
+        val propsFile = outputDir.get().file("alohomora-desktop-version.properties").asFile
+        propsFile.parentFile.mkdirs()
+        propsFile.writeText("version=$version\n")
+    }
+}
+
+sourceSets.main {
+    resources.srcDir(generateVersionProperties.map { it.outputs.files.singleFile })
+}
+
 dependencies {
     implementation(project(":alohomora-common"))
     implementation(project(":alohomora-ui"))
@@ -51,15 +69,15 @@ compose.desktop {
     application {
         mainClass = "io.github.yashkasera.alohomora.desktop.app.MainKt"
 
+        jvmArgs += listOf(
+            "-Xdock:name=Alohomora",
+            "-Xdock:icon=${project.file("appIcons/MacosIcon.icns").absolutePath}",
+        )
+
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Alohomora"
-            packageVersion = "1.0.0"
-
-            // No appResourcesRootDir: pointing it at src/main/resources double-bundled every
-            // classpath resource as an app resource. adb is located on the host at runtime
-            // (see AdbLocator), never shipped — platform-tools redistribution carries licence
-            // obligations and a pinned copy fights the user's own adb server.
+            packageVersion = desktopVersion
 
             linux {
                 iconFile.set(project.file("appIcons/LinuxIcon.png"))
@@ -69,7 +87,7 @@ compose.desktop {
             }
             macOS {
                 iconFile.set(project.file("appIcons/MacosIcon.icns"))
-                bundleID = "io.github.yashkasera.alohomora.desktopApp"
+                bundleID = "io.github.yashkasera.alohomora.AlohomoraApp"
             }
         }
 
