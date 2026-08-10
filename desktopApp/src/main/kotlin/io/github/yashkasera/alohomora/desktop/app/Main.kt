@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,6 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
@@ -68,6 +71,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.UpdateB
 import java.awt.Dimension
 import java.util.UUID
 import kotlin.coroutines.resume
+import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
@@ -187,6 +191,11 @@ fun main() {
                 )
                 var showHelp by remember { mutableStateOf(false) }
                 var showCommandPalette by remember { mutableStateOf(false) }
+                var zoomScale by remember { mutableStateOf(1.0f) }
+
+                val zoomIn = { zoomScale = (zoomScale + 0.1f).coerceAtMost(2.0f) }
+                val zoomOut = { zoomScale = (zoomScale - 0.1f).coerceAtLeast(0.5f) }
+                val resetZoom = { zoomScale = 1.0f }
 
                 val closeWindow = {
                     val devicesVm = session.composition.devicesViewModel
@@ -214,8 +223,9 @@ fun main() {
                     deviceWasOnline = deviceIsOnline
                 }
 
+                val zoomSuffix = if (zoomScale != 1.0f) " (${(zoomScale * 100).roundToInt()}%)" else ""
                 Window(
-                    title = "Alohomora - ${session.deviceId}",
+                    title = "Alohomora - ${session.deviceId}$zoomSuffix",
                     state = state,
                     onCloseRequest = {
                         session.composition.devToolsViewModel.disconnect()
@@ -244,6 +254,22 @@ fun main() {
                                     "Toggle Theme",
                                     shortcut = KeyShortcut(Key.T, meta = isMacOs, ctrl = !isMacOs),
                                     onClick = { sharedIsDark.value = !sharedIsDark.value },
+                                )
+                                Separator()
+                                Item(
+                                    "Zoom In",
+                                    shortcut = KeyShortcut(Key.Equals, meta = isMacOs, ctrl = !isMacOs),
+                                    onClick = zoomIn,
+                                )
+                                Item(
+                                    "Zoom Out",
+                                    shortcut = KeyShortcut(Key.Minus, meta = isMacOs, ctrl = !isMacOs),
+                                    onClick = zoomOut,
+                                )
+                                Item(
+                                    "Reset Zoom",
+                                    shortcut = KeyShortcut(Key.Zero, meta = isMacOs, ctrl = !isMacOs),
+                                    onClick = resetZoom,
                                 )
                             }
                             Menu("Device") {
@@ -279,35 +305,45 @@ fun main() {
                         }
                         window.minimumSize = Dimension(1080, 600)
 
-                        Column {
-                            val pending = updateInfo
-                            if (pending != null && !updateDismissed) {
-                                UpdateBanner(
-                                    updateInfo = pending,
-                                    onDismiss = { updateDismissed = true },
+                        val baseDensity = LocalDensity.current
+                        val scaledDensity = remember(baseDensity, zoomScale) {
+                            Density(baseDensity.density * zoomScale, baseDensity.fontScale)
+                        }
+
+                        CompositionLocalProvider(LocalDensity provides scaledDensity) {
+                            Column {
+                                val pending = updateInfo
+                                if (pending != null && !updateDismissed) {
+                                    UpdateBanner(
+                                        updateInfo = pending,
+                                        onDismiss = { updateDismissed = true },
+                                    )
+                                }
+
+                                DevToolsDesktopApp(
+                                    devToolsViewModel = session.composition.devToolsViewModel,
+                                    devicesViewModel = session.composition.devicesViewModel,
+                                    logcatViewModel = session.composition.logcatViewModel,
+                                    databaseViewModel = session.composition.databaseViewModel,
+                                    cacheViewModel = session.composition.cacheViewModel,
+                                    tracesViewModel = session.composition.tracesViewModel,
+                                    eventsViewModel = session.composition.eventsViewModel,
+                                    trafficViewModel = session.composition.trafficViewModel,
+                                    networkRulesViewModel = session.composition.networkRulesViewModel,
+                                    initialDeviceId = session.deviceId,
+                                    showHelp = showHelp,
+                                    onShowHelp = { showHelp = true },
+                                    onDismissHelp = { showHelp = false },
+                                    showCommandPalette = showCommandPalette,
+                                    onDismissCommandPalette = { showCommandPalette = false },
+                                    onToggleTheme = { sharedIsDark.value = !sharedIsDark.value },
+                                    onZoomIn = zoomIn,
+                                    onZoomOut = zoomOut,
+                                    onResetZoom = resetZoom,
+                                    isDark = sharedIsDark.value,
+                                    onDisconnectWindow = closeWindow,
                                 )
                             }
-
-                            DevToolsDesktopApp(
-                                devToolsViewModel = session.composition.devToolsViewModel,
-                                devicesViewModel = session.composition.devicesViewModel,
-                                logcatViewModel = session.composition.logcatViewModel,
-                                databaseViewModel = session.composition.databaseViewModel,
-                                cacheViewModel = session.composition.cacheViewModel,
-                                tracesViewModel = session.composition.tracesViewModel,
-                                eventsViewModel = session.composition.eventsViewModel,
-                                trafficViewModel = session.composition.trafficViewModel,
-                                networkRulesViewModel = session.composition.networkRulesViewModel,
-                                initialDeviceId = session.deviceId,
-                                showHelp = showHelp,
-                                onShowHelp = { showHelp = true },
-                                onDismissHelp = { showHelp = false },
-                                showCommandPalette = showCommandPalette,
-                                onDismissCommandPalette = { showCommandPalette = false },
-                                onToggleTheme = { sharedIsDark.value = !sharedIsDark.value },
-                                isDark = sharedIsDark.value,
-                                onDisconnectWindow = closeWindow,
-                            )
                         }
                     }
                 }

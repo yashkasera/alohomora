@@ -131,6 +131,9 @@ fun DevToolsDesktopApp(
     showCommandPalette: Boolean = false,
     onDismissCommandPalette: () -> Unit = {},
     onToggleTheme: () -> Unit = {},
+    onZoomIn: () -> Unit = {},
+    onZoomOut: () -> Unit = {},
+    onResetZoom: () -> Unit = {},
     isDark: Boolean = true,
     onDisconnectWindow: () -> Unit,
 ) {
@@ -213,6 +216,9 @@ fun DevToolsDesktopApp(
             onDismissCommandPalette()
             onShowHelp()
         },
+        onZoomIn = onZoomIn,
+        onZoomOut = onZoomOut,
+        onResetZoom = onResetZoom,
         onClearTraffic = { trafficViewModel.clearTraffic() },
         onClearTraces = { tracesViewModel.clearTraces() },
         onClearEvents = { eventsViewModel.clearEvents() },

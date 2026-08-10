@@ -54,6 +54,8 @@ import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.X
+import io.github.yashkasera.alohomora.ui.icons.ZoomIn
+import io.github.yashkasera.alohomora.ui.icons.ZoomOut
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.theme.muted
 
@@ -321,6 +323,9 @@ fun buildCommandActions(
     isAndroid: Boolean,
     onToggleTheme: () -> Unit,
     onShowHelp: () -> Unit,
+    onZoomIn: () -> Unit,
+    onZoomOut: () -> Unit,
+    onResetZoom: () -> Unit,
     onClearTraffic: () -> Unit,
     onClearTraces: () -> Unit,
     onClearEvents: () -> Unit,
@@ -363,6 +368,30 @@ fun buildCommandActions(
         icon = Icons.CircleHelp,
         shortcutDisplay = "$mod+/",
         action = onShowHelp,
+    )
+    actions += CommandAction(
+        id = "general_zoom_in",
+        label = "Zoom In",
+        category = ActionCategory.GENERAL,
+        icon = Icons.ZoomIn,
+        shortcutDisplay = "$mod++",
+        action = onZoomIn,
+    )
+    actions += CommandAction(
+        id = "general_zoom_out",
+        label = "Zoom Out",
+        category = ActionCategory.GENERAL,
+        icon = Icons.ZoomOut,
+        shortcutDisplay = "$mod+-",
+        action = onZoomOut,
+    )
+    actions += CommandAction(
+        id = "general_reset_zoom",
+        label = "Reset Zoom",
+        category = ActionCategory.GENERAL,
+        icon = Icons.ZoomIn,
+        shortcutDisplay = "$mod+0",
+        action = onResetZoom,
     )
 
     if (isAndroid) {

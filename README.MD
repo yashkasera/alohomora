@@ -668,6 +668,27 @@ Design priorities:
 
 The UI assumes curiosity and rewards exploration.
 
+### Desktop App Keyboard Shortcuts
+
+The companion desktop app supports keyboard-driven workflows. All shortcuts use **Cmd** on macOS and **Ctrl** on Windows/Linux.
+
+| Shortcut | Action |
+|----------|--------|
+| Cmd/Ctrl+K | Open command palette |
+| Cmd/Ctrl+1..9 | Switch to Nth sidebar section |
+| Cmd/Ctrl+T | Toggle dark/light theme |
+| Cmd/Ctrl+/ | Open keyboard shortcuts help |
+| Cmd/Ctrl+N | New window (open launcher) |
+| Cmd/Ctrl+W | Close window |
+| Cmd/Ctrl+= | Zoom in (50%–200%) |
+| Cmd/Ctrl+- | Zoom out |
+| Cmd/Ctrl+0 | Reset zoom to 100% |
+| Cmd/Ctrl+Shift+S | Take device screenshot (Android) |
+| Cmd/Ctrl+Shift+Backspace | Clear active panel data |
+| Escape | Close side sheet / dismiss dialog |
+
+Hold Cmd/Ctrl to see number badges on sidebar items.
+
 ## Typical Use Cases
 
 - Debugging “it only happens sometimes” bugs
