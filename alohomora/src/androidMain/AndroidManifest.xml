@@ -10,7 +10,9 @@
     <activity
       android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
       android:exported="true"
-      android:label="Debug - Alohomora"
+      android:icon="@drawable/ic_launcher_alohomora"
+      android:roundIcon="@drawable/ic_launcher_alohomora"
+      android:label="@string/alohomora_label"
       android:launchMode="singleTask"
       android:taskAffinity="io.github.yashkasera.alohomora.DevToolsActivity"
       android:name=".DevToolsActivity"
