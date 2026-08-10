@@ -3,6 +3,8 @@ package io.github.yashkasera.alohomora.network
 import io.github.yashkasera.alohomora.AlohomoraInternal
 import io.github.yashkasera.alohomora.common.HeaderRedaction
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.devtools.MOCK_ID_HEADER
+import io.github.yashkasera.alohomora.devtools.NetworkRuleEngine
 import io.github.yashkasera.alohomora.replay.ReplayMarker
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.statement.bodyAsText
@@ -13,6 +15,7 @@ import io.ktor.util.AttributeKey
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.delay
 
 private val AlohomoraRequestKey = AttributeKey<TrafficEntry>("AlohomoraRequest")
 
@@ -104,6 +107,7 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
             val startTime = entity.time ?: 0L
             val endTime = Clock.System.now().toEpochMilliseconds()
 
+            entity.mockedBy = response.headers[MOCK_ID_HEADER]
             entity.status = response.status.value
             entity.message = response.status.description
             entity.responseHeaders = HeaderRedaction.redact(
@@ -121,6 +125,15 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
             }
 
             AlohomoraInternal.recordTraffic(entity)
+
+            // Ktor hooks are suspending, so delay() throttles the caller directly.
+            // Bandwidth throttling is not implemented here — on Android, the OkHttp engine's
+            // TrafficInterceptor handles it via ThrottledResponseBody; on iOS, the URLProtocol
+            // handler uses dispatch_after.
+            val throttle = NetworkRuleEngine.throttle
+            if (throttle.latencyMs > 0) {
+                delay(throttle.latencyMs)
+            }
         }
     }
 }

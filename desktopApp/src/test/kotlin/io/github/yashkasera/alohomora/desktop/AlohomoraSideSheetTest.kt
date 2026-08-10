@@ -17,7 +17,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.runComposeUiTest
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -36,7 +36,7 @@ class AlohomoraSideSheetTest {
     @Test
     fun `the sheet occupies the requested fraction of the window`() = runComposeUiTest {
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 AlohomoraSideSheet(
                     visible = true,
                     onDismiss = {},
@@ -63,7 +63,7 @@ class AlohomoraSideSheetTest {
     @Test
     fun `a narrower fraction leaves more room for the scrim`() = runComposeUiTest {
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 AlohomoraSideSheet(
                     visible = true,
                     onDismiss = {},
@@ -101,7 +101,7 @@ class AlohomoraSideSheetTest {
     @Test
     fun `a scrollable code block in the content slot lays out instead of throwing`() = runComposeUiTest {
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 AlohomoraSideSheet(
                     visible = true,
                     onDismiss = {},
@@ -135,7 +135,7 @@ class AlohomoraSideSheetTest {
         var visible by mutableStateOf(false)
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 AlohomoraSideSheet(
                     visible = visible,
                     onDismiss = {},

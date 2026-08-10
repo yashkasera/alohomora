@@ -13,7 +13,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -37,15 +36,13 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
         snapshot.table?.takeIf { it.databaseName == snapshot.selectedDatabase?.name }
     val databases = snapshot.databases
     val selectedDatabase = snapshot.selectedDatabase
-    val columns by remember {
-        derivedStateOf {
-            snapshot.schema?.schemas?.firstOrNull { it.name == tableSnapshot?.name }?.columns?.map { tableColumn ->
-                TableColumn(
-                    name = tableColumn.name,
-                    type = tableColumn.type,
-                )
-            }.orEmpty()
-        }
+    val columns = remember(schema, tableSnapshot?.name) {
+        schema?.schemas?.firstOrNull { it.name == tableSnapshot?.name }?.columns?.map { tableColumn ->
+            TableColumn(
+                name = tableColumn.name,
+                type = tableColumn.type,
+            )
+        }.orEmpty()
     }
     Scaffold(
         topBar = {
@@ -99,7 +96,7 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
                 return@Column
             }
             val tables =
-                if (schema?.databaseName == selectedDatabase?.name) schema?.tables.orEmpty() else emptyList()
+                if (schema?.databaseName == selectedDatabase.name) schema.tables else emptyList()
             Text(text = "Tables", style = MaterialTheme.typography.titleLarge)
             if (tables.isEmpty()) {
                 Text(
@@ -120,7 +117,7 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
                             label = table,
                             selected = table == snapshot.table?.name,
                             onClick = onClick@{
-                                val dbName = selectedDatabase.name ?: return@onClick
+                                val dbName = selectedDatabase.name
                                 databaseViewModel.requestTable(dbName, table)
                             },
                         )
@@ -132,7 +129,10 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
             Text(text = "Rows", style = MaterialTheme.typography.labelMedium)
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
             if (tableSnapshot == null) {
-                Text(text = "Select a table to load rows.")
+                Text(
+                    text = "Select a table to load rows.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             } else {
                 AlohomoraTable(
                     columns = columns,

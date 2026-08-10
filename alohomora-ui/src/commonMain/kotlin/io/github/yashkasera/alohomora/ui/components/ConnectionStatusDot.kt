@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -21,6 +22,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.theme.CanvasAlertRed
 import io.github.yashkasera.alohomora.ui.theme.CanvasSuccessGreen
+import io.github.yashkasera.alohomora.ui.theme.logError
+import io.github.yashkasera.alohomora.ui.theme.success
+import io.github.yashkasera.alohomora.ui.theme.warning
 
 enum class ConnectionDotState {
     Connected,
@@ -34,9 +38,9 @@ fun ConnectionStatusDot(
     size: Dp = 10.dp,
 ) {
     val color = when (state) {
-        ConnectionDotState.Connected -> CanvasSuccessGreen
-        ConnectionDotState.Disconnected -> CanvasAlertRed
-        ConnectionDotState.Reconnecting -> Color(0xFFD97706)
+        ConnectionDotState.Connected -> MaterialTheme.colorScheme.success
+        ConnectionDotState.Disconnected -> MaterialTheme.colorScheme.logError
+        ConnectionDotState.Reconnecting -> MaterialTheme.colorScheme.warning
     }
 
     Box {

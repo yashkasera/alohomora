@@ -48,6 +48,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.Section
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SlackShareDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
 import io.github.yashkasera.alohomora.replay.replayBlockedReason
 import io.github.yashkasera.alohomora.replay.toReplayRequest
@@ -74,6 +75,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TrafficPanel(
     trafficViewModel: TrafficViewModel,
+    networkRulesViewModel: NetworkRulesViewModel,
     onLogClick: (TrafficEntry) -> Unit,
 ) {
     val uiState by trafficViewModel.uiState.collectAsState()
@@ -108,6 +110,7 @@ fun TrafficPanel(
                 onErrorsOnlyChange = trafficViewModel::onErrorsOnlyChange,
                 onClearFilters = trafficViewModel::clearFilters,
             )
+            NetworkRulesToolbar(viewModel = networkRulesViewModel)
             AlohomoraHorizontalDivider()
 
             Box(modifier = Modifier.fillMaxSize()) {

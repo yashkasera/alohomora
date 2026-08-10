@@ -141,6 +141,24 @@ data class CacheSnapshotMessage(
 ) : DevToolsMessage()
 
 /**
+ * Reports the current state of device-wide VPN throttling back to the desktop.
+ *
+ * Pushed whenever the state changes (consent requested, VPN starting, active, error, off).
+ * The desktop reflects this in the toolbar so the developer sees what the device is doing.
+ */
+@Serializable
+@SerialName("VPN_STATE")
+data class VpnStateMessage(
+    override val sequence: Long = 0,
+    val state: VpnThrottleState,
+    val activeProfile: ThrottleProfile? = null,
+    val error: String? = null,
+) : DevToolsMessage()
+
+@Serializable
+enum class VpnThrottleState { OFF, AWAITING_CONSENT, STARTING, ACTIVE, ERROR }
+
+/**
  * Liveness probe. The client must answer with a [PongMessage].
  *
  * Sent by the device, not the client, because the device is the side that can be wedged by a
@@ -197,6 +215,35 @@ data class AuthResponseMessage(
      * effectively as an authenticated one.
      */
     val heartbeatSupported: Boolean = false,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("SET_THROTTLE_PROFILE")
+data class SetThrottleProfileMessage(
+    override val sequence: Long = 0,
+    val profile: ThrottleProfile,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("SET_MOCK_RULES")
+data class SetMockRulesMessage(
+    override val sequence: Long = 0,
+    val rules: List<MockRule>,
+) : DevToolsMessage()
+
+/**
+ * Asks the device to enable or disable VPN-based device-wide throttling.
+ *
+ * Reuses [ThrottleProfile] for the rate parameters. When [enabled] is false the VPN is torn down
+ * regardless of the profile. When true, [profile] with name "none" means the VPN is active but
+ * passes traffic unthrottled — useful for verifying the tunnel works before introducing latency.
+ */
+@Serializable
+@SerialName("SET_VPN_THROTTLE")
+data class SetVpnThrottleMessage(
+    override val sequence: Long = 0,
+    val profile: ThrottleProfile,
+    val enabled: Boolean,
 ) : DevToolsMessage()
 
 /**
@@ -443,4 +490,14 @@ data class InitialStatePayload(
      * false so a newer desktop degrades rather than sending into a void.
      */
     val spanCaptureSupported: Boolean = false,
+    val networkRulesSupported: Boolean = false,
+    /**
+     * Whether the app supports VPN-based device-wide throttling.
+     *
+     * Android-only. Defaults false so a desktop talking to an iOS app or an older Android build
+     * hides the toggle rather than sending [SetVpnThrottleMessage] into a void.
+     */
+    val vpnThrottleSupported: Boolean = false,
+    val vpnThrottleState: VpnThrottleState = VpnThrottleState.OFF,
+    val vpnThrottleActiveProfile: ThrottleProfile? = null,
 )

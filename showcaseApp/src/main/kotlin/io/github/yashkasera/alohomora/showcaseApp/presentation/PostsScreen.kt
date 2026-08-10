@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.showcaseApp.presentation
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -26,8 +28,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.showcaseApp.WebViewActivity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -84,6 +88,9 @@ fun PostsScreen(
                 )
             }
             item {
+                WebViewSection()
+            }
+            item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -116,6 +123,41 @@ fun PostsScreen(
                     body = post.body,
                     onClick = { viewModel.onPostClicked(post.id) },
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WebViewSection() {
+    val context = LocalContext.current
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = "WebView (VPN Throttle Demo)",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = "Opens a WebView that bypasses OkHttp/Ktor interceptors. " +
+                    "Enable device-wide VPN throttle from the desktop to see it throttled.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            OutlinedButton(
+                onClick = {
+                    context.startActivity(
+                        Intent(context, WebViewActivity::class.java)
+                            .putExtra(WebViewActivity.EXTRA_URL, "https://www.wikipedia.org"),
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Open Wikipedia")
             }
         }
     }

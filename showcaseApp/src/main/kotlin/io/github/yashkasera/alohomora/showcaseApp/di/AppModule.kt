@@ -16,6 +16,7 @@ import io.github.yashkasera.alohomora.showcaseApp.presentation.PostsViewModel
 import io.github.yashkasera.alohomora.showcaseApp.tracing.SHOWCASE_TRACER_NAME
 import io.github.yashkasera.alohomora.showcaseApp.tracing.showcaseTracerProvider
 import io.github.yashkasera.alohomora.network.AlohomoraInspector
+import io.github.yashkasera.alohomora.traffic.MockRuleInterceptor
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -35,6 +36,9 @@ val appModule = module {
 
     single {
         HttpClient(OkHttp) {
+            engine {
+                addInterceptor(MockRuleInterceptor())
+            }
             install(ContentNegotiation) {
                 json(get())
             }

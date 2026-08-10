@@ -12,7 +12,7 @@ import androidx.compose.ui.test.runComposeUiTest
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventDetailsContent
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -43,7 +43,7 @@ class EventDetailsContentTest {
     @Test
     fun `a tall payload lays out inside the sheet instead of throwing`() = runComposeUiTest {
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 AlohomoraSideSheet(
                     visible = true,
                     onDismiss = {},
@@ -76,7 +76,7 @@ class EventDetailsContentTest {
     @Test
     fun `the event name and read state are shown`() = runComposeUiTest {
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 AlohomoraSideSheet(visible = true, onDismiss = {}, header = { Text("header") }) {
                     EventDetailsContent(
                         event = event().copy(isViewed = true),
@@ -99,7 +99,7 @@ class EventDetailsContentTest {
         var soloed = 0
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 AlohomoraSideSheet(visible = true, onDismiss = {}, header = { Text("header") }) {
                     EventDetailsContent(
                         event = event(),

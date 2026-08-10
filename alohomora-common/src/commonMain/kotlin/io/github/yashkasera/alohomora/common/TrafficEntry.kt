@@ -46,6 +46,7 @@ data class TrafficEntry(
      * Lets the console show a replay next to its original instead of as an unexplained duplicate.
      */
     var replayOf: String? = null,
+    var mockedBy: String? = null,
 ) {
 
     fun isShareable(): Boolean =

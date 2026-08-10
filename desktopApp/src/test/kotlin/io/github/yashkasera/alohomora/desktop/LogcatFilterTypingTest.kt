@@ -16,7 +16,7 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.StartLogcatUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.StopLogcatUseCase
 import io.github.yashkasera.alohomora.desktop.presentation.ui.logcat.LogcatFilters
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -77,7 +77,7 @@ class LogcatFilterTypingTest {
     private fun runFilters(block: ComposeUiTest.(LogcatViewModel) -> Unit) = runComposeUiTest {
         val vm = viewModel()
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 val uiState by vm.uiState.collectAsState()
                 LogcatFilters(
                     filterState = uiState.filterState,

@@ -3,7 +3,9 @@ package io.github.yashkasera.alohomora.traffic
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.AlohomoraInternal
 import io.github.yashkasera.alohomora.common.HeaderRedaction
+import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.devtools.NetworkRuleEngine
 import io.github.yashkasera.alohomora.replay.ReplayMarker
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
@@ -11,6 +13,12 @@ import kotlin.uuid.Uuid
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCClass
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
+import platform.darwin.DISPATCH_TIME_NOW
+import platform.darwin.dispatch_after
+import platform.darwin.dispatch_get_main_queue
+import platform.darwin.dispatch_time
 import platform.Foundation.HTTPBody
 import platform.Foundation.HTTPMethod
 import platform.Foundation.NSCachedURLResponse
@@ -113,24 +121,28 @@ class AlohomoraURLProtocol :
     private var traceId = ""
     private var replayOf: String? = null
 
-    @OptIn(ExperimentalUuidApi::class)
+    @OptIn(ExperimentalUuidApi::class, BetaInteropApi::class)
     override fun startLoading() {
         traceId = Uuid.random().toString()
         startTime = Clock.System.now().toEpochMilliseconds()
-        // Read off allHTTPHeaderFields rather than valueForHTTPHeaderField, which cinterop does not
-        // expose on NSURLRequest. Matched case-insensitively, as HTTP header names are.
         replayOf = request.allHTTPHeaderFields
             ?.entries
             ?.firstOrNull { (k, _) -> (k as? String)?.equals(ReplayMarker.HEADER, true) == true }
             ?.value as? String
 
+        val mockRule = NetworkRuleEngine.findMatch(
+            request.URL?.absoluteString ?: "",
+            request.HTTPMethod ?: "GET",
+        )
+        if (mockRule != null) {
+            deliverMockResponse(mockRule)
+            return
+        }
+
         // Tag the request so canInitWithRequest returns false for this copy, preventing
         // infinite recursion when the internal session issues the same request.
         val tagged = (request.mutableCopy() as NSMutableURLRequest).also {
             NSURLProtocol.setProperty("1", forKey = HANDLED_KEY, inRequest = it)
-            // Alohomora injected this on the way in; it must not reach the server. Rewriting the
-            // whole dictionary rather than clearing the single field: cinterop's
-            // setValue:forHTTPHeaderField: overload collides with NSObject.setValue(_:forKey:).
             if (replayOf != null) {
                 it.setAllHTTPHeaderFields(
                     request.allHTTPHeaderFields?.filterKeys { key ->
@@ -163,12 +175,28 @@ class AlohomoraURLProtocol :
         completionHandler: (Long) -> Unit,
     ) {
         httpResponse = didReceiveResponse as? NSHTTPURLResponse
-        client?.URLProtocol(
-            this,
-            didReceiveResponse = didReceiveResponse,
-            cacheStoragePolicy = NSURLCacheStoragePolicy.NSURLCacheStorageNotAllowed,
-        )
-        completionHandler(NSURLSessionResponseAllow)
+        val throttle = NetworkRuleEngine.throttle
+        if (throttle.latencyMs > 0) {
+            val delta = throttle.latencyMs * 1_000_000L
+            dispatch_after(
+                dispatch_time(DISPATCH_TIME_NOW, delta),
+                dispatch_get_main_queue(),
+            ) {
+                this.client?.URLProtocol(
+                    this,
+                    didReceiveResponse = didReceiveResponse,
+                    cacheStoragePolicy = NSURLCacheStoragePolicy.NSURLCacheStorageNotAllowed,
+                )
+                completionHandler(NSURLSessionResponseAllow)
+            }
+        } else {
+            client?.URLProtocol(
+                this,
+                didReceiveResponse = didReceiveResponse,
+                cacheStoragePolicy = NSURLCacheStoragePolicy.NSURLCacheStorageNotAllowed,
+            )
+            completionHandler(NSURLSessionResponseAllow)
+        }
     }
 
     override fun URLSession(
@@ -195,6 +223,69 @@ class AlohomoraURLProtocol :
     }
 
     // endregion
+
+    @OptIn(BetaInteropApi::class, ExperimentalForeignApi::class)
+    private fun deliverMockResponse(mockRule: MockRule) {
+        val url = request.URL ?: return
+        val bodyBytes = mockRule.responseBody.encodeToByteArray()
+        val bodyData = bodyBytes.usePinned { pinned ->
+            NSData.create(bytes = pinned.addressOf(0), length = bodyBytes.size.toULong())
+        }
+
+        // K/N 2.4 exposes initWithURL:statusCode:HTTPVersion:headerFields: but with
+        // platform-specific parameter names. Using the overload found in the generated stubs.
+        @Suppress("DEPRECATION")
+        val response = NSHTTPURLResponse(
+            url, mockRule.statusCode.toLong(), "HTTP/1.1",
+            mapOf("Content-Type" to mockRule.contentType),
+        ) ?: return
+
+        client?.URLProtocol(
+            this,
+            didReceiveResponse = response,
+            cacheStoragePolicy = NSURLCacheStoragePolicy.NSURLCacheStorageNotAllowed,
+        )
+        client?.URLProtocol(this, didLoadData = bodyData)
+        client?.URLProtocolDidFinishLoading(this)
+
+        val req = request
+        val requestHeaders: Map<String, List<String>> = HeaderRedaction.redact(
+            req.allHTTPHeaderFields
+                ?.entries
+                ?.mapNotNull { (k, v) -> (k as? String)?.to(listOf(v as? String ?: "")) }
+                ?.filterNot { it.first.equals(ReplayMarker.HEADER, ignoreCase = true) }
+                ?.toMap()
+                ?: emptyMap(),
+        ).orEmpty()
+
+        AlohomoraInternal.recordTraffic(
+            TrafficEntry(
+                id = traceId,
+                url = url.absoluteString,
+                method = req.HTTPMethod,
+                scheme = url.scheme,
+                host = url.host,
+                path = url.path,
+                query = url.query,
+                requestBody = req.HTTPBody?.let { body ->
+                    NSString.create(data = body, encoding = NSUTF8StringEncoding)?.toString()
+                        ?: TrafficEntry.UNABLE_PARSE_MESSAGE
+                },
+                requestHeaders = requestHeaders,
+                requestContentType = requestHeaders["Content-Type"]?.firstOrNull(),
+                requestSize = req.HTTPBody?.length?.toLong(),
+                time = startTime,
+                status = mockRule.statusCode,
+                message = "Mocked",
+                responseBody = mockRule.responseBody,
+                responseContentType = mockRule.contentType,
+                responseSize = mockRule.responseBody.length.toLong(),
+                duration = 0,
+                replayOf = replayOf,
+                mockedBy = mockRule.id,
+            ),
+        )
+    }
 
     @OptIn(BetaInteropApi::class)
     private fun persistTrace(error: NSError?) {

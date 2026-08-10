@@ -117,8 +117,8 @@ fun CommandPalette(
         Card(
             modifier = Modifier
                 .padding(top = 80.dp)
-                .widthIn(max = 560.dp)
-                .fillMaxWidth(0.55f)
+                .widthIn(max = 720.dp)
+                .fillMaxWidth(0.6f)
                 .clickable(indication = null, interactionSource = null) {},
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface,

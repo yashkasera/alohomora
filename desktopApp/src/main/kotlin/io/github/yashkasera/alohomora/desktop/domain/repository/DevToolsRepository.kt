@@ -2,7 +2,10 @@ package io.github.yashkasera.alohomora.desktop.domain.repository
 
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.MockRule
+import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.common.VpnThrottleState
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.github.yashkasera.alohomora.desktop.domain.model.CacheState
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
@@ -25,6 +28,13 @@ interface DevToolsRepository {
 
     /** False until the device reports it, so the panel degrades against an app with no tracer. */
     val spanCaptureSupported: StateFlow<Boolean>
+
+    /** False until the device reports it, so the toolbar hides against an older app. */
+    val networkRulesSupported: StateFlow<Boolean>
+
+    /** False until the device reports it. Android-only; always false for iOS devices. */
+    val vpnThrottleSupported: StateFlow<Boolean>
+    val vpnState: StateFlow<VpnThrottleState>
     val traffic: StateFlow<List<TrafficEntry>>
     val databaseSnapshot: StateFlow<DatabaseSnapshot>
     val cacheState: StateFlow<CacheState>
@@ -98,6 +108,10 @@ interface DevToolsRepository {
 
     /** Clears the [deviceError] banner the user has acknowledged. */
     fun dismissDeviceError()
+
+    fun setThrottleProfile(profile: ThrottleProfile)
+    fun setMockRules(rules: List<MockRule>)
+    fun setVpnThrottle(profile: ThrottleProfile, enabled: Boolean)
 
     fun requestDatabaseSchema(databaseName: String)
     fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int = 200)

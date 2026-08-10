@@ -1,12 +1,14 @@
 package io.github.yashkasera.alohomora.presentation.ui
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.LocalThemeIsDark
 import org.koin.compose.KoinIsolatedContext
 
@@ -24,14 +26,14 @@ internal fun AlohomoraApp(
     // Alohomora deliberately never populates so it can coexist with the host app's Koin.
     val koinApplication = Alohomora.koinApplication
     if (koinApplication == null) {
-        AlohomoraTheme { Text("Alohomora is not initialized. Call Alohomora.init() first.") }
+        AppTheme { Text("Alohomora is not initialized. Call Alohomora.init() first.") }
         return
     }
     KoinIsolatedContext(koinApplication) {
         CompositionLocalProvider(
             LocalRippleConfiguration provides null
         ) {
-            AlohomoraTheme {
+            AppTheme {
                 onThemeChanged(LocalThemeIsDark.current.value)
                 AlohomoraNavHost(startDestination = startDestination, onClose = onClose)
             }

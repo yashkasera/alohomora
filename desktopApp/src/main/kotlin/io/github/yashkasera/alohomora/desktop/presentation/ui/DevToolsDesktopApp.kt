@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
@@ -94,6 +95,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsVie
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
@@ -121,6 +123,7 @@ fun DevToolsDesktopApp(
     tracesViewModel: TracesViewModel,
     eventsViewModel: EventsViewModel,
     trafficViewModel: TrafficViewModel,
+    networkRulesViewModel: NetworkRulesViewModel,
     initialDeviceId: String? = null,
     showHelp: Boolean = false,
     onShowHelp: () -> Unit = {},
@@ -163,9 +166,8 @@ fun DevToolsDesktopApp(
         }
     }
 
-    LaunchedEffect(devices, selectedDeviceId) {
-        val availableIds = devices.map { it.id }.toSet()
-        if (selectedDeviceId.isNullOrBlank() || selectedDeviceId !in availableIds) {
+    LaunchedEffect(devices) {
+        if (selectedDeviceId.isNullOrBlank()) {
             selectedDeviceId = onlineDevices.firstOrNull()?.id
         }
     }
@@ -176,38 +178,21 @@ fun DevToolsDesktopApp(
 
     val selectedDevice = devices.firstOrNull { it.id == selectedDeviceId }
     val isConnected = devToolsState.connection is DevToolsConnection.Connected
-    val isConnectedOrReconnecting = isConnected ||
-        devToolsState.connection is DevToolsConnection.Reconnecting
-    val connectedPlatform = selectedDevice?.platform
+    var lastKnownPlatform by remember { mutableStateOf(selectedDevice?.platform) }
+    if (selectedDevice != null) lastKnownPlatform = selectedDevice.platform
+    val connectedPlatform = lastKnownPlatform
     val isAndroid = connectedPlatform == DevicePlatform.ANDROID
 
     val fallbackSection = DesktopSection.defaultFor(
         connectedPlatform ?: DevicePlatform.ANDROID,
     )
 
-    val visibleSections = when {
-        !hasConnectedDevice -> emptyList()
-        connectedPlatform != null -> DesktopSection.forPlatform(connectedPlatform)
-        else -> DesktopSection.entries.toList()
+    val visibleSections = when (connectedPlatform) {
+        null -> DesktopSection.entries.toList()
+        else -> DesktopSection.forPlatform(connectedPlatform)
     }
 
-    LaunchedEffect(activeSection, isConnectedOrReconnecting, hasConnectedDevice, connectedPlatform) {
-        val gatedSections = setOf(
-            DesktopSection.Traffic,
-            DesktopSection.Events,
-            DesktopSection.Cache,
-            DesktopSection.Database,
-            DesktopSection.GitHistory,
-        )
-        if (activeSection in gatedSections && !isConnectedOrReconnecting) {
-            activeSection = fallbackSection
-            devicesViewModel.setActionError("Connect a device first to open traffic, events, cache, database, and git history")
-        }
-
-        if (!hasConnectedDevice) {
-            activeSection = fallbackSection
-        }
-
+    LaunchedEffect(selectedDeviceId) {
         selectedDevice?.let { device ->
             if (!activeSection.isSupportedBy(device.capabilities)) {
                 activeSection = fallbackSection
@@ -359,7 +344,6 @@ fun DevToolsDesktopApp(
                             activeSection = activeSection,
                             devices = devices,
                             selectedDeviceId = selectedDeviceId,
-                            hasConnectedDevice = hasConnectedDevice,
                             onDisconnect = onDisconnectWindow,
                             onSectionClick = { activeSection = it },
                             isModifierHeld = isModifierHeld,
@@ -372,7 +356,7 @@ fun DevToolsDesktopApp(
                     if (!hasConnectedDevice) {
                         Scaffold(
                             snackbarHost = { SnackbarHost(hostState = devicesViewModel.snackbarHostState) },
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                         ) {
                             NoDevicePanel(onRefresh = { devicesViewModel.refreshDevices() })
                         }
@@ -438,6 +422,7 @@ fun DevToolsDesktopApp(
 
                             DesktopSection.Traffic -> TrafficPanel(
                                 trafficViewModel = trafficViewModel,
+                                networkRulesViewModel = networkRulesViewModel,
                                 onLogClick = { selectedTrafficForSheet = it },
                             )
 
@@ -461,7 +446,9 @@ fun DevToolsDesktopApp(
                         exit = shrinkVertically(),
                         modifier = Modifier.align(Alignment.TopCenter),
                     ) {
-                        val attempt = (devToolsState.connection as? DevToolsConnection.Reconnecting)?.attempt ?: 1
+                        val attempt =
+                            (devToolsState.connection as? DevToolsConnection.Reconnecting)?.attempt
+                                ?: 1
                         ReconnectingBanner(attempt = attempt)
                     }
 
@@ -553,7 +540,6 @@ fun ColumnScope.Sidebar(
     connection: DevToolsConnection,
     devices: List<DeviceUi>,
     selectedDeviceId: String?,
-    hasConnectedDevice: Boolean,
     isModifierHeld: Boolean = false,
     visibleSections: List<DesktopSection> = emptyList(),
 ) {
@@ -582,51 +568,45 @@ fun ColumnScope.Sidebar(
         connection = connection,
         devices = devices,
         selectedDeviceId = selectedDeviceId,
-        hasConnectedDevice = hasConnectedDevice,
         onDisconnect = onDisconnect,
     )
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-        contentPadding = PaddingValues(MaterialTheme.dimens.margin.lg)
+        contentPadding = PaddingValues(MaterialTheme.dimens.margin.lg),
     ) {
         itemsIndexed(visibleSections, key = { _, section -> section.title }) { index, section ->
             NavigationDrawerItem(
                 label = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-                    ) {
-                        Text(
-                            text = section.title,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(1f),
-                        )
-                        if (isModifierHeld && index < 9) {
-                            Text(
-                                text = "${index + 1}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .background(
-                                        MaterialTheme.colorScheme.primary,
-                                        RoundedCornerShape(MaterialTheme.dimens.corner.small),
-                                    )
-                                    .padding(horizontal = 6.dp, vertical = 1.dp),
-                            )
-                        }
-                    }
+                    Text(
+                        text = section.title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f),
+                    )
                 },
                 selected = activeSection == section,
                 icon = {
                     Icon(
                         section.icon,
                         contentDescription = null,
-                        modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
                     )
+                },
+                badge = {
+                    if (isModifierHeld && index < 9) {
+                        Text(
+                            text = "${index + 1}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.primary,
+                                    RoundedCornerShape(MaterialTheme.dimens.corner.small),
+                                )
+                                .padding(horizontal = 6.dp, vertical = 1.dp),
+                        )
+                    }
                 },
                 onClick = { onSectionClick(section) },
             )
@@ -639,12 +619,10 @@ private fun SidebarConnectionCard(
     connection: DevToolsConnection,
     devices: List<DeviceUi>,
     selectedDeviceId: String?,
-    hasConnectedDevice: Boolean,
     onDisconnect: () -> Unit,
 ) {
-    val onlineDevices = devices.filter { it.state == DeviceState.DEVICE }
     val selectedOnlineDevice =
-        onlineDevices.firstOrNull { it.id == selectedDeviceId } ?: onlineDevices.firstOrNull()
+        devices.firstOrNull { it.id == selectedDeviceId && it.state == DeviceState.DEVICE }
 
     Column(
         modifier = Modifier
@@ -659,7 +637,7 @@ private fun SidebarConnectionCard(
             .padding(MaterialTheme.dimens.margin.md),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        if (!hasConnectedDevice || selectedOnlineDevice == null) {
+        if (selectedOnlineDevice == null) {
             Text(
                 text = "No online devices found",
                 style = MaterialTheme.typography.bodySmall,
@@ -682,13 +660,12 @@ private fun SidebarConnectionCard(
                     is DevToolsConnection.Connecting -> "Connecting ${connection.host}:${connection.port}"
                     is DevToolsConnection.AwaitingAuth -> "Waiting for OTP"
                     is DevToolsConnection.Connected -> "Connected"
-                    is DevToolsConnection.Reconnecting ->
-                        "Device asleep — reconnecting (${connection.attempt})"
+                    is DevToolsConnection.Reconnecting -> "Reconnecting (${connection.attempt})"
 
                     is DevToolsConnection.Failed -> "Failed: ${connection.reason}"
                 }
                 Text(
-                    connectionText,
+                    text = connectionText,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary,
                 )

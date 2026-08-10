@@ -13,6 +13,7 @@ import io.github.yashkasera.alohomora.ui.icons.Key
 import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.icons.ScrollText
 import io.github.yashkasera.alohomora.ui.icons.Settings
+import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
 import io.github.yashkasera.alohomora.ui.icons.Terminal
 import io.github.yashkasera.alohomora.ui.icons.Waypoints
 
@@ -42,7 +43,7 @@ enum class DesktopSection(
     Database("Database", Icons.Database),
     Cache("Cache", Icons.Key),
     Errors("Errors", Icons.AlertTriangle),
-    Config("Config", Icons.Settings),
+    Config("Config", Icons.SlidersHorizontal),
     GitHistory("Git History", Icons.GitGraph),
     ;
 

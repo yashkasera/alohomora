@@ -57,6 +57,14 @@ fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
             ) {
+                if (call.mockedBy != null) {
+                    AlohomoraChip(
+                        label = "Mocked",
+                        uppercase = false,
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary,
+                    )
+                }
                 Text(
                     text = "${call.duration}ms",
                     style = MaterialTheme.typography.labelSmall,

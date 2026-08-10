@@ -53,7 +53,6 @@ internal fun ConnectionRequestSheetContent(
 
     Column(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
             .padding(MaterialTheme.dimens.margin.xxl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -100,7 +99,7 @@ internal fun ConnectionRequestSheetContent(
                     remember = !remember
                     onRememberChange(remember)
                 },
-            // Top, not centre: the label wraps to two lines on a narrow screen and a centred
+            // Top, not center: the label wraps to two lines on a narrow screen and a centred
             // checkbox then floats between them.
             verticalAlignment = Alignment.Top,
         ) {

@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.traffic
 
 import io.github.yashkasera.alohomora.common.HeaderRedaction
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.devtools.NetworkRuleEngine
 import io.github.yashkasera.alohomora.replay.ReplayMarker
 import io.github.yashkasera.alohomora.replay.ReplayTag
 import java.net.URLDecoder
@@ -9,8 +10,10 @@ import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import okhttp3.Interceptor
+import okhttp3.Protocol
 import okhttp3.RequestBody
 import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.Buffer
 
 /**
@@ -67,9 +70,30 @@ class TrafficInterceptor(
 
         trace?.let { runCatching { collector.onRequestSent(it) } }
 
+        val mockRule = NetworkRuleEngine.findMatch(request.url.toString(), request.method)
+        if (mockRule != null && trace != null) {
+            runCatching {
+                trace.status = mockRule.statusCode
+                trace.message = "Mocked"
+                trace.responseBody = mockRule.responseBody.take(MAX_BODY_BYTES.toInt())
+                trace.responseContentType = mockRule.contentType
+                trace.responseSize = mockRule.responseBody.length.toLong()
+                trace.duration = 0
+                trace.mockedBy = mockRule.id
+                collector.onResponseReceived(trace)
+            }.onFailure { it.logCaptureFailure("mock") }
+            return Response.Builder()
+                .request(request)
+                .protocol(Protocol.HTTP_1_1)
+                .code(mockRule.statusCode)
+                .message("Mocked by Alohomora")
+                .body(mockRule.responseBody.toResponseBody())
+                .build()
+        }
+
         // Outside every try/catch of ours: the host app's request and any IOException it
         // raises must reach the caller exactly as if this interceptor were absent.
-        val response = chain.proceed(request)
+        var response = chain.proceed(request)
 
         if (trace == null) return response
 
@@ -92,6 +116,18 @@ class TrafficInterceptor(
             trace.responseSize = response.body.contentLength()
             collector.onResponseReceived(trace)
         }.onFailure { it.logCaptureFailure("response") }
+
+        val throttle = NetworkRuleEngine.throttle
+        if (throttle.latencyMs > 0) {
+            runCatching { Thread.sleep(throttle.latencyMs) }
+        }
+        if (throttle.downloadBytesPerSec > 0) {
+            runCatching {
+                response = response.newBuilder()
+                    .body(ThrottledResponseBody(response.body, throttle.downloadBytesPerSec))
+                    .build()
+            }
+        }
 
         return response
     }

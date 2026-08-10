@@ -4,6 +4,8 @@
 
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
   <application>
     <activity
       android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
@@ -12,12 +14,32 @@
       android:launchMode="singleTask"
       android:taskAffinity="io.github.yashkasera.alohomora.DevToolsActivity"
       android:name=".DevToolsActivity"
+      android:excludeFromRecents="false"
       android:windowSoftInputMode="adjustPan">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
+
+    <service
+      android:name=".vpn.AlohomoraVpnService"
+      android:permission="android.permission.BIND_VPN_SERVICE"
+      android:exported="false"
+      android:foregroundServiceType="specialUse">
+      <intent-filter>
+        <action android:name="android.net.VpnService" />
+      </intent-filter>
+      <meta-data
+        android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON"
+        android:value="false" />
+    </service>
+
+    <activity
+      android:name=".vpn.VpnConsentActivity"
+      android:theme="@android:style/Theme.Translucent.NoTitleBar"
+      android:exported="false"
+      android:taskAffinity="" />
 
     <receiver
       android:exported="false"

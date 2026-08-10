@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.devtools
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -19,9 +20,10 @@ import androidx.core.content.ContextCompat
 import io.github.yashkasera.alohomora.ActivityTracker
 import io.github.yashkasera.alohomora.presentation.ui.components.ConnectionRequestSheetContent
 import io.github.yashkasera.alohomora.ui.components.AlohomoraBottomSheetModal
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("StaticFieldLeak")
 internal actual object ConnectionPromptHost {
 
     /**
@@ -54,7 +56,7 @@ internal actual object ConnectionPromptHost {
                 // otherwise a rotation leaks the composition.
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
                 setContent {
-                    AlohomoraTheme {
+                    AppTheme {
                         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                         AlohomoraBottomSheetModal(
                             // Swiping away must actually tear the overlay down. With an empty

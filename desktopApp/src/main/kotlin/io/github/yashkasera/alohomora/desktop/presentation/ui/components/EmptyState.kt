@@ -41,51 +41,36 @@ fun EmptyState(
         // override any size the caller asked for, so an EmptyState could not be constrained
         // to a card or a list slot.
         modifier = Modifier.fillMaxSize().then(modifier),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.xxxl)
+            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.xxxl),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(MaterialTheme.dimens.icon.illustration)
-                    .border(
-                        width = MaterialTheme.dimens.stroke.medium,
-                        color = MaterialTheme.colorScheme.outline,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(MaterialTheme.dimens.icon.xl),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(MaterialTheme.dimens.icon.xl),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontStyle = FontStyle.Italic,
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                textAlign = TextAlign.Center,
             )
 
             if (subtitle != null) {
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        letterSpacing = 0.5.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    textAlign = TextAlign.Center,
                 )
             }
 

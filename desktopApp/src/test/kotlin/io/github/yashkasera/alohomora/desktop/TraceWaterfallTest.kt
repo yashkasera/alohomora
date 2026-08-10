@@ -19,7 +19,7 @@ import io.github.yashkasera.alohomora.common.trace.toTraceRows
 import io.github.yashkasera.alohomora.common.trace.traceWindow
 import io.github.yashkasera.alohomora.ui.components.waterfall.TraceWaterfall
 import io.github.yashkasera.alohomora.ui.components.waterfall.WaterfallBarTestTagPrefix
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -67,7 +67,7 @@ class TraceWaterfallTest {
         )
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 TraceWaterfall(
                     rows = spans.toTraceRows(),
                     window = traceWindow(spans),
@@ -101,7 +101,7 @@ class TraceWaterfallTest {
         var collapsed by mutableStateOf(emptySet<String>())
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 TraceWaterfall(
                     rows = spans.toTraceRows(collapsed),
                     window = traceWindow(spans),
@@ -139,7 +139,7 @@ class TraceWaterfallTest {
         var selected: String? = null
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 TraceWaterfall(
                     rows = spans.toTraceRows(),
                     window = traceWindow(spans),

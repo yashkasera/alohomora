@@ -16,7 +16,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.Alohomo
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventDetailsContent
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -56,7 +56,7 @@ class EventsPanelClickTest {
         val vm = EventsViewModel(repository).also { viewModel = it }
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 // Mirrors DevToolsDesktopApp: the sheet is a sibling overlay in the same Box as the
                 // panel, not a child of it. That arrangement is the thing under test.
                 Box(modifier = Modifier.fillMaxSize()) {
@@ -99,7 +99,7 @@ class EventsPanelClickTest {
         val vm = EventsViewModel(repository).also { viewModel = it }
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 // Mirrors DevToolsDesktopApp: the sheet is a sibling overlay in the same Box as the
                 // panel, not a child of it. That arrangement is the thing under test.
                 Box(modifier = Modifier.fillMaxSize()) {

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
@@ -33,13 +34,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,9 +59,13 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraLargeTopAppBar
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopAppBarDefaults
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.icons.Activity
+import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
+import io.github.yashkasera.alohomora.ui.icons.Alohomora
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeftRight
 import io.github.yashkasera.alohomora.ui.icons.ArrowRight
 import io.github.yashkasera.alohomora.ui.icons.Braces
@@ -63,11 +74,15 @@ import io.github.yashkasera.alohomora.ui.icons.ClipboardList
 import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Key
 import io.github.yashkasera.alohomora.ui.icons.Layers
+import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
 import io.github.yashkasera.alohomora.ui.icons.Waypoints
 import io.github.yashkasera.alohomora.ui.icons.X
+import io.github.yashkasera.alohomora.ui.theme.brand
 import io.github.yashkasera.alohomora.ui.theme.dimens
+import kotlinx.datetime.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
 
 private data class OverviewModule(
@@ -82,7 +97,7 @@ private val builtInModules = listOf(
     OverviewModule(
         title = "Traffic",
         subtitle = "LIVE STREAM",
-        icon = Icons.ArrowLeftRight,
+        icon = Icons.Route,
         isInverse = true,
         route = Routes.Traffic,
     ),
@@ -96,7 +111,7 @@ private val builtInModules = listOf(
     OverviewModule(
         title = "Events",
         subtitle = "SYSTEM TRIGGERS",
-        icon = Icons.ClipboardList,
+        icon = Icons.Activity,
         isInverse = false,
         route = Routes.Events,
     ),
@@ -110,14 +125,14 @@ private val builtInModules = listOf(
     OverviewModule(
         title = "Errors",
         subtitle = "CRITICAL LOGS",
-        icon = Icons.CircleAlert,
+        icon = Icons.AlertTriangle,
         isInverse = false,
         route = Routes.Error,
     ),
     OverviewModule(
         title = "Cache",
         subtitle = "KEY-VALUE STORE",
-        icon = Icons.Braces,
+        icon = Icons.Key,
         isInverse = false,
         route = Routes.Cache,
     ),
@@ -172,40 +187,65 @@ internal fun OverviewScreen(
     }
 
     val lazyGridState = rememberLazyStaggeredGridState()
-    val scrollBehavior = AlohomoraTopAppBarDefaults.enterAlwaysScrollBehavior(
-        AlohomoraTopAppBarDefaults.rememberTopAppBarState(),
-    )
-    val collapsed = 28
-    val expanded = 40
-    val topAppBarTextSize =
-        (collapsed + (expanded - collapsed) * (1 - scrollBehavior.state.collapsedFraction)).sp
 
     Scaffold(
         topBar = {
-            AlohomoraLargeTopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            "Alohomora",
-                            style = MaterialTheme.typography.displayMedium,
-                            fontStyle = FontStyle.Italic,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = topAppBarTextSize,
-                        )
-                        if (scrollBehavior.state.collapsedFraction < 0.2f) {
-                            Text(
-                                "INTERNAL DEVELOPER CONSOLE",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.tertiary,
-                            )
+            Column(
+                modifier = Modifier
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surface,
+                                MaterialTheme.colorScheme.surface.copy(0.5f),
+                            ),
+                        ),
+                    )
+                    .statusBarsPadding()
+                    .padding(MaterialTheme.dimens.margin.md),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Alohomora,
+                        modifier = Modifier.size(
+                            MaterialTheme.dimens.icon.lg,
+                        ),
+                        contentDescription = null,
+                    )
+                    Spacer(Modifier.width(MaterialTheme.dimens.margin.sm))
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleLarge,
+                        text = "Alohomora",
+                    )
+
+                    Row(
+                        modifier = Modifier.padding(MaterialTheme.dimens.margin.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        val dotState = when (state.deviceConnectionStatus) {
+                            DevConnectionStatus.Connected -> ConnectionDotState.Connected
+                            // Amber only while something is genuinely in progress.
+                            DevConnectionStatus.AwaitingAuth -> ConnectionDotState.Reconnecting
+                            DevConnectionStatus.Disconnected,
+                            DevConnectionStatus.Off, -> ConnectionDotState.Disconnected
                         }
+                        ConnectionStatusDot(state = dotState)
+                        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+                        Text(
+                            when (state.deviceConnectionStatus) {
+                                DevConnectionStatus.Connected -> "Connected"
+                                DevConnectionStatus.AwaitingAuth -> "Awaiting code"
+                                DevConnectionStatus.Disconnected -> "Waiting"
+                                DevConnectionStatus.Off -> "Server off"
+                            },
+                            textAlign = TextAlign.End,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
                     }
-                },
-                actions = {
-                    // Rendered only when the host supplies a dismiss handler. This slot
-                    // previously held a settings icon with an empty onClick — a control that did
-                    // nothing, which on iOS was the *only* button in the bar and left the console
-                    // impossible to leave (Compose swallows a sheet's swipe-to-dismiss drag).
                     if (onClose != null) {
                         AlohomoraIconButton(onClick = onClose) {
                             Icon(
@@ -214,57 +254,55 @@ internal fun OverviewScreen(
                             )
                         }
                     }
-                },
-                scrollBehavior = scrollBehavior,
-            )
+                }
+            }
         },
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     ) {
         CanvasBackground()
         Box(modifier = Modifier.fillMaxSize()) {
-        LazyVerticalStaggeredGrid(
-            modifier = Modifier.padding(it),
-            columns = StaggeredGridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
-            verticalItemSpacing = MaterialTheme.dimens.margin.lg,
-            contentPadding = PaddingValues(MaterialTheme.dimens.margin.xl),
-            state = lazyGridState,
-        ) {
-            item(span = StaggeredGridItemSpan.FullLine) {
-                DevToolsStatusCard(
-                    state = state,
-                    onToggle = { viewModel.onEvent(OverviewEvent.ToggleServer(it)) },
-                    onPortChange = { viewModel.onEvent(OverviewEvent.PortChanged(it)) },
-                    onRememberChange = {
-                        viewModel.onEvent(OverviewEvent.RememberDeviceChanged(it))
-                    },
-                )
-            }
-            item(span = StaggeredGridItemSpan.FullLine) {
-                Text(
-                    "SYSTEM MODULES",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.lg),
-                )
-            }
-            items(defaultModules, key = { it.route::class.simpleName.orEmpty() }) { modules ->
-                ModuleCard(modules, onNavigate = onNavigate)
-            }
-            customPlugins.ifEmpty { null }?.let { plugins ->
+            LazyVerticalStaggeredGrid(
+                modifier = Modifier.padding(it),
+                columns = StaggeredGridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+                verticalItemSpacing = MaterialTheme.dimens.margin.lg,
+                contentPadding = PaddingValues(MaterialTheme.dimens.margin.xl),
+                state = lazyGridState,
+            ) {
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    DevToolsStatusCard(
+                        state = state,
+                        onToggle = { viewModel.onEvent(OverviewEvent.ToggleServer(it)) },
+                        onPortChange = { viewModel.onEvent(OverviewEvent.PortChanged(it)) },
+                        onRememberChange = {
+                            viewModel.onEvent(OverviewEvent.RememberDeviceChanged(it))
+                        },
+                    )
+                }
                 item(span = StaggeredGridItemSpan.FullLine) {
                     Text(
-                        "CUSTOM MODULES",
+                        "SYSTEM MODULES",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.lg),
                     )
                 }
-                items(plugins, key = { it.route::class.simpleName.orEmpty() }) { module ->
-                    ModuleCard(module, onNavigate = onNavigate)
+                items(defaultModules, key = { it.route::class.simpleName.orEmpty() }) { modules ->
+                    ModuleCard(modules, onNavigate = onNavigate)
+                }
+                customPlugins.ifEmpty { null }?.let { plugins ->
+                    item(span = StaggeredGridItemSpan.FullLine) {
+                        Text(
+                            "CUSTOM MODULES",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.lg),
+                        )
+                    }
+                    items(plugins, key = { it.route::class.simpleName.orEmpty() }) { module ->
+                        ModuleCard(module, onNavigate = onNavigate)
+                    }
                 }
             }
-        }
             ScrollToTopButton(lazyGridState)
         }
     }
@@ -278,9 +316,14 @@ private fun DevToolsStatusCard(
     onRememberChange: (Boolean) -> Unit,
 ) {
     Box(
-        modifier = Modifier.fillMaxWidth().border(
-            MaterialTheme.dimens.stroke.small, MaterialTheme.colorScheme.onBackground, RectangleShape,
-        ).background(MaterialTheme.colorScheme.background).padding(MaterialTheme.dimens.margin.xl),
+        modifier = Modifier.fillMaxWidth()
+            .border(
+                width = MaterialTheme.dimens.stroke.small,
+                color = MaterialTheme.colorScheme.onBackground,
+                shape = RectangleShape,
+            )
+            .background(MaterialTheme.colorScheme.background)
+            .padding(MaterialTheme.dimens.margin.xl),
     ) {
         Column {
             Row(
@@ -300,7 +343,7 @@ private fun DevToolsStatusCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -319,38 +362,8 @@ private fun DevToolsStatusCard(
                         onValueChange = onPortChange,
                         singleLine = true,
                         enabled = !state.serverEnabled,
-                        modifier = Modifier.width(120.dp),
+                        modifier = Modifier.fillMaxWidth(),
                     )
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        "DEVICE",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
-                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        val dotState = when (state.deviceConnectionStatus) {
-                            DevConnectionStatus.Connected -> ConnectionDotState.Connected
-                            // Amber only while something is genuinely in progress.
-                            DevConnectionStatus.AwaitingAuth -> ConnectionDotState.Reconnecting
-                            DevConnectionStatus.Disconnected,
-                            DevConnectionStatus.Off -> ConnectionDotState.Disconnected
-                        }
-                        ConnectionStatusDot(state = dotState)
-                        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                        Text(
-                            when (state.deviceConnectionStatus) {
-                                DevConnectionStatus.Connected -> "Connected"
-                                DevConnectionStatus.AwaitingAuth -> "Awaiting code"
-                                DevConnectionStatus.Disconnected -> "Waiting for client"
-                                DevConnectionStatus.Off -> "Server off"
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                        )
-                    }
                 }
             }
 
@@ -375,9 +388,6 @@ private fun DevToolsStatusCard(
                     color = MaterialTheme.colorScheme.secondary,
                 )
 
-                // Same consent control as the pop-up sheet. Without it, a pairing completed from
-                // this screen could never be remembered, which would look like the checkbox
-                // simply not working depending on where the user happened to be.
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
                 Row(
                     modifier = Modifier
@@ -401,7 +411,7 @@ private fun DevToolsStatusCard(
             if (!state.serverError.isNullOrBlank()) {
                 AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.lg))
                 Text(
-                    text = state.serverError ?: "",
+                    text = state.serverError,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                 )
@@ -447,9 +457,10 @@ private fun ModuleCard(
             )
         }
 
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(MaterialTheme.dimens.margin.lg)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(MaterialTheme.dimens.margin.lg),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

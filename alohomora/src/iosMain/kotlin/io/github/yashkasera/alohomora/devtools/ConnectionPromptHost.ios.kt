@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ComposeUIViewController
 import io.github.yashkasera.alohomora.presentation.ui.components.ConnectionRequestSheetContent
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import platform.UIKit.UIApplication
 import platform.UIKit.UIModalPresentationPageSheet
 import platform.UIKit.UISheetPresentationControllerDetent
@@ -43,7 +43,7 @@ internal actual object ConnectionPromptHost {
             dismissPresented(animated = false)
 
             val controller = ComposeUIViewController {
-                AlohomoraTheme {
+                AppTheme {
                     ConnectionRequestSheetContent(
                         otp = otp,
                         onRememberChange = onRememberChange,

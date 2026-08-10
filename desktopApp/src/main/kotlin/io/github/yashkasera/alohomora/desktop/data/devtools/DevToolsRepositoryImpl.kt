@@ -15,18 +15,25 @@ import io.github.yashkasera.alohomora.common.EnvelopeRead
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.InitialStateMessage
+import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.PingMessage
 import io.github.yashkasera.alohomora.common.PongMessage
 import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
+import io.github.yashkasera.alohomora.common.SetMockRulesMessage
+import io.github.yashkasera.alohomora.common.SetThrottleProfileMessage
+import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
+import io.github.yashkasera.alohomora.common.VpnStateMessage
+import io.github.yashkasera.alohomora.common.VpnThrottleState
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
 import io.github.yashkasera.alohomora.common.RequestTraceSpansMessage
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.StreamErrorMessage
+import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.StreamEventMessage
 import io.github.yashkasera.alohomora.common.StreamSpanMessage
 import io.github.yashkasera.alohomora.common.StreamTrafficMessage
@@ -92,6 +99,14 @@ class DevToolsRepositoryImpl(
     override val switching: StateFlow<Boolean> = _switching.asStateFlow()
     private val _deviceError = MutableStateFlow<String?>(null)
     override val deviceError: StateFlow<String?> = _deviceError.asStateFlow()
+
+    private val _networkRulesSupported = MutableStateFlow(false)
+    override val networkRulesSupported: StateFlow<Boolean> = _networkRulesSupported.asStateFlow()
+
+    private val _vpnThrottleSupported = MutableStateFlow(false)
+    override val vpnThrottleSupported: StateFlow<Boolean> = _vpnThrottleSupported.asStateFlow()
+    private val _vpnState = MutableStateFlow(VpnThrottleState.OFF)
+    override val vpnState: StateFlow<VpnThrottleState> = _vpnState.asStateFlow()
 
     override val events: StateFlow<List<Event>> = eventStore.events
     override val errors: StateFlow<List<Error>> = errorStore.errors
@@ -334,6 +349,18 @@ class DevToolsRepositoryImpl(
         }
     }
 
+    override fun setThrottleProfile(profile: ThrottleProfile) {
+        scope.launch { sendMessage(SetThrottleProfileMessage(profile = profile)) }
+    }
+
+    override fun setMockRules(rules: List<MockRule>) {
+        scope.launch { sendMessage(SetMockRulesMessage(rules = rules)) }
+    }
+
+    override fun setVpnThrottle(profile: ThrottleProfile, enabled: Boolean) {
+        scope.launch { sendMessage(SetVpnThrottleMessage(profile = profile, enabled = enabled)) }
+    }
+
     override fun replayTraffic(request: ReplayRequest) {
         // Marked in flight before the send so the button reflects the click immediately. The device
         // always answers with a ReplayResultMessage, success or failure, which clears it.
@@ -445,6 +472,9 @@ class DevToolsRepositoryImpl(
                 errorStore.replace(payload.errors)
                     spanStore.replace(payload.spans)
                     spanStore.setCaptureSupported(payload.spanCaptureSupported)
+                    _networkRulesSupported.value = payload.networkRulesSupported
+                    _vpnThrottleSupported.value = payload.vpnThrottleSupported
+                    _vpnState.value = payload.vpnThrottleState
                     trafficStore.replace(payload.traffic)
                     databaseStore.replaceDatabases(
                         payload.databases.map { it.toDomain() },
@@ -518,6 +548,10 @@ class DevToolsRepositoryImpl(
                 }
             }
 
+            is VpnStateMessage -> {
+                _vpnState.value = message.state
+            }
+
             is DeviceErrorMessage -> {
                 // Not a connection failure: the socket is healthy, one command could not be
                 // served. Surfaced so a device that cannot read its own database says so instead
@@ -532,6 +566,9 @@ class DevToolsRepositoryImpl(
 
     private fun clearAll() {
         _deviceError.value = null
+        _networkRulesSupported.value = false
+        _vpnThrottleSupported.value = false
+        _vpnState.value = VpnThrottleState.OFF
         eventStore.clear()
         trafficStore.clear()
         databaseStore.clear()

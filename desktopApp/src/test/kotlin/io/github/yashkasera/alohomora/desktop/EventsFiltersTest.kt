@@ -11,7 +11,7 @@ import androidx.compose.ui.test.runComposeUiTest
 import io.github.yashkasera.alohomora.desktop.presentation.model.EventsFilterState
 import io.github.yashkasera.alohomora.desktop.presentation.model.EventsUiState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsFilters
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -51,7 +51,7 @@ class EventsFiltersTest {
         var toggled: String? = null
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 EventsFilters(
                     state = state(
                         filters = EventsFilterState(mutedNames = setOf("Screen.View")),
@@ -85,7 +85,7 @@ class EventsFiltersTest {
         val muted = mutableListOf<Boolean>()
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 EventsFilters(
                     state = state(nameCounts = mapOf("App.Start" to 2)),
                     onQueryChange = {},
@@ -113,7 +113,7 @@ class EventsFiltersTest {
         var unmutedAll = false
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 EventsFilters(
                     state = state(
                         filters = EventsFilterState(mutedNames = setOf("Screen.View", "Api.Call")),
@@ -149,7 +149,7 @@ class EventsFiltersTest {
         var cleared = false
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 EventsFilters(
                     // 1970-01-01T00:00:10Z, so the rendered time is stable regardless of the host clock.
                     state = state(filters = EventsFilterState(markFloorMillis = 10_000)),
@@ -183,7 +183,7 @@ class EventsFiltersTest {
     @Test
     fun `the chip row is absent until an event has been seen`() = runComposeUiTest {
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 EventsFilters(
                     state = state(),
                     onQueryChange = {},

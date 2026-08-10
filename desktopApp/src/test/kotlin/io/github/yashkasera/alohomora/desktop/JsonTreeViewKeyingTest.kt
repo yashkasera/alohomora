@@ -9,7 +9,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.runComposeUiTest
 import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -31,7 +31,7 @@ class JsonTreeViewKeyingTest {
         var json by mutableStateOf("""{"first":"alpha"}""")
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 JsonTreeView(json = json)
             }
         }

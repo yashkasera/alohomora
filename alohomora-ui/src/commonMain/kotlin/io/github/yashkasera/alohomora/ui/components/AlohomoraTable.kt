@@ -140,7 +140,6 @@ private fun TableCell(
     content: CellContent,
     width: Int
 ) {
-    val isHeader = content is CellContent.Header
 
     Box(
         modifier = Modifier

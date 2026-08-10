@@ -8,80 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import io.github.yashkasera.alohomora.ui.backgroundDark
-import io.github.yashkasera.alohomora.ui.backgroundLight
-import io.github.yashkasera.alohomora.ui.errorContainerDark
-import io.github.yashkasera.alohomora.ui.errorContainerLight
-import io.github.yashkasera.alohomora.ui.errorDark
-import io.github.yashkasera.alohomora.ui.errorLight
-import io.github.yashkasera.alohomora.ui.inverseOnSurfaceDark
-import io.github.yashkasera.alohomora.ui.inverseOnSurfaceLight
-import io.github.yashkasera.alohomora.ui.inversePrimaryDark
-import io.github.yashkasera.alohomora.ui.inversePrimaryLight
-import io.github.yashkasera.alohomora.ui.inverseSurfaceDark
-import io.github.yashkasera.alohomora.ui.inverseSurfaceLight
-import io.github.yashkasera.alohomora.ui.onBackgroundDark
-import io.github.yashkasera.alohomora.ui.onBackgroundLight
-import io.github.yashkasera.alohomora.ui.onErrorContainerDark
-import io.github.yashkasera.alohomora.ui.onErrorContainerLight
-import io.github.yashkasera.alohomora.ui.onErrorDark
-import io.github.yashkasera.alohomora.ui.onErrorLight
-import io.github.yashkasera.alohomora.ui.onPrimaryContainerDark
-import io.github.yashkasera.alohomora.ui.onPrimaryContainerLight
-import io.github.yashkasera.alohomora.ui.onPrimaryDark
-import io.github.yashkasera.alohomora.ui.onPrimaryLight
-import io.github.yashkasera.alohomora.ui.onSecondaryContainerDark
-import io.github.yashkasera.alohomora.ui.onSecondaryContainerLight
-import io.github.yashkasera.alohomora.ui.onSecondaryDark
-import io.github.yashkasera.alohomora.ui.onSecondaryLight
-import io.github.yashkasera.alohomora.ui.onSurfaceDark
-import io.github.yashkasera.alohomora.ui.onSurfaceLight
-import io.github.yashkasera.alohomora.ui.onSurfaceVariantDark
-import io.github.yashkasera.alohomora.ui.onSurfaceVariantLight
-import io.github.yashkasera.alohomora.ui.onTertiaryContainerDark
-import io.github.yashkasera.alohomora.ui.onTertiaryContainerLight
-import io.github.yashkasera.alohomora.ui.onTertiaryDark
-import io.github.yashkasera.alohomora.ui.onTertiaryLight
-import io.github.yashkasera.alohomora.ui.outlineDark
-import io.github.yashkasera.alohomora.ui.outlineLight
-import io.github.yashkasera.alohomora.ui.outlineVariantDark
-import io.github.yashkasera.alohomora.ui.outlineVariantLight
-import io.github.yashkasera.alohomora.ui.primaryContainerDark
-import io.github.yashkasera.alohomora.ui.primaryContainerLight
-import io.github.yashkasera.alohomora.ui.primaryDark
-import io.github.yashkasera.alohomora.ui.primaryLight
-import io.github.yashkasera.alohomora.ui.scrimDark
-import io.github.yashkasera.alohomora.ui.scrimLight
-import io.github.yashkasera.alohomora.ui.secondaryContainerDark
-import io.github.yashkasera.alohomora.ui.secondaryContainerLight
-import io.github.yashkasera.alohomora.ui.secondaryDark
-import io.github.yashkasera.alohomora.ui.secondaryLight
-import io.github.yashkasera.alohomora.ui.surfaceBrightDark
-import io.github.yashkasera.alohomora.ui.surfaceBrightLight
-import io.github.yashkasera.alohomora.ui.surfaceContainerDark
-import io.github.yashkasera.alohomora.ui.surfaceContainerHighDark
-import io.github.yashkasera.alohomora.ui.surfaceContainerHighLight
-import io.github.yashkasera.alohomora.ui.surfaceContainerHighestDark
-import io.github.yashkasera.alohomora.ui.surfaceContainerHighestLight
-import io.github.yashkasera.alohomora.ui.surfaceContainerLight
-import io.github.yashkasera.alohomora.ui.surfaceContainerLowDark
-import io.github.yashkasera.alohomora.ui.surfaceContainerLowLight
-import io.github.yashkasera.alohomora.ui.surfaceContainerLowestDark
-import io.github.yashkasera.alohomora.ui.surfaceContainerLowestLight
-import io.github.yashkasera.alohomora.ui.surfaceDark
-import io.github.yashkasera.alohomora.ui.surfaceDimDark
-import io.github.yashkasera.alohomora.ui.surfaceDimLight
-import io.github.yashkasera.alohomora.ui.surfaceLight
-import io.github.yashkasera.alohomora.ui.surfaceVariantDark
-import io.github.yashkasera.alohomora.ui.surfaceVariantLight
-import io.github.yashkasera.alohomora.ui.tertiaryContainerDark
-import io.github.yashkasera.alohomora.ui.tertiaryContainerLight
-import io.github.yashkasera.alohomora.ui.tertiaryDark
-import io.github.yashkasera.alohomora.ui.tertiaryLight
 
 private val lightScheme = lightColorScheme(
     primary = primaryLight,
@@ -174,20 +105,23 @@ val unspecified_scheme = ColorFamily(
 @Composable
 fun AppTheme(
     isDarkState: MutableState<Boolean>? = null,
-    initialIsDark: Boolean = true,
+    initialIsDark: Boolean = isSystemInDarkTheme(),
     content: @Composable() () -> Unit,
 ) {
     val ownedState = remember { mutableStateOf(initialIsDark) }
     val effectiveState = isDarkState ?: ownedState
     CompositionLocalProvider(
         LocalThemeIsDark provides effectiveState,
+        LocalAlohomoraDimens provides AlohomoraDimens(),
     ) {
         val isDark by effectiveState
         MaterialTheme(
             colorScheme = if (isDark) darkScheme else lightScheme,
             typography = AlohomoraTypography(),
+            shapes = AlohomoraShapes,
             content = content,
         )
     }
 }
 
+val LocalThemeIsDark = compositionLocalOf { mutableStateOf(true) }

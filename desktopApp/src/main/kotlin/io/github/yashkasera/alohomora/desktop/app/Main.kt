@@ -37,6 +37,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.MenuBar
@@ -180,7 +181,10 @@ fun main() {
 
         sessions.toList().forEach { session ->
             key(session.id) {
-                val state = rememberWindowState(placement = WindowPlacement.Maximized)
+                val state = rememberWindowState(
+                    placement = WindowPlacement.Maximized,
+                    size = DpSize(1080.dp, 600.dp)
+                )
                 var showHelp by remember { mutableStateOf(false) }
                 var showCommandPalette by remember { mutableStateOf(false) }
 
@@ -193,6 +197,21 @@ fun main() {
                     session.composition.close()
                     sessions.removeAll { it.id == session.id }
                     if (sessions.isEmpty()) launcherVisible = true
+                }
+
+                var deviceWasOnline by remember { mutableStateOf(true) }
+                val devicesForReforward by session.composition.devicesViewModel.devices.collectAsState()
+                val deviceIsOnline = devicesForReforward.any { it.id == session.deviceId && it.state == DeviceState.DEVICE }
+                LaunchedEffect(deviceIsOnline) {
+                    if (deviceIsOnline && !deviceWasOnline) {
+                        val device = devicesForReforward.firstOrNull { it.id == session.deviceId }
+                        if (device?.platform == DevicePlatform.ANDROID) {
+                            session.composition.devicesViewModel.selectDevice(
+                                session.deviceId, session.hostPort, session.devicePort,
+                            )
+                        }
+                    }
+                    deviceWasOnline = deviceIsOnline
                 }
 
                 Window(
@@ -278,6 +297,7 @@ fun main() {
                                 tracesViewModel = session.composition.tracesViewModel,
                                 eventsViewModel = session.composition.eventsViewModel,
                                 trafficViewModel = session.composition.trafficViewModel,
+                                networkRulesViewModel = session.composition.networkRulesViewModel,
                                 initialDeviceId = session.deviceId,
                                 showHelp = showHelp,
                                 onShowHelp = { showHelp = true },

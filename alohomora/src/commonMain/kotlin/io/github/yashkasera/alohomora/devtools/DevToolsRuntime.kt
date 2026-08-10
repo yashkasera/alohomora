@@ -26,6 +26,11 @@ import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
+import io.github.yashkasera.alohomora.common.SetMockRulesMessage
+import io.github.yashkasera.alohomora.common.SetThrottleProfileMessage
+import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
+import io.github.yashkasera.alohomora.common.VpnStateMessage
+import io.github.yashkasera.alohomora.common.VpnThrottleState
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
@@ -340,6 +345,7 @@ internal class DevToolsRuntime(
             control.close()
             stream.close()
             socket.close()
+            NetworkRuleEngine.clear()
             if (activeConnection === this) {
                 activeConnection = null
                 _serverState.value = _serverState.value.copy(hasClient = false, pendingOtp = null)
@@ -420,6 +426,9 @@ internal class DevToolsRuntime(
                             is RequestCacheValueMessage -> handleCacheRequest(message.key)
                             is RequestReplayTraceMessage -> handleReplayRequest(message)
                             is RequestTraceSpansMessage -> handleTraceSpansRequest(message.traceId)
+                            is SetThrottleProfileMessage -> NetworkRuleEngine.setThrottle(message.profile)
+                            is SetMockRulesMessage -> NetworkRuleEngine.setMockRules(message.rules)
+                            is SetVpnThrottleMessage -> handleVpnThrottle(message)
                             // Includes UnknownMessage from a newer peer: ignore, don't disconnect.
                             else -> Unit
                         }
@@ -546,6 +555,7 @@ internal class DevToolsRuntime(
             connectionScope.launch { streamTraffic() }
             connectionScope.launch { streamErrors() }
             connectionScope.launch { streamSpans() }
+            connectionScope.launch { observeVpnState() }
             connectionScope.launch { sendInitialState() }
         }
 
@@ -644,6 +654,10 @@ internal class DevToolsRuntime(
                 gitHistory = Alohomora.config?.commits?.map { it.toGitHistoryPayload() }.orEmpty(),
                 replaySupported = TrafficReplayRegistry.isSupported,
                 spanCaptureSupported = SpanCaptureRegistry.isSupported,
+                networkRulesSupported = true,
+                vpnThrottleSupported = isVpnThrottleSupported,
+                vpnThrottleState = vpnThrottleStateFlow().value,
+                vpnThrottleActiveProfile = vpnThrottleActiveProfile(),
             )
             eventAdapter.seed(events)
             errorAdapter.seed(errors)
@@ -695,6 +709,26 @@ internal class DevToolsRuntime(
                 changedItems.forEach { item ->
                     sendStream(StreamTrafficMessage(nextSequence(), item))
                 }
+            }
+        }
+
+        private fun handleVpnThrottle(message: SetVpnThrottleMessage) {
+            if (message.enabled) {
+                vpnThrottleEnable(message.profile)
+            } else {
+                vpnThrottleDisable()
+            }
+        }
+
+        private suspend fun observeVpnState() {
+            vpnThrottleStateFlow().collect { state ->
+                send(
+                    VpnStateMessage(
+                        sequence = nextSequence(),
+                        state = state,
+                        activeProfile = vpnThrottleActiveProfile(),
+                    ),
+                )
             }
         }
 

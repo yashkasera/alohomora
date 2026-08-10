@@ -10,7 +10,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.model.EventsFilterSta
 import io.github.yashkasera.alohomora.desktop.presentation.model.EventsTimeWindow
 import io.github.yashkasera.alohomora.desktop.presentation.model.EventsUiState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsEmptyState
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -28,7 +28,7 @@ class EventsEmptyStateTest {
     @Test
     fun `nothing captured yet points at the app rather than the filters`() = runComposeUiTest {
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 EventsEmptyState(state = EventsUiState(), onUnmuteAll = {}, onClearFilters = {})
             }
         }
@@ -46,7 +46,7 @@ class EventsEmptyStateTest {
         var unmuted = false
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 EventsEmptyState(
                     state = EventsUiState(
                         totalCount = 120,
@@ -73,7 +73,7 @@ class EventsEmptyStateTest {
         var cleared = false
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 EventsEmptyState(
                     // Mutes AND a query. The query is what the user just typed, so that is the filter
                     // they will think to clear first.

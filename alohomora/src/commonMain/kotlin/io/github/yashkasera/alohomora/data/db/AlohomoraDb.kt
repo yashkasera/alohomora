@@ -23,13 +23,10 @@ import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 
 @Database(
     entities = [Event::class, TrafficEntry::class, Error::class, Screen::class, Span::class],
-    // 4: added the Span table for distributed trace capture. Both platforms use
-    // fallbackToDestructiveMigration, so this bump wipes every captured traffic entry, event and
-    // error on the next launch — but skipping it crashes at startup instead.
-    // 3: Error.id gained `autoGenerate`, which changes its column to AUTOINCREMENT. Required, not
-    // cosmetic — without it every insert used the default id 0 and `OnConflictStrategy.REPLACE`
-    // overwrote the previous row, so the table never held more than one error.
-    version = 4,
+    // 5: TrafficEntry gained `mockedBy` column for network mocking support.
+    // 4: added the Span table for distributed trace capture.
+    // 3: Error.id gained `autoGenerate`, which changes its column to AUTOINCREMENT.
+    version = 5,
     exportSchema = false,
 )
 @ConstructedBy(AlohomoraDbConstructor::class)

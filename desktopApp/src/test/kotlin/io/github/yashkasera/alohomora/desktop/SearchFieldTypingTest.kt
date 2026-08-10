@@ -12,7 +12,7 @@ import androidx.compose.ui.test.runComposeUiTest
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
-import io.github.yashkasera.alohomora.ui.theme.AlohomoraTheme
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -52,7 +52,7 @@ class SearchFieldTypingTest {
         val vm = EventsViewModel(repository).also { viewModel = it }
 
         setContent {
-            AlohomoraTheme {
+            AppTheme {
                 Box(modifier = Modifier.fillMaxSize()) { EventsPanel(eventsViewModel = vm) }
             }
         }

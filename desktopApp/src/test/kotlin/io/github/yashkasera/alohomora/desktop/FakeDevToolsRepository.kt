@@ -2,8 +2,11 @@ package io.github.yashkasera.alohomora.desktop
 
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.Span
+import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.common.VpnThrottleState
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.github.yashkasera.alohomora.desktop.domain.model.CacheState
 import io.github.yashkasera.alohomora.desktop.domain.model.DatabaseSnapshot
@@ -40,6 +43,9 @@ class FakeDevToolsRepository(
     override val errors = MutableStateFlow<List<Error>>(emptyList())
     override val spans = MutableStateFlow<List<Span>>(emptyList())
     override val spanCaptureSupported = MutableStateFlow(false)
+    override val networkRulesSupported = MutableStateFlow(false)
+    override val vpnThrottleSupported = MutableStateFlow(false)
+    override val vpnState = MutableStateFlow(VpnThrottleState.OFF)
     override val traffic = MutableStateFlow<List<TrafficEntry>>(emptyList())
     override val databaseSnapshot = MutableStateFlow(DatabaseSnapshot())
     override val buildInfo = MutableStateFlow<BuildInfo?>(null)
@@ -89,6 +95,9 @@ class FakeDevToolsRepository(
     override fun dismissReplayError(sourceTraceId: String) = Unit
     override fun dismissDeviceError() = Unit
     override fun requestDatabaseSchema(databaseName: String) = Unit
+    override fun setThrottleProfile(profile: ThrottleProfile) = Unit
+    override fun setMockRules(rules: List<MockRule>) = Unit
+    override fun setVpnThrottle(profile: ThrottleProfile, enabled: Boolean) = Unit
     override fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int) = Unit
     override fun requestInitialState() = Unit
 }
