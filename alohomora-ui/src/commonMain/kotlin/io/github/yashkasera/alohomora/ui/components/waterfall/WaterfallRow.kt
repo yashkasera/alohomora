@@ -36,9 +36,6 @@ import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.ChevronRight
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.muted
-import io.github.yashkasera.alohomora.ui.theme.mutedContainer
-import io.github.yashkasera.alohomora.ui.theme.panelBorder
 
 /** Indent per tree level. Small enough that a 6-deep span still has room for its name at phone width. */
 private val IndentPerDepth = 12.dp
@@ -72,7 +69,7 @@ fun WaterfallRowItem(
     val isError = span.isError()
     val barColor = spanBarColor(span.kind, isError, span.isViewed)
     val subtreeColor = spanSubtreeColor(span.kind, isError)
-    val gridColor = MaterialTheme.colorScheme.panelBorder
+    val gridColor = MaterialTheme.colorScheme.outlineVariant
     val eventColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
     val minBarWidth = MaterialTheme.dimens.stroke.medium
     val cornerRadius = MaterialTheme.dimens.corner.small
@@ -150,7 +147,7 @@ fun WaterfallRowItem(
         Text(
             text = formatDuration(span.durationNanos()),
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.muted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = FontFamily.Monospace,
             maxLines = 1,
             modifier = Modifier
@@ -181,7 +178,7 @@ private fun NameCell(
             Icon(
                 imageVector = if (row.isCollapsed) Icons.ChevronRight else Icons.ChevronDown,
                 contentDescription = if (row.isCollapsed) "Expand" else "Collapse",
-                tint = MaterialTheme.colorScheme.muted,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .size(MaterialTheme.dimens.icon.md)
                     .clickable(onClick = onToggleCollapse),
@@ -209,8 +206,8 @@ private fun NameCell(
             AlohomoraChip(
                 label = "+${row.descendantCount}",
                 uppercase = false,
-                containerColor = MaterialTheme.colorScheme.mutedContainer,
-                contentColor = MaterialTheme.colorScheme.muted,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         if (isError) {
@@ -226,15 +223,15 @@ private fun NameCell(
         if (row.isOrphan) {
             AlohomoraChip(
                 label = "orphan",
-                containerColor = MaterialTheme.colorScheme.mutedContainer,
-                contentColor = MaterialTheme.colorScheme.muted,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         if (row.hasSkew) {
             AlohomoraChip(
                 label = "skew",
-                containerColor = MaterialTheme.colorScheme.mutedContainer,
-                contentColor = MaterialTheme.colorScheme.muted,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

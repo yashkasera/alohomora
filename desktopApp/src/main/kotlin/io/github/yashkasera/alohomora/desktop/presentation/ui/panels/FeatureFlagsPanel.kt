@@ -7,6 +7,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,7 +36,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.FeatureFlag
@@ -42,6 +47,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptySt
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagUiState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
@@ -119,7 +125,14 @@ fun FeatureFlagsPanel(featureFlagsViewModel: FeatureFlagViewModel) {
                         onClearQuery = { featureFlagsViewModel.onQueryChange("") },
                     )
                 } else {
-                    LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                        contentPadding = PaddingValues(
+                            MaterialTheme.dimens.margin.md,
+                        ),
+                    ) {
                         items(filtered, key = { it.key }) { flag ->
                             FeatureFlagRow(
                                 flag = flag,
@@ -128,7 +141,6 @@ fun FeatureFlagsPanel(featureFlagsViewModel: FeatureFlagViewModel) {
                                     expandedKey = if (expandedKey == flag.key) null else flag.key
                                 },
                             )
-                            AlohomoraHorizontalDivider()
                         }
                     }
                     ScrollToTopButton(lazyListState)
@@ -145,87 +157,116 @@ private fun FeatureFlagRow(
     onToggle: () -> Unit,
 ) {
     val clipboardManager = LocalClipboardManager.current
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                if (expanded) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-            )
-            .clickable(onClick = onToggle)
-            .padding(
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (expanded) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainer,
+        ),
+        onClick = onToggle,
+    ) {
+        Column(
+            modifier = Modifier.padding(
                 horizontal = MaterialTheme.dimens.margin.xxl,
                 vertical = MaterialTheme.dimens.margin.md,
             ),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = if (expanded) Icons.ChevronDown else Icons.ChevronRight,
-                contentDescription = if (expanded) "Collapse" else "Expand",
-                modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
-
-            Text(
-                text = flag.key,
-                style = MaterialTheme.typography.labelMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            flag.type?.let { type ->
-                Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
-                AlohomoraChip(label = type, containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
-            }
-
-            flag.source?.let { source ->
-                Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
-                AlohomoraChip(label = source, containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            FlagValuePreview(flag = flag)
-        }
-
-        AnimatedVisibility (expanded) {
-            Column {
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.weight(0.6f),
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
                 ) {
-                    Text(
-                        text = flag.value,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                        color = booleanColor(flag.value) ?: MaterialTheme.colorScheme.onSurface,
+                    Icon(
+                        imageVector = if (expanded) Icons.ChevronDown else Icons.ChevronRight,
+                        contentDescription = if (expanded) "Collapse" else "Expand",
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    AlohomoraIconButton(
-                        onClick = { clipboardManager.setText(AnnotatedString(flag.value)) },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Copy,
-                            contentDescription = "Copy value",
-                            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+
+                    Text(
+                        text = flag.key,
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        modifier = Modifier.weight(1f, fill = false),
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    flag.type?.let { type ->
+                        AlohomoraChip(
+                            label = type,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        )
+                    }
+
+                    flag.source?.let { source ->
+                        AlohomoraChip(
+                            label = source,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         )
                     }
                 }
 
-                val meta = flag.metadata
-                if (!meta.isNullOrEmpty()) {
-                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
-                    meta.forEach { (k, v) ->
-                        Row(modifier = Modifier.padding(vertical = 2.dp)) {
-                            Text(
-                                text = "$k: ",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                FlagValuePreview(
+                    flag = flag,
+                    modifier = Modifier.weight(0.4f),
+                )
+            }
+
+            AnimatedVisibility(expanded) {
+                Column {
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                    Row(
+                        modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        AlohomoraCodeBlock(
+                            modifier = Modifier.weight(1f),
+                            content = flag.value,
+                            isScrollable = false,
+                            jsonPrettify = true,
+                        )
+                        AlohomoraIconButton(
+                            onClick = {
+                                clipboardManager.setText(
+                                    /*AnnotatedString(
+                                        flag.value + "\n" + flag.metadata,
+                                    ),*/
+                                    buildAnnotatedString {
+                                        append("Key:")
+                                        appendLine("`${flag.key}`")
+                                        append("Value:")
+                                        appendLine("`${flag.value}`")
+                                        flag.metadata?.ifEmpty { null }?.let {
+                                            appendLine("Metadata:")
+                                            append("```${it}```")
+                                        }
+                                    },
+                                )
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Copy,
+                                contentDescription = "Copy value",
+                                modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
                             )
-                            Text(
-                                text = v,
-                                style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
+                        }
+                    }
+
+                    val meta = flag.metadata
+                    if (!meta.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
+                        meta.forEach { (k, v) ->
+                            Row(modifier = Modifier.padding(vertical = 2.dp)) {
+                                Text(
+                                    text = "$k: ",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    text = v,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
                         }
                     }
                 }
@@ -241,6 +282,7 @@ private fun FlagValuePreview(flag: FeatureFlag, modifier: Modifier = Modifier) {
         text = flag.value,
         style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
         color = color,
+        textAlign = TextAlign.End,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,

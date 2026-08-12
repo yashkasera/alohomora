@@ -81,7 +81,7 @@ fun AlohomoraFilterChip(
 fun AlohomoraChip(
     label: String,
     uppercase: Boolean = AlohomoraChipDefaults.uppercase,
-    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     contentColor: Color = contentColorFor(containerColor),
     shape: Shape = AlohomoraChipDefaults.shape,
     borderStroke: BorderStroke? = null

@@ -29,13 +29,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.ui.theme.JsonColors
-import io.github.yashkasera.alohomora.ui.theme.brand
-
-private val keyColor = JsonColors.key
-private val stringColor = JsonColors.string
-private val numberColor = JsonColors.number
-private val bracketColor = JsonColors.bracket
+import io.github.yashkasera.alohomora.ui.theme.LocalAlohomoraColors
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 
 @Composable
 internal fun LazyItemScope.JsonRow(
@@ -44,6 +39,11 @@ internal fun LazyItemScope.JsonRow(
     index: Int,
     visibleState: VisibleTreeState,
 ) {
+    val themeColors = LocalAlohomoraColors.current
+    val keyColor = themeColors.accent
+    val stringColor = themeColors.warning
+    val numberColor = themeColors.success
+    val bracketColor = MaterialTheme.colorScheme.outline
 
     val comma = visibleState.hasSiblingAfter(index)
     val expanded = visibleState.isExpanded(node.path)
@@ -90,7 +90,7 @@ internal fun LazyItemScope.JsonRow(
                             text = key,
                             query = visibleState.searchQuery,
                             normal = keyColor,
-                            highlight = MaterialTheme.colorScheme.brand
+                            highlight = MaterialTheme.alohomoraColors.accent
                         ),
                         color = keyColor,
                     )
@@ -140,7 +140,7 @@ internal fun LazyItemScope.JsonRow(
                             text = it,
                             query = visibleState.searchQuery,
                             normal = keyColor,
-                            highlight = MaterialTheme.colorScheme.brand
+                            highlight = MaterialTheme.alohomoraColors.accent
                         ),
                         color = keyColor,
                     )
@@ -155,7 +155,7 @@ internal fun LazyItemScope.JsonRow(
                                 text = value.toString(),
                                 query = visibleState.searchQuery,
                                 normal = numberColor,
-                                highlight = MaterialTheme.colorScheme.brand
+                                highlight = MaterialTheme.alohomoraColors.accent
                             ),
                             color = numberColor,
                         )
@@ -167,7 +167,7 @@ internal fun LazyItemScope.JsonRow(
                                 text = "\"$value\"",
                                 query = visibleState.searchQuery,
                                 normal = stringColor,
-                                highlight = MaterialTheme.colorScheme.brand
+                                highlight = MaterialTheme.alohomoraColors.accent
                             ),
                             color = stringColor,
                         )
@@ -179,7 +179,7 @@ internal fun LazyItemScope.JsonRow(
                                 text = value.toString(),
                                 query = visibleState.searchQuery,
                                 normal = LocalContentColor.current,
-                                highlight = MaterialTheme.colorScheme.brand
+                                highlight = MaterialTheme.alohomoraColors.accent
                             ),
                         )
                     }

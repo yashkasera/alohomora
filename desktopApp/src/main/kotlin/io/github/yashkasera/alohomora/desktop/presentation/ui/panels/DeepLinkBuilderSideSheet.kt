@@ -434,7 +434,7 @@ private fun DeepLinkHistoryRow(
     onRemove: () -> Unit,
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.primaryContainer,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(

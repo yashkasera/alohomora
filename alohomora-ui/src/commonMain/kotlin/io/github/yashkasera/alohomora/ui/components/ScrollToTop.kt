@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -210,18 +211,12 @@ private fun BoxScope.ScrollToTopButton(
             .align(Alignment.BottomEnd)
             .padding(MaterialTheme.dimens.margin.xxl),
     ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .background(MaterialTheme.colorScheme.inverseSurface, CircleShape)
-                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center,
-        ) {
+        FloatingActionButton(
+            onClick = onClick
+        ){
             Icon(
                 imageVector = Icons.ArrowLeft,
                 contentDescription = "Scroll to top",
-                tint = MaterialTheme.colorScheme.inverseOnSurface,
                 // No up-arrow in the icon set; rotating the back arrow beats shipping a
                 // near-duplicate asset.
                 modifier = Modifier.rotate(rotation),

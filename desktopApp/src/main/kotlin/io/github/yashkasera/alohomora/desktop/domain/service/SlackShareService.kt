@@ -1,8 +1,10 @@
 package io.github.yashkasera.alohomora.desktop.domain.service
 
 import io.github.yashkasera.alohomora.common.DateUtils
+import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.common.exceptionTypeName
 import io.github.yashkasera.alohomora.common.prettyProperties
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.ktor.client.HttpClient
@@ -63,6 +65,33 @@ class SlackShareService(
             appendLine("• Time: ${DateUtils.format(event.time, DateUtils.Format.ISO_DATE_TIME)}")
             appendLine()
             appendLine("```\n${event.prettyProperties()}\n```")
+        }
+        return postToWebhook(
+            SlackMessage(
+                content = summary,
+                recipientEmail = recipientEmail,
+                buildIdentifier = buildInfo.toBuildIdentifier(),
+            ),
+            buildInfo?.slackWebhookUrl,
+        )
+    }
+
+    suspend fun shareError(
+        error: Error,
+        recipientEmail: String,
+        buildInfo: BuildInfo?,
+    ): Result<Unit> {
+        val summary = buildString {
+            appendLine("🚨 Error Shared")
+            appendLine()
+            appendLine("• Type: ${error.exceptionTypeName()}")
+            error.reason?.takeIf(String::isNotBlank)?.let { appendLine("• Reason: $it") }
+            appendLine("• Time: ${DateUtils.format(error.time, DateUtils.Format.ISO_DATE_TIME)}")
+            error.place?.takeIf(String::isNotBlank)?.let { appendLine("• Place: $it") }
+            error.stackTrace?.takeIf(String::isNotBlank)?.let {
+                appendLine()
+                appendLine("```\n$it\n```")
+            }
         }
         return postToWebhook(
             SlackMessage(

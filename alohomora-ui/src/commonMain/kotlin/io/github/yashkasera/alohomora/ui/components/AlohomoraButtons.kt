@@ -117,7 +117,7 @@ fun AlohomoraElevatedButton(
     trailingIcon: (@Composable (() -> Unit))? = null,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    val resolvedShape = shape ?: MaterialTheme.shapes.extraSmall
+    val resolvedShape = shape ?: MaterialTheme.shapes.small
     AlohomoraButtonBase(
         text = text,
         size = size,
@@ -157,7 +157,7 @@ fun AlohomoraOutlinedButton(
     trailingIcon: (@Composable (() -> Unit))? = null,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    val resolvedShape = shape ?: MaterialTheme.shapes.extraSmall
+    val resolvedShape = shape ?: MaterialTheme.shapes.small
     AlohomoraButtonBase(
         text = text,
         size = size,
@@ -195,7 +195,7 @@ fun AlohomoraTextButton(
     trailingIcon: (@Composable (() -> Unit))? = null,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    val resolvedShape = shape ?: MaterialTheme.shapes.extraSmall
+    val resolvedShape = shape ?: MaterialTheme.shapes.small
     AlohomoraButtonBase(
         text = text,
         size = size,

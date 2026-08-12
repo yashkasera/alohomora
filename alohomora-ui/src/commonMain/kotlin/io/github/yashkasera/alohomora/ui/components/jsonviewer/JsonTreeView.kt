@@ -104,7 +104,7 @@ fun JsonTreeView(
             Column(
                 modifier = Modifier.fillMaxSize()
                     .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .border(
                         1.dp,
                         MaterialTheme.colorScheme.outlineVariant,

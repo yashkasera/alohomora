@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -29,7 +30,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -65,7 +65,10 @@ import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateChecker
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
+import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopEventPrefs
+import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopTrustPrefs
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AboutDialog
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SettingsDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.UpdateBanner
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import java.awt.Dimension
@@ -73,7 +76,6 @@ import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
@@ -99,7 +101,13 @@ data class DeviceWindowSession(
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    val initialIsDark = DesktopThemePrefs.load()
+    val initialMode = DesktopThemePrefs.loadMode()
+    val initialThemeId = DesktopThemePrefs.loadThemeId()
+    val initialIsDark = when (initialMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> true
+    }
     System.setProperty("apple.awt.application.name", "Alohomora")
     System.setProperty(
         "apple.awt.application.appearance",
@@ -109,16 +117,20 @@ fun main() {
         val sharedComposition = remember { DesktopAppComposition() }
         val sessions = remember { mutableStateListOf<DeviceWindowSession>() }
         var launcherVisible by remember { mutableStateOf(true) }
-        val sharedIsDark = remember { mutableStateOf(initialIsDark) }
+        var themeMode by remember { mutableStateOf(initialMode) }
+        var themeId by remember { mutableStateOf(initialThemeId) }
+        val systemDark = isSystemInDarkTheme()
+        val effectiveIsDark = when (themeMode) {
+            ThemeMode.SYSTEM -> systemDark
+            ThemeMode.LIGHT -> false
+            ThemeMode.DARK -> true
+        }
+        val sharedIsDark = remember { mutableStateOf(effectiveIsDark) }
+        sharedIsDark.value = effectiveIsDark
         var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
         var updateDismissed by remember { mutableStateOf(false) }
         var showAbout by remember { mutableStateOf(false) }
-
-        LaunchedEffect(Unit) {
-            snapshotFlow { sharedIsDark.value }
-                .drop(1)
-                .collect { DesktopThemePrefs.save(it) }
-        }
+        var showSettings by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
             val info = UpdateChecker.check(DesktopBuildConfig.version)
@@ -129,9 +141,36 @@ fun main() {
 
         if (showAbout) {
             AboutDialog(
-                isDark = sharedIsDark.value,
+                isDark = effectiveIsDark,
+                themeId = themeId,
                 updateInfo = updateInfo,
                 onDismiss = { showAbout = false },
+            )
+        }
+
+        if (showSettings) {
+            SettingsDialog(
+                isDark = effectiveIsDark,
+                themeId = themeId,
+                themeMode = themeMode,
+                onThemeIdChange = { id ->
+                    themeId = id
+                    DesktopThemePrefs.saveThemeId(id)
+                },
+                onThemeModeChange = { mode ->
+                    themeMode = mode
+                    DesktopThemePrefs.saveMode(mode)
+                },
+                onClearTrustTokens = { DesktopTrustPrefs.clearAll() },
+                onClearMutedEvents = { DesktopEventPrefs.clearAll() },
+                onResetPreferences = {
+                    DesktopThemePrefs.clear()
+                    DesktopTrustPrefs.clearAll()
+                    DesktopEventPrefs.clearAll()
+                    themeMode = ThemeMode.SYSTEM
+                    themeId = "default"
+                },
+                onDismiss = { showSettings = false },
             )
         }
 
@@ -146,7 +185,7 @@ fun main() {
                 },
                 resizable = false
             ) {
-                AppTheme(isDarkState = sharedIsDark) {
+                AppTheme(isDarkState = sharedIsDark, themeId = themeId) {
                     window.minimumSize = Dimension(900, 560)
 
                     Column {
@@ -230,9 +269,15 @@ fun main() {
                         if (sessions.isEmpty()) launcherVisible = true
                     },
                 ) {
-                    AppTheme(isDarkState = sharedIsDark) {
+                    AppTheme(isDarkState = sharedIsDark, themeId = themeId) {
                         MenuBar {
                             Menu("File") {
+                                Item(
+                                    "Preferences",
+                                    shortcut = KeyShortcut(Key.Comma, meta = isMacOs, ctrl = !isMacOs),
+                                    onClick = { showSettings = true },
+                                )
+                                Separator()
                                 Item(
                                     "New Window",
                                     shortcut = KeyShortcut(Key.N, meta = isMacOs, ctrl = !isMacOs),
@@ -246,12 +291,6 @@ fun main() {
                                 Item("Exit", onClick = ::exitApplication)
                             }
                             Menu("View") {
-                                Item(
-                                    "Toggle Theme",
-                                    shortcut = KeyShortcut(Key.T, meta = isMacOs, ctrl = !isMacOs),
-                                    onClick = { sharedIsDark.value = !sharedIsDark.value },
-                                )
-                                Separator()
                                 Item(
                                     "Zoom In",
                                     shortcut = KeyShortcut(Key.Equals, meta = isMacOs, ctrl = !isMacOs),
@@ -333,11 +372,12 @@ fun main() {
                                     onDismissHelp = { showHelp = false },
                                     showCommandPalette = showCommandPalette,
                                     onDismissCommandPalette = { showCommandPalette = false },
-                                    onToggleTheme = { sharedIsDark.value = !sharedIsDark.value },
+                                    onShowSettings = { showSettings = true },
                                     onZoomIn = zoomIn,
                                     onZoomOut = zoomOut,
                                     onResetZoom = resetZoom,
-                                    isDark = sharedIsDark.value,
+                                    isDark = effectiveIsDark,
+                                    themeId = themeId,
                                     onDisconnectWindow = closeWindow,
                                 )
                             }

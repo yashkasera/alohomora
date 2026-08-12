@@ -38,9 +38,6 @@ import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.ChevronRight
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.muted
-import io.github.yashkasera.alohomora.ui.theme.mutedContainer
-import io.github.yashkasera.alohomora.ui.theme.panelBorder
 
 /** Indent per tree level. Deliberately tight: a 6-deep span still needs room for its name at 360dp. */
 private val IndentPerDepth = 10.dp
@@ -72,7 +69,7 @@ internal fun TraceSpanRow(
     val span = row.span
     val isError = span.isError()
     val barColor = spanBarColor(span.kind, isError, span.isViewed)
-    val laneColor = MaterialTheme.colorScheme.panelBorder
+    val laneColor = MaterialTheme.colorScheme.outlineVariant
     val minBarWidth = MaterialTheme.dimens.stroke.medium
     val cornerRadius = MaterialTheme.dimens.corner.small
 
@@ -96,7 +93,7 @@ internal fun TraceSpanRow(
             Icon(
                 imageVector = if (row.isCollapsed) Icons.ChevronRight else Icons.ChevronDown,
                 contentDescription = if (row.isCollapsed) "Expand" else "Collapse",
-                tint = MaterialTheme.colorScheme.muted,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .size(MaterialTheme.dimens.icon.md)
                     .clickable(onClick = onToggleCollapse),
@@ -124,8 +121,8 @@ internal fun TraceSpanRow(
                     AlohomoraChip(
                         label = "+${row.descendantCount}",
                         uppercase = false,
-                        containerColor = MaterialTheme.colorScheme.mutedContainer,
-                        contentColor = MaterialTheme.colorScheme.muted,
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 if (isError) {
@@ -138,15 +135,15 @@ internal fun TraceSpanRow(
                 if (row.isOrphan) {
                     AlohomoraChip(
                         label = "orphan",
-                        containerColor = MaterialTheme.colorScheme.mutedContainer,
-                        contentColor = MaterialTheme.colorScheme.muted,
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
             Text(
                 text = "${span.kind.lowercase()} · ${formatDuration(span.durationNanos())}",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.muted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontFamily = FontFamily.Monospace,
             )
         }

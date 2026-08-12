@@ -45,10 +45,8 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
-import io.github.yashkasera.alohomora.ui.theme.brand
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.logError
-import io.github.yashkasera.alohomora.ui.theme.muted
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -234,7 +232,7 @@ fun AdbToolsPanel(
                         }
                     },
                     enabled = isDeviceSelected,
-                    containerColor = if (isRecording) MaterialTheme.colorScheme.logError else MaterialTheme.colorScheme.onBackground,
+                    containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground,
                     contentColor = MaterialTheme.colorScheme.background,
                 )
                 AdbActionButton(
@@ -326,7 +324,7 @@ private fun AdbConsoleBar(
                     text = if (expanded) "Hide" else "Show",
                     onClick = onToggle,
                     uppercase = false,
-                    contentColor = MaterialTheme.colorScheme.brand,
+                    contentColor = MaterialTheme.alohomoraColors.accent,
                 )
             }
             if (expanded) {
@@ -430,7 +428,7 @@ private fun SwitchRow(
         Text(
             if (checked) "On" else "Off",
             style = MaterialTheme.typography.bodySmall,
-            color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.muted,
+            color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
         Switch(

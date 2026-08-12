@@ -39,6 +39,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import io.github.yashkasera.alohomora.desktop.app.displayModifier
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
@@ -47,10 +48,10 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.DesktopSection
 import io.github.yashkasera.alohomora.ui.icons.Activity
 import io.github.yashkasera.alohomora.ui.icons.Camera
 import io.github.yashkasera.alohomora.ui.icons.CircleHelp
-import io.github.yashkasera.alohomora.ui.icons.Eye
 import io.github.yashkasera.alohomora.ui.icons.Globe
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Link
+import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Trash
@@ -58,7 +59,6 @@ import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.icons.ZoomIn
 import io.github.yashkasera.alohomora.ui.icons.ZoomOut
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.muted
 
 enum class ActionCategory(val label: String) {
     NAVIGATION("Navigation"),
@@ -110,12 +110,8 @@ fun CommandPalette(
         focusRequester.requestFocus()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.2f))
-            .clickable(indication = null, interactionSource = null, onClick = onDismiss),
-        contentAlignment = Alignment.TopCenter,
+    Dialog(
+        onDismissRequest = onDismiss
     ) {
         Card(
             modifier = Modifier
@@ -178,7 +174,7 @@ fun CommandPalette(
                     Text(
                         "No matching commands",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
                     )
                 } else {
@@ -197,7 +193,7 @@ fun CommandPalette(
                                     Text(
                                         text = action.category.label,
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.muted,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(
                                             start = MaterialTheme.dimens.margin.lg,
@@ -252,7 +248,7 @@ private fun FooterHint(key: String, label: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.muted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -284,13 +280,13 @@ private fun CommandActionRow(
             contentDescription = null,
             modifier = Modifier.size(MaterialTheme.dimens.icon.md),
             tint = if (action.enabled) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.muted,
+            else MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             text = action.label,
             style = MaterialTheme.typography.bodyMedium,
             color = if (action.enabled) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.muted,
+            else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f),
         )
         if (action.shortcutDisplay != null) {
@@ -322,7 +318,7 @@ fun buildCommandActions(
     packageName: String?,
     selectedDeviceId: String?,
     isAndroid: Boolean,
-    onToggleTheme: () -> Unit,
+    onShowSettings: () -> Unit,
     onShowHelp: () -> Unit,
     onZoomIn: () -> Unit,
     onZoomOut: () -> Unit,
@@ -356,12 +352,12 @@ fun buildCommandActions(
     }
 
     actions += CommandAction(
-        id = "general_theme",
-        label = "Toggle Theme",
+        id = "general_settings",
+        label = "Preferences",
         category = ActionCategory.GENERAL,
-        icon = Icons.Eye,
-        shortcutDisplay = "$mod+T",
-        action = onToggleTheme,
+        icon = Icons.Settings,
+        shortcutDisplay = "$mod+,",
+        action = onShowSettings,
     )
     actions += CommandAction(
         id = "general_help",

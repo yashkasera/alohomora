@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,11 +62,8 @@ import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Link
 import io.github.yashkasera.alohomora.ui.icons.Server
-import io.github.yashkasera.alohomora.ui.theme.brand
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.logError
-import io.github.yashkasera.alohomora.ui.theme.muted
-import io.github.yashkasera.alohomora.ui.theme.subtleSurfaceAlt
 
 /**
  * Below this content width the two list cards stack instead of sitting side by side.
@@ -129,7 +127,7 @@ fun DashboardContent(
                                 text = "Stop Recording",
                                 onClick = onRecordScreen,
                                 size = AlohomoraButtonSize.SMALL,
-                                containerColor = MaterialTheme.colorScheme.logError,
+                                containerColor = MaterialTheme.colorScheme.error,
                             )
                         } else {
                             AlohomoraOutlinedButton(
@@ -192,7 +190,7 @@ fun DashboardContent(
                             )
                             AlohomoraHorizontalDivider(
                                 thickness = MaterialTheme.dimens.stroke.thin,
-                                color = MaterialTheme.colorScheme.subtleSurfaceAlt,
+                                color = MaterialTheme.colorScheme.surfaceContainerLow,
                             )
                         }
                     }
@@ -210,12 +208,7 @@ fun DashboardContent(
                     ) {
                         itemsIndexed(traffic, key = { _, log -> log.id }) { index, log ->
                             TrafficItem(call = log, onClick = { onTrafficItemClick(log) })
-                            if (index < traffic.lastIndex) {
-                                AlohomoraHorizontalDivider(
-                                    thickness = MaterialTheme.dimens.stroke.thin,
-                                    color = MaterialTheme.colorScheme.subtleSurfaceAlt,
-                                )
-                            }
+
                         }
                     }
                 }
@@ -278,7 +271,7 @@ private fun MetricsStrip(dashboard: DashboardUiState) {
         MetricTile(
             "LATENCY",
             "${dashboard.latencyMs}ms",
-            valueColor = MaterialTheme.colorScheme.brand,
+            valueColor = MaterialTheme.alohomoraColors.accent,
         )
     }
 }
@@ -333,7 +326,7 @@ private fun CurrentBuildCard(buildInfo: BuildInfo?) {
                 Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                 Text(
                     buildInfo?.versionCode?.toString()?.let { "($it)" } ?: "",
-                    color = MaterialTheme.colorScheme.muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -420,8 +413,8 @@ private fun DashboardListCard(
                 modifier = Modifier
                     .padding(
                         horizontal = MaterialTheme.dimens.margin.lg,
-                        vertical = MaterialTheme.dimens.margin.md,
                     )
+                    .padding(top = MaterialTheme.dimens.margin.md)
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
@@ -449,7 +442,14 @@ private fun DashboardListCard(
             } else {
                 val listState = rememberLazyListState()
                 FollowNewest(listState, itemCount)
-                LazyColumn(state = listState, content = content)
+                LazyColumn(
+                    state = listState,
+                    content = content,
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                    contentPadding = PaddingValues(
+                        MaterialTheme.dimens.margin.md
+                    )
+                )
             }
         }
     }

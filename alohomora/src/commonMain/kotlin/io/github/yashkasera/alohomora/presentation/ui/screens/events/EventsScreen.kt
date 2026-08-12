@@ -183,7 +183,7 @@ internal fun EventItem(
             .fillMaxWidth()
             .background(
                 if (event.isViewed) {
-                    MaterialTheme.colorScheme.primaryContainer
+                    MaterialTheme.colorScheme.surfaceContainerHigh
                 } else {
                     Color.Transparent
                 },
@@ -221,7 +221,7 @@ internal fun EventItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = MaterialTheme.dimens.margin.xs)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .border(MaterialTheme.dimens.stroke.small, MaterialTheme.colorScheme.outline),
             ) {
                 if (event.name == "App.Exception") {
@@ -242,7 +242,7 @@ internal fun EventItem(
                         ?.toString()
                         ?: "{}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .padding(MaterialTheme.dimens.margin.sm)
                         .padding(start = if (event.name == "App.Exception") MaterialTheme.dimens.margin.sm else 0.dp),

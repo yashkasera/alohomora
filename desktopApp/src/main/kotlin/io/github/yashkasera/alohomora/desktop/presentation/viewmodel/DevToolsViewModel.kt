@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
+import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
@@ -138,6 +139,18 @@ class DevToolsViewModel(
                 onSuccess()
             }.onFailure { error ->
                 _slackShareError.value = error.message
+            }
+        }
+    }
+
+    fun shareErrorToSlack(error: Error, email: String, onSuccess: () -> Unit = {}) {
+        scope.launch {
+            val result = slackShareService.shareError(error, email, repository.buildInfo.value)
+            result.onSuccess {
+                _slackShareError.value = null
+                onSuccess()
+            }.onFailure { e ->
+                _slackShareError.value = e.message
             }
         }
     }

@@ -47,8 +47,6 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Layers
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.muted
-import io.github.yashkasera.alohomora.ui.theme.mutedContainer
 import kotlinx.coroutines.launch
 
 /**
@@ -155,8 +153,8 @@ private fun TraceSheetHeader(
                 if (summary?.isComplete == false) {
                     AlohomoraChip(
                         label = "partial",
-                        containerColor = MaterialTheme.colorScheme.mutedContainer,
-                        contentColor = MaterialTheme.colorScheme.muted,
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -276,7 +274,7 @@ private fun SpanEventsTab(span: Span, traceStartNanos: Long) {
                     Text(
                         text = "$key = $value",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontFamily = FontFamily.Monospace,
                     )
                 }
@@ -330,7 +328,7 @@ private fun DetailEmptyState(message: String) {
         Text(
             text = message,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.muted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

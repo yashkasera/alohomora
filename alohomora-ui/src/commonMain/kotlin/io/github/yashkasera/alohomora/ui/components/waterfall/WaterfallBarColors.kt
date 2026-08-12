@@ -4,11 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
-import io.github.yashkasera.alohomora.ui.theme.spanClient
-import io.github.yashkasera.alohomora.ui.theme.spanConsumer
-import io.github.yashkasera.alohomora.ui.theme.spanInternal
-import io.github.yashkasera.alohomora.ui.theme.spanProducer
-import io.github.yashkasera.alohomora.ui.theme.spanServer
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 
 /** Alpha applied to a bar whose trace the user has already opened, mirroring how TrafficItem dims. */
 private const val VIEWED_ALPHA = 0.55f
@@ -32,11 +28,11 @@ fun spanBarColor(kind: String, isError: Boolean, isViewed: Boolean = false): Col
         MaterialTheme.colorScheme.error
     } else {
         when (kind.uppercase()) {
-            "SERVER" -> MaterialTheme.colorScheme.spanServer
-            "CLIENT", "HTTP", "HTTP.CLIENT" -> MaterialTheme.colorScheme.spanClient
-            "PRODUCER" -> MaterialTheme.colorScheme.spanProducer
-            "CONSUMER" -> MaterialTheme.colorScheme.spanConsumer
-            else -> MaterialTheme.colorScheme.spanInternal
+            "SERVER" -> MaterialTheme.alohomoraColors.info
+            "CLIENT", "HTTP", "HTTP.CLIENT" -> MaterialTheme.alohomoraColors.fatal
+            "PRODUCER" -> MaterialTheme.alohomoraColors.success
+            "CONSUMER" -> MaterialTheme.alohomoraColors.warning
+            else -> MaterialTheme.alohomoraColors.accent
         }
     }
     return if (isViewed) base.copy(alpha = VIEWED_ALPHA) else base

@@ -11,13 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.ui.theme.mutedContainer
 import io.github.yashkasera.alohomora.desktop.domain.model.LogLevel
 import io.github.yashkasera.alohomora.desktop.presentation.model.LogcatFilterState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
-import io.github.yashkasera.alohomora.ui.theme.querySuccessContainer
 
 @Composable
 fun LogcatFilters(
@@ -34,7 +32,7 @@ fun LogcatFilters(
                 val containerColor = if (selected) {
                     levelColor(level)
                 } else {
-                    MaterialTheme.colorScheme.mutedContainer
+                    MaterialTheme.colorScheme.surfaceVariant
                 }
                 val contentColor = if (selected)
                     MaterialTheme.colorScheme.onPrimary

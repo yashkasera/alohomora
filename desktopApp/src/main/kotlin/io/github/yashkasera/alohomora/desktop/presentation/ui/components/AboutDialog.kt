@@ -41,7 +41,6 @@ import io.github.yashkasera.alohomora.ui.icons.Globe
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.muted
 import java.awt.Desktop
 import java.net.URI
 
@@ -50,6 +49,7 @@ private const val REPO_URL = "https://github.com/yashkasera/alohomora"
 @Composable
 fun AboutDialog(
     isDark: Boolean,
+    themeId: String = "default",
     updateInfo: UpdateInfo?,
     onDismiss: () -> Unit,
 ) {
@@ -60,7 +60,7 @@ fun AboutDialog(
         onCloseRequest = onDismiss,
         resizable = false,
     ) {
-        AppTheme(initialIsDark = isDark) {
+        AppTheme(initialIsDark = isDark, themeId = themeId) {
             val focusRequester = remember { FocusRequester() }
             LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
@@ -102,7 +102,7 @@ fun AboutDialog(
                     Text(
                         text = "v${DesktopBuildConfig.version}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
                     if (updateInfo != null && updateInfo.isUpdateAvailable) {
@@ -166,7 +166,7 @@ private fun InfoRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.muted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             text = value,

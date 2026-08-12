@@ -34,8 +34,6 @@ import io.github.yashkasera.alohomora.common.trace.pickUnit
 import io.github.yashkasera.alohomora.common.trace.ticks
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.muted
-import io.github.yashkasera.alohomora.ui.theme.panelBorder
 
 /**
  * Most spans rendered for one trace.
@@ -158,7 +156,7 @@ private fun WaterfallHeaderRow(
                             )
                         }
                     }
-                    .background(MaterialTheme.colorScheme.panelBorder),
+                    .background(MaterialTheme.colorScheme.outlineVariant),
             )
         }
     }
@@ -169,7 +167,7 @@ private fun TruncationBanner(shown: Int, total: Int) {
     Text(
         text = "Showing the first $shown of $total spans in this trace.",
         style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.muted,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant)

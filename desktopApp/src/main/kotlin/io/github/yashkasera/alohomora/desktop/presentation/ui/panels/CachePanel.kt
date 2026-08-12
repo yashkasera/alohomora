@@ -3,8 +3,10 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -30,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.desktop.presentation.model.CacheRow
 import io.github.yashkasera.alohomora.desktop.presentation.model.CacheUiState
@@ -97,13 +102,19 @@ fun CachePanel(cacheViewModel: CacheViewModel) {
                     modifier = Modifier.weight(1f),
                 )
             }
-            AlohomoraHorizontalDivider()
 
             Box(modifier = Modifier.fillMaxSize()) {
                 if (uiState.rows.isEmpty()) {
                     CacheEmptyState(uiState, onClearQuery = { cacheViewModel.onQueryChange("") })
                 } else {
-                    LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                        contentPadding = PaddingValues(
+                            MaterialTheme.dimens.margin.md
+                        )
+                    ) {
                         items(uiState.rows, key = { it.key }) { row ->
                             CacheEntryRow(
                                 row = row,
@@ -112,7 +123,6 @@ fun CachePanel(cacheViewModel: CacheViewModel) {
                                     expandedKey = if (expandedKey == row.key) null else row.key
                                 },
                             )
-                            AlohomoraHorizontalDivider()
                         }
                     }
                     ScrollToTopButton(lazyListState)
@@ -129,58 +139,63 @@ private fun CacheEntryRow(
     onToggle: () -> Unit,
 ) {
     val clipboardManager = LocalClipboardManager.current
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                if (expanded) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-            )
-            .clickable(onClick = onToggle)
-            .padding(
-                horizontal = MaterialTheme.dimens.margin.xxl,
-                vertical = MaterialTheme.dimens.margin.md,
-            ),
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (expanded) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainer
+        ),
+        onClick = onToggle
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = if (expanded) Icons.ChevronDown else Icons.ChevronRight,
-                contentDescription = if (expanded) "Collapse" else "Expand",
-                modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        Column(
+            modifier = Modifier.padding(
+                horizontal = MaterialTheme.dimens.margin.xxl,
+                vertical = MaterialTheme.dimens.margin.md
             )
-            Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (expanded) Icons.ChevronDown else Icons.ChevronRight,
+                        contentDescription = if (expanded) "Collapse" else "Expand",
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
 
-            // Weighted rather than a fixed key column: the old 200.dp truncated long keys on a narrow
-            // window and stranded whitespace on a wide one.
-            Text(
-                text = row.key,
-                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(KEY_WEIGHT),
-            )
-
-            CacheValuePreview(row = row, modifier = Modifier.weight(VALUE_WEIGHT))
-
-            AlohomoraIconButton(
-                onClick = { clipboardManager.setText(AnnotatedString(row.value.orEmpty())) },
-                enabled = row.value != null,
-            ) {
-                Icon(
-                    imageVector = Icons.Copy,
-                    contentDescription = "Copy value",
-                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                // Weighted rather than a fixed key column: the old 200.dp truncated long keys on a narrow
+                // window and stranded whitespace on a wide one.
+                Text(
+                    text = row.key,
+                    style = MaterialTheme.typography.labelMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(KEY_WEIGHT),
                 )
+
+                CacheValuePreview(row = row, modifier = Modifier.weight(VALUE_WEIGHT))
             }
-        }
 
-        AnimatedVisibility (expanded) {
-            Column {
-                AlohomoraCodeBlock(
-                    content = row.value ?: EMPTY_VALUE_LABEL,
-                    isScrollable = false,
-                    jsonPrettify = true,
-                )
+            AnimatedVisibility(expanded) {
+                Row(
+                    modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AlohomoraCodeBlock(
+                        modifier = Modifier.weight(1f),
+                        content = row.value ?: EMPTY_VALUE_LABEL,
+                        isScrollable = false,
+                        jsonPrettify = true,
+                    )
+                    AlohomoraIconButton(
+                        onClick = { clipboardManager.setText(AnnotatedString(row.value.orEmpty())) },
+                        enabled = row.value != null,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Copy,
+                            contentDescription = "Copy value",
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
+                        )
+                    }
+                }
             }
         }
     }
@@ -202,9 +217,8 @@ private fun CacheValuePreview(row: CacheRow, modifier: Modifier = Modifier) {
     }
     Text(
         text = text,
-        style = MaterialTheme.typography.bodySmall.copy(
-            fontFamily = if (muted) FontFamily.Default else FontFamily.Monospace,
-        ),
+        style = MaterialTheme.typography.labelSmall,
+        textAlign = TextAlign.End,
         color = if (muted) {
             MaterialTheme.colorScheme.onSurfaceVariant
         } else {

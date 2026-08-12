@@ -44,8 +44,6 @@ import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.muted
-import io.github.yashkasera.alohomora.ui.theme.mutedContainer
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -166,7 +164,7 @@ private fun TraceHeader(state: TraceDetailsState) {
         Text(
             text = DateUtils.format(summary.startMillis, DateUtils.Format.HH_MM_SS_2MS),
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.muted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f),
         )
         if (summary.hasError) {
@@ -179,8 +177,8 @@ private fun TraceHeader(state: TraceDetailsState) {
         if (!summary.isComplete) {
             AlohomoraChip(
                 label = "partial",
-                containerColor = MaterialTheme.colorScheme.mutedContainer,
-                contentColor = MaterialTheme.colorScheme.muted,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -281,7 +279,7 @@ private fun SpanDetailSheet(span: Span, children: List<Span>, traceStartNanos: L
                     Text(
                         text = "  $key = $value",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontFamily = FontFamily.Monospace,
                     )
                 }

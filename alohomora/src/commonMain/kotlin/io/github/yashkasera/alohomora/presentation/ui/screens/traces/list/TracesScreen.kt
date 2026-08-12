@@ -40,8 +40,6 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.Waypoints
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.muted
-import io.github.yashkasera.alohomora.ui.theme.mutedContainer
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -176,12 +174,12 @@ private fun TraceRowItem(trace: TraceSummary, onClick: () -> Unit) {
             Text(
                 text = DateUtils.format(trace.startMillis, DateUtils.Format.HH_MM_SS_2MS),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.muted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = "${trace.spanCount} ${if (trace.spanCount == 1) "span" else "spans"}",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.muted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (trace.hasError) {
                 AlohomoraChip(
@@ -193,8 +191,8 @@ private fun TraceRowItem(trace: TraceSummary, onClick: () -> Unit) {
             if (!trace.isComplete) {
                 AlohomoraChip(
                     label = "partial",
-                    containerColor = MaterialTheme.colorScheme.mutedContainer,
-                    contentColor = MaterialTheme.colorScheme.muted,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

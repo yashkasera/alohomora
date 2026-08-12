@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.LogEntry
-import io.github.yashkasera.alohomora.ui.theme.panelBorder
 
 @Composable
 fun LogcatList(

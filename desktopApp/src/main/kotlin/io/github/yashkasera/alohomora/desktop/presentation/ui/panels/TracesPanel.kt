@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -95,7 +96,6 @@ fun TracesPanel(
                     onClick = { tracesViewModel.onErrorsOnlyChange(!errorsOnly) },
                 )
             }
-            AlohomoraHorizontalDivider()
 
             Box(modifier = Modifier.fillMaxSize()) {
                 if (traces.isEmpty()) {
@@ -105,10 +105,16 @@ fun TracesPanel(
                         hasSpans = spanCount > 0,
                     )
                 } else {
-                    LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                        contentPadding = PaddingValues(
+                            MaterialTheme.dimens.margin.md
+                        )
+                    ) {
                         items(traces, key = { it.traceId }) { trace ->
                             TraceItem(trace = trace, onClick = { onTraceClick(trace.traceId) })
-                            AlohomoraHorizontalDivider()
                         }
                     }
                     ScrollToTopButton(lazyListState)

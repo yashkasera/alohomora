@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
-import io.github.yashkasera.alohomora.ui.theme.logError
 import io.github.yashkasera.alohomora.desktop.presentation.ui.logcat.LogcatControls
 import io.github.yashkasera.alohomora.desktop.presentation.ui.logcat.LogcatFilters
 import io.github.yashkasera.alohomora.desktop.presentation.ui.logcat.LogcatList
@@ -62,7 +61,7 @@ fun LogcatPanel(
             if (!error.isNullOrBlank()) {
                 Text(
                     text = error ?: "",
-                    color = MaterialTheme.colorScheme.logError,
+                    color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -70,7 +69,7 @@ fun LogcatPanel(
             if (!uiState.errorMessage.isNullOrBlank()) {
                 Text(
                     text = uiState.errorMessage ?: "",
-                    color = MaterialTheme.colorScheme.logError,
+                    color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                 )
             }

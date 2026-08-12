@@ -43,5 +43,7 @@ internal object DesktopTrustPrefs {
     private fun String.key(): String =
         if (length <= MAX_KEY_LENGTH) this else "h${hashCode()}"
 
+    fun clearAll() { prefs.clear() }
+
     private const val MAX_KEY_LENGTH = 80
 }

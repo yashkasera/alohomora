@@ -30,7 +30,7 @@ fun UpdateBanner(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .padding(
                 horizontal = MaterialTheme.dimens.margin.lg,
                 vertical = MaterialTheme.dimens.margin.sm,
@@ -41,7 +41,7 @@ fun UpdateBanner(
         Text(
             text = "v${updateInfo.latestVersion} available",
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
         )
         AlohomoraTextButton(
@@ -59,7 +59,7 @@ fun UpdateBanner(
                 Icons.X,
                 contentDescription = "Dismiss",
                 modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
     }

@@ -197,7 +197,7 @@ private fun EnvironmentDetails(environment: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .padding(MaterialTheme.dimens.margin.lg),
     ) {
         Row(
@@ -213,7 +213,7 @@ private fun EnvironmentDetails(environment: String) {
             Text(
                 text = environment,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
 
@@ -222,7 +222,7 @@ private fun EnvironmentDetails(environment: String) {
         Text(
             text = "Current environment configuration",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }

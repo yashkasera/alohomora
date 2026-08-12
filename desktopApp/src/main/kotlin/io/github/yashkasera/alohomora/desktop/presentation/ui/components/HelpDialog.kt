@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +16,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -34,6 +36,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import io.github.yashkasera.alohomora.desktop.app.isShortcutModifier
@@ -44,7 +47,6 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.muted
 import kotlinx.coroutines.launch
 
 private val SECTION_DESCRIPTIONS = mapOf(
@@ -64,22 +66,19 @@ fun HelpDialog(
     visibleSections: List<DesktopSection>,
     actions: List<CommandAction>,
     isDark: Boolean,
+    themeId: String = "default",
     onDismiss: () -> Unit,
 ) {
-    val state = rememberDialogState(width = 620.dp, height = 520.dp)
-    DialogWindow(
-        title = "Help",
-        state = state,
-        onCloseRequest = onDismiss,
-        resizable = true,
+    Dialog(
+        onDismissRequest = onDismiss,
     ) {
-        AppTheme(initialIsDark = isDark) {
+        AppTheme(initialIsDark = isDark, themeId = themeId) {
             val focusRequester = remember { FocusRequester() }
             LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
             Surface(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxHeight(0.7f)
                     .focusRequester(focusRequester)
                     .focusable()
                     .onPreviewKeyEvent { event ->
@@ -151,7 +150,7 @@ private fun ShortcutsTab(actions: List<CommandAction>) {
                 Text(
                     text = action.category.label,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.xs),
                 )
@@ -163,7 +162,7 @@ private fun ShortcutsTab(actions: List<CommandAction>) {
         Text(
             text = "Data",
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.muted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.xs),
         )

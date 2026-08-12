@@ -16,7 +16,6 @@ import io.github.yashkasera.alohomora.common.trace.TimeUnitScale
 import io.github.yashkasera.alohomora.common.trace.TraceWindow
 import io.github.yashkasera.alohomora.common.trace.formatOffset
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.muted
 import kotlin.math.roundToInt
 
 /**
@@ -62,7 +61,7 @@ private fun TickLabels(window: TraceWindow, unit: TimeUnitScale, ticks: List<Lon
                 Text(
                     text = formatOffset(offset, unit),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Clip,
                 )

@@ -57,10 +57,8 @@ import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.X
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.queryErrorContainer
-import io.github.yashkasera.alohomora.ui.theme.querySuccessContainer
-import io.github.yashkasera.alohomora.ui.theme.success
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -404,9 +402,9 @@ private fun QueryTabContent(
                 queryStatus?.let { status ->
                     Surface(
                         color = if (status.success) {
-                            MaterialTheme.colorScheme.querySuccessContainer
+                            MaterialTheme.alohomoraColors.successContainer
                         } else {
-                            MaterialTheme.colorScheme.queryErrorContainer
+                            MaterialTheme.colorScheme.errorContainer
                         },
                         shape = MaterialTheme.shapes.small
                     ) {
@@ -419,7 +417,7 @@ private fun QueryTabContent(
                                 contentDescription = null,
                                 modifier = Modifier.size(MaterialTheme.dimens.icon.xs),
                                 tint = if (status.success) {
-                                    MaterialTheme.colorScheme.success
+                                    MaterialTheme.alohomoraColors.success
                                 } else {
                                     MaterialTheme.colorScheme.error
                                 }
@@ -603,7 +601,7 @@ private fun DatabaseSelectorBottomSheet(
                         .clickable { onDatabaseSelected(database) }
                         .background(
                             if (database == selectedDatabase) {
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                                MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.3f)
                             } else {
                                 Color.Transparent
                             }

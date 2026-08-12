@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
@@ -82,7 +83,9 @@ fun AlohomoraSideSheet(
                 modifier = Modifier
                     .fillMaxWidth(widthFraction)
                     .fillMaxHeight(),
-                color = MaterialTheme.colorScheme.primaryContainer,
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 2.dp,
+                tonalElevation = 1.dp
             ) {
                 Box {
                     Column(modifier = Modifier.fillMaxSize()) {

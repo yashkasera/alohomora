@@ -9,7 +9,6 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
-import io.github.yashkasera.alohomora.ui.theme.logError
 
 @Composable
 fun LogcatControls(
@@ -23,7 +22,7 @@ fun LogcatControls(
         AlohomoraFilledButton(
             text = "Stop",
             size = AlohomoraButtonSize.SMALL,
-            containerColor = MaterialTheme.colorScheme.logError,
+            containerColor = MaterialTheme.colorScheme.error,
             onClick = onStop
         )
     } else {

@@ -5,30 +5,32 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
-import io.github.yashkasera.alohomora.ui.theme.JsonColors
+import io.github.yashkasera.alohomora.ui.theme.AlohomoraColorTheme
 
 data class JsonEditorColors(
-    val key: Color = JsonColors.key,
-    val string: Color = JsonColors.string,
-    val number: Color = JsonColors.number,
-    val boolean: Color = JsonColors.boolean,
-    val nullValue: Color = JsonColors.nullValue,
-    val bracket: Color = JsonColors.bracket,
-    val template: Color = JsonColors.template,
-    val templateBackground: Color = JsonColors.templateBackground,
+    val key: Color,
+    val string: Color,
+    val number: Color,
+    val boolean: Color,
+    val nullValue: Color,
+    val bracket: Color,
+    val template: Color,
+    val templateBackground: Color,
 ) {
     companion object {
-        val Light = JsonEditorColors()
-        val Dark = JsonEditorColors(
-            key = JsonColors.keyDark,
-            string = JsonColors.stringDark,
-            number = JsonColors.numberDark,
-            boolean = JsonColors.booleanDark,
-            nullValue = JsonColors.nullValueDark,
-            bracket = JsonColors.bracketDark,
-            template = JsonColors.templateDark,
-            templateBackground = JsonColors.templateBackgroundDark,
-        )
+        fun forTheme(theme: AlohomoraColorTheme): JsonEditorColors {
+            val outline = theme.materialColorScheme.outline
+            return JsonEditorColors(
+                key = theme.accent,
+                string = theme.warning,
+                number = theme.success,
+                boolean = theme.fatal,
+                nullValue = outline,
+                bracket = outline,
+                template = theme.info,
+                templateBackground = theme.info.copy(alpha = 0.1f),
+            )
+        }
     }
 }
 

@@ -8,8 +8,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,97 +23,100 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
 fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
     val containerColor = when {
         call.isSuccessful().not() -> MaterialTheme.colorScheme.errorContainer
-        call.isViewed -> MaterialTheme.colorScheme.surfaceContainerLowest
-        else -> MaterialTheme.colorScheme.background
+        call.isViewed -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MaterialTheme.colorScheme.surfaceContainer
     }
 
-    Column(
-        modifier = Modifier.fillMaxWidth()
-            .background(containerColor)
-            .clickable(onClick = onClick)
-            .padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.lg),
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor
+        ),
+        onClick = onClick
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Column(modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.lg)){
             Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
             ) {
-                MethodBadge(call.method.orEmpty())
-                Text(
-                    text = DateUtils.format(call.time ?: 0, DateUtils.Format.HH_MM_SS_2MS),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-            ) {
-                if (call.mockedBy != null) {
-                    AlohomoraChip(
-                        label = "Mocked",
-                        uppercase = false,
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                ) {
+                    MethodBadge(call.method.orEmpty())
+                    Text(
+                        text = DateUtils.format(call.time ?: 0, DateUtils.Format.HH_MM_SS_2MS),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Text(
-                    text = "${call.duration}ms",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
-                )
 
-                val statusColor = when {
-                    call.isSuccessful() -> MaterialTheme.colorScheme.onSurface // Design shows Black for 200 GET, Emerald for 201 etc. using Black for simplicity or custom logic
-                    call.isViewed -> MaterialTheme.colorScheme.onSurface
-                    else -> MaterialTheme.colorScheme.error
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                ) {
+                    if (call.mockedBy != null) {
+                        AlohomoraChip(
+                            label = "Mocked",
+                            uppercase = true,
+                            shape = MaterialTheme.shapes.small
+                        )
+                    }
+                    Text(
+                        text = "${call.duration}ms",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    val statusColor = when {
+                        call.isSuccessful() -> MaterialTheme.colorScheme.onSurface // Design shows Black for 200 GET, Emerald for 201 etc. using Black for simplicity or custom logic
+                        call.isViewed -> MaterialTheme.colorScheme.onSurface
+                        else -> MaterialTheme.colorScheme.error
+                    }
+                    // Override for 201 -> Emerald using theme color
+                    val finalStatusColor =
+                        if (call.status == 201)
+                            MaterialTheme.colorScheme.tertiary
+                        else statusColor
+
+                    Text(
+                        text = "${call.status}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = finalStatusColor,
+                    )
                 }
-                // Override for 201 -> Emerald using theme color
-                val finalStatusColor =
-                    if (call.status == 201)
-                        MaterialTheme.colorScheme.tertiary
-                    else statusColor
-
-                Text(
-                    text = "${call.status}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = finalStatusColor,
-                )
             }
+
+            Text(
+                text = call.pathWithQuery(),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(end = MaterialTheme.dimens.margin.xxxl),
+            )
+
+            Text(
+                text = "host: ${call.host}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
-
-        Text(
-            text = call.pathWithQuery(),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(end = MaterialTheme.dimens.margin.xxxl),
-        )
-
-        Text(
-            text = "host: ${call.host}",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.secondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
 @Composable
-private fun MethodBadge(method: String) {
+fun MethodBadge(method: String) {
     val isWrite = method in listOf("POST", "PUT", "PATCH", "DELETE")
 
     val backgroundColor =

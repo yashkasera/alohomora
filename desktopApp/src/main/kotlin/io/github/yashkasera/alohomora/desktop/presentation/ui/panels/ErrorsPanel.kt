@@ -1,11 +1,9 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -37,7 +35,6 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCa
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
-import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
@@ -48,11 +45,13 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ErrorsPanel(devToolsViewModel: DevToolsViewModel) {
+fun ErrorsPanel(
+    devToolsViewModel: DevToolsViewModel,
+    onErrorClick: (Error) -> Unit,
+) {
     val errors by devToolsViewModel.errors.collectAsState()
     val lazyListState = rememberLazyListState()
     var showClearConfirmation by remember { mutableStateOf(false) }
-    var expandedId by remember { mutableStateOf<Long?>(null) }
     Scaffold(
         topBar = {
             AlohomoraTopBar(
@@ -75,36 +74,36 @@ fun ErrorsPanel(devToolsViewModel: DevToolsViewModel) {
                 EmptyState(
                     icon = Icons.AlertTriangle,
                     title = "No errors yet",
-                    // Says what to do about it: unlike traffic or events, an empty Errors panel is
-                    // the desired state, and the one thing worth checking is whether the app is
-                    // new enough to report at all.
                     subtitle = "Uncaught exceptions appear here automatically. " +
                         "Caught ones show up when the app calls Alohomora.recordError.",
                 )
             } else {
-                LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    state = lazyListState,
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                    contentPadding = PaddingValues(
+                        MaterialTheme.dimens.margin.md,
+                    ),
+                ) {
                     items(errors, key = { error -> error.id }) { error ->
                         ErrorRow(
                             error = error,
-                            isExpanded = expandedId == error.id,
                             onClick = {
-                                expandedId = if (expandedId == error.id) null else error.id
                                 devToolsViewModel.markErrorViewed(error.id)
+                                onErrorClick(error)
                             },
                         )
-                        AlohomoraHorizontalDivider()
                     }
                 }
                 ScrollToTopButton(lazyListState)
             }
         }
-        // Follows only while the user is already at the top; see FollowNewest.
         FollowNewest(lazyListState, errors.size)
 
         if (showClearConfirmation) {
             ClearCapturedDialog(
                 title = "Clear all errors?",
-                // Says "device" deliberately: this deletes at the source, not just this window.
                 message = "Errors will be deleted from the device. This cannot be undone.",
                 onConfirm = {
                     devToolsViewModel.clearErrors()
@@ -116,89 +115,66 @@ fun ErrorsPanel(devToolsViewModel: DevToolsViewModel) {
     }
 }
 
-/**
- * One error, with its stack trace collapsed until clicked.
- *
- * Collapsed by default because a trace is dozens of lines: expanded rows would let two errors fill
- * the viewport and make the list useless for scanning, which is what it is mainly for.
- */
 @Composable
 private fun ErrorRow(
     error: Error,
-    isExpanded: Boolean,
     onClick: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(
-                horizontal = MaterialTheme.dimens.margin.xl,
-                vertical = MaterialTheme.dimens.margin.lg,
-            ),
+    val containerColor = when {
+        error.isViewed -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MaterialTheme.colorScheme.surfaceContainer
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        onClick = onClick,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            modifier = Modifier.padding(
+                horizontal = MaterialTheme.dimens.margin.xxl,
+                vertical = MaterialTheme.dimens.margin.md,
+            ),
         ) {
-            Text(
-                text = error.exceptionTypeName(),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = if (error.isViewed) FontWeight.Normal else FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            AlohomoraChip(
-                label = "FATAL",
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-            )
-            Box(modifier = Modifier.weight(1f))
-            Text(
-                text = DateUtils.format(error.time, DateUtils.Format.HH_MM_SS_3MS),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        error.reason?.takeIf { it.isNotBlank() }?.let { reason ->
-            Text(
-                text = reason,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
-            )
-        }
-
-        error.place?.takeIf { it.isNotBlank() }?.let { place ->
-            Text(
-                text = place,
-                style = MaterialTheme.typography.labelSmall,
-                fontFamily = FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
-            )
-        }
-
-        if (isExpanded) {
-            val trace = error.stackTrace?.takeIf { it.isNotBlank() }
-                // Only reachable for an error reported through the string overload without one.
-                ?: "No stack trace was recorded for this error."
-            Box(
-                modifier = Modifier
-                    .padding(top = MaterialTheme.dimens.margin.md)
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    // Traces are wide and must not wrap: a wrapped frame is far harder to read
-                    // than one that scrolls.
-                    .horizontalScroll(rememberScrollState()),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
             ) {
                 Text(
-                    text = trace,
+                    text = error.exceptionTypeName(),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = if (error.isViewed) FontWeight.Normal else FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                AlohomoraChip(
+                    label = "FATAL",
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                )
+                Box(modifier = Modifier.weight(1f))
+                Text(
+                    text = DateUtils.format(error.time, DateUtils.Format.HH_MM_SS_3MS),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            error.reason?.takeIf { it.isNotBlank() }?.let { reason ->
+                Text(
+                    text = reason,
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
+                )
+            }
+
+            error.place?.takeIf { it.isNotBlank() }?.let { place ->
+                Text(
+                    text = place,
+                    style = MaterialTheme.typography.labelSmall,
                     fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+                    modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
                 )
             }
         }

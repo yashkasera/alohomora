@@ -68,5 +68,7 @@ internal object DesktopEventPrefs {
         return base + KEY_SUFFIX
     }
 
+    fun clearAll() { prefs.clear() }
+
     private const val KEY_SUFFIX = ".mutedEvents"
 }

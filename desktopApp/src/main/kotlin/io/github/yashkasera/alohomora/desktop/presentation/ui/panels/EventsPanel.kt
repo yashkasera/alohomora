@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -109,14 +110,20 @@ fun EventsPanel(eventsViewModel: EventsViewModel) {
                         onClearFilters = eventsViewModel::clearFilters,
                     )
                 } else {
-                    LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                        contentPadding = PaddingValues(
+                            MaterialTheme.dimens.margin.md
+                        )
+                    ) {
                         items(state.events, key = { event -> event.id to event.time }) { event ->
                             EventItem(
                                 event = event,
                                 showProperties = showProperties,
                                 onClick = { eventsViewModel.openEvent(event.id) },
                             )
-                            AlohomoraHorizontalDivider()
                         }
                     }
                     ScrollToTopButton(lazyListState)

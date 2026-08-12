@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.onClick
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -31,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,7 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.MockRule
@@ -47,7 +46,6 @@ import io.github.yashkasera.alohomora.desktop.data.local.MockSession
 import io.github.yashkasera.alohomora.desktop.data.local.MockSessionSummary
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
-import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
@@ -62,16 +60,10 @@ import io.github.yashkasera.alohomora.ui.icons.Download
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Plus
 import io.github.yashkasera.alohomora.ui.icons.Save
-import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
-import io.github.yashkasera.alohomora.ui.icons.ToggleRight
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.Upload
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.queryErrorContainer
-import io.github.yashkasera.alohomora.ui.theme.querySuccessContainer
-import io.github.yashkasera.alohomora.ui.theme.success
-import io.ktor.http.HttpStatusCode
 
 @Composable
 fun MockRulesSideSheet(
@@ -463,19 +455,16 @@ private fun EditMockRuleSideSheet(
                 onValueChange = { urlPattern = it },
                 label = "URL pattern",
                 placeholder = "/api/users",
-                modifier = Modifier.fillMaxWidth(),
             )
 
+
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = isRegex, onCheckedChange = { isRegex = it })
-                    Text("Regex", style = MaterialTheme.typography.bodySmall)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    AlohomoraTextButton(
+                    AlohomoraOutlinedButton(
                         text = method ?: "Any method",
                         onClick = { showMethodDropdown = true },
                         size = AlohomoraButtonSize.SMALL,
@@ -508,6 +497,18 @@ private fun EditMockRuleSideSheet(
                         }
                     }
                 }
+                AlohomoraTextButton(
+                    text = "Regex",
+                    leadingIcon = {
+                        Checkbox(checked = isRegex, onCheckedChange = null)
+                    },
+                    size = AlohomoraButtonSize.SMALL,
+                    uppercase = false,
+                    onClick = {
+                        isRegex = !isRegex
+
+                    },
+                )
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm)) {

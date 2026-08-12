@@ -49,12 +49,9 @@ import io.github.yashkasera.alohomora.desktop.util.DevicePortRegistry
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
-import io.github.yashkasera.alohomora.ui.theme.brand
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.muted
-import io.github.yashkasera.alohomora.ui.theme.success
-import io.github.yashkasera.alohomora.ui.theme.warning
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -113,7 +110,7 @@ fun DeviceSelectionScreen(
                         Box(
                             modifier = Modifier
                                 .size(MaterialTheme.dimens.icon.standard)
-                                .background(MaterialTheme.colorScheme.brand),
+                                .background(MaterialTheme.alohomoraColors.accent),
                         )
                         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
                         Text(
@@ -374,10 +371,10 @@ private fun DeviceRow(
     onSelect: () -> Unit,
 ) {
     val statusColor = when (device.state) {
-        DeviceState.DEVICE -> MaterialTheme.colorScheme.success
-        DeviceState.OFFLINE -> MaterialTheme.colorScheme.warning
+        DeviceState.DEVICE -> MaterialTheme.alohomoraColors.success
+        DeviceState.OFFLINE -> MaterialTheme.alohomoraColors.warning
         DeviceState.UNAUTHORIZED -> MaterialTheme.colorScheme.error
-        DeviceState.UNKNOWN -> MaterialTheme.colorScheme.muted
+        DeviceState.UNKNOWN -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val title = buildString {
         append(device.model ?: device.id)
@@ -430,13 +427,13 @@ private fun DeviceRow(
             isActive -> Text(
                 "Active",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = MaterialTheme.colorScheme.onSurface,
             )
 
             selected -> Text(
                 "Selected",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }

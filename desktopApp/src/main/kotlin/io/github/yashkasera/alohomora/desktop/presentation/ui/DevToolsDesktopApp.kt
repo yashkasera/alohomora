@@ -1,7 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
@@ -26,7 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,7 +43,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,6 +78,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ConfigPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DashboardContent
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DatabasePanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DeepLinkBuilderSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
@@ -112,6 +110,7 @@ import io.github.yashkasera.alohomora.ui.icons.Android
 import io.github.yashkasera.alohomora.ui.icons.Apple
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import java.io.File
@@ -135,11 +134,12 @@ fun DevToolsDesktopApp(
     onDismissHelp: () -> Unit = {},
     showCommandPalette: Boolean = false,
     onDismissCommandPalette: () -> Unit = {},
-    onToggleTheme: () -> Unit = {},
+    onShowSettings: () -> Unit = {},
     onZoomIn: () -> Unit = {},
     onZoomOut: () -> Unit = {},
     onResetZoom: () -> Unit = {},
     isDark: Boolean = true,
+    themeId: String = "default",
     onDisconnectWindow: () -> Unit,
 ) {
     var activeSection by remember { mutableStateOf(DesktopSection.Traffic) }
@@ -150,11 +150,11 @@ fun DevToolsDesktopApp(
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()
     val deviceError by devToolsViewModel.deviceError.collectAsState()
 
-    val scope = rememberCoroutineScope()
     var isRecording by remember { mutableStateOf(false) }
     var recordingDevicePath by remember { mutableStateOf<String?>(null) }
     var recordingLocalPath by remember { mutableStateOf<String?>(null) }
     var selectedTrafficForSheet by remember { mutableStateOf<TrafficEntry?>(null) }
+    var selectedErrorForSheet by remember { mutableStateOf<io.github.yashkasera.alohomora.common.Error?>(null) }
     var showMockSheet by remember { mutableStateOf(false) }
     var showDeepLinkBuilder by remember { mutableStateOf(false) }
     // Read from the view model rather than held here: the sheet's whole state (selection, collapse,
@@ -218,7 +218,10 @@ fun DevToolsDesktopApp(
         packageName = buildInfo?.packageName,
         selectedDeviceId = selectedDeviceId,
         isAndroid = isAndroid,
-        onToggleTheme = onToggleTheme,
+        onShowSettings = {
+            onDismissCommandPalette()
+            onShowSettings()
+        },
         onShowHelp = {
             onDismissCommandPalette()
             onShowHelp()
@@ -309,6 +312,10 @@ fun DevToolsDesktopApp(
                             selectedTrafficForSheet = null; return@onPreviewKeyEvent true
                         }
 
+                        selectedErrorForSheet != null -> {
+                            selectedErrorForSheet = null; return@onPreviewKeyEvent true
+                        }
+
                         selectedTraceId != null -> {
                             tracesViewModel.closeTrace(); return@onPreviewKeyEvent true
                         }
@@ -349,16 +356,16 @@ fun DevToolsDesktopApp(
                 false
             },
     ) {
-        val contentModifier = if (showCommandPalette)
-            Modifier.fillMaxSize().blur(16.dp)
-        else Modifier.fillMaxSize()
-
-        Box(modifier = contentModifier) {
+        Box(modifier = Modifier
+            .background(MaterialTheme.colorScheme.background)
+            .fillMaxSize()
+        ) {
             PermanentNavigationDrawer(
                 drawerContent = {
                     PermanentDrawerSheet(
                         modifier = Modifier.fillMaxWidth(0.2f),
                         windowInsets = WindowInsets.safeContent,
+                        drawerShape = MaterialTheme.shapes.medium
                     ) {
                         Sidebar(
                             connection = devToolsState.connection,
@@ -457,7 +464,10 @@ fun DevToolsDesktopApp(
                             DesktopSection.Events -> EventsPanel(eventsViewModel = eventsViewModel)
                             DesktopSection.Cache -> CachePanel(cacheViewModel = cacheViewModel)
                             DesktopSection.FeatureFlags -> FeatureFlagsPanel(featureFlagsViewModel = featureFlagsViewModel)
-                            DesktopSection.Errors -> ErrorsPanel(devToolsViewModel = devToolsViewModel)
+                            DesktopSection.Errors -> ErrorsPanel(
+                                devToolsViewModel = devToolsViewModel,
+                                onErrorClick = { selectedErrorForSheet = it },
+                            )
                             DesktopSection.Config -> ConfigPanel(devToolsViewModel = devToolsViewModel)
                             DesktopSection.GitHistory -> GitHistoryPanel(devToolsViewModel = devToolsViewModel)
                             DesktopSection.Database -> DatabasePanel(databaseViewModel = databaseViewModel)
@@ -547,6 +557,12 @@ fun DevToolsDesktopApp(
                 onDismiss = eventsViewModel::closeEvent,
             )
 
+            ErrorDetailsSideSheet(
+                error = selectedErrorForSheet,
+                devToolsViewModel = devToolsViewModel,
+                onDismiss = { selectedErrorForSheet = null },
+            )
+
             val deepLinkHistory by devicesViewModel.deepLinkHistory.collectAsState()
             DeepLinkBuilderSideSheet(
                 visible = showDeepLinkBuilder,
@@ -574,6 +590,7 @@ fun DevToolsDesktopApp(
             visibleSections = visibleSections,
             actions = commandActions,
             isDark = isDark,
+            themeId = themeId,
             onDismiss = onDismissHelp,
         )
     }
@@ -633,7 +650,7 @@ fun ColumnScope.Sidebar(
     )
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize(),
+            .weight(1f),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
         contentPadding = PaddingValues(MaterialTheme.dimens.margin.lg),
     ) {

@@ -4,13 +4,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,52 +46,37 @@ fun GitHistoryPanel(devToolsViewModel: DevToolsViewModel) {
         topBar = {
             AlohomoraTopBar(
                 title = "Git History",
-                // Build metadata moved to its own Config section; this panel is commits only.
-                subtitle = "Commits baked into the connected build",
+                subtitle = "Showing last ${commits.size} commits",
             )
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
         Box(modifier = Modifier.padding(it).fillMaxSize()) {
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            stickyHeader {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                        .padding(MaterialTheme.dimens.margin.md),
-                ) {
-                    Text(
-                        text = "Commit History",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = "Showing last ${commits.size} commits",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
-                }
-            }
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                contentPadding = PaddingValues(
+                    MaterialTheme.dimens.margin.md
+                )
+            ) {
 
-            if (commits.isEmpty()) {
-                item {
-                    EmptyState(
-                        // No .padding(it): the enclosing Box already applied the Scaffold
-                        // insets, so passing them again double-padded this.
-                        icon = Icons.GitGraph,
-                        title = "No Git Commits",
-                        subtitle = "No commits available. Connect a device to load commit history.",
-                    )
-                }
-            } else {
-                items(commits) { commit ->
-                    GitHistoryRow(commit = commit)
-                    AlohomoraHorizontalDivider()
+                if (commits.isEmpty()) {
+                    item {
+                        EmptyState(
+                            // No .padding(it): the enclosing Box already applied the Scaffold
+                            // insets, so passing them again double-padded this.
+                            icon = Icons.GitGraph,
+                            title = "No Git Commits",
+                            subtitle = "No commits available. Connect a device to load commit history.",
+                        )
+                    }
+                } else {
+                    itemsIndexed(commits, key = { _, commit -> commit.sha }) { _, commit ->
+                        GitHistoryRow(commit = commit)
+                    }
                 }
             }
-        }
             ScrollToTopButton(lazyListState)
         }
     }
@@ -93,41 +84,44 @@ fun GitHistoryPanel(devToolsViewModel: DevToolsViewModel) {
 
 @Composable
 private fun GitHistoryRow(commit: GitHistoryCommit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = MaterialTheme.dimens.margin.lg, vertical = MaterialTheme.dimens.margin.md),
-        verticalArrangement = Arrangement.spacedBy(6.dp), // 6.dp intentional: tight commit row gap
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+        Column(
+            modifier = Modifier.padding(
+                horizontal = MaterialTheme.dimens.margin.xxl,
+                vertical = MaterialTheme.dimens.margin.md,
+            ),
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = commit.sha,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+                Text(
+                    text = "${DateUtils.format(
+                        commit.timestamp,
+                        DateUtils.Format.READABLE_DATE_TIME,
+                    )} | ${commit.author}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+            Spacer(Modifier.height(MaterialTheme.dimens.margin.sm))
             Text(
-                text = commit.sha.take(7),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.tertiary
-            )
-            Text(
-                text = commit.author,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary
+                text = commit.message,
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
-        Text(
-            text = commit.message,
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = DateUtils.format(
-                commit.timestamp,
-                DateUtils.Format.READABLE_DATE_TIME,
-            ),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.tertiary,
-        )
     }
 }

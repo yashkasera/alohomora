@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,61 +38,64 @@ fun LazyItemScope.EventItem(
     showProperties: Boolean,
     onClick: () -> Unit,
 ) {
-    Column(
-        // Sunken once read, matching the traffic row. Events have no error state, so unlike
-        // TrafficItem there is nothing that should override the dimming.
+    val containerColor = when {
+        event.isViewed -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MaterialTheme.colorScheme.surfaceContainer
+    }
+    Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                if (event.isViewed) {
-                    MaterialTheme.colorScheme.primaryContainer
-                } else {
-                    Color.Transparent
-                },
-            )
-            .clickable(onClick = onClick)
             .animateItem()
-            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+        ),
+        onClick = onClick,
     ) {
-        // Header Row: Title + Timestamp
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            modifier = Modifier.padding(
+                horizontal = MaterialTheme.dimens.margin.xxl,
+                vertical = MaterialTheme.dimens.margin.lg,
+            ),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = event.name,
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
+
                 Text(
-                    text = event.name,
-                    style = MaterialTheme.typography.labelMedium
+                    text = DateUtils.format(event.time, DateUtils.Format.HH_MM_SS),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            Text(
-                text = DateUtils.format(event.time, DateUtils.Format.HH_MM_SS),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+            // Code Block - only shown if showProperties is true
+            if (showProperties) {
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
-        // Code Block - only shown if showProperties is true
-        if (showProperties) {
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-
-            // Clamped rather than scrollable or height-capped. A verticalScroll inside a LazyColumn row
-            // fights the list for the wheel, an unbounded row lets one 200-key payload grow taller than
-            // the window, and a bare height cap truncates without saying so. The detail sheet is where
-            // the whole payload is readable.
-            //
-            // prettyProperties() also fixes what `properties?.toString() ?: "{}"` got wrong here:
-            // JsonNull is not Kotlin null, so an event recorded without properties rendered the word
-            // "null".
-            val properties = remember(event.id, event.time) {
-                event.prettyProperties().clampLines(MAX_ROW_PROPERTY_LINES)
+                // Clamped rather than scrollable or height-capped. A verticalScroll inside a LazyColumn row
+                // fights the list for the wheel, an unbounded row lets one 200-key payload grow taller than
+                // the window, and a bare height cap truncates without saying so. The detail sheet is where
+                // the whole payload is readable.
+                //
+                // prettyProperties() also fixes what `properties?.toString() ?: "{}"` got wrong here:
+                // JsonNull is not Kotlin null, so an event recorded without properties rendered the word
+                // "null".
+                val properties = remember(event.id, event.time) {
+                    event.prettyProperties().clampLines(MAX_ROW_PROPERTY_LINES)
+                }
+                AlohomoraCodeBlock(
+                    content = properties,
+                    isScrollable = false,
+                )
             }
-            AlohomoraCodeBlock(
-                content = properties,
-                isScrollable = false
-            )
         }
     }
 }

@@ -39,7 +39,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.icons.Check
 import io.github.yashkasera.alohomora.ui.icons.CircleAlert
 import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.theme.LocalThemeIsDark
+import io.github.yashkasera.alohomora.ui.theme.LocalAlohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
@@ -50,9 +50,9 @@ fun JsonEditor(
     minLines: Int = 6,
     label: String? = null,
 ) {
-    val isDark = LocalThemeIsDark.current.value
-    val colors = remember(isDark) {
-        if (isDark) JsonEditorColors.Dark else JsonEditorColors.Light
+    val alohomoraColors = LocalAlohomoraColors.current
+    val colors = remember(alohomoraColors) {
+        JsonEditorColors.forTheme(alohomoraColors)
     }
 
     val codeStyle = MaterialTheme.typography.bodySmall.copy(
@@ -173,8 +173,14 @@ fun JsonEditor(
                         .onPreviewKeyEvent { event ->
                             if (!readOnly && event.type == KeyEventType.KeyDown) {
                                 when (event.key) {
-                                    Key.Tab -> { state.insertTab(); true }
-                                    Key.Enter -> { state.insertNewline(); true }
+                                    Key.Tab -> {
+                                        state.insertTab(); true
+                                    }
+
+                                    Key.Enter -> {
+                                        state.insertNewline(); true
+                                    }
+
                                     else -> false
                                 }
                             } else {
@@ -190,11 +196,12 @@ fun JsonEditor(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (state.text.isNotBlank()) {
+            if (state.text.isNotBlank()) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     if (state.isValidJson) {
                         Icon(
                             Icons.Check,
@@ -203,7 +210,8 @@ fun JsonEditor(
                             modifier = Modifier.width(14.dp),
                         )
                         Text(
-                            "Valid JSON",
+                            modifier = Modifier.weight(1f),
+                            text = "Valid JSON",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -215,16 +223,17 @@ fun JsonEditor(
                             modifier = Modifier.width(14.dp),
                         )
                         Text(
-                            state.validationError ?: "Invalid JSON",
+                            modifier = Modifier.weight(1f),
+                            text = state.validationError ?: "Invalid JSON",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.error,
-                            maxLines = 1,
+                            maxLines = 3,
                         )
                     }
                 }
             }
 
-            if (!readOnly && state.text.isNotBlank()) {
+            if (!readOnly) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
                 ) {

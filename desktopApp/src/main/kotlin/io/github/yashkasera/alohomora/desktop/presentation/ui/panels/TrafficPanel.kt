@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,6 +43,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.Alohomo
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValueRow
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.MethodBadge
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SlackShareDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficItem
@@ -121,7 +123,14 @@ fun TrafficPanel(
                 if (uiState.entries.isEmpty()) {
                     TrafficEmptyState(uiState, onClearFilters = trafficViewModel::clearFilters)
                 } else {
-                    LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                        contentPadding = PaddingValues(
+                            MaterialTheme.dimens.margin.md
+                        )
+                    ) {
                         items(uiState.entries, key = { log -> log.id }) { log ->
                             TrafficItem(
                                 call = log,
@@ -130,7 +139,6 @@ fun TrafficPanel(
                                     onLogClick(log)
                                 },
                             )
-                            AlohomoraHorizontalDivider()
                         }
                     }
                     ScrollToTopButton(lazyListState)
@@ -466,7 +474,7 @@ private fun DesktopOverviewTab(traffic: TrafficEntry) {
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            MethodChip(traffic.method.orEmpty())
+            MethodBadge(traffic.method.orEmpty())
             if (traffic.mockedBy != null) {
                 AlohomoraChip(
                     label = "Mocked",
@@ -507,7 +515,7 @@ private fun DesktopRequestTab(traffic: TrafficEntry) {
             ),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
-        MethodChip(traffic.method.orEmpty())
+        MethodBadge(traffic.method.orEmpty())
         SelectionContainer {
             Text(
                 text = traffic.url ?: "-",
@@ -568,18 +576,6 @@ private fun DesktopResponseTab(traffic: TrafficEntry) {
     }
 }
 
-
-@Composable
-private fun MethodChip(method: String) {
-    Text(
-        text = method.ifBlank { "UNKNOWN" }.uppercase(),
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onPrimary,
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.primary, MaterialTheme.shapes.extraSmall)
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-    )
-}
 
 @Composable
 private fun OverviewStatRow(status: String, duration: String, size: String) {

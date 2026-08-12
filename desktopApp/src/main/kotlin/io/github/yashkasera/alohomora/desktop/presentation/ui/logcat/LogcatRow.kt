@@ -12,12 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
-import io.github.yashkasera.alohomora.ui.theme.logDebug
-import io.github.yashkasera.alohomora.ui.theme.logError
-import io.github.yashkasera.alohomora.ui.theme.logFatal
-import io.github.yashkasera.alohomora.ui.theme.logInfo
-import io.github.yashkasera.alohomora.ui.theme.logVerbose
-import io.github.yashkasera.alohomora.ui.theme.logWarn
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.LogEntry
@@ -72,10 +67,10 @@ fun LogcatRow(entry: LogEntry) {
 @Composable
 @ReadOnlyComposable
 internal fun levelColor(level: LogLevel): Color = when (level) {
-    LogLevel.VERBOSE -> MaterialTheme.colorScheme.logVerbose
-    LogLevel.DEBUG -> MaterialTheme.colorScheme.logDebug
-    LogLevel.INFO -> MaterialTheme.colorScheme.logInfo
-    LogLevel.WARN -> MaterialTheme.colorScheme.logWarn
-    LogLevel.ERROR -> MaterialTheme.colorScheme.logError
-    LogLevel.FATAL -> MaterialTheme.colorScheme.logFatal
+    LogLevel.VERBOSE -> MaterialTheme.colorScheme.outline
+    LogLevel.DEBUG -> MaterialTheme.alohomoraColors.info
+    LogLevel.INFO -> MaterialTheme.alohomoraColors.success
+    LogLevel.WARN -> MaterialTheme.alohomoraColors.warning
+    LogLevel.ERROR -> MaterialTheme.colorScheme.error
+    LogLevel.FATAL -> MaterialTheme.alohomoraColors.fatal
 }
