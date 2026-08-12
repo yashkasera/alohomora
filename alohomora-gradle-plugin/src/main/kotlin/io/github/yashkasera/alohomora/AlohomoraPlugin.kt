@@ -95,6 +95,11 @@ class AlohomoraPlugin : Plugin<Project> {
             ) {
                 baseIconName.set(extension.devIconBase)
                 bgRef.set(extension.devIconBgRef)
+                val pos = extension.devIconVariantBarPosition
+                if (pos != DevIconVariantBarPosition.NONE) {
+                    variantBarText.set(variant.name.uppercase())
+                    variantBarPosition.set(pos.name)
+                }
                 val appName = extension.devIconAppName
                     ?: readAppLabel(project)
                     ?: project.name

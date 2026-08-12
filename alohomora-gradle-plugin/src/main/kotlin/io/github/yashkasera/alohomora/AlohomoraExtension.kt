@@ -10,4 +10,5 @@ open class AlohomoraExtension {
     var devIconBgRef: String? = null
     var devIconAppName: String? = null
     var devIconLabel: String? = null
+    var devIconVariantBarPosition: DevIconVariantBarPosition = DevIconVariantBarPosition.TOP_RIGHT
 }
