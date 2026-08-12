@@ -108,7 +108,6 @@ fun DashboardContent(
                         append(" · Android ${dashboard.androidVersion} (API ${dashboard.apiLevel})")
                     }
                 },
-                showDivider = scrollState.canScrollBackward,
                 actions = {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),

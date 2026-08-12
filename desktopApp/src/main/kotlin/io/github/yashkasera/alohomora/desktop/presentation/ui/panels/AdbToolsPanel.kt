@@ -90,7 +90,6 @@ fun AdbToolsPanel(
             AlohomoraTopBar(
                 title = "ADB Shortcuts",
                 subtitle = "Common device actions for developers and QA",
-                showDivider = scrollState.canScrollBackward,
             )
         },
         snackbarHost = {

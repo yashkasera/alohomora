@@ -61,7 +61,7 @@ fun AlohomoraCodeBlock(
         modifier = modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .background(MaterialTheme.colorScheme.primaryContainer)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.small),
     ) {
         // Left accent border for errors/exceptions
@@ -95,7 +95,7 @@ fun AlohomoraCodeBlock(
                 text = displayContent,
                 style = MaterialTheme.typography.bodySmall.copy(
                     lineHeight = 18.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                 ),
                 modifier = textModifier,
             )

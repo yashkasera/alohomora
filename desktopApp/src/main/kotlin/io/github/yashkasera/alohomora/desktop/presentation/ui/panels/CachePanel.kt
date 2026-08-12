@@ -1,15 +1,14 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -73,7 +72,6 @@ fun CachePanel(cacheViewModel: CacheViewModel) {
             AlohomoraTopBar(
                 title = "Cache",
                 subtitle = cacheSubtitle(uiState),
-                showDivider = lazyListState.canScrollBackward,
             )
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -135,7 +133,7 @@ private fun CacheEntryRow(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                if (expanded) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                if (expanded) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
             )
             .clickable(onClick = onToggle)
             .padding(
@@ -163,44 +161,27 @@ private fun CacheEntryRow(
             )
 
             CacheValuePreview(row = row, modifier = Modifier.weight(VALUE_WEIGHT))
+
+            AlohomoraIconButton(
+                onClick = { clipboardManager.setText(AnnotatedString(row.value.orEmpty())) },
+                enabled = row.value != null,
+            ) {
+                Icon(
+                    imageVector = Icons.Copy,
+                    contentDescription = "Copy value",
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                )
+            }
         }
 
-        if (expanded) {
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // No per-key refresh. `RepositoryCacheInspector.getValue` answers from the cache primed
-                // at connect — re-scanning per key would be quadratic in the number of preferences — so a
-                // refresh button here could only ever return the value already on screen. Re-reading the
-                // device means re-requesting initial state, which is a panel-level act, not a row-level
-                // one.
-                AlohomoraIconButton(
-                    onClick = { clipboardManager.setText(AnnotatedString(row.value.orEmpty())) },
-                    enabled = row.value != null,
-                ) {
-                    Icon(
-                        imageVector = Icons.Copy,
-                        contentDescription = "Copy value",
-                        modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                    )
-                }
+        AnimatedVisibility (expanded) {
+            Column {
+                AlohomoraCodeBlock(
+                    content = row.value ?: EMPTY_VALUE_LABEL,
+                    isScrollable = false,
+                    jsonPrettify = true,
+                )
             }
-            // jsonPrettify because a preference is a common place to stash a JSON blob, and a one-line
-            // blob is unreadable. A non-JSON value passes through unchanged.
-            //
-            // NOT scrollable, and that is a correctness point rather than a preference: a LazyColumn
-            // measures its items with an unbounded height, so a verticalScroll in here is measured with
-            // an infinite max height and Compose throws. The row grows to fit and the list scrolls
-            // instead — which is also the behaviour the reader wants, since expanding is a deliberate
-            // request to see the whole value.
-            AlohomoraCodeBlock(
-                content = row.value ?: EMPTY_VALUE_LABEL,
-                isScrollable = false,
-                jsonPrettify = true,
-            )
         }
     }
 }

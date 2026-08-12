@@ -58,7 +58,6 @@ fun ErrorsPanel(devToolsViewModel: DevToolsViewModel) {
             AlohomoraTopBar(
                 title = "Errors",
                 subtitle = "Crashes and reported failures from connected app",
-                showDivider = lazyListState.canScrollBackward,
                 actions = {
                     AlohomoraIconButton(onClick = { showClearConfirmation = true }) {
                         Icon(

@@ -13,6 +13,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import io.github.yashkasera.alohomora.DevToolsActivity
+import io.github.yashkasera.alohomora.R
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -50,7 +51,7 @@ internal class TrafficNotificationHelper(
         }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_sys_upload_done)
+            .setSmallIcon(R.drawable.ic_alohomora)
             .setContentTitle("Latest network traces")
             .setContentText(summaries.firstOrNull() ?: "No recent traces")
             .setStyle(style)

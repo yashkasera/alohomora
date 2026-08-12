@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
@@ -43,7 +42,6 @@ fun GitHistoryPanel(devToolsViewModel: DevToolsViewModel) {
                 title = "Git History",
                 // Build metadata moved to its own Config section; this panel is commits only.
                 subtitle = "Commits baked into the connected build",
-                showDivider = lazyListState.canScrollBackward,
             )
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -108,27 +106,28 @@ private fun GitHistoryRow(commit: GitHistoryCommit) {
             Text(
                 text = commit.sha.take(7),
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.tertiary
             )
             Text(
                 text = commit.author,
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.secondary
             )
         }
         Text(
             text = commit.message,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.primary
         )
         Text(
             text = DateUtils.format(
                 commit.timestamp,
                 DateUtils.Format.READABLE_DATE_TIME,
             ),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.secondary,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.tertiary,
         )
     }
 }

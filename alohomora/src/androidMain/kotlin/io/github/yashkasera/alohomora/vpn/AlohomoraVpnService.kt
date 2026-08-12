@@ -7,6 +7,7 @@ import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.core.app.NotificationCompat
+import io.github.yashkasera.alohomora.R
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
 import kotlinx.serialization.json.Json
@@ -104,7 +105,7 @@ class AlohomoraVpnService : VpnService() {
     private fun startForegroundWithNotification() {
         ensureChannel()
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_sync)
+            .setSmallIcon(R.drawable.ic_alohomora)
             .setContentTitle("Alohomora VPN Throttle")
             .setContentText("Device-wide throttling active")
             .setOngoing(true)

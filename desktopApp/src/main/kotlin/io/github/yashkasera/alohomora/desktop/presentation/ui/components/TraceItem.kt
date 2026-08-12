@@ -35,7 +35,7 @@ import io.github.yashkasera.alohomora.ui.theme.mutedContainer
 fun TraceItem(trace: TraceSummary, onClick: () -> Unit) {
     val containerColor = when {
         trace.hasError -> MaterialTheme.colorScheme.errorContainer
-        trace.isViewed -> MaterialTheme.colorScheme.surfaceVariant
+        trace.isViewed -> MaterialTheme.colorScheme.surfaceContainerLowest
         else -> MaterialTheme.colorScheme.background
     }
 

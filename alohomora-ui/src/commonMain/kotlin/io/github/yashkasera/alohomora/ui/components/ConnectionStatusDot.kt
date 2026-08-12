@@ -1,6 +1,5 @@
 package io.github.yashkasera.alohomora.ui.components
 
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -17,11 +16,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.ui.theme.CanvasAlertRed
-import io.github.yashkasera.alohomora.ui.theme.CanvasSuccessGreen
 import io.github.yashkasera.alohomora.ui.theme.logError
 import io.github.yashkasera.alohomora.ui.theme.success
 import io.github.yashkasera.alohomora.ui.theme.warning

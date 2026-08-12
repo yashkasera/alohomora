@@ -16,9 +16,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,7 +32,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -52,6 +50,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRule
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
 import io.github.yashkasera.alohomora.replay.replayBlockedReason
 import io.github.yashkasera.alohomora.replay.toReplayRequest
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
@@ -88,7 +87,6 @@ fun TrafficPanel(
             AlohomoraTopBar(
                 title = "Traffic",
                 subtitle = trafficSubtitle(uiState),
-                showDivider = lazyListState.canScrollBackward,
                 actions = {
                     AlohomoraIconButton(onClick = { showClearConfirmation = true }) {
                         Icon(
@@ -299,12 +297,12 @@ fun TrafficDetailsSideSheet(
                         Text(
                             text = "API Request",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
                             text = traffic.path ?: traffic.url ?: "-",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.secondary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -317,8 +315,6 @@ fun TrafficDetailsSideSheet(
                         ) {
                             Icon(
                                 imageVector = Icons.Repeat,
-                                // Names the blocker, so an unavailable action explains
-                                // itself instead of just looking broken.
                                 contentDescription = replayBlockedReason?.message
                                     ?: "Replay this request",
                             )
@@ -442,14 +438,20 @@ private fun DesktopOverviewTab(traffic: TrafficEntry) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scroll)
-            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
+            .padding(
+                horizontal = MaterialTheme.dimens.margin.xl,
+                vertical = MaterialTheme.dimens.margin.lg,
+            ),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
         MethodChip(traffic.method.orEmpty())
-        Text(
-            text = traffic.pathWithQuery().ifBlank { traffic.url.orEmpty() },
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        SelectionContainer {
+            Text(
+                text = traffic.pathWithQuery().ifBlank { traffic.url.orEmpty() },
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
         AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         OverviewStatRow(
             status = traffic.status?.toString() ?: "-",
@@ -465,44 +467,38 @@ private fun DesktopOverviewTab(traffic: TrafficEntry) {
 
 @Composable
 private fun DesktopRequestTab(traffic: TrafficEntry) {
-    val scroll = rememberScrollState()
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(scroll)
-            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
+            .padding(
+                horizontal = MaterialTheme.dimens.margin.xl,
+                vertical = MaterialTheme.dimens.margin.lg,
+            ),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
         MethodChip(traffic.method.orEmpty())
-        Text(
-            text = traffic.url ?: "-",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        SelectionContainer {
+            Text(
+                text = traffic.url ?: "-",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
         SectionLabel("Headers")
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        ) {
-            Text(
-                text = traffic.requestHeaders
-                    ?.flatMap { (key, values) -> values.map { "$key: $it" } }
-                    ?.joinToString("\n")
-                    .orEmpty()
-                    .ifBlank { "No headers" },
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
-            )
-        }
+
+        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+        AlohomoraCodeBlock(
+            content = traffic.requestHeaders
+                ?.flatMap { (key, values) -> values.map { "$key: $it" } }
+                ?.joinToString("\n")
+                .orEmpty()
+                .ifBlank { "No headers" },
+        )
         SectionLabel("Body")
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        ) {
-            Text(
-                text = traffic.requestBody.orEmpty().ifBlank { "{}" },
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
-            )
-        }
+        AlohomoraCodeBlock(
+            content = traffic.requestBody.orEmpty().ifBlank { "{}" },
+        )
     }
 }
 
@@ -515,7 +511,10 @@ private fun DesktopResponseTab(traffic: TrafficEntry) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.md),
+                        .padding(
+                            horizontal = MaterialTheme.dimens.margin.xl,
+                            vertical = MaterialTheme.dimens.margin.md,
+                        ),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(

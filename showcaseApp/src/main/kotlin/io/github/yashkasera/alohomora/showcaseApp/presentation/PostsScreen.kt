@@ -38,9 +38,7 @@ import java.util.Locale
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun AndroidSampleApp(
-    onThemeChanged: @Composable (isDark: Boolean) -> Unit = {},
-) {
+fun AndroidSampleApp() {
     Surface(modifier = Modifier.fillMaxSize()) {
         PostsScreen()
     }

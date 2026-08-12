@@ -17,7 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.prettyProperties
@@ -44,7 +43,7 @@ fun LazyItemScope.EventItem(
             .fillMaxWidth()
             .background(
                 if (event.isViewed) {
-                    MaterialTheme.colorScheme.surfaceVariant
+                    MaterialTheme.colorScheme.primaryContainer
                 } else {
                     Color.Transparent
                 },
@@ -62,16 +61,14 @@ fun LazyItemScope.EventItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = event.name,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.labelMedium
                 )
             }
 
             Text(
                 text = DateUtils.format(event.time, DateUtils.Format.HH_MM_SS),
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 

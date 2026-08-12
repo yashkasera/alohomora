@@ -20,13 +20,12 @@ import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import io.github.yashkasera.alohomora.ui.theme.queryErrorContainer
 
 @Composable
 fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
     val containerColor = when {
         call.isSuccessful().not() -> MaterialTheme.colorScheme.errorContainer
-        call.isViewed -> MaterialTheme.colorScheme.surfaceVariant
+        call.isViewed -> MaterialTheme.colorScheme.surfaceContainerLowest
         else -> MaterialTheme.colorScheme.background
     }
 

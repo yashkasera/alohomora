@@ -173,7 +173,7 @@ private fun TrafficTopBar(
 private fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
     val containerColor = when {
         call.isSuccessful().not() -> MaterialTheme.colorScheme.errorContainer
-        call.isViewed -> MaterialTheme.colorScheme.surfaceVariant
+        call.isViewed -> MaterialTheme.colorScheme.surfaceContainerLowest
         else -> MaterialTheme.colorScheme.background
     }
 

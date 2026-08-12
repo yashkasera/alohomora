@@ -57,7 +57,6 @@ fun TracesPanel(
             AlohomoraTopBar(
                 title = "Traces",
                 subtitle = "Spans grouped by trace, newest first",
-                showDivider = lazyListState.canScrollBackward,
                 actions = {
                     AlohomoraIconButton(onClick = { showClearConfirmation = true }) {
                         Icon(

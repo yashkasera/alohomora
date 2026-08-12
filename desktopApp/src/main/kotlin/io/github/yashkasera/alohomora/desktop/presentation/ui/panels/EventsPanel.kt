@@ -58,7 +58,6 @@ fun EventsPanel(eventsViewModel: EventsViewModel) {
                 // Says how much the filters removed, and names the store cap when it bites — a total
                 // stalled at exactly the cap otherwise looks like a stalled stream.
                 subtitle = eventsSubtitle(state),
-                showDivider = lazyListState.canScrollBackward,
                 actions = {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),

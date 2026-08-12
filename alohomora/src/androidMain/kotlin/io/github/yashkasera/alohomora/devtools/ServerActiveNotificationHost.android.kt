@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import io.github.yashkasera.alohomora.ActivityTracker
 import io.github.yashkasera.alohomora.DevToolsActivity
+import io.github.yashkasera.alohomora.R
 
 internal actual object ServerActiveNotificationHost {
 
@@ -32,7 +33,7 @@ internal actual object ServerActiveNotificationHost {
         val chipText = if (hasClient) "Connected" else "Port $port"
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_sync)
+            .setSmallIcon(R.drawable.ic_alohomora)
             .setContentTitle(title)
             .setContentText(text)
             .setContentIntent(createContentIntent(context))

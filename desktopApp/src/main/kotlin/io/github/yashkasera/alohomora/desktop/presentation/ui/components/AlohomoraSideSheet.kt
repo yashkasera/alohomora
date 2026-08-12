@@ -7,6 +7,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -45,39 +46,42 @@ fun AlohomoraSideSheet(
     widthFraction: Float = 0.5f,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+
     AnimatedVisibility(
-        visible = visible,
+        visible,
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
-        Row(modifier = modifier.fillMaxSize()) {
-            Box(
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = SCRIM_ALPHA))
+                .clickable(
+                    indication = null,
+                    interactionSource = null,
+                    onClick = onDismiss,
+                ),
+        )
+    }
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn() + slideInHorizontally { it },
+        exit = fadeOut() + slideOutHorizontally { it },
+    ) {
+        Row(
+            modifier = modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            Surface(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = SCRIM_ALPHA))
-                    .clickable(
-                        indication = null,
-                        interactionSource = null,
-                        onClick = onDismiss,
-                    ),
-            )
-            AnimatedVisibility(
-                visible = true,
-                enter = fadeIn() + slideInHorizontally { -it },
-                exit = fadeOut() + slideOutHorizontally { it },
+                    .fillMaxWidth(widthFraction)
+                    .fillMaxHeight(),
+                color = MaterialTheme.colorScheme.secondaryContainer,
             ) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth(widthFraction)
-                        .fillMaxHeight(),
-                    color = MaterialTheme.colorScheme.background,
-                ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        header()
-                        AlohomoraHorizontalDivider()
-                        content()
-                    }
+                Column(modifier = Modifier.fillMaxSize()) {
+                    header()
+                    AlohomoraHorizontalDivider()
+                    content()
                 }
             }
         }
