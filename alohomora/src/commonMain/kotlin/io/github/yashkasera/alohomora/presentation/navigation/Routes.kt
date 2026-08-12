@@ -25,6 +25,9 @@ internal sealed interface Routes {
     data object Cache : Routes
 
     @Serializable
+    data object FeatureFlags : Routes
+
+    @Serializable
     data object Config : Routes
 
     @Serializable

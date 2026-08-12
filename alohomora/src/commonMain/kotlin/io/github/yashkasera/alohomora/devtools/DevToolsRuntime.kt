@@ -19,6 +19,7 @@ import io.github.yashkasera.alohomora.common.DeviceErrorMessage
 import io.github.yashkasera.alohomora.common.EnvelopeRead
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.FeatureFlagsSnapshotMessage
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.InitialStatePayload
 import io.github.yashkasera.alohomora.common.PingMessage
@@ -111,6 +112,7 @@ internal class DevToolsRuntime(
     private val server: DevToolsTcpServer,
     private val appDatabaseProvider: DevToolsAppDatabaseProvider,
     private val trustStore: DevToolsTrustStore,
+    private val featureFlagStore: FeatureFlagStore,
 ) {
     private val exceptionHandler = CoroutineExceptionHandler { _, t ->
         println("[Alohomora] DevTools uncaught exception: ${t.message}")
@@ -555,6 +557,7 @@ internal class DevToolsRuntime(
             connectionScope.launch { streamTraffic() }
             connectionScope.launch { streamErrors() }
             connectionScope.launch { streamSpans() }
+            connectionScope.launch { streamFeatureFlags() }
             connectionScope.launch { observeVpnState() }
             connectionScope.launch { sendInitialState() }
         }
@@ -658,6 +661,7 @@ internal class DevToolsRuntime(
                 vpnThrottleSupported = isVpnThrottleSupported,
                 vpnThrottleState = vpnThrottleStateFlow().value,
                 vpnThrottleActiveProfile = vpnThrottleActiveProfile(),
+                featureFlags = featureFlagStore.getAll(),
             )
             eventAdapter.seed(events)
             errorAdapter.seed(errors)
@@ -709,6 +713,12 @@ internal class DevToolsRuntime(
                 changedItems.forEach { item ->
                     sendStream(StreamTrafficMessage(nextSequence(), item))
                 }
+            }
+        }
+
+        private suspend fun streamFeatureFlags() {
+            featureFlagStore.flags.collect { flags ->
+                sendStream(FeatureFlagsSnapshotMessage(nextSequence(), flags.values.toList()))
             }
         }
 

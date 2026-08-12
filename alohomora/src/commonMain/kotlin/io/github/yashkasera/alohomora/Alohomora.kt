@@ -5,6 +5,7 @@ import io.github.yashkasera.alohomora.Alohomora.initLock
 import io.github.yashkasera.alohomora.Alohomora.isReplaySupported
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.NANOS_PER_SECOND
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.SpanEvent
@@ -16,6 +17,7 @@ import io.github.yashkasera.alohomora.data.model.discoverPlatformBuildConfig
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
+import io.github.yashkasera.alohomora.devtools.FeatureFlagStore
 import io.github.yashkasera.alohomora.di.initKoin
 import io.github.yashkasera.alohomora.domain.repository.ErrorRepository
 import io.github.yashkasera.alohomora.domain.repository.EventsRepository
@@ -503,6 +505,53 @@ object Alohomora {
 
     /** True when a replay handler is registered and captured requests can be re-sent. */
     val isReplaySupported: Boolean get() = TrafficReplayRegistry.isSupported
+
+    // ============================================================================
+    // Feature Flags
+    // ============================================================================
+
+    @JvmStatic
+    @JvmOverloads
+    fun recordFeatureFlag(
+        key: String,
+        value: String,
+        source: String? = null,
+        type: String? = null,
+        metadata: Map<String, String>? = null,
+    ) {
+        scope.launch {
+            val store = koin?.get<FeatureFlagStore>() ?: return@launch
+            try {
+                store.put(FeatureFlag(key, value, source, type, metadata))
+            } catch (e: Exception) {
+                Logger.d { "[Alohomora] Failed to record feature flag: ${e.message}" }
+            }
+        }
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun setFeatureFlags(
+        flags: List<FeatureFlag>,
+        source: String? = null,
+    ) {
+        scope.launch {
+            val store = koin?.get<FeatureFlagStore>() ?: return@launch
+            try {
+                store.putAll(flags, source)
+            } catch (e: Exception) {
+                Logger.d { "[Alohomora] Failed to set feature flags: ${e.message}" }
+            }
+        }
+    }
+
+    @JvmStatic
+    fun clearFeatureFlags() {
+        scope.launch {
+            val store = koin?.get<FeatureFlagStore>() ?: return@launch
+            store.clear()
+        }
+    }
 
     // ============================================================================
     // Plugin System - Custom Screens

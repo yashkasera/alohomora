@@ -140,6 +140,13 @@ data class CacheSnapshotMessage(
     val payload: CacheSnapshotPayload,
 ) : DevToolsMessage()
 
+@Serializable
+@SerialName("SNAPSHOT_FEATURE_FLAGS")
+data class FeatureFlagsSnapshotMessage(
+    override val sequence: Long,
+    val flags: List<FeatureFlag>,
+) : DevToolsMessage()
+
 /**
  * Reports the current state of device-wide VPN throttling back to the desktop.
  *
@@ -500,4 +507,5 @@ data class InitialStatePayload(
     val vpnThrottleSupported: Boolean = false,
     val vpnThrottleState: VpnThrottleState = VpnThrottleState.OFF,
     val vpnThrottleActiveProfile: ThrottleProfile? = null,
+    val featureFlags: List<FeatureFlag> = emptyList(),
 )

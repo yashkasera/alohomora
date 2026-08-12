@@ -83,6 +83,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DatabasePan
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.FeatureFlagsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceWaterfallSideSheet
@@ -94,6 +95,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseVie
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
@@ -120,6 +122,7 @@ fun DevToolsDesktopApp(
     logcatViewModel: LogcatViewModel,
     databaseViewModel: DatabaseViewModel,
     cacheViewModel: CacheViewModel,
+    featureFlagsViewModel: FeatureFlagViewModel,
     tracesViewModel: TracesViewModel,
     eventsViewModel: EventsViewModel,
     trafficViewModel: TrafficViewModel,
@@ -439,6 +442,7 @@ fun DevToolsDesktopApp(
 
                             DesktopSection.Events -> EventsPanel(eventsViewModel = eventsViewModel)
                             DesktopSection.Cache -> CachePanel(cacheViewModel = cacheViewModel)
+                            DesktopSection.FeatureFlags -> FeatureFlagsPanel(featureFlagsViewModel = featureFlagsViewModel)
                             DesktopSection.Errors -> ErrorsPanel(devToolsViewModel = devToolsViewModel)
                             DesktopSection.Config -> ConfigPanel(devToolsViewModel = devToolsViewModel)
                             DesktopSection.GitHistory -> GitHistoryPanel(devToolsViewModel = devToolsViewModel)

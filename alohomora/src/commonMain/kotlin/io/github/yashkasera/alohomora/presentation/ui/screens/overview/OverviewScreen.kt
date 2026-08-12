@@ -78,6 +78,7 @@ import io.github.yashkasera.alohomora.ui.icons.Key
 import io.github.yashkasera.alohomora.ui.icons.Layers
 import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
+import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
 import io.github.yashkasera.alohomora.ui.icons.Waypoints
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.brand
@@ -135,6 +136,13 @@ private val builtInModules = listOf(
         icon = Icons.Key,
         isInverse = false,
         route = Routes.Cache,
+    ),
+    OverviewModule(
+        title = "Feature Flags",
+        subtitle = "FLAGS & CONFIG",
+        icon = Icons.ToggleLeft,
+        isInverse = false,
+        route = Routes.FeatureFlags,
     ),
     OverviewModule(
         title = "Config",

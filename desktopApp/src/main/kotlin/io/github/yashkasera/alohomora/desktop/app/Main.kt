@@ -326,6 +326,7 @@ fun main() {
                                     logcatViewModel = session.composition.logcatViewModel,
                                     databaseViewModel = session.composition.databaseViewModel,
                                     cacheViewModel = session.composition.cacheViewModel,
+                                    featureFlagsViewModel = session.composition.featureFlagsViewModel,
                                     tracesViewModel = session.composition.tracesViewModel,
                                     eventsViewModel = session.composition.eventsViewModel,
                                     trafficViewModel = session.composition.trafficViewModel,

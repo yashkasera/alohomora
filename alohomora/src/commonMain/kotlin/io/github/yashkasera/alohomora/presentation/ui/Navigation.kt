@@ -14,6 +14,7 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.database.DatabaseS
 import io.github.yashkasera.alohomora.presentation.ui.screens.error.detail.ErrorDetailsScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.error.list.ErrorScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.events.EventsScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.featureflags.FeatureFlagsScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.githistory.GitHistoryScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.overview.OverviewScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail.TrafficDetailsScreen
@@ -67,6 +68,10 @@ internal fun AlohomoraNavHost(
 
         composable<Routes.Cache> {
             CacheScreen(onBackClick = navController::navigateUp)
+        }
+
+        composable<Routes.FeatureFlags> {
+            FeatureFlagsScreen(onBackClick = navController::navigateUp)
         }
 
         composable<Routes.Config> {

@@ -9,6 +9,7 @@ import io.github.yashkasera.alohomora.desktop.data.local.CacheStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
+import io.github.yashkasera.alohomora.desktop.data.local.FeatureFlagStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
 import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
@@ -58,6 +59,7 @@ class DesktopAppComposition(
     val logcatViewModel: LogcatViewModel
     val databaseViewModel: DatabaseViewModel
     val cacheViewModel: CacheViewModel
+    val featureFlagsViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel
     val tracesViewModel: TracesViewModel
     val eventsViewModel: EventsViewModel
     val trafficViewModel: TrafficViewModel
@@ -77,6 +79,7 @@ class DesktopAppComposition(
         val trafficStore = TrafficStore()
         val databaseSnapshotStore = DatabaseSnapshotStore()
         val cacheStore = CacheStore()
+        val featureFlagStore = FeatureFlagStore()
         val buildMetadataStore = BuildMetadataStore()
         val gitHistoryStore = GitHistoryStore()
         val replayStore = ReplayStore()
@@ -89,6 +92,7 @@ class DesktopAppComposition(
             trafficStore = trafficStore,
             databaseStore = databaseSnapshotStore,
             cacheStore = cacheStore,
+            featureFlagStore = featureFlagStore,
             buildMetadataStore = buildMetadataStore,
             gitHistoryStore = gitHistoryStore,
             replayStore = replayStore,
@@ -181,6 +185,9 @@ class DesktopAppComposition(
             requestCacheValueUseCase = requestCacheValueUseCase,
         )
 
+        featureFlagsViewModel = io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel(
+            repository = devToolsRepository,
+        )
         tracesViewModel = TracesViewModel(repository = devToolsRepository)
         eventsViewModel = EventsViewModel(repository = devToolsRepository)
         trafficViewModel = TrafficViewModel(repository = devToolsRepository)
@@ -201,6 +208,7 @@ class DesktopAppComposition(
         logcatViewModel.close()
         databaseViewModel.close()
         cacheViewModel.close()
+        featureFlagsViewModel.close()
         tracesViewModel.close()
         eventsViewModel.close()
         trafficViewModel.close()

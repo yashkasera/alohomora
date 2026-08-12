@@ -98,6 +98,11 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
             implementation(libs.androidx.startup.runtime)
+
+            // compileOnly: syncFirebaseRemoteConfig() compiles against it but consumers who
+            // don't use Firebase never see the transitive dependency. Consumers who do already
+            // declare firebase-config themselves, so the class is present at runtime.
+            compileOnly(libs.firebase.config)
         }
 
         iosMain.dependencies {

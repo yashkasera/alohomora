@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.desktop.domain.repository
 
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -38,6 +39,7 @@ interface DevToolsRepository {
     val traffic: StateFlow<List<TrafficEntry>>
     val databaseSnapshot: StateFlow<DatabaseSnapshot>
     val cacheState: StateFlow<CacheState>
+    val featureFlags: StateFlow<List<FeatureFlag>>
     val buildInfo: StateFlow<BuildInfo?>
     val gitHistory: StateFlow<List<GitHistoryCommit>>
     val replayState: StateFlow<ReplayState>

@@ -32,5 +32,17 @@ class AndroidApp : Application() {
         // anything has made a request yet, and a lazy `single` would leave replay unavailable until
         // the first one.
         Alohomora.registerReplayHandler(ktorReplayHandler(koin.get<HttpClient>()))
+
+        Alohomora.recordFeatureFlag("dark_mode_v2", "true", source = "Firebase Remote Config", type = "feature_flag")
+        Alohomora.recordFeatureFlag("checkout_redesign", "false", source = "Firebase Remote Config", type = "experiment")
+        Alohomora.recordFeatureFlag("max_cart_items", "25", source = "LaunchDarkly", type = "remote_config")
+        Alohomora.recordFeatureFlag(
+            "onboarding_flow",
+            "variant_b",
+            source = "LaunchDarkly",
+            type = "experiment",
+            metadata = mapOf("cohort" to "new_users", "rollout_pct" to "50"),
+        )
+        Alohomora.recordFeatureFlag("enable_search_v3", "true", type = "feature_flag")
     }
 }

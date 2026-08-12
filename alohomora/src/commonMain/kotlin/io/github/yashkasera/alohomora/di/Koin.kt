@@ -6,6 +6,7 @@ import io.github.yashkasera.alohomora.data.repository.EventsRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.SpanRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.TrafficRepositoryImpl
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
+import io.github.yashkasera.alohomora.devtools.FeatureFlagStore
 import io.github.yashkasera.alohomora.domain.repository.ErrorRepository
 import io.github.yashkasera.alohomora.domain.repository.EventsRepository
 import io.github.yashkasera.alohomora.domain.repository.SpanRepository
@@ -24,6 +25,7 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.database.DatabaseV
 import io.github.yashkasera.alohomora.presentation.ui.screens.error.detail.ErrorDetailsViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.error.list.ErrorViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.events.EventsViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.featureflags.FeatureFlagsViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.githistory.GitHistoryViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.overview.OverviewViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.traces.detail.TraceDetailsViewModel
@@ -67,7 +69,8 @@ internal val appModule = module {
     single<ErrorRepository> { ErrorRepositoryImpl(get()) }
     single<SpanRepository> { SpanRepositoryImpl(get()) }
 
-    single { DevToolsRuntime(get(), get(), get(), get(), get(), get()) }
+    single { FeatureFlagStore() }
+    single { DevToolsRuntime(get(), get(), get(), get(), get(), get(), get()) }
 
 
     // UseCases
@@ -100,6 +103,7 @@ internal val appModule = module {
     viewModel { EventsViewModel(get()) }
     viewModel { DatabaseViewModel(get()) }
     viewModel { CacheViewModel(get()) }
+    viewModel { FeatureFlagsViewModel(get()) }
     viewModel { GitHistoryViewModel() }
     viewModel { ErrorViewModel(get()) }
     viewModel { (errorId: Long) -> ErrorDetailsViewModel(errorId, get(), get()) }

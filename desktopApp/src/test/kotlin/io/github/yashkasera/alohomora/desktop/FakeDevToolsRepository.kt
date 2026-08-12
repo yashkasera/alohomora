@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.desktop
 
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.ThrottleProfile
@@ -48,6 +49,7 @@ class FakeDevToolsRepository(
     override val vpnState = MutableStateFlow(VpnThrottleState.OFF)
     override val traffic = MutableStateFlow<List<TrafficEntry>>(emptyList())
     override val databaseSnapshot = MutableStateFlow(DatabaseSnapshot())
+    override val featureFlags = MutableStateFlow<List<FeatureFlag>>(emptyList())
     override val buildInfo = MutableStateFlow<BuildInfo?>(null)
     override val gitHistory = MutableStateFlow<List<GitHistoryCommit>>(emptyList())
     override val replayState = MutableStateFlow(ReplayState())

@@ -59,6 +59,31 @@ sealed interface io.github.yashkasera.alohomora.replay/ReplayOutcome { // io.git
     }
 }
 
+final class io.github.yashkasera.alohomora.common/FeatureFlag { // io.github.yashkasera.alohomora.common/FeatureFlag|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ...) // io.github.yashkasera.alohomora.common/FeatureFlag.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
+
+    final val key // io.github.yashkasera.alohomora.common/FeatureFlag.key|{}key[0]
+        final fun <get-key>(): kotlin/String // io.github.yashkasera.alohomora.common/FeatureFlag.key.<get-key>|<get-key>(){}[0]
+    final val metadata // io.github.yashkasera.alohomora.common/FeatureFlag.metadata|{}metadata[0]
+        final fun <get-metadata>(): kotlin.collections/Map<kotlin/String, kotlin/String>? // io.github.yashkasera.alohomora.common/FeatureFlag.metadata.<get-metadata>|<get-metadata>(){}[0]
+    final val source // io.github.yashkasera.alohomora.common/FeatureFlag.source|{}source[0]
+        final fun <get-source>(): kotlin/String? // io.github.yashkasera.alohomora.common/FeatureFlag.source.<get-source>|<get-source>(){}[0]
+    final val type // io.github.yashkasera.alohomora.common/FeatureFlag.type|{}type[0]
+        final fun <get-type>(): kotlin/String? // io.github.yashkasera.alohomora.common/FeatureFlag.type.<get-type>|<get-type>(){}[0]
+    final val value // io.github.yashkasera.alohomora.common/FeatureFlag.value|{}value[0]
+        final fun <get-value>(): kotlin/String // io.github.yashkasera.alohomora.common/FeatureFlag.value.<get-value>|<get-value>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.yashkasera.alohomora.common/FeatureFlag.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.yashkasera.alohomora.common/FeatureFlag.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // io.github.yashkasera.alohomora.common/FeatureFlag.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // io.github.yashkasera.alohomora.common/FeatureFlag.component4|component4(){}[0]
+    final fun component5(): kotlin.collections/Map<kotlin/String, kotlin/String>? // io.github.yashkasera.alohomora.common/FeatureFlag.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ...): io.github.yashkasera.alohomora.common/FeatureFlag // io.github.yashkasera.alohomora.common/FeatureFlag.copy|copy(kotlin.String;kotlin.String;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yashkasera.alohomora.common/FeatureFlag.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yashkasera.alohomora.common/FeatureFlag.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yashkasera.alohomora.common/FeatureFlag.toString|toString(){}[0]
+}
+
 final class io.github.yashkasera.alohomora.common/SpanEvent { // io.github.yashkasera.alohomora.common/SpanEvent|null[0]
     constructor <init>(kotlin/String, kotlin/Long, kotlin.collections/Map<kotlin/String, kotlin/String>? = ...) // io.github.yashkasera.alohomora.common/SpanEvent.<init>|<init>(kotlin.String;kotlin.Long;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
 
@@ -111,6 +136,7 @@ final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.
         final fun <get-isReplaySupported>(): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.isReplaySupported.<get-isReplaySupported>|<get-isReplaySupported>(){}[0]
 
     final fun clearAppDatabaseOverrides() // io.github.yashkasera.alohomora/Alohomora.clearAppDatabaseOverrides|clearAppDatabaseOverrides(){}[0]
+    final fun clearFeatureFlags() // io.github.yashkasera.alohomora/Alohomora.clearFeatureFlags|clearFeatureFlags(){}[0]
     final fun clearReplayHandler() // io.github.yashkasera.alohomora/Alohomora.clearReplayHandler|clearReplayHandler(){}[0]
     final fun excludeAppDatabase(kotlin/String) // io.github.yashkasera.alohomora/Alohomora.excludeAppDatabase|excludeAppDatabase(kotlin.String){}[0]
     final fun getPlugins(): kotlin.collections/List<io.github.yashkasera.alohomora.plugin/CustomScreenPlugin> // io.github.yashkasera.alohomora/Alohomora.getPlugins|getPlugins(){}[0]
@@ -118,17 +144,20 @@ final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.
     final fun recordError(kotlin/String, kotlin/String? = ..., kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.recordError|recordError(kotlin.String;kotlin.String?;kotlin.String?){}[0]
     final fun recordError(kotlin/Throwable, kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.recordError|recordError(kotlin.Throwable;kotlin.String?){}[0]
     final fun recordEvent(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String>? = ...) // io.github.yashkasera.alohomora/Alohomora.recordEvent|recordEvent(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
+    final fun recordFeatureFlag(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ...) // io.github.yashkasera.alohomora/Alohomora.recordFeatureFlag|recordFeatureFlag(kotlin.String;kotlin.String;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
     final fun recordSpan(kotlin/String, kotlin/Long, kotlin.collections/Map<kotlin/String, kotlin/String>? = ...) // io.github.yashkasera.alohomora/Alohomora.recordSpan|recordSpan(kotlin.String;kotlin.Long;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
     final fun recordSpan(kotlin/String, kotlin/String, kotlin/String, kotlin/Long, kotlin/Long, kotlin/String? = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ..., kotlin.collections/List<io.github.yashkasera.alohomora.common/SpanEvent> = ..., kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.recordSpan|recordSpan(kotlin.String;kotlin.String;kotlin.String;kotlin.Long;kotlin.Long;kotlin.String?;kotlin.String;kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>?;kotlin.collections.List<io.github.yashkasera.alohomora.common.SpanEvent>;kotlin.String?){}[0]
     final fun recordTraffic(kotlin/String = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>>? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>>? = ..., kotlin/Long? = ..., kotlin/Long? = ...) // io.github.yashkasera.alohomora/Alohomora.recordTraffic|recordTraffic(kotlin.String;kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Long?;kotlin.Long?;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>?;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>?;kotlin.Long?;kotlin.Long?){}[0]
     final fun registerAppDatabase(kotlin/String, kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.registerAppDatabase|registerAppDatabase(kotlin.String;kotlin.String?){}[0]
     final fun registerPlugin(io.github.yashkasera.alohomora.plugin/CustomScreenPlugin) // io.github.yashkasera.alohomora/Alohomora.registerPlugin|registerPlugin(io.github.yashkasera.alohomora.plugin.CustomScreenPlugin){}[0]
     final fun registerReplayHandler(io.github.yashkasera.alohomora.replay/TrafficReplayHandler) // io.github.yashkasera.alohomora/Alohomora.registerReplayHandler|registerReplayHandler(io.github.yashkasera.alohomora.replay.TrafficReplayHandler){}[0]
+    final fun setFeatureFlags(kotlin.collections/List<io.github.yashkasera.alohomora.common/FeatureFlag>, kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.setFeatureFlags|setFeatureFlags(kotlin.collections.List<io.github.yashkasera.alohomora.common.FeatureFlag>;kotlin.String?){}[0]
     final fun startDevToolsServer(kotlin/Int = ...): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.startDevToolsServer|startDevToolsServer(kotlin.Int){}[0]
     final fun stopDevToolsServer() // io.github.yashkasera.alohomora/Alohomora.stopDevToolsServer|stopDevToolsServer(){}[0]
     final fun unregisterPlugin(kotlin/String): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.unregisterPlugin|unregisterPlugin(kotlin.String){}[0]
 }
 
+final val io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_FeatureFlag$stableprop // io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_FeatureFlag$stableprop|#static{}io_github_yashkasera_alohomora_common_FeatureFlag$stableprop[0]
 final val io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_SpanEvent$stableprop // io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_SpanEvent$stableprop|#static{}io_github_yashkasera_alohomora_common_SpanEvent$stableprop[0]
 final val io.github.yashkasera.alohomora.network/AlohomoraInspector // io.github.yashkasera.alohomora.network/AlohomoraInspector|{}AlohomoraInspector[0]
     final fun <get-AlohomoraInspector>(): io.ktor.client.plugins.api/ClientPlugin<kotlin/Unit> // io.github.yashkasera.alohomora.network/AlohomoraInspector.<get-AlohomoraInspector>|<get-AlohomoraInspector>(){}[0]
@@ -137,6 +166,7 @@ final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_r
 final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop[0]
 final val io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop // io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop|#static{}io_github_yashkasera_alohomora_Alohomora$stableprop[0]
 
+final fun io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_FeatureFlag$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_FeatureFlag$stableprop_getter|io_github_yashkasera_alohomora_common_FeatureFlag$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_SpanEvent$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_SpanEvent$stableprop_getter|io_github_yashkasera_alohomora_common_SpanEvent$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop_getter(){}[0]

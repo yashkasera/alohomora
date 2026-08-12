@@ -14,6 +14,8 @@ import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.EnvelopeRead
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.FeatureFlag
+import io.github.yashkasera.alohomora.common.FeatureFlagsSnapshotMessage
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.PingMessage
@@ -43,6 +45,7 @@ import io.github.yashkasera.alohomora.desktop.data.local.BuildMetadataStore
 import io.github.yashkasera.alohomora.desktop.data.local.CacheStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
+import io.github.yashkasera.alohomora.desktop.data.local.FeatureFlagStore
 import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
@@ -86,6 +89,7 @@ class DevToolsRepositoryImpl(
     private val trafficStore: TrafficStore,
     private val databaseStore: DatabaseSnapshotStore,
     private val cacheStore: CacheStore,
+    private val featureFlagStore: FeatureFlagStore,
     private val buildMetadataStore: BuildMetadataStore,
     private val gitHistoryStore: GitHistoryStore,
     private val replayStore: ReplayStore,
@@ -115,6 +119,7 @@ class DevToolsRepositoryImpl(
     override val traffic: StateFlow<List<TrafficEntry>> = trafficStore.logs
     override val databaseSnapshot: StateFlow<DatabaseSnapshot> = databaseStore.snapshot
     override val cacheState: StateFlow<CacheState> = cacheStore.state
+    override val featureFlags: StateFlow<List<FeatureFlag>> = featureFlagStore.flags
     override val buildInfo: StateFlow<BuildInfo?> = buildMetadataStore.buildInfo
     override val gitHistory: StateFlow<List<GitHistoryCommit>> = gitHistoryStore.commits
     override val replayState: StateFlow<ReplayState> = replayStore.state
@@ -482,6 +487,7 @@ class DevToolsRepositoryImpl(
                     )
                     databaseStore.replaceSchema(payload.databaseSchema.toDomain())
                     cacheStore.replaceKeys(payload.cacheKeys)
+                    featureFlagStore.replace(payload.featureFlags)
                     buildMetadataStore.replace(payload.buildMetadata?.toDomain())
                     gitHistoryStore.replace(payload.gitHistory.map { it.toDomain() })
                     replayStore.setSupported(payload.replaySupported)
@@ -548,6 +554,12 @@ class DevToolsRepositoryImpl(
                 }
             }
 
+            is FeatureFlagsSnapshotMessage -> {
+                withContext(Dispatchers.Default) {
+                    featureFlagStore.replace(message.flags)
+                }
+            }
+
             is VpnStateMessage -> {
                 _vpnState.value = message.state
             }
@@ -573,6 +585,7 @@ class DevToolsRepositoryImpl(
         trafficStore.clear()
         databaseStore.clear()
         cacheStore.clear()
+        featureFlagStore.clear()
         buildMetadataStore.clear()
         gitHistoryStore.clear()
         replayStore.clear()

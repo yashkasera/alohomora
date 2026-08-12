@@ -15,6 +15,7 @@ import io.github.yashkasera.alohomora.ui.icons.ScrollText
 import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
 import io.github.yashkasera.alohomora.ui.icons.Terminal
+import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
 import io.github.yashkasera.alohomora.ui.icons.Waypoints
 
 enum class DesktopSection(
@@ -42,6 +43,7 @@ enum class DesktopSection(
     Events("Events", Icons.Activity),
     Database("Database", Icons.Database),
     Cache("Cache", Icons.Key),
+    FeatureFlags("Feature Flags", Icons.ToggleLeft),
     Errors("Errors", Icons.AlertTriangle),
     Config("Config", Icons.SlidersHorizontal),
     GitHistory("Git History", Icons.GitGraph),

@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora
 
+import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.SpanEvent
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.replay.TrafficReplayHandler
@@ -173,6 +174,38 @@ object Alohomora {
     }
 
     val isReplaySupported: Boolean get() = false
+
+    // ============================================================================
+    // Feature Flags - No-op
+    // ============================================================================
+
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    @JvmOverloads
+    fun recordFeatureFlag(
+        key: String,
+        value: String,
+        source: String? = null,
+        type: String? = null,
+        metadata: Map<String, String>? = null,
+    ) {
+        /* no-op */
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    @JvmOverloads
+    fun setFeatureFlags(
+        flags: List<FeatureFlag>,
+        source: String? = null,
+    ) {
+        /* no-op */
+    }
+
+    @JvmStatic
+    fun clearFeatureFlags() {
+        /* no-op */
+    }
 
     // ============================================================================
     // Plugin System - No-op
