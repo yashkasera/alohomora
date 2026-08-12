@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
@@ -114,7 +115,7 @@ internal fun TrafficDetailsContent(
                             .padding(horizontal = MaterialTheme.dimens.margin.xxl)
                             .padding(top = MaterialTheme.dimens.margin.xxl),
                     ) {
-                        OverviewTab(trace = trace)
+                        OverviewTab(entry = trace)
                     }
                 }
 
@@ -148,26 +149,36 @@ internal fun TrafficDetailsContent(
 // ============================================================================
 
 @Composable
-private fun OverviewTab(trace: TrafficEntry) {
+private fun OverviewTab(entry: TrafficEntry) {
     // Method badge and endpoint
     MethodAndEndpointSection(
-        method = trace.method.orEmpty(),
-        url = trace.pathWithQuery(),
+        method = entry.method.orEmpty(),
+        url = entry.pathWithQuery(),
     )
+
+    if (entry.mockedBy != null) {
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+        AlohomoraChip(
+            label = "Mocked",
+            uppercase = false,
+            containerColor = MaterialTheme.colorScheme.tertiary,
+            contentColor = MaterialTheme.colorScheme.onTertiary,
+        )
+    }
 
     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
 
     // Calculate sizes from content
-    val requestSize = trace.requestSize ?: 0
-    val responseSize = trace.responseSize ?: 0L
+    val requestSize = entry.requestSize ?: 0
+    val responseSize = entry.responseSize ?: 0L
 
     // Detect format from Content-Type header
-    val responseFormat = detectFormatFromContentType(trace.responseContentType)
+    val responseFormat = detectFormatFromContentType(entry.responseContentType)
 
     // Hero stats (STATUS, LATENCY, SIZE, FORMAT)
     HeroStatsSection(
-        statusCode = trace.status ?: 0,
-        latencyMs = trace.duration ?: 0,
+        statusCode = entry.status ?: 0,
+        latencyMs = entry.duration ?: 0,
         responseSize = responseSize,
         requestSize = requestSize,
         format = responseFormat,
@@ -176,7 +187,7 @@ private fun OverviewTab(trace: TrafficEntry) {
     AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.xxxl))
 
     // Info rows with all TrafficEntry fields
-    InfoRowsSection(trace = trace)
+    InfoRowsSection(trace = entry)
 
     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.huge))
 }
@@ -408,12 +419,7 @@ private fun HeroStatsSection(
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
-                text = statusCode.toString(),
-                style = MaterialTheme.typography.displayMedium,
-            )
-            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
-            Text(
-                text = getStatusText(statusCode),
+                text = HttpStatusCode.fromValue(statusCode).toString(),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.sm),
@@ -680,22 +686,6 @@ private fun ResponseMetadata(
 // Helper Functions
 // ============================================================================
 
-private fun getStatusText(statusCode: Int): String {
-    return when (statusCode) {
-        200 -> "OK"
-        201 -> "Created"
-        204 -> "No Content"
-        400 -> "Bad Request"
-        401 -> "Unauthorized"
-        403 -> "Forbidden"
-        404 -> "Not Found"
-        500 -> "Internal Server Error"
-        502 -> "Bad Gateway"
-        503 -> "Service Unavailable"
-        else -> ""
-    }
-}
-
 /**
  * Formats bytes to human-readable format (B, KB, MB, GB)
  */
@@ -734,4 +724,5 @@ private fun formatHeaders(headers: Map<String, List<String>>?): List<String> {
  * Detects content format from Content-Type header
  */
 private fun detectFormatFromContentType(contentType: String?): ContentType =
-    ContentType.parse(contentType ?: "")
+    if (contentType.isNullOrBlank()) ContentType.Any
+    else try { ContentType.parse(contentType) } catch (_: Exception) { ContentType.Any }

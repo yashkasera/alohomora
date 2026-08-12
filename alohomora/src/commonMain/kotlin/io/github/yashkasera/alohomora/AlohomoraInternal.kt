@@ -42,6 +42,7 @@ internal object AlohomoraInternal {
             responseHeaders = trace.responseHeaders,
             requestSize = trace.requestSize,
             responseSize = trace.responseSize,
+            mockedBy = trace.mockedBy,
         )
     }
 }

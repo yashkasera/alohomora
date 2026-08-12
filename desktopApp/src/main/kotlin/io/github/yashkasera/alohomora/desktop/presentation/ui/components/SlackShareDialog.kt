@@ -2,16 +2,14 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,14 +46,14 @@ fun SlackShareDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md)) {
                 if (isConfigured) {
-                    OutlinedTextField(
+                    AlohomoraTextField(
                         value = email,
                         onValueChange = {
                             email = it
                             if (shareError != null) onClearError()
                         },
-                        label = { Text("Recipient Email") },
-                        placeholder = { Text("abc.xyz@example.org") },
+                        label = "Recipient Email",
+                        placeholder = "abc.xyz@example.org",
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -65,23 +63,24 @@ fun SlackShareDialog(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     if (onShareCurl != null) {
-                        Button(
+                        AlohomoraFilledButton(
+                            text = "Share cURL to Slack",
                             onClick = { onShareCurl(email) },
                             enabled = email.isNotBlank(),
                             modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("Share cURL to Slack")
-                        }
+                            uppercase = false,
+                        )
                     }
-                    Button(
+                    AlohomoraFilledButton(
+                        text = shareTextLabel,
                         onClick = { onShareText(email) },
                         enabled = email.isNotBlank(),
                         modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Icon(imageVector = Icons.Copy, contentDescription = null)
-                        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                        Text(shareTextLabel)
-                    }
+                        uppercase = false,
+                        leadingIcon = {
+                            Icon(imageVector = Icons.Copy, contentDescription = null)
+                        },
+                    )
                     if (!shareError.isNullOrBlank()) {
                         Text(
                             text = shareError,
@@ -115,9 +114,10 @@ fun SlackShareDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
-            }
+            AlohomoraTextButton(
+                text = "Close",
+                onClick = onDismiss,
+            )
         },
     )
 }

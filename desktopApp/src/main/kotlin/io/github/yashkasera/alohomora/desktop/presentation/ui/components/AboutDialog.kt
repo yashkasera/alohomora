@@ -15,7 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -106,15 +106,14 @@ fun AboutDialog(
                     )
 
                     if (updateInfo != null && updateInfo.isUpdateAvailable) {
-                        TextButton(onClick = {
-                            try { Desktop.getDesktop().browse(URI(updateInfo.htmlUrl)) } catch (_: Exception) {}
-                        }) {
-                            Text(
-                                "v${updateInfo.latestVersion} available",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                        }
+                        AlohomoraTextButton(
+                            text = "v${updateInfo.latestVersion} available",
+                            onClick = {
+                                try { Desktop.getDesktop().browse(URI(updateInfo.htmlUrl)) } catch (_: Exception) {}
+                            },
+                            uppercase = false,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
@@ -136,21 +135,20 @@ fun AboutDialog(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    TextButton(onClick = {
-                        try { Desktop.getDesktop().browse(URI(REPO_URL)) } catch (_: Exception) {}
-                    }) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-                        ) {
+                    AlohomoraTextButton(
+                        text = "GitHub",
+                        onClick = {
+                            try { Desktop.getDesktop().browse(URI(REPO_URL)) } catch (_: Exception) {}
+                        },
+                        uppercase = false,
+                        leadingIcon = {
                             Icon(
                                 Icons.Globe,
                                 contentDescription = null,
                                 modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
                             )
-                            Text("GitHub")
-                        }
-                    }
+                        },
+                    )
                 }
             }
         }

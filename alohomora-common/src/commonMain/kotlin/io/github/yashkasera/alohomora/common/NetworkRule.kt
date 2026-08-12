@@ -12,6 +12,7 @@ data class ThrottleProfile(
 @Serializable
 data class MockRule(
     val id: String,
+    val name: String? = null,
     val enabled: Boolean = true,
     val urlPattern: String,
     val isRegex: Boolean = false,

@@ -30,5 +30,5 @@ internal data class JsonTree(
     val root: Path,
     val nodes: Map<Path, JsonNode>,
     val children: Map<Path, List<Path>>,
-    val searchIndex: SearchTrie
+    val searchIndex: SearchIndex
 )

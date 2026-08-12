@@ -38,7 +38,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -80,12 +80,14 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.CachePanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ConfigPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DashboardContent
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DatabasePanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DeepLinkBuilderSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.FeatureFlagsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.MockRulesSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceWaterfallSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TracesPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TrafficDetailsSideSheet
@@ -153,6 +155,8 @@ fun DevToolsDesktopApp(
     var recordingDevicePath by remember { mutableStateOf<String?>(null) }
     var recordingLocalPath by remember { mutableStateOf<String?>(null) }
     var selectedTrafficForSheet by remember { mutableStateOf<TrafficEntry?>(null) }
+    var showMockSheet by remember { mutableStateOf(false) }
+    var showDeepLinkBuilder by remember { mutableStateOf(false) }
     // Read from the view model rather than held here: the sheet's whole state (selection, collapse,
     // split) lives there, so a second copy of "which trace is open" could only ever disagree.
     val selectedTraceId by tracesViewModel.selectedTraceId.collectAsState()
@@ -262,6 +266,10 @@ fun DevToolsDesktopApp(
         onClearLogcat = {
             devicesViewModel.runCommand(selectedDeviceId, "logcat -c")
         },
+        onOpenDeepLinkBuilder = {
+            onDismissCommandPalette()
+            showDeepLinkBuilder = true
+        },
     )
 
     val rootFocus = remember { FocusRequester() }
@@ -291,6 +299,10 @@ fun DevToolsDesktopApp(
 
                         showHelp -> {
                             onDismissHelp(); return@onPreviewKeyEvent true
+                        }
+
+                        showDeepLinkBuilder -> {
+                            showDeepLinkBuilder = false; return@onPreviewKeyEvent true
                         }
 
                         selectedTrafficForSheet != null -> {
@@ -414,6 +426,7 @@ fun DevToolsDesktopApp(
                                 onEventViewClick = {},
                                 onTrafficClick = { activeSection = DesktopSection.Traffic },
                                 onEventsClick = { activeSection = DesktopSection.Events },
+                                onOpenDeepLinkBuilder = { showDeepLinkBuilder = true },
                             )
 
                             DesktopSection.Logcat -> LogcatPanel(
@@ -433,6 +446,7 @@ fun DevToolsDesktopApp(
                                 trafficViewModel = trafficViewModel,
                                 networkRulesViewModel = networkRulesViewModel,
                                 onLogClick = { selectedTrafficForSheet = it },
+                                onOpenMockRules = { showMockSheet = true },
                             )
 
                             DesktopSection.Traces -> TracesPanel(
@@ -495,7 +509,31 @@ fun DevToolsDesktopApp(
             TrafficDetailsSideSheet(
                 traffic = selectedTrafficForSheet,
                 devToolsViewModel = devToolsViewModel,
+                networkRulesViewModel = networkRulesViewModel,
                 onDismiss = { selectedTrafficForSheet = null },
+            )
+
+            val mockRules by networkRulesViewModel.mockRules.collectAsState()
+            val mockCurrentSession by networkRulesViewModel.currentSession.collectAsState()
+            val mockSessions by networkRulesViewModel.sessions.collectAsState()
+            MockRulesSideSheet(
+                visible = showMockSheet,
+                rules = mockRules,
+                currentSession = mockCurrentSession,
+                sessions = mockSessions,
+                onAddRule = networkRulesViewModel::addRule,
+                onUpdateRule = networkRulesViewModel::updateRule,
+                onDeleteRule = networkRulesViewModel::deleteRule,
+                onToggleRule = networkRulesViewModel::toggleRule,
+                onToggleAll = networkRulesViewModel::toggleAllRules,
+                onLoadSession = networkRulesViewModel::loadSession,
+                onSaveSession = networkRulesViewModel::saveCurrentSession,
+                onSaveAsSession = networkRulesViewModel::saveAsNewSession,
+                onDeleteSession = networkRulesViewModel::deleteSession,
+                onDetachSession = networkRulesViewModel::detachSession,
+                onExport = networkRulesViewModel::exportSession,
+                onImport = networkRulesViewModel::importFromFile,
+                onDismiss = { showMockSheet = false },
             )
 
             TraceWaterfallSideSheet(
@@ -507,6 +545,19 @@ fun DevToolsDesktopApp(
                 eventsViewModel = eventsViewModel,
                 devToolsViewModel = devToolsViewModel,
                 onDismiss = eventsViewModel::closeEvent,
+            )
+
+            val deepLinkHistory by devicesViewModel.deepLinkHistory.collectAsState()
+            DeepLinkBuilderSideSheet(
+                visible = showDeepLinkBuilder,
+                initialUrl = "",
+                history = deepLinkHistory,
+                onOpen = { url ->
+                    devicesViewModel.openDeepLink(selectedDeviceId, url)
+                },
+                onRemoveHistoryEntry = devicesViewModel::removeDeepLinkEntry,
+                onClearHistory = devicesViewModel::clearDeepLinkHistory,
+                onDismiss = { showDeepLinkBuilder = false },
             )
         }
 
@@ -761,9 +812,12 @@ private fun DeviceErrorBanner(
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f, fill = false),
             )
-            TextButton(onClick = onDismiss) {
-                Text("Dismiss", color = MaterialTheme.colorScheme.onErrorContainer)
-            }
+            AlohomoraTextButton(
+                text = "Dismiss",
+                onClick = onDismiss,
+                uppercase = false,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            )
         }
     }
 }

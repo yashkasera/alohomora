@@ -50,6 +50,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRule
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
 import io.github.yashkasera.alohomora.replay.replayBlockedReason
 import io.github.yashkasera.alohomora.replay.toReplayRequest
+import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
@@ -61,6 +62,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
+import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Repeat
 import io.github.yashkasera.alohomora.ui.icons.Search
@@ -76,6 +78,7 @@ fun TrafficPanel(
     trafficViewModel: TrafficViewModel,
     networkRulesViewModel: NetworkRulesViewModel,
     onLogClick: (TrafficEntry) -> Unit,
+    onOpenMockRules: () -> Unit = {},
 ) {
     val uiState by trafficViewModel.uiState.collectAsState()
     val query by trafficViewModel.query.collectAsState()
@@ -88,6 +91,10 @@ fun TrafficPanel(
                 title = "Traffic",
                 subtitle = trafficSubtitle(uiState),
                 actions = {
+                    NetworkRulesActions(
+                        viewModel = networkRulesViewModel,
+                        onOpenMockRules = onOpenMockRules,
+                    )
                     AlohomoraIconButton(onClick = { showClearConfirmation = true }) {
                         Icon(
                             imageVector = Icons.Trash,
@@ -108,7 +115,6 @@ fun TrafficPanel(
                 onErrorsOnlyChange = trafficViewModel::onErrorsOnlyChange,
                 onClearFilters = trafficViewModel::clearFilters,
             )
-            NetworkRulesToolbar(viewModel = networkRulesViewModel)
             AlohomoraHorizontalDivider()
 
             Box(modifier = Modifier.fillMaxSize()) {
@@ -256,6 +262,7 @@ private const val TRAFFIC_SHEET_WIDTH_FRACTION = 0.5f
 fun TrafficDetailsSideSheet(
     traffic: TrafficEntry?,
     devToolsViewModel: DevToolsViewModel,
+    networkRulesViewModel: NetworkRulesViewModel? = null,
     onDismiss: () -> Unit,
 ) {
     // Keyed on the entry, not bare `remember`: this composable is reused as the selection changes,
@@ -320,6 +327,19 @@ fun TrafficDetailsSideSheet(
                             )
                         }
                     }
+                    if (networkRulesViewModel != null) {
+                        val networkRulesSupported by networkRulesViewModel.networkRulesSupported.collectAsState()
+                        if (networkRulesSupported) {
+                            AlohomoraIconButton(
+                                onClick = { networkRulesViewModel.addRuleFromTraffic(traffic) },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Copy,
+                                    contentDescription = "Create mock from this request",
+                                )
+                            }
+                        }
+                    }
                     AlohomoraIconButton(onClick = { showSlackShareDialog = true }) {
                         Icon(
                             imageVector = Icons.Slack,
@@ -350,8 +370,9 @@ fun TrafficDetailsSideSheet(
         if (showReplayDialog && !replayInFlight && replayError == null) showReplayDialog = false
     }
 
-    if (showReplayDialog && replayRequest != null && traffic != null) {
-        ReplayRequestDialog(
+    if (replayRequest != null && traffic != null) {
+        ReplayRequestSideSheet(
+            visible = showReplayDialog,
             initial = replayRequest,
             inFlight = replayState.isInFlight(traffic.id),
             error = replayState.errorFor(traffic.id),
@@ -359,9 +380,6 @@ fun TrafficDetailsSideSheet(
                 showReplayDialog = false
                 devToolsViewModel.dismissReplayError(traffic.id)
             },
-            // Deliberately stays open: the device answers with a failure often enough — a hand-edited
-            // URL, a refused connection — that closing on send would throw away both the error and
-            // the edits that produced it.
             onSend = devToolsViewModel::replayTraffic,
         )
     }
@@ -444,7 +462,20 @@ private fun DesktopOverviewTab(traffic: TrafficEntry) {
             ),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
-        MethodChip(traffic.method.orEmpty())
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MethodChip(traffic.method.orEmpty())
+            if (traffic.mockedBy != null) {
+                AlohomoraChip(
+                    label = "Mocked",
+                    uppercase = false,
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                )
+            }
+        }
         SelectionContainer {
             Text(
                 text = traffic.pathWithQuery().ifBlank { traffic.url.orEmpty() },
@@ -504,32 +535,37 @@ private fun DesktopRequestTab(traffic: TrafficEntry) {
 
 @Composable
 private fun DesktopResponseTab(traffic: TrafficEntry) {
-    JsonTreeView(
-        json = traffic.responseBody.orEmpty().ifBlank { "{}" },
-        parentContent = {
-            item(key = "response_summary") {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = MaterialTheme.dimens.margin.xl,
-                            vertical = MaterialTheme.dimens.margin.md,
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        text = "Status: ${traffic.status ?: "-"}",
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                    Text(
-                        text = "Duration: ${traffic.duration ?: 0} ms",
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                }
-                AlohomoraHorizontalDivider()
-            }
-        },
-    )
+    Column() {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = MaterialTheme.dimens.margin.xl,
+                    vertical = MaterialTheme.dimens.margin.md,
+                ),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = "Status: ${traffic.status ?: "-"}",
+                style = MaterialTheme.typography.labelMedium,
+            )
+            Text(
+                text = "Duration: ${traffic.duration ?: 0} ms",
+                style = MaterialTheme.typography.labelMedium,
+            )
+        }
+        AlohomoraHorizontalDivider()
+        Box(
+            modifier = Modifier.padding(
+                horizontal = MaterialTheme.dimens.margin.xl,
+                vertical = MaterialTheme.dimens.margin.lg,
+            )
+        ){
+            JsonTreeView(
+                json = traffic.responseBody.orEmpty().ifBlank { "{}" },
+            )
+        }
+    }
 }
 
 

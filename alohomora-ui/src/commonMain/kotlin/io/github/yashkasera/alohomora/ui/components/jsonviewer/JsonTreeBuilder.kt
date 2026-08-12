@@ -8,7 +8,7 @@ internal object JsonTreeBuilder {
 
         val nodes = mutableMapOf<Path, JsonNode>()
         val children = mutableMapOf<Path, List<Path>>()
-        val search = SearchTrie()
+        val search = SearchIndex()
 
         fun walk(el: JsonElement, path: Path, key: String?) {
 

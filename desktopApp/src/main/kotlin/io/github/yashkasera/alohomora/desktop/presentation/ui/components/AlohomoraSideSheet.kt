@@ -15,11 +15,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.theme.dimens
 
 /**
  * The desktop's one right-hand detail sheet: scrim on the left, sliding surface on the right.
@@ -44,6 +49,7 @@ fun AlohomoraSideSheet(
     header: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     widthFraction: Float = 0.5f,
+    floatingActionButton: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
 
@@ -76,16 +82,29 @@ fun AlohomoraSideSheet(
                 modifier = Modifier
                     .fillMaxWidth(widthFraction)
                     .fillMaxHeight(),
-                color = MaterialTheme.colorScheme.secondaryContainer,
+                color = MaterialTheme.colorScheme.primaryContainer,
             ) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    header()
-                    AlohomoraHorizontalDivider()
-                    content()
+                Box {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.primary) {
+                            header()
+                        }
+                        AlohomoraHorizontalDivider()
+                        content()
+                    }
+                    floatingActionButton?.let { floatingActionButton ->
+                        Box(
+                            modifier = Modifier
+                                .padding(MaterialTheme.dimens.margin.xl)
+                                .align(Alignment.BottomEnd),
+                        ) {
+                            floatingActionButton.invoke()
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-private const val SCRIM_ALPHA = 0.30f
+private const val SCRIM_ALPHA = 0.40f

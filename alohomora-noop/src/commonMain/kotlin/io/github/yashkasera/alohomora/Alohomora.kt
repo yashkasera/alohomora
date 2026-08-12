@@ -58,6 +58,7 @@ object Alohomora {
         responseHeaders: Map<String, List<String>>? = null,
         requestSize: Long? = null,
         responseSize: Long? = null,
+        mockedBy: String? = null,
     ) {
         /* no-op */
     }

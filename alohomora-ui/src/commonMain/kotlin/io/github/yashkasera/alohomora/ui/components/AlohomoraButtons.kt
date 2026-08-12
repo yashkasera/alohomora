@@ -232,6 +232,7 @@ fun AlohomoraIconButton(
             modifier = modifier,
             enabled = enabled,
             content = content,
+            shape = MaterialTheme.shapes.medium
         )
         AlohomoraIconButtonStyle.FILLED -> FilledIconButton(
             onClick = onClick,
@@ -241,6 +242,7 @@ fun AlohomoraIconButton(
                 containerColor = MaterialTheme.colorScheme.onBackground,
                 contentColor = MaterialTheme.colorScheme.background,
             ),
+            shape = MaterialTheme.shapes.medium,
             content = content,
         )
         AlohomoraIconButtonStyle.OUTLINED -> OutlinedIconButton(
@@ -250,6 +252,7 @@ fun AlohomoraIconButton(
             colors = IconButtonDefaults.outlinedIconButtonColors(
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ),
+            shape = MaterialTheme.shapes.medium,
             content = content,
         )
         AlohomoraIconButtonStyle.TONAL -> FilledTonalIconButton(
@@ -260,6 +263,7 @@ fun AlohomoraIconButton(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
+            shape = MaterialTheme.shapes.medium,
             content = content,
         )
     }

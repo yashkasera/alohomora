@@ -347,7 +347,6 @@ internal class DevToolsRuntime(
             control.close()
             stream.close()
             socket.close()
-            NetworkRuleEngine.clear()
             if (activeConnection === this) {
                 activeConnection = null
                 _serverState.value = _serverState.value.copy(hasClient = false, pendingOtp = null)

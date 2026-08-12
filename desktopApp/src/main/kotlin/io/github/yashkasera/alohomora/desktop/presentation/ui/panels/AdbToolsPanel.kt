@@ -23,7 +23,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,6 +43,7 @@ import io.github.yashkasera.alohomora.desktop.util.pickApkPath
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.theme.brand
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -67,7 +67,6 @@ fun AdbToolsPanel(
     var packageName by remember { mutableStateOf("") }
     var packageEdited by remember { mutableStateOf(false) }
     var apkPath by remember { mutableStateOf("") }
-    var deepLinkUrl by remember { mutableStateOf("") }
     var isRecording by remember { mutableStateOf(false) }
     var recordingDevicePath by remember { mutableStateOf<String?>(null) }
     var recordingLocalPath by remember { mutableStateOf<String?>(null) }
@@ -89,91 +88,31 @@ fun AdbToolsPanel(
         topBar = {
             AlohomoraTopBar(
                 title = "ADB Shortcuts",
-                subtitle = "Common device actions for developers and QA",
+                subtitle = if (isDeviceSelected) "Device: $selectedDeviceId" else "No device selected",
             )
         },
         snackbarHost = {
-            SnackbarHost(
-                hostState = devicesViewModel.snackbarHostState,
-            )
+            SnackbarHost(hostState = devicesViewModel.snackbarHostState)
         },
         bottomBar = {
-            Column(
-                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
-            ) {
-                AlohomoraHorizontalDivider()
-                Column(modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.lg, vertical = MaterialTheme.dimens.margin.sm)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            "ADB Console",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        TextButton(
-                            onClick = {
-                                consoleExpanded = !consoleExpanded
-                            },
-                        ) {
-                            Text(
-                                if (consoleExpanded) "Hide" else "Show",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.brand,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-                    }
-                    if (consoleExpanded) {
-                        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
-                        val rendered = adbCommandHistory.asReversed()
-                        if (rendered.isEmpty()) {
-                            Text(
-                                "No commands yet.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.secondary,
-                            )
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxWidth().height(220.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.surfaceContainerLow,
-                                        RoundedCornerShape(6.dp),
-                                    )
-                                    .padding(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                items(rendered) { entry ->
-                                    Text(
-                                        text = formatLogEntry(entry),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontFamily = FontFamily.Monospace,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            AdbConsoleBar(
+                expanded = consoleExpanded,
+                onToggle = { consoleExpanded = !consoleExpanded },
+                history = adbCommandHistory,
+            )
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-    ) {
+    ) { padding ->
         Column(
             modifier = Modifier
                 .verticalScroll(scrollState)
-                .padding(it)
+                .padding(padding)
                 .padding(horizontal = 40.dp, vertical = 20.dp)
                 .fillMaxWidth(),
         ) {
-            SectionHeader("App Targets")
-            AdbRow(
-                title = "App package",
-                subtitle = buildInfo?.packageName?.let { "Detected: $it" }
-                    ?: "Set the app package for app actions",
-            ) {
+            // --- App ---
+            SectionHeader("App")
+            AdbRow(title = "Package", subtitle = buildInfo?.packageName?.let { "Detected: $it" }) {
                 AlohomoraTextField(
                     value = packageName,
                     onValueChange = {
@@ -181,104 +120,16 @@ fun AdbToolsPanel(
                         packageName = it
                     },
                     placeholder = "com.example.app",
-                    singleLine = true,
                     modifier = Modifier.widthIn(min = 240.dp, max = 360.dp),
                 )
             }
-            AdbRow(
-                title = "Deep link URL",
-                subtitle = "Launch a deep link in the app",
-            ) {
-                AlohomoraTextField(
-                    value = deepLinkUrl,
-                    onValueChange = { deepLinkUrl = it },
-                    placeholder = "myapp://home",
-                    singleLine = true,
-                    modifier = Modifier.widthIn(min = 240.dp, max = 360.dp),
-                )
-            }
-            AdbRow(
-                title = "Install APK",
-                subtitle = "Install or update an APK on the device",
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    AlohomoraTextField(
-                        value = apkPath,
-                        onValueChange = { apkPath = it },
-                        placeholder = "APK path",
-                        singleLine = true,
-                        modifier = Modifier.widthIn(min = 240.dp, max = 360.dp),
-                    )
-                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                    AlohomoraFilledButton(
-                        text = "Browse",
-                        onClick = {
-                            val picked = pickApkPath()
-                            if (!picked.isNullOrBlank()) {
-                                apkPath = picked
-                            }
-                        },
-                    )
-                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                    AlohomoraFilledButton(
-                        text = "Install",
-                        onClick = { devicesViewModel.installApk(selectedDeviceId, apkPath) },
-                        enabled = isDeviceSelected,
-                    )
-                }
-            }
-            AdbRow(
-                title = "Uninstall app",
-                subtitle = "Remove the app from the device",
-            ) {
-                AdbActionButton(
-                    text = "Uninstall",
-                    enabled = isDeviceSelected,
-                    onClick = {
-                        devicesViewModel.uninstallPackage(
-                            selectedDeviceId,
-                            packageName,
-                        )
-                    },
-                )
-            }
-            AdbRow(
-                title = "Clear app data",
-                subtitle = "Reset app storage and cache",
-            ) {
-                AdbActionButton(
-                    text = "Clear Data",
-                    enabled = isDeviceSelected,
-                    onClick = {
-                        devicesViewModel.runCommand(
-                            selectedDeviceId,
-                            "shell pm clear $packageName",
-                        )
-                    },
-                )
-            }
-            AdbRow(
-                title = "Force stop app",
-                subtitle = "Terminate the app process",
-            ) {
-                AdbActionButton(
-                    text = "Force Stop",
-                    enabled = isDeviceSelected,
-                    onClick = {
-                        devicesViewModel.runCommand(
-                            selectedDeviceId,
-                            "shell am force-stop $packageName",
-                        )
-                    },
-                )
-            }
-            AdbRow(
-                title = "Launch app",
-                subtitle = "Start the main launcher activity",
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = MaterialTheme.dimens.margin.sm),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
             ) {
                 AdbActionButton(
                     text = "Launch",
-                    enabled = isDeviceSelected,
+                    enabled = isDeviceSelected && packageName.isNotBlank(),
                     onClick = {
                         devicesViewModel.runCommand(
                             selectedDeviceId,
@@ -286,46 +137,85 @@ fun AdbToolsPanel(
                         )
                     },
                 )
-            }
-            AdbRow(
-                title = "Open deep link",
-                subtitle = "Send a deep link to the device",
-            ) {
                 AdbActionButton(
-                    text = "Open",
-                    enabled = isDeviceSelected,
-                    onClick = { devicesViewModel.openDeepLink(selectedDeviceId, deepLinkUrl) },
+                    text = "Force Stop",
+                    enabled = isDeviceSelected && packageName.isNotBlank(),
+                    onClick = {
+                        devicesViewModel.runCommand(
+                            selectedDeviceId,
+                            "shell am force-stop $packageName",
+                        )
+                    },
+                )
+                AdbActionButton(
+                    text = "Clear Data",
+                    enabled = isDeviceSelected && packageName.isNotBlank(),
+                    onClick = {
+                        devicesViewModel.runCommand(
+                            selectedDeviceId,
+                            "shell pm clear $packageName",
+                        )
+                    },
+                )
+                AdbActionButton(
+                    text = "Uninstall",
+                    enabled = isDeviceSelected && packageName.isNotBlank(),
+                    onClick = {
+                        devicesViewModel.uninstallPackage(selectedDeviceId, packageName)
+                    },
                 )
             }
 
+            // --- Install APK ---
+            SectionHeader("Install APK")
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = MaterialTheme.dimens.margin.sm),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            ) {
+                AlohomoraTextField(
+                    value = apkPath,
+                    onValueChange = { apkPath = it },
+                    placeholder = "APK path",
+                    modifier = Modifier.weight(1f),
+                )
+                AdbActionButton(
+                    text = "Browse",
+                    enabled = true,
+                    onClick = {
+                        val picked = pickApkPath()
+                        if (!picked.isNullOrBlank()) apkPath = picked
+                    },
+                )
+                AdbActionButton(
+                    text = "Install",
+                    enabled = isDeviceSelected && apkPath.isNotBlank(),
+                    onClick = { devicesViewModel.installApk(selectedDeviceId, apkPath) },
+                )
+            }
+
+            // --- Capture ---
             SectionHeader("Capture")
-            AdbRow(
-                title = "Screenshot",
-                subtitle = "Save a PNG screenshot locally",
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = MaterialTheme.dimens.margin.sm),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
             ) {
                 AdbActionButton(
-                    text = "Take Screenshot",
+                    text = "Screenshot",
                     enabled = isDeviceSelected,
                     onClick = {
-                        val timestamp = System.currentTimeMillis()
-                        val defaultName = "alohomora_screenshot_${timestamp}.png"
-                        val localPath = pickSavePath(defaultName, "Save Screenshot", ".png")
+                        val ts = System.currentTimeMillis()
+                        val localPath = pickSavePath("alohomora_screenshot_$ts.png", "Save Screenshot", ".png")
                             ?: return@AdbActionButton
                         devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
                     },
                 )
-            }
-            AdbRow(
-                title = "Screen recording",
-                subtitle = if (isRecording) "Recording…" else "Start or stop screen recording",
-            ) {
                 AlohomoraFilledButton(
-                    text = if (isRecording) "Stop Recording" else "Start Recording",
+                    text = if (isRecording) "Stop Recording" else "Record Screen",
                     onClick = {
                         if (!isRecording) {
-                            val timestamp = System.currentTimeMillis()
-                            val defaultName = "alohomora_record_${timestamp}.mp4"
-                            val localPath = pickSavePath(defaultName, "Save Recording", ".mp4")
+                            val ts = System.currentTimeMillis()
+                            val localPath = pickSavePath("alohomora_record_$ts.mp4", "Save Recording", ".mp4")
                                 ?: return@AlohomoraFilledButton
                             val devicePath = "/sdcard/${File(localPath).name}"
                             recordingDevicePath = devicePath
@@ -347,18 +237,12 @@ fun AdbToolsPanel(
                     containerColor = if (isRecording) MaterialTheme.colorScheme.logError else MaterialTheme.colorScheme.onBackground,
                     contentColor = MaterialTheme.colorScheme.background,
                 )
-            }
-            AdbRow(
-                title = "Bugreport",
-                subtitle = "Save a bugreport ZIP locally",
-            ) {
                 AdbActionButton(
-                    text = "Take Bugreport",
+                    text = "Bugreport",
                     enabled = isDeviceSelected,
                     onClick = {
-                        val timestamp = System.currentTimeMillis()
-                        val defaultName = "alohomora_bugreport_${timestamp}.zip"
-                        val localPath = pickSavePath(defaultName, "Save Bugreport", ".zip")
+                        val ts = System.currentTimeMillis()
+                        val localPath = pickSavePath("alohomora_bugreport_$ts.zip", "Save Bugreport", ".zip")
                             ?: return@AdbActionButton
                         val devicePath = "/sdcard/${File(localPath).name}"
                         devicesViewModel.takeBugreport(selectedDeviceId, devicePath, localPath)
@@ -366,7 +250,8 @@ fun AdbToolsPanel(
                 )
             }
 
-            SectionHeader("Device Toggles")
+            // --- Device ---
+            SectionHeader("Device")
             AdbRow(
                 title = "Wi-Fi",
                 subtitle = wifiEnabled?.let { if (it) "Enabled" else "Disabled" } ?: "Unknown",
@@ -374,9 +259,7 @@ fun AdbToolsPanel(
                 SwitchRow(
                     checked = wifiEnabled == true,
                     enabled = isDeviceSelected && wifiEnabled != null,
-                    onCheckedChange = {
-                        devicesViewModel.toggleWifi(selectedDeviceId)
-                    },
+                    onCheckedChange = { devicesViewModel.toggleWifi(selectedDeviceId) },
                 )
             }
             AdbRow(
@@ -390,36 +273,93 @@ fun AdbToolsPanel(
                 )
             }
 
-            SectionHeader("System")
-            AdbRow(
-                title = "Clear logcat",
-                subtitle = "Clear the device log buffer",
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = MaterialTheme.dimens.margin.sm),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
             ) {
                 AdbActionButton(
-                    text = "Clear",
+                    text = "Clear Logcat",
                     enabled = isDeviceSelected,
                     onClick = { devicesViewModel.runCommand(selectedDeviceId, "logcat -c") },
                 )
-            }
-            AdbRow(
-                title = "Reboot device",
-                subtitle = "Restart the device",
-            ) {
                 AdbActionButton(
                     text = "Reboot",
                     enabled = isDeviceSelected,
                     onClick = { devicesViewModel.runCommand(selectedDeviceId, "reboot") },
                 )
-            }
-            AdbRow(
-                title = "Restart ADB",
-                subtitle = "Restart the ADB server",
-            ) {
                 AdbActionButton(
-                    text = "Restart",
+                    text = "Restart ADB",
                     enabled = true,
                     onClick = { devicesViewModel.restartAdb() },
                 )
+            }
+        }
+    }
+
+}
+
+@Composable
+private fun AdbConsoleBar(
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    history: List<AdbCommandLogEntry>,
+) {
+    Column(modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)) {
+        AlohomoraHorizontalDivider()
+        Column(
+            modifier = Modifier.padding(
+                horizontal = MaterialTheme.dimens.margin.lg,
+                vertical = MaterialTheme.dimens.margin.sm,
+            ),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "ADB Console",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+                AlohomoraTextButton(
+                    text = if (expanded) "Hide" else "Show",
+                    onClick = onToggle,
+                    uppercase = false,
+                    contentColor = MaterialTheme.colorScheme.brand,
+                )
+            }
+            if (expanded) {
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+                val rendered = history.asReversed()
+                if (rendered.isEmpty()) {
+                    Text(
+                        "No commands yet.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp)
+                            .background(
+                                MaterialTheme.colorScheme.surfaceContainerLow,
+                                RoundedCornerShape(6.dp),
+                            )
+                            .padding(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        items(rendered) { entry ->
+                            Text(
+                                text = formatLogEntry(entry),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = FontFamily.Monospace,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -509,3 +449,4 @@ private fun formatLogEntry(entry: AdbCommandLogEntry): String {
     val deviceLabel = entry.deviceId?.let { "[$it]" } ?: "[no-device]"
     return "[$time] $deviceLabel ${entry.command}"
 }
+

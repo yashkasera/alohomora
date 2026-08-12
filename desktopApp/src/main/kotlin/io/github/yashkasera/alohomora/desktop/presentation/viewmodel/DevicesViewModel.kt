@@ -10,6 +10,8 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.RefreshDevicesUseCa
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RunAdbCommandUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.SelectDeviceUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.UninstallPackageUseCase
+import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkEntry
+import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkHistoryStore
 import io.github.yashkasera.alohomora.desktop.presentation.model.AdbCommandLogEntry
 import io.github.yashkasera.alohomora.desktop.presentation.model.DashboardUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
@@ -36,9 +38,17 @@ class DevicesViewModel(
     private val runAdbCommandUseCase: RunAdbCommandUseCase,
     private val installApkUseCase: InstallApkUseCase,
     private val uninstallPackageUseCase: UninstallPackageUseCase,
+    private val deepLinkHistoryStore: DeepLinkHistoryStore = DeepLinkHistoryStore(),
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     val snackbarHostState = SnackbarHostState()
+
+    private val _deepLinkHistory = MutableStateFlow<List<DeepLinkEntry>>(emptyList())
+    val deepLinkHistory: StateFlow<List<DeepLinkEntry>> = _deepLinkHistory.asStateFlow()
+
+    init {
+        scope.launch { _deepLinkHistory.value = deepLinkHistoryStore.load() }
+    }
 
     val devices: StateFlow<List<DeviceUi>> = repository.devices
         .map { devices -> devices.map { it.toUi() } }
@@ -252,17 +262,20 @@ class DevicesViewModel(
             }
             when {
                 stateLine.contains("enabled", ignoreCase = true) -> {
+                    _wifiEnabled.value = false
                     runLoggedBlocking(deviceId, listOf("shell", "svc", "wifi", "disable"))
                     setActionMessage("Wi-Fi disabled")
                 }
 
                 stateLine.contains("disabled", ignoreCase = true) -> {
+                    _wifiEnabled.value = true
                     runLoggedBlocking(deviceId, listOf("shell", "svc", "wifi", "enable"))
                     setActionMessage("Wi-Fi enabled")
                 }
 
                 else -> setActionError("Unable to determine Wi-Fi state")
             }
+            delay(500)
             refreshConnectivityState(deviceId)
         }
     }
@@ -284,12 +297,15 @@ class DevicesViewModel(
             val connected = stateLine.contains("CONNECTED", ignoreCase = true) ||
                 Regex("mDataConnectionState=(\\d+)").find(stateLine)?.groupValues?.get(1) == "2"
             if (connected) {
+                _dataEnabled.value = false
                 runLoggedBlocking(deviceId, listOf("shell", "svc", "data", "disable"))
                 setActionMessage("Mobile data disabled")
             } else {
+                _dataEnabled.value = true
                 runLoggedBlocking(deviceId, listOf("shell", "svc", "data", "enable"))
                 setActionMessage("Mobile data enabled")
             }
+            delay(500)
             refreshConnectivityState(deviceId)
         }
     }
@@ -415,7 +431,23 @@ class DevicesViewModel(
                 deviceId,
                 listOf("shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", url),
             )
+            deepLinkHistoryStore.add(url)
+            _deepLinkHistory.value = deepLinkHistoryStore.load()
             setActionMessage("Deep link opened")
+        }
+    }
+
+    fun removeDeepLinkEntry(url: String) {
+        scope.launch {
+            deepLinkHistoryStore.remove(url)
+            _deepLinkHistory.value = deepLinkHistoryStore.load()
+        }
+    }
+
+    fun clearDeepLinkHistory() {
+        scope.launch {
+            deepLinkHistoryStore.clear()
+            _deepLinkHistory.value = emptyList()
         }
     }
 

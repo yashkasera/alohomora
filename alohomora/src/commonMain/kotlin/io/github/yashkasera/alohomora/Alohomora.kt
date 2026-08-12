@@ -174,6 +174,7 @@ object Alohomora {
         responseHeaders: Map<String, List<String>>? = null,
         requestSize: Long? = null,
         responseSize: Long? = null,
+        mockedBy: String? = null,
     ) {
         // Resolution happens inside the coroutine on purpose: building TrafficRepository
         // transitively opens AlohomoraDb, which runs a synchronous SQLite open plus
@@ -201,6 +202,7 @@ object Alohomora {
                 responseHeaders = responseHeaders,
                 requestSize = requestSize,
                 responseSize = responseSize,
+                mockedBy = mockedBy,
             )
             try {
                 repo.save(trace)

@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.devtools
 import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
+import io.github.yashkasera.alohomora.common.mock.TemplateEngine
 import kotlin.concurrent.Volatile
 
 internal const val MOCK_ID_HEADER = "X-Alohomora-Mock-Id"
@@ -25,8 +26,11 @@ internal object NetworkRuleEngine {
         _mockRules = rules.filter { it.enabled }.map(::CompiledMockRule)
     }
 
-    fun findMatch(url: String, method: String?): MockRule? =
-        _mockRules.firstOrNull { it.matches(url, method) }?.rule
+    fun findMatch(url: String, method: String?): MockRule? {
+        val rule = _mockRules.firstOrNull { it.matches(url, method) }?.rule ?: return null
+        if (!rule.responseBody.contains("{{")) return rule
+        return rule.copy(responseBody = TemplateEngine.resolve(rule.responseBody))
+    }
 
     fun clear() {
         _throttle = ThrottleProfiles.NONE

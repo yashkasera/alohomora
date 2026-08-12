@@ -191,7 +191,10 @@ class DesktopAppComposition(
         tracesViewModel = TracesViewModel(repository = devToolsRepository)
         eventsViewModel = EventsViewModel(repository = devToolsRepository)
         trafficViewModel = TrafficViewModel(repository = devToolsRepository)
-        networkRulesViewModel = NetworkRulesViewModel(repository = devToolsRepository)
+        networkRulesViewModel = NetworkRulesViewModel(
+            repository = devToolsRepository,
+            sessionStore = io.github.yashkasera.alohomora.desktop.data.local.MockSessionStore(),
+        )
     }
 
     /**

@@ -74,6 +74,7 @@ internal class VisibleTreeState(
         var i = index + 1
 
         while (i < rows.size && rows[i].depth > depth) {
+            expanded -= rows[i].path
             rows.removeAt(i)
         }
 

@@ -50,6 +50,7 @@ import io.github.yashkasera.alohomora.ui.icons.CircleHelp
 import io.github.yashkasera.alohomora.ui.icons.Eye
 import io.github.yashkasera.alohomora.ui.icons.Globe
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Link
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Trash
@@ -337,6 +338,7 @@ fun buildCommandActions(
     onToggleWifi: () -> Unit,
     onToggleMobileData: () -> Unit,
     onClearLogcat: () -> Unit,
+    onOpenDeepLinkBuilder: () -> Unit,
 ): List<CommandAction> {
     val mod = displayModifier()
     val actions = mutableListOf<CommandAction>()
@@ -462,6 +464,14 @@ fun buildCommandActions(
             icon = Icons.Trash,
             enabled = deviceReady,
             action = onClearLogcat,
+        )
+        actions += CommandAction(
+            id = "device_deep_link",
+            label = "Deep Link Builder",
+            category = ActionCategory.DEVICE,
+            icon = Icons.Link,
+            enabled = deviceReady,
+            action = onOpenDeepLinkBuilder,
         )
     }
 

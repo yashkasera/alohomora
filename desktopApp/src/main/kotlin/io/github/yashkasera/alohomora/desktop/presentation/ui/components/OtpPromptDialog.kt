@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,13 +63,14 @@ fun OtpPromptDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            AlohomoraTextButton(
+                text = "Connect",
                 onClick = { onSubmit(otp); otp = "" },
                 enabled = otp.length == OTP_LENGTH,
-            ) { Text("Connect") }
+            )
         },
         dismissButton = {
-            TextButton(onClick = { otp = ""; onCancel() }) { Text("Disconnect") }
+            AlohomoraTextButton(text = "Disconnect", onClick = { otp = ""; onCancel() })
         },
     )
 }

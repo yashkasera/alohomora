@@ -3,8 +3,8 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 
 /**
  * Confirms deleting captured data.
@@ -25,12 +25,14 @@ fun ClearCapturedDialog(
         title = { Text(text = title, style = MaterialTheme.typography.titleMedium) },
         text = { Text(text = message, style = MaterialTheme.typography.bodyMedium) },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Clear", color = MaterialTheme.colorScheme.error)
-            }
+            AlohomoraTextButton(
+                text = "Clear",
+                onClick = onConfirm,
+                contentColor = MaterialTheme.colorScheme.error,
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            AlohomoraTextButton(text = "Cancel", onClick = onDismiss)
         },
     )
 }

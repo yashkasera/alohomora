@@ -207,6 +207,14 @@ private fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
             ) {
+                if (call.mockedBy != null) {
+                    AlohomoraChip(
+                        label = "Mocked",
+                        uppercase = false,
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary,
+                    )
+                }
                 Text(
                     text = "${call.duration}ms",
                     style = MaterialTheme.typography.labelSmall,
@@ -215,11 +223,8 @@ private fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
 
                 val statusColor = when {
                     call.isSuccessful() -> MaterialTheme.colorScheme.onSurface
-                    // Not softened by isViewed: having read a failed request does not make it
-                    // succeed, and the previous rule dropped the red as soon as it was opened.
                     else -> MaterialTheme.colorScheme.error
                 }
-                // Override for 201 -> Emerald using theme color
                 val finalStatusColor =
                     if (call.status == 201)
                         MaterialTheme.colorScheme.tertiary

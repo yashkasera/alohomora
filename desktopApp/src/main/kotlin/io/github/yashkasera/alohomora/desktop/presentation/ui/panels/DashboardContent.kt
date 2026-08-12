@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,11 +22,12 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -58,6 +59,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedCard
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Link
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.theme.brand
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -89,6 +91,7 @@ fun DashboardContent(
     onEventViewClick: (Event) -> Unit,
     onTrafficClick: () -> Unit,
     onEventsClick: () -> Unit,
+    onOpenDeepLinkBuilder: () -> Unit,
 ) {
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()
     val events by devToolsViewModel.events.collectAsState()
@@ -135,6 +138,18 @@ fun DashboardContent(
                                 size = AlohomoraButtonSize.SMALL,
                             )
                         }
+                        AlohomoraOutlinedButton(
+                            text = "Deep Link",
+                            onClick = onOpenDeepLinkBuilder,
+                            size = AlohomoraButtonSize.SMALL,
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Link,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                                )
+                            },
+                        )
                     }
                 },
             )
@@ -423,9 +438,10 @@ private fun DashboardListCard(
                         AlohomoraChip(label = itemCount.toString())
                     }
                 }
-                TextButton(onClick = onAction, contentPadding = PaddingValues(0.dp)) {
-                    Text("VIEW ALL", style = MaterialTheme.typography.labelSmall)
-                }
+                AlohomoraTextButton(
+                    text = "View All",
+                    onClick = onAction,
+                )
             }
 
             if (isEmpty) {

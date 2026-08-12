@@ -53,6 +53,10 @@ kotlin {
             // Desktop app provides compose.desktop.currentOs.
         }
 
+        jvmTest.dependencies {
+            implementation(kotlin("test"))
+        }
+
         iosMain.dependencies {
             // No platform-specific deps required.
         }

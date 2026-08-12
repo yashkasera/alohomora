@@ -29,11 +29,13 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.JsonColors
+import io.github.yashkasera.alohomora.ui.theme.brand
 
-private val keyColor = Color(0xFF6366F1)      // indigo — matches brand primary
-private val stringColor = Color(0xFFC2410C)   // burnt orange
-private val numberColor = Color(0xFF059669)   // emerald — matches CanvasSuccessGreen
-private val bracketColor = Color(0xFFA1A1AA)  // zinc-400
+private val keyColor = JsonColors.key
+private val stringColor = JsonColors.string
+private val numberColor = JsonColors.number
+private val bracketColor = JsonColors.bracket
 
 @Composable
 internal fun LazyItemScope.JsonRow(
@@ -45,7 +47,6 @@ internal fun LazyItemScope.JsonRow(
 
     val comma = visibleState.hasSiblingAfter(index)
     val expanded = visibleState.isExpanded(node.path)
-//    val indent  = (row.depth * 16).dp
     val indent by animateDpAsState((row.depth * 16).dp)
     val isContainer = node is JsonObjectNode || node is JsonArrayNode
     val isEmptyContainer = isContainer &&
@@ -72,15 +73,13 @@ internal fun LazyItemScope.JsonRow(
                     preview(node, visibleState.tree)
                 }
 
-                Icon(
-                    imageVector = Icons.ChevronRight,
-                    contentDescription = null,
+                Text(
+                    text = "▶",
                     modifier = Modifier
-                        .size(MaterialTheme.dimens.icon.xs)
                         .rotate(arrowRotation)
                         .clickable(enabled = isExpandable) { visibleState.toggle(node.path) }
                         .padding(end = 6.dp),
-                    tint = if (isExpandable)
+                    color = if (isExpandable)
                         Color(0xFF52525B) else Color(0xFFD4D4D8),
                 )
 
@@ -91,6 +90,7 @@ internal fun LazyItemScope.JsonRow(
                             text = key,
                             query = visibleState.searchQuery,
                             normal = keyColor,
+                            highlight = MaterialTheme.colorScheme.brand
                         ),
                         color = keyColor,
                     )
@@ -116,7 +116,7 @@ internal fun LazyItemScope.JsonRow(
                         },
                         maxLines = 1,
                         overflow = TextOverflow.MiddleEllipsis,
-                        color = MaterialTheme.colorScheme.tertiary
+                        color = MaterialTheme.colorScheme.secondary
                     )
 
                 } else if (!expanded && isEmptyContainer) {
@@ -140,6 +140,7 @@ internal fun LazyItemScope.JsonRow(
                             text = it,
                             query = visibleState.searchQuery,
                             normal = keyColor,
+                            highlight = MaterialTheme.colorScheme.brand
                         ),
                         color = keyColor,
                     )
@@ -154,6 +155,7 @@ internal fun LazyItemScope.JsonRow(
                                 text = value.toString(),
                                 query = visibleState.searchQuery,
                                 normal = numberColor,
+                                highlight = MaterialTheme.colorScheme.brand
                             ),
                             color = numberColor,
                         )
@@ -165,6 +167,7 @@ internal fun LazyItemScope.JsonRow(
                                 text = "\"$value\"",
                                 query = visibleState.searchQuery,
                                 normal = stringColor,
+                                highlight = MaterialTheme.colorScheme.brand
                             ),
                             color = stringColor,
                         )
@@ -176,6 +179,7 @@ internal fun LazyItemScope.JsonRow(
                                 text = value.toString(),
                                 query = visibleState.searchQuery,
                                 normal = LocalContentColor.current,
+                                highlight = MaterialTheme.colorScheme.brand
                             ),
                         )
                     }

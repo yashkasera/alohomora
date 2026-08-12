@@ -38,7 +38,6 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -68,6 +67,7 @@ import io.github.yashkasera.alohomora.desktop.domain.service.UpdateChecker
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AboutDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.UpdateBanner
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import java.awt.Dimension
 import java.util.UUID
 import kotlin.coroutines.resume
@@ -160,10 +160,6 @@ fun main() {
 
                         LauncherScreen(
                             sharedDevicesComposition = sharedComposition,
-                            onCloseLauncher = {
-                                launcherVisible = false
-                                if (sessions.isEmpty()) exitApplication()
-                            },
                             onOpenDeviceWindow = { deviceId, host, hostPort, devicePort, composition ->
                                 val duplicate = sessions.any { it.deviceId == deviceId }
                                 if (!duplicate) {
@@ -356,7 +352,6 @@ fun main() {
 @Composable
 private fun LauncherScreen(
     sharedDevicesComposition: DesktopAppComposition,
-    onCloseLauncher: () -> Unit,
     onOpenDeviceWindow: (deviceId: String, host: String, hostPort: Int, devicePort: Int, composition: DesktopAppComposition) -> Unit,
 ) {
     val devicesViewModel = sharedDevicesComposition.devicesViewModel
@@ -557,12 +552,12 @@ private fun LauncherScreen(
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(
+                    AlohomoraFilledButton(
+                        text = "Connect & Open Window",
                         onClick = {
-                            val target = selectedDevice
-                            if (target == null) {
+                            if (selectedDevice == null) {
                                 actionError = "Select an online device first"
-                                return@Button
+                                return@AlohomoraFilledButton
                             }
                             val numericHostPort = hostPort.toIntOrNull() ?: DEFAULT_PORT.toInt()
                             val numericDevicePort = devicePort.toIntOrNull() ?: DEFAULT_PORT.toInt()
@@ -579,28 +574,29 @@ private fun LauncherScreen(
                             }
 
                             scope.launch {
-                                when (target.platform) {
+                                when (selectedDevice.platform) {
                                     // Physical iOS: no adb, and no host-side port to reserve.
                                     // usbmuxd tunnels straight to the device port over USB.
                                     DevicePlatform.IOS -> {
-                                        val usbmuxId = target.usbmuxDeviceId
+                                        val usbmuxId = selectedDevice.usbmuxDeviceId
                                         if (usbmuxId == null) {
                                             actionError = "Device is not reachable over USB. Reconnect the cable and trust this Mac."
                                         } else {
-                                            openSession(target, DevToolsTarget.Usbmux(usbmuxId, numericDevicePort))
+                                            openSession(selectedDevice, DevToolsTarget.Usbmux(usbmuxId, numericDevicePort))
                                         }
                                     }
 
                                     // Simulator: nothing to tunnel. It runs on the host's network
                                     // stack, so the device's 127.0.0.1 is the host's 127.0.0.1.
                                     DevicePlatform.IOS_SIMULATOR ->
-                                        openSession(target, DevToolsTarget.Tcp("127.0.0.1", numericDevicePort))
+                                        openSession(selectedDevice, DevToolsTarget.Tcp("127.0.0.1", numericDevicePort))
 
                                     DevicePlatform.ANDROID -> {
                                         // Wi-Fi adb needs `adb connect` before a forward exists.
                                         if (!isLocalHost) {
                                             val connectError = suspendConnectOverTcp(
-                                                composition.devicesViewModel, target.id, host, numericDevicePort,
+                                                composition.devicesViewModel,
+                                                selectedDevice.id, host, numericDevicePort,
                                             )
                                             if (connectError != null) {
                                                 actionError = connectError
@@ -608,24 +604,20 @@ private fun LauncherScreen(
                                             }
                                         }
                                         val selectError = suspendSelectDevice(
-                                            composition.devicesViewModel, target.id, numericHostPort, numericDevicePort,
+                                            composition.devicesViewModel,
+                                            selectedDevice.id, numericHostPort, numericDevicePort,
                                         )
                                         if (selectError != null) {
                                             actionError = selectError
                                         } else {
-                                            openSession(target, DevToolsTarget.Tcp(host, numericHostPort))
+                                            openSession(selectedDevice, DevToolsTarget.Tcp(host, numericHostPort))
                                         }
                                     }
                                 }
                             }
                         },
-                        enabled = selectedDevice != null,
-                    ) {
-                        Text("Connect & Open Window")
-                    }
-                    OutlinedButton(onClick = onCloseLauncher) {
-                        Text("Close")
-                    }
+                        enabled = selectedDevice != null
+                    )
                 }
             }
             Spacer(modifier = Modifier.weight(1f))

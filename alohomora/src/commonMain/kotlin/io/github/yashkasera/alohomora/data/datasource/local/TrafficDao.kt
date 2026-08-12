@@ -33,7 +33,7 @@ internal interface TrafficDao {
     /**
      * Lists traces with pagination, filtering by path query and HTTP method.
      */
-    @Query("SELECT id, status, host, path, `query`, method, duration, time, isViewed, replayOf, requestBodyTruncated, responseBodyTruncated FROM TrafficEntry WHERE path LIKE '%' || :query || '%' AND method LIKE '%' || :method || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
+    @Query("SELECT id, status, host, path, `query`, method, duration, time, isViewed, replayOf, requestBodyTruncated, responseBodyTruncated, mockedBy FROM TrafficEntry WHERE path LIKE '%' || :query || '%' AND method LIKE '%' || :method || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
     fun list(query: String?, method: String?, page: Int, pageSize: Int): Flow<List<TrafficEntry>>
 
     /**

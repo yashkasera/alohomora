@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,18 +44,17 @@ fun UpdateBanner(
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             modifier = Modifier.weight(1f),
         )
-        TextButton(onClick = {
-            try {
-                Desktop.getDesktop().browse(URI(updateInfo.htmlUrl))
-            } catch (_: Exception) { }
-        }) {
-            Text(
-                "Download",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-        IconButton(onClick = onDismiss) {
+        AlohomoraTextButton(
+            text = "Download",
+            onClick = {
+                try {
+                    Desktop.getDesktop().browse(URI(updateInfo.htmlUrl))
+                } catch (_: Exception) { }
+            },
+            uppercase = false,
+            contentColor = MaterialTheme.colorScheme.primary,
+        )
+        AlohomoraIconButton(onClick = onDismiss) {
             Icon(
                 Icons.X,
                 contentDescription = "Dismiss",

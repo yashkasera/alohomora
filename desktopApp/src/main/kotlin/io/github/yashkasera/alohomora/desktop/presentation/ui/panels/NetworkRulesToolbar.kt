@@ -2,11 +2,8 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,31 +13,27 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
 import io.github.yashkasera.alohomora.common.VpnThrottleState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
-import io.github.yashkasera.alohomora.ui.icons.Gauge
-import io.github.yashkasera.alohomora.ui.icons.Globe
-import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
-fun NetworkRulesToolbar(
+fun NetworkRulesActions(
     viewModel: NetworkRulesViewModel,
-    modifier: Modifier = Modifier,
+    onOpenMockRules: () -> Unit,
 ) {
     val supported by viewModel.networkRulesSupported.collectAsState()
     if (!supported) return
 
     val throttle by viewModel.throttleProfile.collectAsState()
     val mockRules by viewModel.mockRules.collectAsState()
+    val currentSession by viewModel.currentSession.collectAsState()
     val vpnSupported by viewModel.vpnThrottleSupported.collectAsState()
     val vpnEnabled by viewModel.vpnEnabled.collectAsState()
     val vpnState by viewModel.vpnState.collectAsState()
     var showThrottleMenu by remember { mutableStateOf(false) }
-    var showMockDialog by remember { mutableStateOf(false) }
 
     val activeThrottleLabel = when (throttle.name) {
         "none" -> null
@@ -54,22 +47,9 @@ fun NetworkRulesToolbar(
     val enabledMockCount = mockRules.count { it.enabled }
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = MaterialTheme.dimens.margin.xxl,
-                vertical = MaterialTheme.dimens.margin.sm,
-            ),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = Icons.Gauge,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(end = MaterialTheme.dimens.margin.xs),
-        )
-
         ThrottleDropdown(
             label = activeThrottleLabel?.let { "Throttle: $it" } ?: "No throttle",
             expanded = showThrottleMenu,
@@ -81,27 +61,17 @@ fun NetworkRulesToolbar(
         MockRulesChip(
             count = enabledMockCount,
             total = mockRules.size,
-            onClick = { showMockDialog = true },
+            sessionName = currentSession?.name,
+            onClick = onOpenMockRules,
         )
 
-        if (vpnSupported) {
+        if (vpnSupported && activeThrottleLabel != null) {
             DeviceWideChip(
                 enabled = vpnEnabled,
                 state = vpnState,
                 onToggle = { viewModel.toggleDeviceWideThrottle(!vpnEnabled) },
             )
         }
-    }
-
-    if (showMockDialog) {
-        MockRuleDialog(
-            rules = mockRules,
-            onAddRule = viewModel::addRule,
-            onUpdateRule = viewModel::updateRule,
-            onDeleteRule = viewModel::deleteRule,
-            onToggleRule = viewModel::toggleRule,
-            onDismiss = { showMockDialog = false },
-        )
     }
 }
 
@@ -144,12 +114,16 @@ private fun ThrottleDropdown(
 private fun MockRulesChip(
     count: Int,
     total: Int,
+    sessionName: String?,
     onClick: () -> Unit,
 ) {
-    val label = when {
-        total == 0 -> "Mock rules"
-        count == 0 -> "Mock rules ($total paused)"
-        else -> "Mock rules ($count active)"
+    val label = buildString {
+        append(sessionName ?: "Mock rules")
+        when {
+            total == 0 -> {}
+            count == 0 -> append(" ($total paused)")
+            else -> append(" ($count active)")
+        }
     }
     AlohomoraFilterChip(
         label = label,
