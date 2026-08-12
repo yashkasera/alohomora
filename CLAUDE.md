@@ -206,9 +206,70 @@ Rules that keep replay honest — none are cosmetic:
 
 **TCP server:** `DevToolsRuntime` starts a TCP server (default port 53999). One active connection at a time. On connect: sends initial state snapshot, then streams new events and traffic via `DevToolsStreamAdapter` (key-based deduplication). All guarded by `isDebugBuild` expect/actual.
 
+### Mock rules and network throttling
+
+`NetworkRuleEngine` (device-side, in `:alohomora`) evaluates mock rules before a request leaves the
+app. `findMatch(url, method)` iterates `CompiledMockRule` wrappers (lazy-compiled regex, cached) and
+returns the first match. If the matched body contains `{{`, `TemplateEngine.resolve()` replaces
+placeholders with fresh values per-request. The engine lives in `DevToolsRuntime` and receives rules
+from the desktop via `SET_MOCK_RULES`.
+
+**`TemplateEngine`** (`alohomora-common/.../mock/TemplateEngine.kt`) is a single `resolve(template): String`
+function. Regex `\{\{(\w+)(?:\(([^)]*)\))?\}\}` dispatches to `MockGenerators`. Generators are pure
+Kotlin — `kotlin.uuid.Uuid.random()`, `kotlin.random.Random`, `kotlinx.datetime` — no platform deps.
+Unknown placeholders pass through as-is.
+
+**`MockRule`** (`alohomora-common/.../NetworkRule.kt`) carries `id`, `name`, `enabled`, `urlPattern`,
+`isRegex`, `method`, `statusCode`, `responseBody`, `contentType`. Also in `NetworkRule.kt`:
+`ThrottleProfile` with five presets (NONE, EDGE, SLOW_3G, FAST_3G, SLOW_WIFI).
+
+**Desktop-side persistence** (`desktopApp/.../data/local/MockSessionStore.kt`): file-backed at
+`~/.alohomora/mock-sessions/` with an `index.json` + per-session `{uuid}.json`. Auto-save with
+500 ms debounce via cancel-and-relaunch Job. Last active session restored on init.
+
+**Import/export:**
+- `MockExportEnvelope` (`.alohomora-mocks.json`) — `version`, `name`, `exportedAt`, `rules`
+- `HarImporter.importHar(json)` — parses HAR 1.2, keeps only 2xx entries with a body
+- `TrafficEntry.toMockRule()` — one-click mock creation from captured traffic
+
+**UI:** `MockRulesSideSheet` (master, 50% width) with session selector, save/import/export actions,
+rule list. `EditMockRuleSideSheet` (detail, 40% width) with JSON editor and "Insert generator"
+dropdown. `NetworkRulesActions` in the top bar shows throttle preset dropdown, mock-rules chip
+(with session name and active count), and VPN state chip.
+
+### Deep link builder
+
+`DeepLinkBuilderSideSheet` (`desktopApp/.../panels/DeepLinkBuilderSideSheet.kt`) is a top-level side
+sheet (40% width) with two tabs via `AlohomoraPrimaryTabRow`:
+
+- **Builder** — scheme dropdown (https, http, deeplink, content, custom), host, port, path, query
+  params (add/remove rows), fragment, live URL preview via `AlohomoraCodeBlock`, "Open on device" and
+  "Reset" buttons. `parseUrl()` / `buildUrl()` handle decomposition and recomposition.
+- **History** — scrollable list from `DeepLinkHistoryStore`. Click populates builder and switches tab.
+  Play fires directly. Trash removes individual entries. "Clear all" at the top.
+
+**Persistence:** `DeepLinkHistoryStore` (`desktopApp/.../data/local/DeepLinkHistoryStore.kt`) writes
+to `~/.alohomora/deeplink-history.json`. `add()` deduplicates, prepends, caps at 50 entries.
+
+**Entry points:** Dashboard toolbar button, Command Palette ("Deep Link Builder" in DEVICE category).
+State `showDeepLinkBuilder` lives in `DevToolsDesktopApp`.
+
+### Command palette
+
+`CommandPalette` (`desktopApp/.../components/CommandPalette.kt`) opens via `Cmd/Ctrl+K`. A modal
+overlay with a search field, grouped action list (NAVIGATION, GENERAL, DEVICE, DATA categories),
+keyboard navigation (arrow keys + Enter), and shortcut chips.
+
+`buildCommandActions()` assembles the full action list from callbacks. Categories:
+- **NAVIGATION** — one entry per visible `DesktopSection`, with `Cmd+1..9` shortcuts
+- **GENERAL** — theme toggle, help, zoom in/out/reset
+- **DEVICE** — screenshot, force stop, launch, clear data, reboot, Wi-Fi/data toggle, clear logcat,
+  deep link builder. All gated on `deviceReady` (connected + device selected)
+- **DATA** — clear traffic, clear traces, clear events. Gated on `isConnected`
+
 ### Desktop app architecture
 
-Manual DI (no Koin): `DesktopAppComposition` constructs all stores, repositories, use cases, and ViewModels. `LauncherScreen` dialog lets users select an ADB device and open per-device windows. Each window owns its own `DesktopAppComposition`. ADB port forwarding sets up the TCP tunnel from host to device. Includes an embedded terminal panel (`LocalTerminal`, `TerminalView`) via pty4j.
+Manual DI (no Koin): `DesktopAppComposition` constructs all stores (`MockSessionStore`, `DeepLinkHistoryStore`), repositories, use cases, and ViewModels. `LauncherScreen` dialog lets users select an ADB device and open per-device windows. Each window owns its own `DesktopAppComposition`. ADB port forwarding sets up the TCP tunnel from host to device. Includes an embedded terminal panel (`LocalTerminal`, `TerminalView`) via pty4j.
 
 ## Compose UI Architecture
 
@@ -313,6 +374,11 @@ To add a new icon: find it on [https://lucide.dev/icons/](https://lucide.dev/ico
   - Preferences/SharedPreferences/UserDefaults = **Cache**
   - Build metadata = **BuildMetadata** (or **Config**)
   - Git history = **GitHistory** (records are `GitHistoryCommit`)
+  - API response mocking = **Mock Rules** (not "stubs" or "fakes"). One rule is a **MockRule**
+  - Network simulation = **Throttling** (not "network conditioning" or "traffic shaping"). Presets
+    are **ThrottleProfile** values
+  - `{{placeholder}}` syntax in mock bodies = **Generators** or **Templates** (resolved by
+    `TemplateEngine`)
 
 ## Authentication & Connection Flow
 
@@ -338,6 +404,7 @@ The console implements trust-on-first-use (TOFU) authentication:
 - **No commas in backticked test names.** Kotlin/Native rejects them (`Name contains illegal characters: ","`), so any test in a source set that compiles for iOS — `commonTest` in either `:alohomora` or `:alohomora-common` — fails to compile while `jvmTest` passes happily. Reword rather than reach for a comma; only a full `check` (or an iOS target compile) catches it.
 - **`alohomora-common` now has a `commonTest` source set**, run with `./gradlew :alohomora-common:jvmTest`. Note there is **no `withHostTest {}`** on its android target, so those tests reach the JVM and iOS targets but *not* the Android host — fine for the pure trace logic that lives there (`TraceTree`, `TraceTimeScale`, `TraceSummary`, `SpanSelfTime`), but do not put an `expect`/`actual` test there expecting Android coverage.
 - **Prefer a pure test over a Compose one, and move the arithmetic out to make that possible.** The waterfall's minimum-bar-width clamp originally lived inside a `DrawScope`, where nothing could reach it; it moved to `TraceWindow.barGeometry` purely so `TraceTimeScaleTest` could assert it. `TraceWaterfallTest` is deliberately three tests covering only what a real composition can show (a zero-duration span still gets laid out, collapse hides a subtree, a click reports the right span).
-- **Desktop tests:** `./gradlew :desktopApp:test` (includes connection and message serialization tests)
+- **Desktop tests:** `./gradlew :desktopApp:test` (includes connection, message serialization, HAR import, mock export round-trip, and traffic-to-mock mapping tests)
+- **Mock/template tests:** `TemplateEngineTest` and `MockGeneratorsTest` are in `alohomora-common`'s `commonTest` — run with `./gradlew :alohomora-common:jvmTest`. They cover plain passthrough, single/multiple placeholders, parameterised generators, unknown placeholder passthrough, and output format validation. The "no commas in backticked names" rule applies here too.
 - **Flaky UI tests:** The Compose test harness can be brittle with timing. If a test flakes, increase timeouts or break the assertion into smaller steps
 - **Message round-trips:** Use `DevToolsProtocol.encodeEnvelope()` and `decodeFrame()` to verify message serialization round-trips (see `AuthHandshakeTest` for the pattern)

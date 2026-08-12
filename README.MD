@@ -316,13 +316,89 @@ reproduce.
 Injected at build time — see [Build metadata (Android)](#build-metadata-android) and
 [iOS build metadata](#ios-build-metadata-xcode-run-script-phase).
 
+### Mock Rules & Network Throttling
+
+The desktop app can intercept matching requests on the device and return canned responses instead of
+hitting the real server. Rules are defined in the desktop, pushed to the device over the DevTools
+protocol, and evaluated inside `NetworkRuleEngine` before the request leaves the app.
+
+A rule carries a URL pattern (substring or regex), an optional HTTP method filter, a status code, a
+content type, and a response body. Rules can be toggled individually or all at once.
+
+#### Dynamic response bodies
+
+Response bodies support `{{generator}}` placeholders that are resolved per-request on the device, so
+each response carries fresh data:
+
+| Syntax | Output |
+|--------|--------|
+| `{{uuid}}` | `550e8400-e29b-41d4-a716-446655440000` |
+| `{{name}}` | `Jane Smith` |
+| `{{firstName}}` / `{{lastName}}` | `Jane` / `Smith` |
+| `{{email}}` | `jane.smith@example.com` |
+| `{{int(1,100)}}` | `42` |
+| `{{float(0,1)}}` | `0.7342` |
+| `{{amount(10,500)}}` | `247.83` (2 decimal places) |
+| `{{date(past,30)}}` | `2026-07-15` (ISO-8601) |
+| `{{date(future,365)}}` | `2027-05-20` |
+| `{{timestamp}}` | `1723456789000` (epoch millis) |
+| `{{bool}}` | `true` or `false` |
+| `{{oneOf(active,inactive,pending)}}` | `inactive` |
+
+Unknown placeholders pass through as-is, so a body that happens to contain `{{` for some other
+reason is not corrupted.
+
+#### Persistent mock sessions
+
+Mock rules are saved to `~/.alohomora/mock-sessions/` as JSON files. Sessions auto-save with a
+500 ms debounce after every rule change. The last active session is restored on launch, so rules
+survive restarts without manual re-entry.
+
+You can maintain multiple named sessions and switch between them — one set of rules per API
+environment, per feature branch, per bug reproduction.
+
+#### Import and export
+
+- **Export** a session as `.alohomora-mocks.json` to share with teammates or check into a repo
+- **Import** from `.alohomora-mocks.json` or from a **HAR 1.2** file (only 2xx responses with a
+  body are imported as rules)
+- **Create a mock from any captured request** — one click in the traffic detail panel pre-fills a
+  rule with the request's path, method, status, content type and response body
+
+#### Network throttling
+
+Five presets simulate degraded network conditions: Edge (500 ms / 50 KB/s), Slow 3G (200 ms /
+100 KB/s), Fast 3G (100 ms / 300 KB/s), Slow Wi-Fi (50 ms / 1 MB/s), and None. Throttling applies
+latency before the response and caps throughput on the response body.
+
+On Android, device-wide throttling is available via a local VPN service that applies the same
+profile to all traffic, not just intercepted requests.
+
+### Deep Link Builder
+
+The desktop app includes a deep link builder accessible from the Dashboard toolbar or the command
+palette (`Cmd/Ctrl+K` → "Deep Link Builder"). It opens as a side sheet with two tabs:
+
+- **Builder** — compose a URL from scheme, host, port, path, query parameters and fragment. A live
+  preview updates as you type. "Open on device" fires the URL via `adb shell am start`
+- **History** — every URL you open is persisted to `~/.alohomora/deeplink-history.json`. Click an
+  entry to populate the builder; click the play button to fire it directly. Individual entries or
+  the full history can be cleared
+
+### Command Palette
+
+`Cmd/Ctrl+K` opens a searchable command palette with every action the desktop app supports:
+navigation to any panel, theme toggle, zoom controls, device actions (force stop, launch, reboot,
+screenshot, Wi-Fi/data toggle, clear logcat), data actions (clear traffic/traces/events), and the
+deep link builder. Each action shows its keyboard shortcut when one exists.
+
 ### Desktop-only panels
 
 Traffic, Events, Database, Cache, Errors, Config and Git History all work for any connected device,
 and so does Traces once the app has recorded a span. The desktop app adds three more that need
 host-side tooling, so they are gated on device capability and hidden for an iOS device:
 
-- **Dashboard** — live device metrics
+- **Dashboard** — live device metrics, with a quick-launch button for the deep link builder
 - **Logcat** — streamed device log
 - **ADB** — an embedded terminal (pty4j)
 
@@ -695,6 +771,9 @@ Hold Cmd/Ctrl to see number badges on sidebar items.
 - Understanding unfamiliar legacy systems
 - Answering “which build is this, and what changed in it?”
 - Inspecting third-party API behavior, and replaying a request until it works
+- Mocking API responses to test error states, loading screens, or edge-case payloads without a
+  backend change
+- Testing deep links across schemes and parameters without typing `adb shell am start` by hand
 - Checking what the app actually persisted, without a rebuild
 - Teaching junior developers how the system actually behaves
 
