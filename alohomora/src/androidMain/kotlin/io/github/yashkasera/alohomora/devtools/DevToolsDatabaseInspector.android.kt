@@ -85,9 +85,36 @@ internal actual class DevToolsDatabaseInspector actual constructor(
         }
     }
 
-    private fun openDatabase(path: String): SQLiteDatabase? {
+    actual fun updateCell(
+        databaseName: String,
+        tableName: String,
+        primaryKeys: Map<String, String>,
+        columnName: String,
+        newValue: String?,
+    ): Boolean {
+        if (primaryKeys.isEmpty()) return false
+        val path = appDatabaseProvider.resolvePath(databaseName) ?: return false
+        val db = openDatabase(path, readOnly = false) ?: return false
         return try {
-            SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY)
+            if (tableName !in queryTables(db)) return false
+            val whereClause = primaryKeys.keys.joinToString(" AND ") { "`$it` = ?" }
+            val whereArgs = primaryKeys.values.toTypedArray()
+            val values = android.content.ContentValues().apply {
+                if (newValue == null) putNull(columnName) else put(columnName, newValue)
+            }
+            db.update("`$tableName`", values, whereClause, whereArgs) > 0
+        } catch (e: Exception) {
+            println("[Alohomora] Failed to update cell: ${e.message}")
+            false
+        } finally {
+            db.close()
+        }
+    }
+
+    private fun openDatabase(path: String, readOnly: Boolean = true): SQLiteDatabase? {
+        val flags = if (readOnly) SQLiteDatabase.OPEN_READONLY else SQLiteDatabase.OPEN_READWRITE
+        return try {
+            SQLiteDatabase.openDatabase(path, null, flags)
         } catch (e: Exception) {
             null
         }

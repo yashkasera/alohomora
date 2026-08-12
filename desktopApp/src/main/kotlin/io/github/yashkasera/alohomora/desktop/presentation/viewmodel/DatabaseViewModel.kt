@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 import io.github.yashkasera.alohomora.desktop.domain.repository.DatabaseRepository
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseSchemaUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseTableUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseUpdateUseCase
 import io.github.yashkasera.alohomora.desktop.presentation.model.DatabaseUiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -16,6 +17,7 @@ class DatabaseViewModel(
     private val repository: DatabaseRepository,
     private val requestDatabaseSchemaUseCase: RequestDatabaseSchemaUseCase,
     private val requestDatabaseTableUseCase: RequestDatabaseTableUseCase,
+    private val requestDatabaseUpdateUseCase: RequestDatabaseUpdateUseCase,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -30,6 +32,16 @@ class DatabaseViewModel(
 
     fun requestTable(databaseName: String, tableName: String, limit: Int = 200) {
         requestDatabaseTableUseCase(databaseName, tableName, limit)
+    }
+
+    fun updateCell(
+        databaseName: String,
+        tableName: String,
+        primaryKeys: Map<String, String>,
+        columnName: String,
+        newValue: String?,
+    ) {
+        requestDatabaseUpdateUseCase(databaseName, tableName, primaryKeys, columnName, newValue)
     }
 
     /**

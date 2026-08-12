@@ -117,6 +117,13 @@ interface DevToolsRepository {
 
     fun requestDatabaseSchema(databaseName: String)
     fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int = 200)
+    fun requestDatabaseUpdate(
+        databaseName: String,
+        tableName: String,
+        primaryKeys: Map<String, String>,
+        columnName: String,
+        newValue: String?,
+    )
     fun requestCacheValue(key: String)
     fun requestInitialState()
 }

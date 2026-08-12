@@ -12,4 +12,11 @@ internal expect class DevToolsDatabaseInspector(
     fun listDatabases(): List<AppDatabaseInfo>
     fun loadSchema(databaseName: String): DatabaseSchemaSnapshot
     fun loadTable(databaseName: String, tableName: String, limit: Int): DatabaseTableSnapshot
+    fun updateCell(
+        databaseName: String,
+        tableName: String,
+        primaryKeys: Map<String, String>,
+        columnName: String,
+        newValue: String?,
+    ): Boolean
 }

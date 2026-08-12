@@ -101,5 +101,12 @@ class FakeDevToolsRepository(
     override fun setMockRules(rules: List<MockRule>) = Unit
     override fun setVpnThrottle(profile: ThrottleProfile, enabled: Boolean) = Unit
     override fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int) = Unit
+    override fun requestDatabaseUpdate(
+        databaseName: String,
+        tableName: String,
+        primaryKeys: Map<String, String>,
+        columnName: String,
+        newValue: String?,
+    ) = Unit
     override fun requestInitialState() = Unit
 }

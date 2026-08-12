@@ -30,6 +30,7 @@ import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
 import io.github.yashkasera.alohomora.common.VpnStateMessage
 import io.github.yashkasera.alohomora.common.VpnThrottleState
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
+import io.github.yashkasera.alohomora.common.RequestDatabaseUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
 import io.github.yashkasera.alohomora.common.RequestTraceSpansMessage
@@ -386,6 +387,26 @@ class DevToolsRepositoryImpl(
     override fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int) {
         scope.launch {
             sendMessage(RequestDatabaseTableMessage(databaseName = databaseName, tableName = tableName, limit = limit))
+        }
+    }
+
+    override fun requestDatabaseUpdate(
+        databaseName: String,
+        tableName: String,
+        primaryKeys: Map<String, String>,
+        columnName: String,
+        newValue: String?,
+    ) {
+        scope.launch {
+            sendMessage(
+                RequestDatabaseUpdateMessage(
+                    databaseName = databaseName,
+                    tableName = tableName,
+                    primaryKeys = primaryKeys,
+                    columnName = columnName,
+                    newValue = newValue,
+                ),
+            )
         }
     }
 

@@ -27,6 +27,7 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.ReplayTrafficUseCas
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestCacheValueUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseSchemaUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseTableUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseUpdateUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestInitialStateUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RunAdbCommandUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.SelectDeviceUseCase
@@ -114,6 +115,7 @@ class DesktopAppComposition(
         val requestInitialStateUseCase = RequestInitialStateUseCase(devToolsRepository)
         val requestDatabaseSchemaUseCase = RequestDatabaseSchemaUseCase(devToolsRepository)
         val requestDatabaseTableUseCase = RequestDatabaseTableUseCase(devToolsRepository)
+        val requestDatabaseUpdateUseCase = RequestDatabaseUpdateUseCase(devToolsRepository)
         val requestCacheValueUseCase = RequestCacheValueUseCase(devToolsRepository)
         val replayTrafficUseCase = ReplayTrafficUseCase(devToolsRepository)
 
@@ -178,6 +180,7 @@ class DesktopAppComposition(
             repository = databaseRepository,
             requestDatabaseSchemaUseCase = requestDatabaseSchemaUseCase,
             requestDatabaseTableUseCase = requestDatabaseTableUseCase,
+            requestDatabaseUpdateUseCase = requestDatabaseUpdateUseCase,
         )
 
         cacheViewModel = CacheViewModel(

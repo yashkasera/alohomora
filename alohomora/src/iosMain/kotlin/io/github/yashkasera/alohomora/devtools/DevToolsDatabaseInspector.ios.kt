@@ -89,6 +89,35 @@ internal actual class DevToolsDatabaseInspector actual constructor(
         }
     }
 
+    actual fun updateCell(
+        databaseName: String,
+        tableName: String,
+        primaryKeys: Map<String, String>,
+        columnName: String,
+        newValue: String?,
+    ): Boolean {
+        if (primaryKeys.isEmpty()) return false
+        val path = appDatabaseProvider.resolvePath(databaseName) ?: return false
+        return withConnection(path, { false }) { connection ->
+            if (tableName !in queryTables(connection)) return@withConnection false
+            val setCols = "`$columnName` = ?"
+            val whereClause = primaryKeys.keys.joinToString(" AND ") { "`$it` = ?" }
+            val sql = "UPDATE `$tableName` SET $setCols WHERE $whereClause"
+            connection.prepare(sql).use { statement ->
+                if (newValue == null) {
+                    statement.bindNull(1)
+                } else {
+                    statement.bindText(1, newValue)
+                }
+                primaryKeys.values.forEachIndexed { index, value ->
+                    statement.bindText(index + 2, value)
+                }
+                statement.step()
+            }
+            true
+        }
+    }
+
     /**
      * Opens [path], runs [block], and always closes the connection.
      *

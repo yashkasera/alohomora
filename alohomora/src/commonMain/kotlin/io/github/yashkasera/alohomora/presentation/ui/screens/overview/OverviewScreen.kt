@@ -426,7 +426,7 @@ private fun ModuleCard(
         else MaterialTheme.colorScheme.onSurface
     val borderColor =
         if (overviewModule.isInverse) MaterialTheme.colorScheme.inverseOnSurface
-        else MaterialTheme.colorScheme.onSurface
+        else MaterialTheme.colorScheme.outline
 
     Box(
         modifier = Modifier
@@ -437,7 +437,7 @@ private fun ModuleCard(
             .border(
                 width = MaterialTheme.dimens.stroke.small,
                 color = borderColor,
-                shape = RectangleShape,
+                shape = MaterialTheme.shapes.extraSmall,
             )
             .background(backgroundColor)
             .clickable { onNavigate(overviewModule.route) },

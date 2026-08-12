@@ -33,6 +33,7 @@ import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
 import io.github.yashkasera.alohomora.common.VpnStateMessage
 import io.github.yashkasera.alohomora.common.VpnThrottleState
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
+import io.github.yashkasera.alohomora.common.RequestDatabaseUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
 import io.github.yashkasera.alohomora.common.RequestTraceSpansMessage
@@ -45,6 +46,7 @@ import io.github.yashkasera.alohomora.common.TraceSpansSnapshotMessage
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults.ERROR_SNAPSHOT_LIMIT
+import io.github.yashkasera.alohomora.devtools.DevToolsDefaults.MAX_TABLE_RELOAD_LIMIT
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults.TRAFFIC_SNAPSHOT_LIMIT
 import io.github.yashkasera.alohomora.domain.repository.EventsRepository
 import io.github.yashkasera.alohomora.replay.ReplayOutcome
@@ -95,6 +97,7 @@ internal object DevToolsDefaults {
      */
     const val SPAN_SNAPSHOT_LIMIT: Int = 1000
     const val STREAM_BUFFER_CAPACITY: Int = 1024
+    const val MAX_TABLE_RELOAD_LIMIT: Int = 200
 
     /**
      * How long to wait for a client's token probe before displaying the OTP regardless.
@@ -424,6 +427,7 @@ internal class DevToolsRuntime(
                                 message.tableName,
                                 message.limit,
                             )
+                            is RequestDatabaseUpdateMessage -> handleDatabaseUpdate(message)
                             is RequestCacheValueMessage -> handleCacheRequest(message.key)
                             is RequestReplayTraceMessage -> handleReplayRequest(message)
                             is RequestTraceSpansMessage -> handleTraceSpansRequest(message.traceId)
@@ -800,6 +804,20 @@ internal class DevToolsRuntime(
                 nextSequence(),
                 DatabaseSnapshotPayload(databaseName = databaseName, schema = schema),
             ))
+        }
+
+        private suspend fun handleDatabaseUpdate(message: RequestDatabaseUpdateMessage) {
+            val dbName = message.databaseName
+            val success = databaseInspector.updateCell(
+                databaseName = dbName,
+                tableName = message.tableName,
+                primaryKeys = message.primaryKeys,
+                columnName = message.columnName,
+                newValue = message.newValue,
+            )
+            if (success) {
+                handleDatabaseRequest(dbName, message.tableName, MAX_TABLE_RELOAD_LIMIT)
+            }
         }
 
         private suspend fun handleCacheRequest(key: String) {

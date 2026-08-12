@@ -318,6 +318,17 @@ data class RequestDatabaseTableMessage(
 ) : DevToolsMessage()
 
 @Serializable
+@SerialName("REQUEST_DATABASE_UPDATE")
+data class RequestDatabaseUpdateMessage(
+    override val sequence: Long = 0,
+    val databaseName: String,
+    val tableName: String,
+    val primaryKeys: Map<String, String>,
+    val columnName: String,
+    val newValue: String?,
+) : DevToolsMessage()
+
+@Serializable
 @SerialName("REQUEST_CACHE_VALUE")
 data class RequestCacheValueMessage(
     override val sequence: Long = 0,
