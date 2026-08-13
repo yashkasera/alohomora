@@ -9,8 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 
-// --- Minimal Canvas Background ---
-
 @Composable
 internal fun CanvasBackground(
     modifier: Modifier = Modifier,

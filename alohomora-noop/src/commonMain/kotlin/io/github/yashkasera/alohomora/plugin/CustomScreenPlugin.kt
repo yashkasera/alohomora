@@ -3,14 +3,7 @@ package io.github.yashkasera.alohomora.plugin
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 
-/**
- * No-op implementation of CustomScreenPlugin for release builds.
- *
- * This interface matches the debug version but will never be used at runtime.
- *
- * Every member here must mirror `:alohomora`'s `CustomScreenPlugin` exactly — a consumer
- * implements this interface once and compiles it against both artifacts.
- */
+/** No-op mirror of `:alohomora`'s `CustomScreenPlugin`. Must match the debug version exactly. */
 interface CustomScreenPlugin {
     val id: String
     val title: String

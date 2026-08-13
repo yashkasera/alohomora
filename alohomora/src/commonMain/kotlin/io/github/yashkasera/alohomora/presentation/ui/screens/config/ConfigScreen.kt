@@ -37,7 +37,6 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 @Composable
 internal fun ConfigScreen(
     onBackClick: () -> Unit = {},
-    onSaveConfig: (String) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -85,10 +84,6 @@ internal fun ConfigScreen(
     }
 }
 
-// ============================================================================
-// Config Section Container
-// ============================================================================
-
 @Composable
 private fun ConfigSection(
     title: String,
@@ -110,10 +105,6 @@ private fun ConfigSection(
         content()
     }
 }
-
-// ============================================================================
-// Build Information Grid
-// ============================================================================
 
 @Composable
 private fun BuildInfoGrid(buildConfig: BuildMetadata?) {
@@ -173,10 +164,6 @@ private fun BuildInfoGrid(buildConfig: BuildMetadata?) {
     }
 }
 
-// ============================================================================
-// Environment Details
-// ============================================================================
-
 @Composable
 private fun EnvironmentDetails(environment: String) {
     Column(
@@ -212,10 +199,6 @@ private fun EnvironmentDetails(environment: String) {
         )
     }
 }
-
-// ============================================================================
-// Info Item Component
-// ============================================================================
 
 @Composable
 private fun InfoItem(

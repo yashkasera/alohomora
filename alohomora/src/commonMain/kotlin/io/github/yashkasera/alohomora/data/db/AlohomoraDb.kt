@@ -19,8 +19,6 @@ import io.github.yashkasera.alohomora.data.datasource.local.ScreenDao
 import io.github.yashkasera.alohomora.data.datasource.local.SpanDao
 import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 
-// --- Database ---
-
 @Database(
     entities = [Event::class, TrafficEntry::class, Error::class, Screen::class, Span::class],
     // 5: TrafficEntry gained `mockedBy` column for network mocking support.

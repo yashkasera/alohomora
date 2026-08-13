@@ -1,15 +1,12 @@
 package io.github.yashkasera.alohomora.showcaseApp.presentation
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.showcaseApp.domain.usecase.GetPreferencesUseCase
 import io.github.yashkasera.alohomora.showcaseApp.domain.usecase.ObservePostsUseCase
 import io.github.yashkasera.alohomora.showcaseApp.domain.usecase.RefreshPostsUseCase
 import io.github.yashkasera.alohomora.showcaseApp.domain.usecase.UpdatePreferencesUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -23,7 +20,6 @@ class PostsViewModel(
     private val updatePreferencesUseCase: UpdatePreferencesUseCase,
 ) : ViewModel() {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val loadingState = MutableStateFlow(false)
     private val errorState = MutableStateFlow<String?>(null)
 
@@ -39,14 +35,14 @@ class PostsViewModel(
             isLoading = isLoading,
             errorMessage = error
         )
-    }.stateIn(scope, SharingStarted.WhileSubscribed(5_000), UiState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
 
     init {
         refreshPosts()
     }
 
     fun refreshPosts() {
-        scope.launch {
+        viewModelScope.launch {
             loadingState.value = true
             errorState.value = null
             try {
@@ -64,19 +60,15 @@ class PostsViewModel(
     }
 
     fun updateUsername(value: String) {
-        scope.launch {
+        viewModelScope.launch {
             updatePreferencesUseCase.updateUsername(value)
         }
     }
 
     fun updateAutoRefresh(enabled: Boolean) {
-        scope.launch {
+        viewModelScope.launch {
             updatePreferencesUseCase.updateAutoRefresh(enabled)
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        scope.cancel()
-    }
 }

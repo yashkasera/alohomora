@@ -59,7 +59,7 @@ fun PostsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    throw IllegalStateException()
+                    throw IllegalStateException("Intentional crash to demo Alohomora error capture")
                 },
             ) {
                 // A label rather than an icon from :alohomora-ui. This app compiles against

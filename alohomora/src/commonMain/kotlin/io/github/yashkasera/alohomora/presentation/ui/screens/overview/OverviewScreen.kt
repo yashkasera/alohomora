@@ -2,10 +2,8 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.overview
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,38 +20,23 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
-import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.capitalize
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -61,21 +44,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
-import io.github.yashkasera.alohomora.presentation.ui.components.CanvasBackground
-import io.github.yashkasera.alohomora.common.AttentionItem
-import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
-import io.github.yashkasera.alohomora.ui.components.AlohomoraChipDefaults
-import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
-import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
 import io.github.yashkasera.alohomora.ui.components.NeedsAttentionPager
-import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.icons.Activity
 import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.AlohomoraFull
-import io.github.yashkasera.alohomora.ui.icons.ArrowRight
 import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -87,8 +62,6 @@ import io.github.yashkasera.alohomora.ui.icons.Tag
 import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
 import io.github.yashkasera.alohomora.ui.icons.ToggleRight
 import io.github.yashkasera.alohomora.ui.icons.Waypoints
-import io.github.yashkasera.alohomora.ui.icons.X
-import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -171,11 +144,6 @@ private val builtInModules = listOf(
 @Composable
 internal fun OverviewScreen(
     onNavigate: (Routes) -> Unit,
-    /**
-     * Dismisses the console. Non-null only when the host has no way out of its own — notably an
-     * iOS sheet, where there is no system back button.
-     */
-    onClose: (() -> Unit)? = null,
 ) {
     val viewModel = koinViewModel<OverviewViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -222,15 +190,6 @@ internal fun OverviewScreen(
                             .width(148.dp),
                         contentDescription = null,
                     )
-                    Spacer(Modifier.weight(1f))
-                    if (onClose != null) {
-                        AlohomoraIconButton(onClick = onClose) {
-                            Icon(
-                                imageVector = Icons.X,
-                                contentDescription = "Close Alohomora",
-                            )
-                        }
-                    }
                 }
                 Alohomora.config?.let {
                     Row(

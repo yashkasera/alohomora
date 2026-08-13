@@ -45,21 +45,10 @@ kotlin {
             api(libs.kotlinx.serialization.json)
         }
 
-        androidMain.dependencies {
-            // No platform-specific UI deps yet.
-        }
-
-        jvmMain.dependencies {
-            // Desktop app provides compose.desktop.currentOs.
-        }
-
         jvmTest.dependencies {
             implementation(kotlin("test"))
         }
 
-        iosMain.dependencies {
-            // No platform-specific deps required.
-        }
     }
 
     targets

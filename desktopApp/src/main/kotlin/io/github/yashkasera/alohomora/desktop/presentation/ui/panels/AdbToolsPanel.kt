@@ -108,7 +108,6 @@ fun AdbToolsPanel(
                 .padding(horizontal = 40.dp, vertical = 20.dp)
                 .fillMaxWidth(),
         ) {
-            // --- App ---
             SectionHeader("App")
             AdbRow(title = "Package", subtitle = buildInfo?.packageName?.let { "Detected: $it" }) {
                 AlohomoraTextField(
@@ -164,7 +163,6 @@ fun AdbToolsPanel(
                 )
             }
 
-            // --- Install APK ---
             SectionHeader("Install APK")
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = MaterialTheme.dimens.margin.sm),
@@ -192,7 +190,6 @@ fun AdbToolsPanel(
                 )
             }
 
-            // --- Capture ---
             SectionHeader("Capture")
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = MaterialTheme.dimens.margin.sm),
@@ -248,7 +245,6 @@ fun AdbToolsPanel(
                 )
             }
 
-            // --- Device ---
             SectionHeader("Device")
             AdbRow(
                 title = "Wi-Fi",

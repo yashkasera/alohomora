@@ -8,33 +8,12 @@ import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 
 /**
- * No-op implementation of Alohomora for release builds.
- *
- * This version has zero runtime overhead - all methods are empty and will be
- * optimized away by the compiler/ProGuard/R8.
- *
- * Use this in your release builds:
- * ```
- * dependencies {
- *     debugImplementation("io.github.yashkasera:alohomora:1.0.0")
- *     releaseImplementation("io.github.yashkasera:alohomora-noop:1.0.0")
- * }
- * ```
- *
- * **Every member here must mirror `:alohomora`'s `Alohomora` object exactly** — same names,
- * same parameter lists and order, same defaults, same JVM annotations. A consumer compiles
- * one call site against both artifacts, so any divergence is a release-only build failure.
- * `:consumerParity` in the root build enforces this; do not hand-edit one side alone.
+ * No-op mirror of `:alohomora`'s `Alohomora` object.
+ * Every member must match exactly; `:consumerParity` enforces this.
  */
 object Alohomora {
 
-    fun init() {
-        /* no-op */
-    }
-
-    // ============================================================================
-    // Logging and Event Tracking - No-op
-    // ============================================================================
+    fun init() {}
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
@@ -59,50 +38,24 @@ object Alohomora {
         requestSize: Long? = null,
         responseSize: Long? = null,
         mockedBy: String? = null,
-    ) {
-        /* no-op */
-    }
+    ) {}
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordEvent(name: String, properties: Map<String, String>? = null) {
-        /* no-op */
-    }
-
-    // ============================================================================
-    // Error Recording - No-op
-    // ============================================================================
+    fun recordEvent(name: String, properties: Map<String, String>? = null) {}
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordError(throwable: Throwable, place: String? = null) {
-        /* no-op */
-    }
+    fun recordError(throwable: Throwable, place: String? = null) {}
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordError(reason: String, stackTrace: String? = null, place: String? = null) {
-        /* no-op */
-    }
+    fun recordError(reason: String, stackTrace: String? = null, place: String? = null) {}
 
-    // ============================================================================
-    // Trace Recording - No-op
-    // ============================================================================
-
-    /**
-     * No-op mirror of `:alohomora`'s `recordSpan`.
-     *
-     * This being a no-op is what lets a host app register its tracer adapter from `src/main` rather
-     * than a debug-only source set: the adapter compiles and runs in release, and every span it hands
-     * over lands here and is discarded. R8 removes the call and the argument construction with it.
-     *
-     * The defaults are literals rather than `Span.KIND_INTERNAL` / `Span.STATUS_UNSET`, because
-     * `Span` lives in `:alohomora-common`, which this module deliberately does not depend on. They
-     * must match the real declaration's constants.
-     */
+    /** No-op. Defaults are literals to avoid depending on `:alohomora-common`. */
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
@@ -119,66 +72,34 @@ object Alohomora {
         attributes: Map<String, String>? = null,
         events: List<SpanEvent> = emptyList(),
         scopeName: String? = null,
-    ) {
-        /* no-op */
-    }
+    ) {}
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordSpan(name: String, durationNanos: Long, attributes: Map<String, String>? = null) {
-        /* no-op */
-    }
-
-    // ============================================================================
-    // DevTools TCP Server - No-op
-    // ============================================================================
+    fun recordSpan(name: String, durationNanos: Long, attributes: Map<String, String>? = null) {}
 
     @Suppress("UNUSED_PARAMETER")
     fun startDevToolsServer(port: Int = 53999): Boolean {
         return false
     }
 
-    fun stopDevToolsServer() {
-        /* no-op */
-    }
-
-    // ============================================================================
-    // App Database Overrides - No-op
-    // ============================================================================
+    fun stopDevToolsServer() {}
 
     @Suppress("UNUSED_PARAMETER")
-    fun registerAppDatabase(name: String, path: String? = null) {
-        /* no-op */
-    }
+    fun registerAppDatabase(name: String, path: String? = null) {}
 
     @Suppress("UNUSED_PARAMETER")
-    fun excludeAppDatabase(name: String) {
-        /* no-op */
-    }
+    fun excludeAppDatabase(name: String) {}
 
-    fun clearAppDatabaseOverrides() {
-        /* no-op */
-    }
-
-    // ============================================================================
-    // Traffic Replay - No-op
-    // ============================================================================
+    fun clearAppDatabaseOverrides() {}
 
     @Suppress("UNUSED_PARAMETER")
-    fun registerReplayHandler(handler: TrafficReplayHandler) {
-        /* no-op */
-    }
+    fun registerReplayHandler(handler: TrafficReplayHandler) {}
 
-    fun clearReplayHandler() {
-        /* no-op */
-    }
+    fun clearReplayHandler() {}
 
     val isReplaySupported: Boolean get() = false
-
-    // ============================================================================
-    // Feature Flags - No-op
-    // ============================================================================
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
@@ -189,9 +110,7 @@ object Alohomora {
         source: String? = null,
         type: String? = null,
         metadata: Map<String, String>? = null,
-    ) {
-        /* no-op */
-    }
+    ) {}
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
@@ -199,23 +118,13 @@ object Alohomora {
     fun setFeatureFlags(
         flags: List<FeatureFlag>,
         source: String? = null,
-    ) {
-        /* no-op */
-    }
+    ) {}
 
     @JvmStatic
-    fun clearFeatureFlags() {
-        /* no-op */
-    }
-
-    // ============================================================================
-    // Plugin System - No-op
-    // ============================================================================
+    fun clearFeatureFlags() {}
 
     @Suppress("UNUSED_PARAMETER")
-    fun registerPlugin(plugin: CustomScreenPlugin) {
-        /* no-op */
-    }
+    fun registerPlugin(plugin: CustomScreenPlugin) {}
 
     @Suppress("UNUSED_PARAMETER")
     fun unregisterPlugin(pluginId: String): Boolean {

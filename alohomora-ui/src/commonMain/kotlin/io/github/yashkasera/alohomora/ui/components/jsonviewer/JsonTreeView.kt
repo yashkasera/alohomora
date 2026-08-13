@@ -75,11 +75,11 @@ fun JsonTreeView(
     val tree = remember(element) { element?.let(JsonTreeBuilder::build) }
     val visibleState = remember(tree) { tree?.let(::VisibleTreeState) }
 
-    var query by remember { mutableStateOf("") }
-    var results by remember { mutableStateOf<List<Path>>(emptyList()) }
+    var query by remember(json) { mutableStateOf("") }
+    var results by remember(json) { mutableStateOf<List<Path>>(emptyList()) }
 
     val scope = rememberCoroutineScope()
-    var index by remember { mutableStateOf(0) }
+    var index by remember(json) { mutableStateOf(0) }
 
     fun navigateTo(path: Path) {
         visibleState?.expandParents(path) ?: return
@@ -233,7 +233,7 @@ fun JsonTreeView(
     }
 }
 
-fun <A, B, C> guardLet(a: A?, b: B?, c: C?, action: (A, B, C) -> Unit): Unit? {
+internal fun <A, B, C> guardLet(a: A?, b: B?, c: C?, action: (A, B, C) -> Unit): Unit? {
     if (a != null && b != null && c != null) {
         action(a, b, c)
         return Unit
@@ -242,7 +242,7 @@ fun <A, B, C> guardLet(a: A?, b: B?, c: C?, action: (A, B, C) -> Unit): Unit? {
 }
 
 @Composable
-fun <A, B, C, T> T.guardLetCompose(a: A?, b: B?, c: C?, action: @Composable T.(A, B, C) -> Unit) {
+internal fun <A, B, C, T> T.guardLetCompose(a: A?, b: B?, c: C?, action: @Composable T.(A, B, C) -> Unit) {
     if (a != null && b != null && c != null) {
         action(a, b, c)
     }

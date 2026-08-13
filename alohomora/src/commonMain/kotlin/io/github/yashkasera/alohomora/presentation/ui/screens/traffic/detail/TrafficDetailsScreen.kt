@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +28,7 @@ import io.github.yashkasera.alohomora.presentation.ui.components.ReplayBottomShe
 import io.github.yashkasera.alohomora.presentation.ui.components.ShareBottomSheet
 import io.github.yashkasera.alohomora.presentation.ui.components.SlackShareBottomSheet
 import io.github.yashkasera.alohomora.presentation.ui.components.SlackShareOption
+import io.github.yashkasera.alohomora.presentation.ui.components.rememberClipboardCopy
 import io.github.yashkasera.alohomora.replay.ReplayRequest
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
@@ -51,6 +53,7 @@ internal fun TrafficDetailsScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val trace = state.trace
     var replayDraft by remember { mutableStateOf<ReplayRequest?>(null) }
+    val clipboardCopy = rememberClipboardCopy()
 
     if (trace == null) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -64,6 +67,7 @@ internal fun TrafficDetailsScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(clipboardCopy.snackbarHostState) },
         topBar = {
             AlohomoraTopBar(
                 title = "Traffic Log",
@@ -116,7 +120,7 @@ internal fun TrafficDetailsScreen(
             state.replayResultTraceId?.let { resultId ->
                 ReplayResultBanner(onClick = { onOpenTraffic(resultId) })
             }
-            TrafficDetailsContent(trace = trace)
+            TrafficDetailsContent(trace = trace, onCopy = clipboardCopy.copy)
         }
     }
 

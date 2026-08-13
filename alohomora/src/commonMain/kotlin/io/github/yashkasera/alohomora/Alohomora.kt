@@ -147,11 +147,6 @@ object Alohomora {
         }
     }
 
-    // ============================================================================
-    // Logging and Event Tracking
-    // ============================================================================
-
-
     @OptIn(ExperimentalUuidApi::class)
     @JvmStatic
     fun recordTraffic(
@@ -233,10 +228,6 @@ object Alohomora {
         }
     }
 
-    // ============================================================================
-    // Error Recording
-    // ============================================================================
-
     /**
      * Records a caught, non-fatal [throwable] in the Errors console.
      *
@@ -314,10 +305,6 @@ object Alohomora {
             ),
         )
     }
-
-    // ============================================================================
-    // Trace Recording
-    // ============================================================================
 
     /**
      * Records a completed span, so its trace shows up in the Traces console.
@@ -431,10 +418,6 @@ object Alohomora {
         koin?.get<SpanRepository>()?.saveAll(spans)
     }
 
-    // ============================================================================
-    // DevTools TCP Server
-    // ============================================================================
-
     fun startDevToolsServer(port: Int = DevToolsDefaults.DEFAULT_PORT): Boolean {
         return try {
             val runtime = koin?.get<DevToolsRuntime>() ?: return false
@@ -450,10 +433,6 @@ object Alohomora {
         runtime.stop()
     }
 
-    // ============================================================================
-    // App Database Overrides
-    // ============================================================================
-
     fun registerAppDatabase(name: String, path: String? = null) {
         DevToolsDatabaseOverrides.include(name, path)
     }
@@ -465,10 +444,6 @@ object Alohomora {
     fun clearAppDatabaseOverrides() {
         DevToolsDatabaseOverrides.clear()
     }
-
-    // ============================================================================
-    // Trace Replay
-    // ============================================================================
 
     /**
      * Registers the client Alohomora should use to re-send a captured request.
@@ -507,10 +482,6 @@ object Alohomora {
 
     /** True when a replay handler is registered and captured requests can be re-sent. */
     val isReplaySupported: Boolean get() = TrafficReplayRegistry.isSupported
-
-    // ============================================================================
-    // Feature Flags
-    // ============================================================================
 
     @JvmStatic
     @JvmOverloads
@@ -554,10 +525,6 @@ object Alohomora {
             store.clear()
         }
     }
-
-    // ============================================================================
-    // Plugin System - Custom Screens
-    // ============================================================================
 
     /**
      * Register a custom screen plugin.

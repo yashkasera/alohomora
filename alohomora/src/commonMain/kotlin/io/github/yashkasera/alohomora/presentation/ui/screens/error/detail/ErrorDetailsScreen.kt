@@ -14,13 +14,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,6 +33,7 @@ import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.dimens
+import io.github.yashkasera.alohomora.presentation.ui.components.rememberClipboardCopy
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -44,9 +44,10 @@ internal fun ErrorDetailsScreen(
 ) {
     val viewModel = koinViewModel<ErrorDetailsViewModel> { parametersOf(errorId) }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val clipboard = LocalClipboardManager.current
+    val clipboardCopy = rememberClipboardCopy()
 
     Scaffold(
+        snackbarHost = { SnackbarHost(clipboardCopy.snackbarHostState) },
         topBar = {
             AlohomoraTopBar(
                 title = state.error?.exceptionTypeName().orEmpty(),
@@ -60,15 +61,13 @@ internal fun ErrorDetailsScreen(
                     state.error?.let { error ->
                         AlohomoraIconButton(
                             onClick = {
-                                clipboard.setText(
-                                    AnnotatedString(
-                                        buildString {
-                                            appendLine(error.reason ?: "Unknown exception")
-                                            appendLine(error.place ?: "")
-                                            appendLine()
-                                            append(error.stackTrace ?: "")
-                                        },
-                                    ),
+                                clipboardCopy.copy(
+                                    buildString {
+                                        appendLine(error.reason ?: "Unknown exception")
+                                        appendLine(error.place ?: "")
+                                        appendLine()
+                                        append(error.stackTrace ?: "")
+                                    },
                                 )
                             },
                         ) {

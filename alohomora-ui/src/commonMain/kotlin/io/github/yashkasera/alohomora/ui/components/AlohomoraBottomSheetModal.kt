@@ -87,15 +87,15 @@ data class DragHandleConfig(
 fun AlohomoraBottomSheetModal(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    skipPartiallyExpanded: Boolean = true,
     sheetState: SheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
+        skipPartiallyExpanded = skipPartiallyExpanded
     ),
     shape: Shape = AlohomoraBottomSheetDefaults.shape,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = contentColorFor(containerColor),
     tonalElevation: Dp = AlohomoraBottomSheetDefaults.tonalElevation,
     dragHandle: DragHandleConfig = DragHandleConfig(),
-    skipPartiallyExpanded: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     ModalBottomSheet(
@@ -139,37 +139,20 @@ fun AlohomoraBottomSheetModal(
     }
 }
 
-/**
- * A convenience wrapper that provides default content padding and layout structure
- * for simple bottom sheets that don't need custom padding.
- *
- * @param onDismissRequest Callback when the user attempts to dismiss the sheet
- * @param modifier Modifier to be applied to the bottom sheet
- * @param sheetState State of the sheet
- * @param shape The shape of the bottom sheet
- * @param containerColor The background color of the bottom sheet
- * @param contentColor The preferred content color for the bottom sheet
- * @param tonalElevation The tonal elevation of the bottom sheet
- * @param dragHandle Configuration for the drag handle
- * @param skipPartiallyExpanded Whether to skip the partially expanded state
- * @param horizontalPadding The horizontal padding for content (default: 24.dp)
- * @param bottomPadding The bottom padding for content (default: 32.dp)
- * @param content The content of the bottom sheet
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlohomoraBottomSheetModal(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    skipPartiallyExpanded: Boolean = true,
     sheetState: SheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
+        skipPartiallyExpanded = skipPartiallyExpanded
     ),
     shape: Shape = AlohomoraBottomSheetDefaults.shape,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = contentColorFor(containerColor),
     tonalElevation: Dp = AlohomoraBottomSheetDefaults.tonalElevation,
     dragHandle: DragHandleConfig = DragHandleConfig(),
-    skipPartiallyExpanded: Boolean = true,
     horizontalPadding: Dp = AlohomoraBottomSheetDefaults.contentHorizontalPadding,
     bottomPadding: Dp = AlohomoraBottomSheetDefaults.contentBottomPadding,
     content: @Composable ColumnScope.() -> Unit,

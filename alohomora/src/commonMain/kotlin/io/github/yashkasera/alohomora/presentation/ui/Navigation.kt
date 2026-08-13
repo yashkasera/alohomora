@@ -22,14 +22,9 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.traces.detail.Trac
 import io.github.yashkasera.alohomora.presentation.ui.screens.traces.list.TracesScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.list.TrafficScreen
 
-// Need to detect platform - minimal expect/actual or just resizing for now
-// Assuming Desktop has wide screen, Mobile has narrow.
-// For true separation we should use expect/actual but WindowSizeClass is better for responsive UI.
-
 @Composable
 internal fun AlohomoraNavHost(
     startDestination: Routes = Routes.Overview,
-    onClose: (() -> Unit)? = null,
 ) {
     val navController = rememberNavController()
 
@@ -43,7 +38,7 @@ internal fun AlohomoraNavHost(
 
     NavHost(navController = navController, startDestination = Routes.Overview) {
         composable<Routes.Overview> {
-            OverviewScreen(onNavigate = navController::navigate, onClose = onClose)
+            OverviewScreen(onNavigate = navController::navigate)
         }
 
         composable<Routes.Traffic> {
@@ -77,10 +72,6 @@ internal fun AlohomoraNavHost(
         composable<Routes.Config> {
             ConfigScreen(
                 onBackClick = navController::navigateUp,
-                onSaveConfig = { url ->
-                    // TODO: Handle URL save logic
-                    println("Saving BE URL: $url")
-                },
             )
         }
 

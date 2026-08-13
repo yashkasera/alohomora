@@ -35,8 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -68,6 +66,7 @@ import kotlinx.coroutines.launch
 internal fun TrafficDetailsContent(
     modifier: Modifier = Modifier,
     trace: TrafficEntry,
+    onCopy: (String) -> Unit = {},
 ) {
     val tabs = listOf("OVERVIEW", "REQUEST", "RESPONSE")
     val pagerState = rememberPagerState(pageCount = { tabs.size })
@@ -128,7 +127,7 @@ internal fun TrafficDetailsContent(
                             .padding(horizontal = MaterialTheme.dimens.margin.md)
                             .padding(top = MaterialTheme.dimens.margin.md),
                     ) {
-                        RequestTab(trace = trace)
+                        RequestTab(trace = trace, onCopy = onCopy)
                     }
                 }
 
@@ -144,10 +143,6 @@ internal fun TrafficDetailsContent(
 
     }
 }
-
-// ============================================================================
-// Overview Tab
-// ============================================================================
 
 @Composable
 private fun OverviewTab(entry: TrafficEntry) {
@@ -180,16 +175,11 @@ private fun OverviewTab(entry: TrafficEntry) {
         )
     }
 
-
-
     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
     // Calculate sizes from content
     val requestSize = entry.requestSize ?: 0
     val responseSize = entry.responseSize ?: 0L
-
-    // Detect format from Content-Type header
-//    val responseFormat = detectFormatFromContentType(entry.responseContentType)
 
     HeroStatsSection(
         statusCode = entry.status ?: 0,
@@ -207,13 +197,8 @@ private fun OverviewTab(entry: TrafficEntry) {
     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.huge))
 }
 
-// ============================================================================
-// Request Tab
-// ============================================================================
-
 @Composable
-private fun RequestTab(trace: TrafficEntry) {
-    val clipboard = LocalClipboardManager.current
+private fun RequestTab(trace: TrafficEntry, onCopy: (String) -> Unit) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -317,7 +302,7 @@ private fun RequestTab(trace: TrafficEntry) {
                 AlohomoraOutlinedButton(
                     text = "Copy JSON",
                     onClick = {
-                        clipboard.setText(AnnotatedString(requestBody ?: trace.responseBody ?: ""))
+                        onCopy(requestBody ?: trace.responseBody ?: "")
                     },
                     modifier = Modifier.weight(1f),
                 )
@@ -325,7 +310,7 @@ private fun RequestTab(trace: TrafficEntry) {
             }
             AlohomoraOutlinedButton(
                 text = "Copy cURL",
-                onClick = { clipboard.setText(AnnotatedString(trace.curlCommand())) },
+                onClick = { onCopy(trace.curlCommand()) },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -333,11 +318,6 @@ private fun RequestTab(trace: TrafficEntry) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.huge))
     }
 }
-
-
-// ============================================================================
-// Response Tab
-// ============================================================================
 
 @Composable
 private fun ResponseTab(
@@ -403,10 +383,6 @@ private fun ResponseTab(
     }
 }
 
-// ============================================================================
-// Shared Components
-// ============================================================================
-
 @Composable
 private fun HeroStatsSection(
     statusCode: Int,
@@ -438,7 +414,9 @@ private fun HeroStatsSection(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Column {
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
                 Text(
                     text = "LATENCY",
                     style = MaterialTheme.typography.labelSmall,
@@ -459,7 +437,10 @@ private fun HeroStatsSection(
                 }
             }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Text(
                     text = "SIZE",
                     style = MaterialTheme.typography.labelSmall,
@@ -477,7 +458,10 @@ private fun HeroStatsSection(
                 )
             }
 
-            Column(horizontalAlignment = Alignment.End) {
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.End,
+            ) {
                 Text(
                     text = "FORMAT",
                     style = MaterialTheme.typography.labelSmall,
@@ -485,7 +469,7 @@ private fun HeroStatsSection(
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                 Text(
-                    text = format,
+                    text = detectFormatFromContentType(format).contentSubtype,
                     style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.End,
                 )
@@ -586,37 +570,6 @@ private fun FormatBadge(format: String) {
     }
 }
 
-// ============================================================================
-// Response Tab Specific Components
-// ============================================================================
-
-@Composable
-private fun PrettifyToggle(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .width(48.dp)
-            .height(24.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .background(
-                if (checked) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.surfaceVariant,
-            )
-            .clickable { onCheckedChange(!checked) }
-            .padding(2.dp),
-        contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(20.dp)
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surface),
-        )
-    }
-}
-
 @Composable
 private fun ResponseMetadata(
     statusCode: Int,
@@ -664,11 +617,6 @@ private fun ResponseMetadata(
     }
 }
 
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
 /**
  * Formats bytes to human-readable format (B, KB, MB, GB)
  */
@@ -707,9 +655,6 @@ private fun formatHeaders(headers: Map<String, List<String>>?): List<String> {
  * Detects content format from Content-Type header
  */
 private fun detectFormatFromContentType(contentType: String?): ContentType =
-    if (contentType.isNullOrBlank()) ContentType.Any
-    else try {
-        ContentType.parse(contentType)
-    } catch (_: Exception) {
-        ContentType.Any
-    }
+    runCatching {
+        ContentType.parse(contentType ?: throw Exception())
+    }.getOrDefault(ContentType.Any)

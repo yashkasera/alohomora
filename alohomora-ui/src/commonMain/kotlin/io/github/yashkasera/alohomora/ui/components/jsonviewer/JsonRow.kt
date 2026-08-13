@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
@@ -80,7 +79,7 @@ internal fun LazyItemScope.JsonRow(
                         .clickable(enabled = isExpandable) { visibleState.toggle(node.path) }
                         .padding(end = 6.dp),
                     color = if (isExpandable)
-                        Color(0xFF52525B) else Color(0xFFD4D4D8),
+                        MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.outlineVariant,
                 )
 
                 node.key?.let { key ->

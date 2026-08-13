@@ -5,11 +5,20 @@ import AlohomoraKit
 struct ShowcaseApp: App {
 
     init() {
-        // init() takes no arguments any more. It previously accepted a Koin declaration, which
-        // leaked the library's DI container into the host app; Alohomora now builds an isolated
-        // container internally so it cannot collide with the app's own.
         Alohomora.shared.doInit()
         _ = Alohomora.shared.registerURLProtocol()
+
+        Alohomora.shared.recordFeatureFlag(key: "dark_mode_v2", value: "true", source: "Firebase Remote Config", type: "feature_flag", metadata: nil)
+        Alohomora.shared.recordFeatureFlag(key: "checkout_redesign", value: "false", source: "Firebase Remote Config", type: "experiment", metadata: nil)
+        Alohomora.shared.recordFeatureFlag(key: "max_cart_items", value: "25", source: "LaunchDarkly", type: "remote_config", metadata: nil)
+        Alohomora.shared.recordFeatureFlag(
+            key: "onboarding_flow",
+            value: "variant_b",
+            source: "LaunchDarkly",
+            type: "experiment",
+            metadata: ["cohort": "new_users", "rollout_pct": "50"]
+        )
+        Alohomora.shared.recordFeatureFlag(key: "enable_search_v3", value: "true", source: nil, type: "feature_flag", metadata: nil)
     }
 
     var body: some Scene {

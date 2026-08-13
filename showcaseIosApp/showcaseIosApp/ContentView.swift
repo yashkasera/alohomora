@@ -29,14 +29,30 @@ class PostsService {
     )
 
     func fetchPosts() async throws -> [Post] {
+        let start = DispatchTime.now()
         let (data, _) = try await session.data(from: endpoint)
-        return try JSONDecoder().decode([Post].self, from: data)
+        let posts = try JSONDecoder().decode([Post].self, from: data)
+        let elapsed = Int64(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds)
+        Alohomora.shared.recordSpan(
+            name: "GET /posts",
+            durationNanos: elapsed,
+            attributes: ["http.method": "GET", "post.count": "\(posts.count)"]
+        )
+        return posts
     }
 
     func fetchPost(id: Int) async throws -> Post {
         let url = URL(string: "https://jsonplaceholder.typicode.com/posts/\(id)")!
+        let start = DispatchTime.now()
         let (data, _) = try await session.data(from: url)
-        return try JSONDecoder().decode(Post.self, from: data)
+        let post = try JSONDecoder().decode(Post.self, from: data)
+        let elapsed = Int64(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds)
+        Alohomora.shared.recordSpan(
+            name: "GET /posts/\(id)",
+            durationNanos: elapsed,
+            attributes: ["http.method": "GET", "post.id": "\(id)"]
+        )
+        return post
     }
 }
 
@@ -51,30 +67,42 @@ class PostsViewModel: ObservableObject {
     func load() async {
         isLoading = true
         errorMessage = nil
-       Alohomora.shared.recordEvent(name: "posts_refresh_start", properties: nil)
+        Alohomora.shared.recordEvent(name: "posts_refresh_start", properties: nil)
 
+        let start = DispatchTime.now()
         do {
             posts = try await PostsService.shared.fetchPosts()
-           Alohomora.shared.recordEvent(
-               name: "posts_refresh_success",
-               properties: ["count": String(posts.count)]
-           )
+            let elapsed = Int64(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds)
+            Alohomora.shared.recordSpan(
+                name: "posts.refresh",
+                durationNanos: elapsed,
+                attributes: ["post.count": "\(posts.count)"]
+            )
+            Alohomora.shared.recordEvent(
+                name: "posts_refresh_success",
+                properties: ["count": String(posts.count)]
+            )
         } catch {
             errorMessage = error.localizedDescription
-           Alohomora.shared.recordEvent(
-               name: "posts_refresh_failure",
-               properties: ["error": error.localizedDescription]
-           )
+            Alohomora.shared.recordError(
+                reason: "\(type(of: error)): \(error.localizedDescription)",
+                stackTrace: Thread.callStackSymbols.joined(separator: "\n"),
+                place: "PostsViewModel.load"
+            )
+            Alohomora.shared.recordEvent(
+                name: "posts_refresh_failure",
+                properties: ["error": error.localizedDescription]
+            )
         }
 
         isLoading = false
     }
 
     func onPostTapped(_ post: Post) {
-       Alohomora.shared.recordEvent(
-           name: "post_clicked",
-           properties: ["postId": String(post.id)]
-       )
+        Alohomora.shared.recordEvent(
+            name: "post_clicked",
+            properties: ["postId": String(post.id)]
+        )
         Task { try? await PostsService.shared.fetchPost(id: post.id) }
     }
 }
@@ -91,10 +119,10 @@ class PreferencesViewModel: ObservableObject {
     @Published var autoRefresh: Bool {
         didSet {
             defaults.set(autoRefresh, forKey: "auto_refresh")
-           Alohomora.shared.recordEvent(
-               name: "auto_refresh_toggled",
-               properties: ["enabled": autoRefresh ? "true" : "false"]
-           )
+            Alohomora.shared.recordEvent(
+                name: "auto_refresh_toggled",
+                properties: ["enabled": autoRefresh ? "true" : "false"]
+            )
         }
     }
 
@@ -111,7 +139,7 @@ class PreferencesViewModel: ObservableObject {
 
     func commitUsername() {
         defaults.set(username, forKey: "username")
-       Alohomora.shared.recordEvent(name: "username_updated", properties: nil)
+        Alohomora.shared.recordEvent(name: "username_updated", properties: nil)
     }
 
     func markRefreshed() {
@@ -128,11 +156,25 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                preferencesSection
-                postsSection
+            ZStack(alignment: .bottomTrailing) {
+                List {
+                    preferencesSection
+                    postsSection
+                }
+                .listStyle(.insetGrouped)
+
+                Button {
+                    fatalError("Intentional crash to demo Alohomora error capture")
+                } label: {
+                    Text("Crash")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .frame(width: 56, height: 56)
+                        .background(.red, in: Circle())
+                        .shadow(radius: 4, y: 2)
+                }
+                .padding()
             }
-            .listStyle(.insetGrouped)
             .navigationTitle("Alohomora Showcase")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -259,7 +301,7 @@ struct DevToolsSheet: UIViewControllerRepresentable {
     let onClose: () -> Void
 
     func makeUIViewController(context: Context) -> UIViewController {
-        MainKt.MainViewController(onClose: onClose)
+        MainKt.MainViewController()
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}

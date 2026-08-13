@@ -11,14 +11,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
@@ -49,7 +49,7 @@ internal fun EventsDetailsSheet(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
     )
-    val clipboardManager = LocalClipboardManager.current
+    val clipboardCopy = rememberClipboardCopy()
 
     val formattedJson = remember(event) { event.prettyProperties() }
 
@@ -74,69 +74,67 @@ internal fun EventsDetailsSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // Header with event name and actions
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = event.name,
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                    Text(
-                        text = DateUtils.format(
-                            event.time,
-                            DateUtils.Format.READABLE_DATE_TIME,
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                // Copy to clipboard button
-                IconButton(
-                    onClick = {
-                        clipboardManager.setText(AnnotatedString(shareText))
-                    },
+        Scaffold(
+            snackbarHost = { SnackbarHost(clipboardCopy.snackbarHostState) },
+        ) { _ ->
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(
-                        imageVector = Icons.Copy,
-                        contentDescription = "Copy to clipboard",
-                    )
-                }
-
-                // Share to Slack button (only if configured)
-                if (isSlackConfigured) {
-                    IconButton(
-                        onClick = { onShareToSlack("") }, // Will open the slack sheet
-                    ) {
-                        Icon(
-                            imageVector = Icons.Slack,
-                            contentDescription = "Share to Slack",
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = event.name,
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        Text(
+                            text = DateUtils.format(
+                                event.time,
+                                DateUtils.Format.READABLE_DATE_TIME,
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
+
+                    IconButton(
+                        onClick = {
+                            clipboardCopy.copy(shareText)
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Copy,
+                            contentDescription = "Copy to clipboard",
+                        )
+                    }
+
+                    if (isSlackConfigured) {
+                        IconButton(
+                            onClick = { onShareToSlack("") },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Slack,
+                                contentDescription = "Share to Slack",
+                            )
+                        }
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Properties",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+
+                AlohomoraCodeBlock(
+                    content = formattedJson,
+                    isScrollable = true,
+                )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Properties section
-            Text(
-                text = "Properties",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
-
-            // Already indented by prettyProperties(), so no jsonPrettify: that would reparse the
-            // string back into a JsonElement to reformat what is already formatted.
-            AlohomoraCodeBlock(
-                content = formattedJson,
-                isScrollable = true,
-            )
         }
     }
 }

@@ -19,7 +19,6 @@ kotlinx-datetime = "0.8.0"
 room = "2.8.4"
 ksp = "2.3.10"
 koin = "4.2.2"
-logback = "1.5.38"
 androidx-navigation = "2.9.2"
 sqlite = "2.7.0"
 startupRuntime = "1.2.0"
@@ -53,7 +52,6 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "kotlinx-atomicfu" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
-ktor-client-serialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
@@ -90,12 +88,6 @@ opentelemetry-sdk-trace = { module = "io.opentelemetry:opentelemetry-sdk-trace",
 # without shipping Firebase to consumers who don't use it. Same trade as OkHttp: consumers
 # already declare the dependency themselves.
 firebase-config = { module = "com.google.firebase:firebase-config", version = "23.1.0" }
-
-# Ktor Server
-ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
-ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
-ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
-logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

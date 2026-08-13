@@ -30,7 +30,6 @@ fun AppTheme(
         MaterialTheme(
             colorScheme = theme.materialColorScheme,
             typography = AlohomoraTypography(),
-//            shapes = AlohomoraShapes,
             content = content,
         )
     }
