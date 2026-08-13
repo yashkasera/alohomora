@@ -1,5 +1,6 @@
 import SwiftUI
 import AlohomoraKit
+import SQLite3
 
 // MARK: - Model
 
@@ -56,6 +57,74 @@ class PostsService {
     }
 }
 
+// MARK: - Local database
+
+// A real on-device SQLite database, so the DevTools Database inspector has something to show.
+//
+// Alohomora's iOS inspector scans the app sandbox (Documents / Library / Application Support) for
+// .db / .sqlite / .sqlite3 files, so writing this into Documents is all it takes to appear there —
+// the Android showcase does the same with a Room `posts` table.
+final class PostsDatabase {
+    static let shared = PostsDatabase()
+
+    // SQLite copies the bound bytes immediately instead of holding the transient Swift String buffer.
+    private let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+
+    private var db: OpaquePointer?
+    let path: String
+
+    private init() {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        path = documents.appendingPathComponent("ios_sample.db").path
+
+        guard sqlite3_open(path, &db) == SQLITE_OK else {
+            Alohomora.shared.recordError(
+                reason: "SQLiteError: could not open \(path)",
+                stackTrace: nil,
+                place: "PostsDatabase.init"
+            )
+            return
+        }
+        sqlite3_exec(
+            db,
+            """
+            CREATE TABLE IF NOT EXISTS posts (
+                id INTEGER PRIMARY KEY NOT NULL,
+                userId INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                updatedAtEpochMillis INTEGER NOT NULL
+            );
+            """,
+            nil, nil, nil
+        )
+    }
+
+    func replaceAll(_ posts: [Post]) {
+        guard let db else { return }
+        sqlite3_exec(db, "BEGIN TRANSACTION;", nil, nil, nil)
+        sqlite3_exec(db, "DELETE FROM posts;", nil, nil, nil)
+
+        var statement: OpaquePointer?
+        let sql = "INSERT OR REPLACE INTO posts (id, userId, title, body, updatedAtEpochMillis) VALUES (?, ?, ?, ?, ?);"
+        if sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK {
+            let nowMillis = Int64(Date().timeIntervalSince1970 * 1000)
+            for post in posts {
+                sqlite3_bind_int64(statement, 1, Int64(post.id))
+                sqlite3_bind_int64(statement, 2, Int64(post.userId))
+                sqlite3_bind_text(statement, 3, post.title, -1, SQLITE_TRANSIENT)
+                sqlite3_bind_text(statement, 4, post.body, -1, SQLITE_TRANSIENT)
+                sqlite3_bind_int64(statement, 5, nowMillis)
+                sqlite3_step(statement)
+                sqlite3_reset(statement)
+            }
+            sqlite3_finalize(statement)
+        }
+
+        sqlite3_exec(db, "COMMIT;", nil, nil, nil)
+    }
+}
+
 // MARK: - ViewModels
 
 @MainActor
@@ -72,6 +141,7 @@ class PostsViewModel: ObservableObject {
         let start = DispatchTime.now()
         do {
             posts = try await PostsService.shared.fetchPosts()
+            PostsDatabase.shared.replaceAll(posts)
             let elapsed = Int64(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds)
             Alohomora.shared.recordSpan(
                 name: "posts.refresh",

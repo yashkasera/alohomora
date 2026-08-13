@@ -53,6 +53,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.components.jsoneditor.JsonEditor
 import io.github.yashkasera.alohomora.ui.components.jsoneditor.JsonEditorState
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
@@ -346,6 +347,7 @@ fun MockRulesSideSheet(
                         )
                         AlohomoraHorizontalDivider()
                     }
+                    fabClearanceItem()
                 }
             }
         }

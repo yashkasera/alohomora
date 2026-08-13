@@ -44,6 +44,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.ConfirmationBottomSheet
 import io.github.yashkasera.alohomora.ui.components.ConfirmationConfig
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeftRight
@@ -89,7 +90,7 @@ internal fun TrafficScreen(
                     items(state.calls, key = { it.id }) { call ->
                         TrafficItem(call = call, onClick = { onTrafficClick(call.id) })
                     }
-                    item { Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl)) }
+                    fabClearanceItem()
                 }
                 ScrollToTopButton(listState)
             }

@@ -452,11 +452,11 @@ private fun DashboardListCard(
                 FollowNewest(listState, itemCount)
                 LazyColumn(
                     state = listState,
-                    content = content,
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                     contentPadding = PaddingValues(
                         MaterialTheme.dimens.margin.md,
                     ),
+                    content = content,
                 )
             }
         }

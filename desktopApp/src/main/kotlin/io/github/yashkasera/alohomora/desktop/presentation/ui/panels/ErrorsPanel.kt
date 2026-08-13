@@ -38,6 +38,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
@@ -95,6 +96,7 @@ fun ErrorsPanel(
                             },
                         )
                     }
+                    fabClearanceItem()
                 }
                 ScrollToTopButton(lazyListState)
             }

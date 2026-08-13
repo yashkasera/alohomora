@@ -63,6 +63,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -140,6 +141,7 @@ fun TrafficPanel(
                                 },
                             )
                         }
+                        fabClearanceItem()
                     }
                     ScrollToTopButton(lazyListState)
                 }

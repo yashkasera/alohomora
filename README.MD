@@ -93,6 +93,10 @@ Alohomora.recordSpan(name = "image_decode", durationNanos = elapsed)
 Alohomora.startDevToolsServer()
 Alohomora.stopDevToolsServer()
 
+// Shake the device to open the console — on by default on both platforms.
+// Turn it off if it clashes with a gesture your app already owns.
+Alohomora.setShakeToOpenEnabled(false)
+
 Alohomora.registerAppDatabase(name = "app.db")
 Alohomora.excludeAppDatabase(name = "cache.db")
 Alohomora.clearAppDatabaseOverrides()
@@ -172,26 +176,33 @@ engine config.
 ignores, so it is not a substitute for the above. Background upload/download tasks and WebSocket
 frames are not captured at all.
 
-#### Presenting the console
+#### Opening the console
 
-`MainViewController` is a top-level function, so Swift reaches it through `MainKt`:
+**Shake the device.** Shake-to-open is built in on both platforms and on by default — no wiring
+needed. A shake toggles the console the library presents for you. Opt out if it clashes with a
+gesture your app already owns:
+
+```swift
+Alohomora.shared.setShakeToOpenEnabled(enabled: false)
+```
+
+To present it yourself instead — from a toolbar button, say — `MainViewController` is a top-level
+function, so Swift reaches it through `MainKt`:
 
 ```swift
 struct ConsoleView: UIViewControllerRepresentable {
-    let onClose: () -> Void
-
     func makeUIViewController(context: Context) -> UIViewController {
-        MainKt.MainViewController(onClose: onClose)
+        MainKt.MainViewController()
     }
 
     func updateUIViewController(_ controller: UIViewController, context: Context) {}
 }
 ```
 
-**Always pass `onClose` when presenting modally.** iOS has no system back button, and a Compose view
-inside a SwiftUI sheet consumes the vertical drag gesture, so the sheet's swipe-to-dismiss never
-fires. With no handler there is no way out of the console. Pair it with
-`.presentationDragIndicator(.visible)` for a second escape route.
+**Present it with `.presentationDragIndicator(.visible)`.** iOS has no system back button, and a
+Compose view inside a SwiftUI sheet consumes the vertical drag gesture, so the sheet's
+swipe-to-dismiss never fires — the grab indicator is the reliable way out. (The shake-presented
+console needs none of this: another shake closes it.)
 
 ### iOS build metadata (Xcode run-script phase)
 

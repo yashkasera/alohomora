@@ -18,6 +18,8 @@ class AlohomoraInitializer : Initializer<Unit> {
         }
         Alohomora.registerPlugin(NavigationPlugin)
         ActivityTracker.attach(context.applicationContext as Application)
+        // After attach: a shake opens the console over the tracked foreground Activity.
+        AndroidShakeToOpen.install(context.applicationContext)
     }
 
     fun discoverConfig(context: Context): AlohomoraConfig? {

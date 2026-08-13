@@ -144,6 +144,7 @@ object Alohomora {
             this.config = config
             koinApplication = initKoin(appDeclaration)
             installCrashHandler()
+            installShakeToOpen()
         }
     }
 
@@ -416,6 +417,19 @@ object Alohomora {
      */
     internal suspend fun persistSpans(spans: List<Span>) {
         koin?.get<SpanRepository>()?.saveAll(spans)
+    }
+
+    /**
+     * Enables or disables shake-to-open, the gesture that surfaces the console on a physical shake.
+     *
+     * On by default. Turn it off when it competes with a gesture the host already owns (a dev menu,
+     * a custom shake action) or gets in the way of tests that move the device. The accelerometer
+     * listener is installed at init regardless; this only gates whether a shake opens the console,
+     * so it is safe to call at any time — before or after `init()`.
+     */
+    @JvmStatic
+    fun setShakeToOpenEnabled(enabled: Boolean) {
+        ShakeToOpenState.enabled = enabled
     }
 
     fun startDevToolsServer(port: Int = DevToolsDefaults.DEFAULT_PORT): Boolean {

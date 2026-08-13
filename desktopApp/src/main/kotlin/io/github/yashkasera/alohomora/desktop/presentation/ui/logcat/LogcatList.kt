@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import io.github.yashkasera.alohomora.ui.components.ScrollToBottomButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -70,6 +71,7 @@ fun LogcatList(
             items(entries) { entry ->
                 LogcatRow(entry)
             }
+            fabClearanceItem()
         }
         // The follow-while-at-bottom effect above already keeps this pinned; this is the way
         // back after scrolling up to read something, which was the missing half.

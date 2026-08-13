@@ -33,6 +33,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptySt
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -76,6 +77,7 @@ fun GitHistoryPanel(devToolsViewModel: DevToolsViewModel) {
                         GitHistoryRow(commit = commit)
                     }
                 }
+                fabClearanceItem()
             }
             ScrollToTopButton(lazyListState)
         }

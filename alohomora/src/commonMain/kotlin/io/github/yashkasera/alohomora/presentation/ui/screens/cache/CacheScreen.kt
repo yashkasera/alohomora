@@ -38,6 +38,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -137,6 +138,7 @@ private fun PreferencesList(
             ) { entry ->
                 PreferenceItem(entry = entry)
             }
+            fabClearanceItem()
         }
         ScrollToTopButton(listState)
     }

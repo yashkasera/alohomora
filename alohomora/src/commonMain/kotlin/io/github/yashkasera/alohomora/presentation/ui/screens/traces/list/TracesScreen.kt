@@ -34,6 +34,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
@@ -119,6 +120,7 @@ internal fun TracesScreen(
                                 onClick = { onNavigateToTrace(trace.traceId) },
                             )
                         }
+                        fabClearanceItem()
                     }
                     ScrollToTopButton(lazyListState)
                 }

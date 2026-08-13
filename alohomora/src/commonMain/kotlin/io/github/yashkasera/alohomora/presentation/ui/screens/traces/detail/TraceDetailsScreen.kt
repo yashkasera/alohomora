@@ -39,6 +39,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.components.waterfall.TraceWaterfall
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
@@ -127,6 +128,7 @@ internal fun TraceDetailsScreen(
                         )
                         AlohomoraHorizontalDivider()
                     }
+                    fabClearanceItem()
                 }
             }
         }

@@ -1,6 +1,5 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.overview
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,9 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,6 +44,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
 import io.github.yashkasera.alohomora.ui.components.NeedsAttentionPager
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.Activity
 import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.AlohomoraFull
@@ -251,9 +248,6 @@ internal fun OverviewScreen(
                         state = state,
                         onToggle = { viewModel.onEvent(OverviewEvent.ToggleServer(it)) },
                         onPortChange = { viewModel.onEvent(OverviewEvent.PortChanged(it)) },
-                        onRememberChange = {
-                            viewModel.onEvent(OverviewEvent.RememberDeviceChanged(it))
-                        },
                     )
                 }
             }
@@ -310,6 +304,7 @@ internal fun OverviewScreen(
                     ModuleCard(module, onNavigate = onNavigate)
                 }
             }
+            fabClearanceItem()
         }
     }
 }
@@ -319,7 +314,6 @@ private fun DevToolsStatusCard(
     state: OverviewState,
     onToggle: (Boolean) -> Unit,
     onPortChange: (String) -> Unit,
-    onRememberChange: (Boolean) -> Unit,
 ) {
     Card(
         onClick = {
@@ -379,88 +373,6 @@ private fun DevToolsStatusCard(
             )
         }
     }
-
-    /*Box(
-        modifier = Modifier.fillMaxWidth()
-            .border(
-                width = MaterialTheme.dimens.stroke.small,
-                color = MaterialTheme.colorScheme.onBackground,
-                shape = RectangleShape,
-            )
-            .background(MaterialTheme.colorScheme.background)
-            .padding(MaterialTheme.dimens.margin.xl),
-    ) {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    "Server Status",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontStyle = FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Switch(
-                    checked = state.serverEnabled,
-                    onCheckedChange = onToggle,
-                )
-            }
-
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
-
-            if (state.pendingOtp != null) {
-                AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.xxl))
-                Text(
-                    "OTP",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.tertiary,
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-                Text(
-                    state.pendingOtp,
-                    style = MaterialTheme.typography.displayMedium,
-                    fontStyle = FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-                Text(
-                    "Enter this code on the desktop client",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
-
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onRememberChange(!state.rememberDevice) },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Checkbox(
-                        checked = state.rememberDevice,
-                        onCheckedChange = onRememberChange,
-                    )
-                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                    Text(
-                        "Remember this computer",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
-                }
-            }
-
-            if (!state.serverError.isNullOrBlank()) {
-                AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.lg))
-                Text(
-                    text = state.serverError,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-        }
-    }*/
 }
 
 @Composable
@@ -506,33 +418,3 @@ private fun ModuleCard(
     }
 }
 
-/** Height of every module tile. See [ModuleCard] for why it is fixed rather than intrinsic. */
-private val CARD_HEIGHT = 128.dp
-
-/**
- * Scattered squares in the accent tile's top corner.
- *
- * Purely decorative and deliberately faint — it marks the primary tile without competing with the
- * label. Drawn in a Canvas rather than shipped as an asset so it inherits the content colour and
- * works on either theme.
- */
-@Composable
-private fun AccentCornerPattern(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.size(76.dp)) {
-        val cell = size.width / 7f
-        val square = cell * 0.52f
-        for (row in 0 until 7) {
-            for (col in 0 until 7) {
-                // Densest at the top-right, fading out along the diagonal.
-                val distance = (row + (6 - col)) / 12f
-                val alpha = (0.18f - distance * 0.24f).coerceAtLeast(0f)
-                if (alpha <= 0.01f) continue
-                drawRect(
-                    color = color.copy(alpha = alpha),
-                    topLeft = Offset(col * cell, row * cell),
-                    size = Size(square, square),
-                )
-            }
-        }
-    }
-}

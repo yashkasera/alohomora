@@ -34,6 +34,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.Waypoints
@@ -116,6 +117,7 @@ fun TracesPanel(
                         items(traces, key = { it.traceId }) { trace ->
                             TraceItem(trace = trace, onClick = { onTraceClick(trace.traceId) })
                         }
+                        fabClearanceItem()
                     }
                     ScrollToTopButton(lazyListState)
                 }

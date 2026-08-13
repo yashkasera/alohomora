@@ -33,6 +33,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -130,6 +131,7 @@ internal fun ErrorScreen(
                                 onClick = { onNavigateToError(error.id) },
                             )
                         }
+                        fabClearanceItem()
                     }
                     ScrollToTopButton(listState)
                 }

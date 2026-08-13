@@ -152,6 +152,7 @@ final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.
     final fun registerPlugin(io.github.yashkasera.alohomora.plugin/CustomScreenPlugin) // io.github.yashkasera.alohomora/Alohomora.registerPlugin|registerPlugin(io.github.yashkasera.alohomora.plugin.CustomScreenPlugin){}[0]
     final fun registerReplayHandler(io.github.yashkasera.alohomora.replay/TrafficReplayHandler) // io.github.yashkasera.alohomora/Alohomora.registerReplayHandler|registerReplayHandler(io.github.yashkasera.alohomora.replay.TrafficReplayHandler){}[0]
     final fun setFeatureFlags(kotlin.collections/List<io.github.yashkasera.alohomora.common/FeatureFlag>, kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.setFeatureFlags|setFeatureFlags(kotlin.collections.List<io.github.yashkasera.alohomora.common.FeatureFlag>;kotlin.String?){}[0]
+    final fun setShakeToOpenEnabled(kotlin/Boolean) // io.github.yashkasera.alohomora/Alohomora.setShakeToOpenEnabled|setShakeToOpenEnabled(kotlin.Boolean){}[0]
     final fun startDevToolsServer(kotlin/Int = ...): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.startDevToolsServer|startDevToolsServer(kotlin.Int){}[0]
     final fun stopDevToolsServer() // io.github.yashkasera.alohomora/Alohomora.stopDevToolsServer|stopDevToolsServer(){}[0]
     final fun unregisterPlugin(kotlin/String): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.unregisterPlugin|unregisterPlugin(kotlin.String){}[0]

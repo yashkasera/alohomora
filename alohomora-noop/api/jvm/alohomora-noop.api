@@ -44,6 +44,7 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public static final fun setFeatureFlags (Ljava/util/List;)V
 	public static final fun setFeatureFlags (Ljava/util/List;Ljava/lang/String;)V
 	public static synthetic fun setFeatureFlags$default (Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)V
+	public static final fun setShakeToOpenEnabled (Z)V
 	public final fun startDevToolsServer (I)Z
 	public static synthetic fun startDevToolsServer$default (Lio/github/yashkasera/alohomora/Alohomora;IILjava/lang/Object;)Z
 	public final fun stopDevToolsServer ()V

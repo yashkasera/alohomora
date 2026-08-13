@@ -37,6 +37,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.EyeOff
 import io.github.yashkasera.alohomora.ui.icons.Filter
@@ -125,6 +126,7 @@ fun EventsPanel(eventsViewModel: EventsViewModel) {
                                 onClick = { eventsViewModel.openEvent(event.id) },
                             )
                         }
+                        fabClearanceItem()
                     }
                     ScrollToTopButton(lazyListState)
                 }

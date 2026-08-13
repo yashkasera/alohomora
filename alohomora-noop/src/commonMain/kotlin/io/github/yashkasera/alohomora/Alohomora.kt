@@ -80,6 +80,10 @@ object Alohomora {
     fun recordSpan(name: String, durationNanos: Long, attributes: Map<String, String>? = null) {}
 
     @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    fun setShakeToOpenEnabled(enabled: Boolean) {}
+
+    @Suppress("UNUSED_PARAMETER")
     fun startDevToolsServer(port: Int = 53999): Boolean {
         return false
     }

@@ -17,24 +17,56 @@ dependencies {
 
 ## Supported public APIs
 
-- `Alohomora.init(...)`
-- `Alohomora.log(...)`
-- `Alohomora.recordTrace(...)`
-- `Alohomora.recordTelemetry(...)`
-- `Alohomora.startDevToolsServer(...)`
+Every member of `alohomora`'s `Alohomora` object is mirrored here, so a single source call compiles
+against both artifacts. Parity is enforced by `./gradlew consumerParity`.
+
+Lifecycle:
+
+- `Alohomora.init()`
+
+Capture:
+
+- `Alohomora.recordTraffic(...)`
+- `Alohomora.recordEvent(name, properties?)`
+- `Alohomora.recordError(throwable, place?)`
+- `Alohomora.recordError(reason, stackTrace?, place?)` — for Swift and other non-`Throwable` callers
+- `Alohomora.recordSpan(traceId, spanId, name, startEpochNanos, endEpochNanos, ...)`
+- `Alohomora.recordSpan(name, durationNanos, attributes?)`
+
+Feature flags:
+
+- `Alohomora.recordFeatureFlag(...)`
+- `Alohomora.setFeatureFlags(flags, source?)`
+- `Alohomora.clearFeatureFlags()`
+
+Console & server:
+
+- `Alohomora.setShakeToOpenEnabled(enabled)`
+- `Alohomora.startDevToolsServer(port?)` — returns `false` in the no-op
 - `Alohomora.stopDevToolsServer()`
-- `Alohomora.registerAppDatabase(...)`
-- `Alohomora.excludeAppDatabase(...)`
+
+Database inspection:
+
+- `Alohomora.registerAppDatabase(name, path?)`
+- `Alohomora.excludeAppDatabase(name)`
 - `Alohomora.clearAppDatabaseOverrides()`
-- `Alohomora.registerPlugin(...)`
-- `Alohomora.unregisterPlugin(...)`
-- `Alohomora.getPlugins()`
+
+Traffic replay:
+
+- `Alohomora.registerReplayHandler(handler)`
+- `Alohomora.clearReplayHandler()`
+- `Alohomora.isReplaySupported` — always `false` in the no-op
+
+Custom screen plugins:
+
+- `Alohomora.registerPlugin(plugin)`
+- `Alohomora.unregisterPlugin(pluginId)` — returns `false` in the no-op
+- `Alohomora.getPlugins()` — returns an empty list in the no-op
 
 ## Notes
 
 - Internal-only APIs are intentionally not exposed here.
 - Use `Alohomora.registerPlugin(...)`/`unregisterPlugin(...)`/`getPlugins()` instead of internal registries.
-- `CustomValueStore` is not part of the public API contract.
 - No-op methods do not perform logging, persistence, network tracing, or server startup.
 
 ## GitHub Packages publishing/consumption

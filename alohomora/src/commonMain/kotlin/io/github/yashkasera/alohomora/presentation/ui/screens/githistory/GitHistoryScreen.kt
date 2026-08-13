@@ -30,6 +30,7 @@ import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -82,6 +83,7 @@ internal fun GitHistoryScreen(
                         items(state.commits, key = { it.sha }) { commit ->
                             CommitListItem(commit = commit)
                         }
+                        fabClearanceItem()
                     }
                     ScrollToTopButton(listState)
                 }

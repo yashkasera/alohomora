@@ -42,6 +42,7 @@ import io.github.yashkasera.alohomora.ui.components.ConfirmationBottomSheet
 import io.github.yashkasera.alohomora.ui.components.ConfirmationConfig
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Eye
@@ -166,6 +167,7 @@ internal fun EventsList(
                         onClick = { onEventClick(event) },
                     )
                 }
+                fabClearanceItem()
             }
             ScrollToTopButton(listState)
         }

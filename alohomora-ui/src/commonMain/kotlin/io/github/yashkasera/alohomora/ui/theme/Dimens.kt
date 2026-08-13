@@ -32,6 +32,7 @@ data class AlohomoraDimens(
         val xxl: Dp = 24.dp,     // section container padding
         val xxxl: Dp = 32.dp,    // section separator, empty-state outer padding
         val huge: Dp = 48.dp,    // tall section spacers
+        val fab: Dp = 88.dp,     // trailing scroll space clearing a floating action button
     )
 
     @Immutable

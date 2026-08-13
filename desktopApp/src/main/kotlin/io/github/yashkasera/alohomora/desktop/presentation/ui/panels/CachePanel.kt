@@ -47,6 +47,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.ChevronRight
 import io.github.yashkasera.alohomora.ui.icons.Copy
@@ -124,6 +125,7 @@ fun CachePanel(cacheViewModel: CacheViewModel) {
                                 },
                             )
                         }
+                        fabClearanceItem()
                     }
                     ScrollToTopButton(lazyListState)
                 }
