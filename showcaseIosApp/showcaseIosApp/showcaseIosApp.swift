@@ -1,10 +1,29 @@
 import SwiftUI
 import AlohomoraKit
+import UserNotifications
+
+// Lets Alohomora's "server active" notification show as a banner while the app is foregrounded.
+// iOS suppresses foreground notifications unless a delegate opts in; the library requests
+// authorization but deliberately does not claim this delegate (a push SDK often owns it), so the
+// host wires it up.
+final class NotificationForegroundPresenter: NSObject, UNUserNotificationCenterDelegate {
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .list, .sound])
+    }
+}
 
 @main
 struct ShowcaseApp: App {
 
+    private let notificationPresenter = NotificationForegroundPresenter()
+
     init() {
+        UNUserNotificationCenter.current().delegate = notificationPresenter
+
         Alohomora.shared.doInit()
         _ = Alohomora.shared.registerURLProtocol()
 
