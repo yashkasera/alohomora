@@ -22,6 +22,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -48,6 +53,7 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberWindowState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
@@ -71,6 +77,8 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AboutDi
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SettingsDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.UpdateBanner
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
+import io.github.yashkasera.alohomora.ui.icons.AlohomoraFull
 import java.awt.Dimension
 import java.util.UUID
 import kotlin.coroutines.resume
@@ -183,7 +191,7 @@ fun main() {
                     launcherVisible = false
                     if (sessions.isEmpty()) exitApplication()
                 },
-                resizable = false
+                resizable = false,
             ) {
                 AppTheme(isDarkState = sharedIsDark, themeId = themeId) {
                     window.minimumSize = Dimension(900, 560)
@@ -222,7 +230,7 @@ fun main() {
             key(session.id) {
                 val state = rememberWindowState(
                     placement = WindowPlacement.Maximized,
-                    size = DpSize(1080.dp, 600.dp)
+                    size = DpSize(1080.dp, 600.dp),
                 )
                 var showHelp by remember { mutableStateOf(false) }
                 var showCommandPalette by remember { mutableStateOf(false) }
@@ -245,7 +253,8 @@ fun main() {
 
                 var deviceWasOnline by remember { mutableStateOf(true) }
                 val devicesForReforward by session.composition.devicesViewModel.devices.collectAsState()
-                val deviceIsOnline = devicesForReforward.any { it.id == session.deviceId && it.state == DeviceState.DEVICE }
+                val deviceIsOnline =
+                    devicesForReforward.any { it.id == session.deviceId && it.state == DeviceState.DEVICE }
                 LaunchedEffect(deviceIsOnline) {
                     if (deviceIsOnline && !deviceWasOnline) {
                         val device = devicesForReforward.firstOrNull { it.id == session.deviceId }
@@ -258,7 +267,8 @@ fun main() {
                     deviceWasOnline = deviceIsOnline
                 }
 
-                val zoomSuffix = if (zoomScale != 1.0f) " (${(zoomScale * 100).roundToInt()}%)" else ""
+                val zoomSuffix =
+                    if (zoomScale != 1.0f) " (${(zoomScale * 100).roundToInt()}%)" else ""
                 Window(
                     title = "Alohomora - ${session.deviceId}$zoomSuffix",
                     state = state,
@@ -274,7 +284,11 @@ fun main() {
                             Menu("File") {
                                 Item(
                                     "Preferences",
-                                    shortcut = KeyShortcut(Key.Comma, meta = isMacOs, ctrl = !isMacOs),
+                                    shortcut = KeyShortcut(
+                                        Key.Comma,
+                                        meta = isMacOs,
+                                        ctrl = !isMacOs,
+                                    ),
                                     onClick = { showSettings = true },
                                 )
                                 Separator()
@@ -293,31 +307,52 @@ fun main() {
                             Menu("View") {
                                 Item(
                                     "Zoom In",
-                                    shortcut = KeyShortcut(Key.Equals, meta = isMacOs, ctrl = !isMacOs),
+                                    shortcut = KeyShortcut(
+                                        Key.Equals,
+                                        meta = isMacOs,
+                                        ctrl = !isMacOs,
+                                    ),
                                     onClick = zoomIn,
                                 )
                                 Item(
                                     "Zoom Out",
-                                    shortcut = KeyShortcut(Key.Minus, meta = isMacOs, ctrl = !isMacOs),
+                                    shortcut = KeyShortcut(
+                                        Key.Minus,
+                                        meta = isMacOs,
+                                        ctrl = !isMacOs,
+                                    ),
                                     onClick = zoomOut,
                                 )
                                 Item(
                                     "Reset Zoom",
-                                    shortcut = KeyShortcut(Key.Zero, meta = isMacOs, ctrl = !isMacOs),
+                                    shortcut = KeyShortcut(
+                                        Key.Zero,
+                                        meta = isMacOs,
+                                        ctrl = !isMacOs,
+                                    ),
                                     onClick = resetZoom,
                                 )
                             }
                             Menu("Device") {
                                 Item(
                                     "Take Screenshot",
-                                    shortcut = KeyShortcut(Key.S, shift = true, meta = isMacOs, ctrl = !isMacOs),
+                                    shortcut = KeyShortcut(
+                                        Key.S,
+                                        shift = true,
+                                        meta = isMacOs,
+                                        ctrl = !isMacOs,
+                                    ),
                                     onClick = {
                                         val timestamp = System.currentTimeMillis()
                                         val defaultName = "alohomora_screenshot_${timestamp}.png"
-                                        val localPath = io.github.yashkasera.alohomora.desktop.util.pickSavePath(
-                                            defaultName, "Save Screenshot", ".png",
-                                        ) ?: return@Item
-                                        session.composition.devicesViewModel.takeScreenshot(session.deviceId, localPath)
+                                        val localPath =
+                                            io.github.yashkasera.alohomora.desktop.util.pickSavePath(
+                                                defaultName, "Save Screenshot", ".png",
+                                            ) ?: return@Item
+                                        session.composition.devicesViewModel.takeScreenshot(
+                                            session.deviceId,
+                                            localPath,
+                                        )
                                     },
                                 )
                             }
@@ -329,7 +364,11 @@ fun main() {
                                 )
                                 Item(
                                     "Keyboard Shortcuts",
-                                    shortcut = KeyShortcut(Key.Slash, meta = isMacOs, ctrl = !isMacOs),
+                                    shortcut = KeyShortcut(
+                                        Key.Slash,
+                                        meta = isMacOs,
+                                        ctrl = !isMacOs,
+                                    ),
                                     onClick = { showHelp = true },
                                 )
                                 Item(
@@ -389,6 +428,7 @@ fun main() {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LauncherScreen(
     sharedDevicesComposition: DesktopAppComposition,
@@ -431,15 +471,23 @@ private fun LauncherScreen(
             pendingConnectionState = uiState.connection
             when (val conn = uiState.connection) {
                 is DevToolsConnection.Connected -> {
-                    onOpenDeviceWindow(session.deviceId, session.host, session.hostPort, session.devicePort, session.composition)
+                    onOpenDeviceWindow(
+                        session.deviceId,
+                        session.host,
+                        session.hostPort,
+                        session.devicePort,
+                        session.composition,
+                    )
                     pendingSession = null
                     otpInput = ""
                 }
+
                 is DevToolsConnection.Failed -> {
                     actionError = conn.reason
                     pendingSession = null
                     otpInput = ""
                 }
+
                 else -> {}
             }
         }
@@ -449,26 +497,28 @@ private fun LauncherScreen(
         Column(
             modifier = Modifier.fillMaxSize()
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Alohomora,
+                    imageVector = Icons.AlohomoraFull,
                     contentDescription = null,
-                    modifier = Modifier.size(
-                        MaterialTheme.dimens.icon.standard
-                    ),
+                    modifier = Modifier.width(256.dp,),
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 AlohomoraOutlinedButton(
                     text = "Refresh",
-                    leadingIcon = { Icon(
-                        modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                        imageVector = Icons.RefreshCw, contentDescription = null) },
+                    leadingIcon = {
+                        Icon(
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                            imageVector = Icons.RefreshCw, contentDescription = null,
+                        )
+                    },
                     onClick = devicesViewModel::refreshDevices,
-                    size = AlohomoraButtonSize.SMALL
+                    size = AlohomoraButtonSize.SMALL,
                 )
             }
+            Spacer(Modifier.height(MaterialTheme.dimens.margin.md))
 
             if (pendingSession != null) {
                 when (val pending = pendingConnectionState) {
@@ -485,7 +535,9 @@ private fun LauncherScreen(
                         )
                         AlohomoraTextField(
                             value = otpInput,
-                            onValueChange = { if (it.length <= 4 && it.all(Char::isDigit)) otpInput = it },
+                            onValueChange = {
+                                if (it.length <= 4 && it.all(Char::isDigit)) otpInput = it
+                            },
                             placeholder = "0000",
                             singleLine = true,
                             modifier = Modifier.width(160.dp),
@@ -493,35 +545,57 @@ private fun LauncherScreen(
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Button(
                                 onClick = {
-                                    pendingSession?.composition?.devToolsViewModel?.submitOtp(otpInput)
+                                    pendingSession?.composition?.devToolsViewModel?.submitOtp(
+                                        otpInput,
+                                    )
                                     otpInput = ""
                                 },
                                 enabled = otpInput.length == 4,
                             ) { Text("Confirm") }
-                            OutlinedButton(onClick = {
-                                pendingSession?.composition?.devToolsViewModel?.disconnect()
-                                pendingSession = null
-                                otpInput = ""
-                            }) { Text("Cancel") }
-                        }
-                    }
-                    else -> {
-                        Text(
-                            "Connecting…",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        (pendingConnectionState as? DevToolsConnection.Connecting)?.let { conn ->
-                            Text(
-                                "${conn.host}:${conn.port}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.secondary,
+                            AlohomoraOutlinedButton(
+                                text = "Cancel",
+                                size = AlohomoraButtonSize.SMALL,
+                                onClick = {
+                                    pendingSession?.composition?.devToolsViewModel?.disconnect()
+                                    pendingSession = null
+                                    otpInput = ""
+                                },
                             )
                         }
-                        OutlinedButton(onClick = {
-                            pendingSession?.composition?.devToolsViewModel?.disconnect()
-                            pendingSession = null
-                        }) { Text("Cancel") }
+                    }
+
+                    else -> {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(
+                                space = MaterialTheme.dimens.margin.md,
+                                alignment = Alignment.CenterVertically,
+                            ),
+                        ) {
+                            CircularWavyProgressIndicator()
+                            Text(
+                                "Connecting…",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            (pendingConnectionState as? DevToolsConnection.Connecting)?.let { conn ->
+                                Text(
+                                    "${conn.host}:${conn.port}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+                            AlohomoraOutlinedButton(
+                                text = "Cancel",
+                                size = AlohomoraButtonSize.SMALL,
+                                onClick = {
+                                    pendingSession?.composition?.devToolsViewModel?.disconnect()
+                                    pendingSession = null
+                                },
+                            )
+                        }
                     }
                 }
                 if (!actionError.isNullOrBlank()) {
@@ -603,12 +677,17 @@ private fun LauncherScreen(
                             val numericDevicePort = devicePort.toIntOrNull() ?: DEFAULT_PORT.toInt()
                             val isLocalHost = host == "127.0.0.1" || host == "localhost"
 
-                            val composition = DesktopAppComposition(sharedDevicesViewModel = devicesViewModel)
+                            val composition =
+                                DesktopAppComposition(sharedDevicesViewModel = devicesViewModel)
 
                             fun openSession(target1: DeviceUi, tunnel: DevToolsTarget) {
                                 composition.devToolsViewModel.switchDevice(tunnel, target1.id)
                                 pendingSession = PendingSession(
-                                    target1.id, tunnel.displayHost, numericHostPort, numericDevicePort, composition,
+                                    target1.id,
+                                    tunnel.displayHost,
+                                    numericHostPort,
+                                    numericDevicePort,
+                                    composition,
                                 )
                                 actionError = null
                             }
@@ -620,16 +699,23 @@ private fun LauncherScreen(
                                     DevicePlatform.IOS -> {
                                         val usbmuxId = selectedDevice.usbmuxDeviceId
                                         if (usbmuxId == null) {
-                                            actionError = "Device is not reachable over USB. Reconnect the cable and trust this Mac."
+                                            actionError =
+                                                "Device is not reachable over USB. Reconnect the cable and trust this Mac."
                                         } else {
-                                            openSession(selectedDevice, DevToolsTarget.Usbmux(usbmuxId, numericDevicePort))
+                                            openSession(
+                                                selectedDevice,
+                                                DevToolsTarget.Usbmux(usbmuxId, numericDevicePort),
+                                            )
                                         }
                                     }
 
                                     // Simulator: nothing to tunnel. It runs on the host's network
                                     // stack, so the device's 127.0.0.1 is the host's 127.0.0.1.
                                     DevicePlatform.IOS_SIMULATOR ->
-                                        openSession(selectedDevice, DevToolsTarget.Tcp("127.0.0.1", numericDevicePort))
+                                        openSession(
+                                            selectedDevice,
+                                            DevToolsTarget.Tcp("127.0.0.1", numericDevicePort),
+                                        )
 
                                     DevicePlatform.ANDROID -> {
                                         // Wi-Fi adb needs `adb connect` before a forward exists.
@@ -650,13 +736,16 @@ private fun LauncherScreen(
                                         if (selectError != null) {
                                             actionError = selectError
                                         } else {
-                                            openSession(selectedDevice, DevToolsTarget.Tcp(host, numericHostPort))
+                                            openSession(
+                                                selectedDevice,
+                                                DevToolsTarget.Tcp(host, numericHostPort),
+                                            )
                                         }
                                     }
                                 }
                             }
                         },
-                        enabled = selectedDevice != null
+                        enabled = selectedDevice != null,
                     )
                 }
             }

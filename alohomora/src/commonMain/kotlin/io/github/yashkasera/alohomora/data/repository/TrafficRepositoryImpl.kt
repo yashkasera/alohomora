@@ -32,4 +32,7 @@ internal class TrafficRepositoryImpl(private val dao: TrafficDao) : TrafficRepos
     override suspend fun clearAll() = dao.clearAll()
 
     override suspend fun markAsViewed(id: String) = dao.markAsViewed(id)
+
+    override fun observeUnviewedFailed(limit: Int): Flow<List<TrafficEntry>> =
+        dao.observeUnviewedFailed(limit)
 }

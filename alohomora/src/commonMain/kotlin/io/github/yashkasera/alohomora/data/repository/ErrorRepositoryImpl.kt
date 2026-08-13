@@ -26,4 +26,7 @@ internal class ErrorRepositoryImpl(private val db: AlohomoraDb) : ErrorRepositor
 
     override suspend fun markAsViewed(id: Long) =
         db.errorDao().markAsViewed(id)
+
+    override fun observeUnviewed(limit: Int): Flow<List<Error>> =
+        db.errorDao().observeUnviewed(limit)
 }

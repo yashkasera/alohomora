@@ -3,10 +3,15 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.overview
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.yashkasera.alohomora.common.AttentionItem
+import io.github.yashkasera.alohomora.common.mergeAttentionItems
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
+import io.github.yashkasera.alohomora.domain.repository.ErrorRepository
+import io.github.yashkasera.alohomora.domain.repository.TrafficRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 internal enum class DevConnectionStatus { Off, Disconnected, AwaitingAuth, Connected }
@@ -19,6 +24,7 @@ internal data class OverviewState(
     val deviceConnectionStatus: DevConnectionStatus = DevConnectionStatus.Off,
     val pendingOtp: String? = null,
     val rememberDevice: Boolean = false,
+    val attentionItems: List<AttentionItem> = emptyList(),
 )
 
 internal sealed class OverviewEvent {
@@ -29,6 +35,8 @@ internal sealed class OverviewEvent {
 
 internal class OverviewViewModel(
     private val devToolsRuntime: DevToolsRuntime,
+    private val errorRepository: ErrorRepository,
+    private val trafficRepository: TrafficRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(OverviewState())
@@ -51,6 +59,16 @@ internal class OverviewViewModel(
                     pendingOtp = serverState.pendingOtp,
                     rememberDevice = serverState.rememberDevice,
                 )
+            }
+        }
+        viewModelScope.launch {
+            combine(
+                errorRepository.observeUnviewed(),
+                trafficRepository.observeUnviewedFailed(),
+            ) { errors, traffic ->
+                mergeAttentionItems(errors, traffic)
+            }.collect { items ->
+                _state.value = _state.value.copy(attentionItems = items)
             }
         }
     }

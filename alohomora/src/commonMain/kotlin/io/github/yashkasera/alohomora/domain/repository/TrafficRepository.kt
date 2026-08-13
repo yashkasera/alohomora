@@ -33,4 +33,6 @@ internal interface TrafficRepository : Repository<TrafficEntry, String> {
      * nothing and the console would look like the replay never happened.
      */
     fun observeReplayOf(sourceId: String): Flow<TrafficEntry?>
+
+    fun observeUnviewedFailed(limit: Int = 50): Flow<List<TrafficEntry>>
 }

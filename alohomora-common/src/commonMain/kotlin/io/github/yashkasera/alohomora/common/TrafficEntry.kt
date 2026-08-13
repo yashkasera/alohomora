@@ -54,6 +54,8 @@ data class TrafficEntry(
 
     fun isSuccessful(): Boolean = status in 200..299
 
+    fun isMocked(): Boolean = mockedBy != null
+
     fun pathWithQuery(): String = "$path${if (query.isNullOrEmpty()) "" else "?$query"}"
 
     fun summary(): String = "$status $method ${pathWithQuery()}"

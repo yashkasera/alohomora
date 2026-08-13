@@ -58,4 +58,7 @@ internal interface ErrorDao {
     /** Reactive counterpart to [getLatest], for streaming newly recorded errors to the desktop. */
     @Query("SELECT * FROM Error ORDER BY id DESC LIMIT :limit")
     fun observeLatest(limit: Int): Flow<List<Error>>
+
+    @Query("SELECT id, place, reason, time, isViewed FROM Error WHERE isViewed = 0 ORDER BY time DESC LIMIT :limit")
+    fun observeUnviewed(limit: Int = 50): Flow<List<Error>>
 }

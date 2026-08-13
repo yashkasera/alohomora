@@ -27,7 +27,7 @@ object AlohomoraThemes {
         registry.values.flatMap { (light, dark) -> listOf(light, dark) }
 
     fun forId(id: String, isDark: Boolean): AlohomoraColorTheme {
-        val (light, dark) = registry[id] ?: registry.getValue("monochrome")
+        val (light, dark) = registry[id] ?: registry.getValue("material")
         return if (isDark) dark else light
     }
 

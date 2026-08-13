@@ -69,7 +69,11 @@ fun AlohomoraTextField(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
-    val currentBorderColor = if (isFocused) focusedBorderColor else borderColor
+    val currentBorderColor =
+        if (isFocused)
+            focusedBorderColor
+        else if (!enabled) borderColor.copy(alpha = 0.5f)
+        else borderColor
 
     // The caret is remembered here; the text is not.
     //
@@ -83,7 +87,8 @@ fun AlohomoraTextField(
     var selection by remember { mutableStateOf(TextRange(value.length)) }
     // Coerced because the remembered caret can briefly outrun a lagging value, and a selection past the
     // end of the text throws.
-    val fieldValue = TextFieldValue(text = value, selection = selection.coerceAtMostLength(value.length))
+    val fieldValue =
+        TextFieldValue(text = value, selection = selection.coerceAtMostLength(value.length))
 
     Column(modifier = modifier) {
         label?.let {
@@ -104,7 +109,13 @@ fun AlohomoraTextField(
             enabled = enabled,
             readOnly = readOnly,
             singleLine = singleLine,
-            textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSurface),
+            textStyle = textStyle.copy(
+                color =
+                    if (enabled)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             visualTransformation = visualTransformation,
@@ -116,9 +127,17 @@ fun AlohomoraTextField(
                         .fillMaxWidth()
                         .height(IntrinsicSize.Max)
                         .clip(shape)
-                        .background(containerColor)
+                        .background(
+                            if (enabled)
+                                containerColor
+                            else
+                                MaterialTheme.colorScheme.surfaceContainer,
+                        )
                         .border(MaterialTheme.dimens.stroke.small, currentBorderColor, shape)
-                        .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = MaterialTheme.dimens.margin.sm),
+                        .padding(
+                            horizontal = MaterialTheme.dimens.margin.md,
+                            vertical = MaterialTheme.dimens.margin.sm,
+                        ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (leadingIcon != null) {

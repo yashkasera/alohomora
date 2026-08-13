@@ -63,4 +63,13 @@ internal interface TrafficDao {
      */
     @Query("Update TrafficEntry SET isViewed = 1 WHERE id = :id")
     suspend fun markAsViewed(id: String)
+
+    @Query(
+        "SELECT id, status, url, method, host, path, `query`, duration, time, isViewed," +
+            " replayOf, requestBodyTruncated, responseBodyTruncated, mockedBy" +
+            " FROM TrafficEntry" +
+            " WHERE isViewed = 0 AND (status IS NULL OR status NOT BETWEEN 200 AND 299)" +
+            " ORDER BY time DESC LIMIT :limit"
+    )
+    fun observeUnviewedFailed(limit: Int = 50): Flow<List<TrafficEntry>>
 }

@@ -212,14 +212,12 @@ private fun BoxScope.ScrollToTopButton(
             .padding(MaterialTheme.dimens.margin.xxl),
     ) {
         FloatingActionButton(
-            onClick = onClick
-        ){
+            onClick = onClick,
+        ) {
             Icon(
                 imageVector = Icons.ArrowLeft,
                 contentDescription = "Scroll to top",
-                // No up-arrow in the icon set; rotating the back arrow beats shipping a
-                // near-duplicate asset.
-                modifier = Modifier.rotate(rotation),
+                modifier = Modifier.rotate(rotation)
             )
         }
     }

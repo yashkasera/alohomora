@@ -95,7 +95,7 @@ internal val appModule = module {
     }
 
     // ViewModels
-    viewModel { OverviewViewModel(get()) }
+    viewModel { OverviewViewModel(get(), get(), get()) }
     viewModel { TrafficViewModel(get()) }
     viewModel { (traceId: String) ->
         TrafficDetailsViewModel(traceId, get(), get(), get(), get(), get(), get())

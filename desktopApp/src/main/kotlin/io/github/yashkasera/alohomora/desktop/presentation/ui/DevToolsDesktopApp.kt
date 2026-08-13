@@ -106,6 +106,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
 import io.github.yashkasera.alohomora.ui.icons.Alohomora
+import io.github.yashkasera.alohomora.ui.icons.AlohomoraFull
 import io.github.yashkasera.alohomora.ui.icons.Android
 import io.github.yashkasera.alohomora.ui.icons.Apple
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
@@ -154,7 +155,11 @@ fun DevToolsDesktopApp(
     var recordingDevicePath by remember { mutableStateOf<String?>(null) }
     var recordingLocalPath by remember { mutableStateOf<String?>(null) }
     var selectedTrafficForSheet by remember { mutableStateOf<TrafficEntry?>(null) }
-    var selectedErrorForSheet by remember { mutableStateOf<io.github.yashkasera.alohomora.common.Error?>(null) }
+    var selectedErrorForSheet by remember {
+        mutableStateOf<io.github.yashkasera.alohomora.common.Error?>(
+            null,
+        )
+    }
     var showMockSheet by remember { mutableStateOf(false) }
     var showDeepLinkBuilder by remember { mutableStateOf(false) }
     // Read from the view model rather than held here: the sheet's whole state (selection, collapse,
@@ -356,22 +361,24 @@ fun DevToolsDesktopApp(
                 false
             },
     ) {
-        Box(modifier = Modifier
-            .background(MaterialTheme.colorScheme.background)
-            .fillMaxSize()
+        Box(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.background)
+                .fillMaxSize(),
         ) {
             PermanentNavigationDrawer(
                 drawerContent = {
                     PermanentDrawerSheet(
                         modifier = Modifier.fillMaxWidth(0.2f),
                         windowInsets = WindowInsets.safeContent,
-                        drawerShape = MaterialTheme.shapes.medium
+                        drawerShape = MaterialTheme.shapes.medium,
                     ) {
                         Sidebar(
                             connection = devToolsState.connection,
                             activeSection = activeSection,
                             devices = devices,
                             selectedDeviceId = selectedDeviceId,
+                            appName = buildInfo?.projectName,
                             onDisconnect = onDisconnectWindow,
                             onSectionClick = { activeSection = it },
                             isModifierHeld = isModifierHeld,
@@ -430,6 +437,7 @@ fun DevToolsDesktopApp(
                                     }
                                 },
                                 onTrafficItemClick = { selectedTrafficForSheet = it },
+                                onErrorClick = { selectedErrorForSheet = it },
                                 onEventViewClick = {},
                                 onTrafficClick = { activeSection = DesktopSection.Traffic },
                                 onEventsClick = { activeSection = DesktopSection.Events },
@@ -468,6 +476,7 @@ fun DevToolsDesktopApp(
                                 devToolsViewModel = devToolsViewModel,
                                 onErrorClick = { selectedErrorForSheet = it },
                             )
+
                             DesktopSection.Config -> ConfigPanel(devToolsViewModel = devToolsViewModel)
                             DesktopSection.GitHistory -> GitHistoryPanel(devToolsViewModel = devToolsViewModel)
                             DesktopSection.Database -> DatabasePanel(databaseViewModel = databaseViewModel)
@@ -618,34 +627,26 @@ fun ColumnScope.Sidebar(
     connection: DevToolsConnection,
     devices: List<DeviceUi>,
     selectedDeviceId: String?,
+    appName: String? = null,
     isModifierHeld: Boolean = false,
     visibleSections: List<DesktopSection> = emptyList(),
 ) {
-    Row(
+    Icon(
+        imageVector = Icons.AlohomoraFull,
+        contentDescription = null,
         modifier = Modifier
             .padding(top = MaterialTheme.dimens.margin.xxl)
-            .padding(horizontal = MaterialTheme.dimens.margin.xxl),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = Icons.Alohomora,
-            contentDescription = null,
-            modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
-        )
-        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
-        Text(
-            "Alohomora",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-        )
-    }
+            .padding(horizontal = MaterialTheme.dimens.margin.xxl)
+            .width(148.dp),
+    )
 
-    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
 
     SidebarConnectionCard(
         connection = connection,
         devices = devices,
         selectedDeviceId = selectedDeviceId,
+        appName = appName,
         onDisconnect = onDisconnect,
     )
     LazyColumn(
@@ -697,6 +698,7 @@ private fun SidebarConnectionCard(
     connection: DevToolsConnection,
     devices: List<DeviceUi>,
     selectedDeviceId: String?,
+    appName: String? = null,
     onDisconnect: () -> Unit,
 ) {
     val selectedOnlineDevice =
@@ -746,6 +748,15 @@ private fun SidebarConnectionCard(
                     text = connectionText,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary,
+                )
+            }
+            if (!appName.isNullOrBlank()) {
+                Text(
+                    text = appName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
             Row(

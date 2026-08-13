@@ -47,7 +47,6 @@ internal fun ConfigScreen(
     onSaveConfig: (String) -> Unit = {},
 ) {
     Scaffold(
-        modifier = Modifier.systemBarsPadding(),
         topBar = {
             AlohomoraTopBar(
                 title = "Config",

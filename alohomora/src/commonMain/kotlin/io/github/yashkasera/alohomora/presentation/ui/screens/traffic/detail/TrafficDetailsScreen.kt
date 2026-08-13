@@ -67,7 +67,6 @@ internal fun TrafficDetailsScreen(
     }
 
     Scaffold(
-        modifier = Modifier.systemBarsPadding(),
         topBar = {
             AlohomoraTopBar(
                 title = "API Request",

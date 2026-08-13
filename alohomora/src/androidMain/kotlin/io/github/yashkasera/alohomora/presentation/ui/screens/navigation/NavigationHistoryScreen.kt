@@ -53,7 +53,6 @@ internal fun NavigationHistoryScreen(onBackClick: () -> Unit = {}) {
     val state by viewModel.state.collectAsState()
 
     Scaffold(
-        modifier = Modifier.systemBarsPadding(),
         topBar = {
             AlohomoraTopBar(
                 title = "Navigation History",
