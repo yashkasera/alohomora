@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -78,18 +77,6 @@ fun FollowNewest(listState: LazyListState, itemCount: Int) {
     }
 }
 
-/** [FollowNewest] for a staggered grid. */
-@Composable
-fun FollowNewest(gridState: LazyStaggeredGridState, itemCount: Int) {
-    val following = rememberFollowState(
-        isAtTop = { gridState.firstVisibleItemIndex == 0 },
-        isScrolling = { gridState.isScrollInProgress },
-    )
-    LaunchedEffect(itemCount) {
-        if (following.value && itemCount > 0) gridState.animateScrollToItem(0)
-    }
-}
-
 /**
  * Whether the list should keep following the newest item.
  *
@@ -128,20 +115,6 @@ fun BoxScope.ScrollToTopButton(listState: LazyListState, modifier: Modifier = Mo
     ScrollToTopButton(
         visible = visible,
         onClick = { scope.launch { listState.animateScrollToItem(0) } },
-        modifier = modifier,
-    )
-}
-
-/** [ScrollToTopButton] for a staggered grid. */
-@Composable
-fun BoxScope.ScrollToTopButton(gridState: LazyStaggeredGridState, modifier: Modifier = Modifier) {
-    val visible by remember(gridState) {
-        derivedStateOf { gridState.firstVisibleItemIndex > REVEAL_AFTER_ITEMS }
-    }
-    val scope = rememberCoroutineScope()
-    ScrollToTopButton(
-        visible = visible,
-        onClick = { scope.launch { gridState.animateScrollToItem(0) } },
         modifier = modifier,
     )
 }
