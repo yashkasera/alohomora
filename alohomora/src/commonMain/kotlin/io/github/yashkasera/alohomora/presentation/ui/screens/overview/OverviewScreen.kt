@@ -37,6 +37,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
+import io.github.yashkasera.alohomora.plugin.InternalPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
@@ -66,7 +68,7 @@ import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
-private data class OverviewModule(
+internal data class OverviewModule(
     val title: String,
     val subtitle: String,
     val icon: ImageVector,
@@ -74,7 +76,46 @@ private data class OverviewModule(
     val route: Routes,
 )
 
-private val builtInModules = listOf(
+/**
+ * Grid key for a module card.
+ *
+ * Every plugin routes to [Routes.Extension], so keying on the route's class name alone gives
+ * every plugin card the key `Extension` and `LazyVerticalGrid` throws on the duplicate as soon
+ * as a second dashboard plugin is registered. Built-in routes are `data object`s so their
+ * class names are already unique.
+ */
+internal val OverviewModule.gridKey: String
+    get() = when (val route = route) {
+        is Routes.Extension -> "Extension:${route.extensionId}"
+        else -> route::class.simpleName.orEmpty()
+    }
+
+private fun CustomScreenPlugin.toOverviewModule() = OverviewModule(
+    title = title,
+    subtitle = description ?: "",
+    // Never inverted. Emphasis is reserved for the first built-in module;
+    // keying it off `priority` scattered white cards through the grid.
+    isInverse = false,
+    route = Routes.Extension(extensionId = id),
+    icon = icon ?: Icons.Layers,
+)
+
+/**
+ * Splits dashboard plugins into Alohomora's own ([InternalPlugin]) and consumer-registered ones,
+ * which the grid renders under "SYSTEM MODULES" and "CUSTOM MODULES" respectively.
+ *
+ * The partition runs on the plugin, not on the mapped [OverviewModule]: every module routes to
+ * [Routes.Extension], so partitioning after the map put every plugin on the internal side and
+ * left the "CUSTOM MODULES" branch permanently unreachable.
+ */
+internal fun partitionDashboardModules(
+    plugins: List<CustomScreenPlugin>,
+): Pair<List<OverviewModule>, List<OverviewModule>> {
+    val (internal, custom) = plugins.partition { it is InternalPlugin }
+    return internal.map { it.toOverviewModule() } to custom.map { it.toOverviewModule() }
+}
+
+internal val builtInModules = listOf(
     OverviewModule(
         title = "Traffic",
         subtitle = "LIVE STREAM",
@@ -151,19 +192,7 @@ internal fun OverviewScreen(
 
     val pluginCount = PluginRegistry.getAllPlugins().size
     val (internalPlugins, customPlugins) = remember(pluginCount) {
-        PluginRegistry.getDashboardPlugins()
-            .map { plugin ->
-                OverviewModule(
-                    title = plugin.title,
-                    subtitle = plugin.description ?: "",
-                    // Never inverted. Emphasis is reserved for the first built-in module;
-                    // keying it off `priority` scattered white cards through the grid.
-                    isInverse = false,
-                    route = Routes.Extension(extensionId = plugin.id),
-                    icon = plugin.icon ?: Icons.Layers,
-                )
-            }
-            .partition { it.route is Routes.Extension }
+        partitionDashboardModules(PluginRegistry.getDashboardPlugins())
     }
     val defaultModules = remember(internalPlugins) {
         builtInModules + internalPlugins
@@ -292,7 +321,7 @@ internal fun OverviewScreen(
             }
             items(
                 items = defaultModules,
-                key = { it.route::class.simpleName.orEmpty() },
+                key = { it.gridKey },
                 span = {
                     if (it.isInverse) GridItemSpan(2)
                     else GridItemSpan(1)
@@ -312,7 +341,7 @@ internal fun OverviewScreen(
                         )
                     }
                 }
-                items(plugins, key = { it.route::class.simpleName.orEmpty() }) { module ->
+                items(plugins, key = { it.gridKey }) { module ->
                     ModuleCard(module, onNavigate = onNavigate)
                 }
             }

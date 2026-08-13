@@ -95,6 +95,17 @@ interface CustomScreenPlugin {
 }
 
 /**
+ * Marks a plugin that Alohomora itself registers, as opposed to one a consumer passed to
+ * [io.github.yashkasera.alohomora.Alohomora.registerPlugin].
+ *
+ * The overview grid uses this to keep its own modules under "SYSTEM MODULES" and put
+ * consumer-registered ones under "CUSTOM MODULES". Deliberately a separate internal marker
+ * rather than a property on [CustomScreenPlugin]: the distinction is meaningless to a
+ * consumer, and every member of that interface has to be mirrored in `alohomora-noop`.
+ */
+internal interface InternalPlugin
+
+/**
  * Registry for managing custom screen plugins.
  */
 internal object PluginRegistry {

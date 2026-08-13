@@ -2,8 +2,9 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.navigation
 
 import androidx.compose.runtime.Composable
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
+import io.github.yashkasera.alohomora.plugin.InternalPlugin
 
-internal object NavigationPlugin : CustomScreenPlugin {
+internal object NavigationPlugin : CustomScreenPlugin, InternalPlugin {
     override val id: String
         get() = "alohomora_navigation_plugin"
     override val title: String
