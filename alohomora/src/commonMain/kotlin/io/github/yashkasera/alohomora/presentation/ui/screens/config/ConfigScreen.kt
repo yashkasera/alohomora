@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -20,12 +19,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import io.github.yashkasera.alohomora.common.DateUtils
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.data.model.BuildMetadata
 import io.github.yashkasera.alohomora.data.model.toBuildMetadata
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
@@ -34,12 +33,6 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import kotlin.time.Instant
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.format
-import kotlinx.datetime.format.char
-import kotlinx.datetime.toLocalDateTime
 
 @Composable
 internal fun ConfigScreen(
@@ -51,11 +44,8 @@ internal fun ConfigScreen(
             AlohomoraTopBar(
                 title = "Config",
                 navigationIcon = {
-                    AlohomoraIconButton(
-                        onClick = onBackClick,
-                        modifier = Modifier.size(48.dp),
-                    ) {
-                        Icon(imageVector = Icons.ArrowLeft, contentDescription = "back")
+                    AlohomoraIconButton(onClick = onBackClick) {
+                        Icon(Icons.ArrowLeft, contentDescription = "Back")
                     }
                 },
             )
@@ -65,21 +55,14 @@ internal fun ConfigScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = MaterialTheme.dimens.margin.xl),
+                .verticalScroll(rememberScrollState()),
         ) {
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
-
-            // Build Information (Read-only)
             ConfigSection(title = "BUILD INFORMATION") {
                 BuildInfoGrid(buildConfig = Alohomora.config?.toBuildMetadata())
             }
 
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
-            AlohomoraHorizontalDivider()
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
+            AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.md))
 
-            // Environment Details (Read-only)
             Alohomora.config?.let {
                 ConfigSection(title = "ENVIRONMENT") {
                     EnvironmentDetails(
@@ -111,7 +94,11 @@ private fun ConfigSection(
     title: String,
     content: @Composable () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(
+        modifier = Modifier
+            .padding(MaterialTheme.dimens.margin.md)
+            .fillMaxWidth(),
+    ) {
         Text(
             text = title,
             // tertiary, matching PORT/DEVICE/OTP on Overview and DATABASE/TABLES in the Vault.
@@ -119,7 +106,7 @@ private fun ConfigSection(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.tertiary,
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
         content()
     }
 }
@@ -247,8 +234,11 @@ private fun InfoItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(MaterialTheme.shapes.extraSmall)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = MaterialTheme.dimens.margin.sm),
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .padding(
+                    horizontal = MaterialTheme.dimens.margin.md,
+                    vertical = MaterialTheme.dimens.margin.sm,
+                ),
         ) {
             Text(
                 text = value ?: "--not-set--",

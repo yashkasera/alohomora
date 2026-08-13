@@ -20,6 +20,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
@@ -47,8 +49,8 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
 import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
+import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.Clock
-import io.github.yashkasera.alohomora.ui.icons.Download
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Search
@@ -100,7 +102,6 @@ internal fun TrafficDetailsContent(
             }
         }
 
-        // HorizontalPager for tab content
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.weight(1f),
@@ -112,8 +113,8 @@ internal fun TrafficDetailsContent(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(overviewScrollState)
-                            .padding(horizontal = MaterialTheme.dimens.margin.xxl)
-                            .padding(top = MaterialTheme.dimens.margin.xxl),
+                            .padding(horizontal = MaterialTheme.dimens.margin.md)
+                            .padding(top = MaterialTheme.dimens.margin.md),
                     ) {
                         OverviewTab(entry = trace)
                     }
@@ -124,8 +125,8 @@ internal fun TrafficDetailsContent(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(requestScrollState)
-                            .padding(horizontal = MaterialTheme.dimens.margin.xxl)
-                            .padding(top = MaterialTheme.dimens.margin.xxl),
+                            .padding(horizontal = MaterialTheme.dimens.margin.md)
+                            .padding(top = MaterialTheme.dimens.margin.md),
                     ) {
                         RequestTab(trace = trace)
                     }
@@ -150,38 +151,52 @@ internal fun TrafficDetailsContent(
 
 @Composable
 private fun OverviewTab(entry: TrafficEntry) {
-    // Method badge and endpoint
-    MethodAndEndpointSection(
-        method = entry.method.orEmpty(),
-        url = entry.pathWithQuery(),
-    )
-
-    if (entry.mockedBy != null) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            AlohomoraChip(
+                label = entry.method?.uppercase().orEmpty(),
+            )
+            if (entry.mockedBy != null) {
+                AlohomoraChip(
+                    label = "Mocked",
+                    uppercase = false,
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
-        AlohomoraChip(
-            label = "Mocked",
-            uppercase = false,
-            containerColor = MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.onTertiary,
+        Text(
+            modifier = Modifier.fillMaxWidth()
+                .clip(MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(MaterialTheme.dimens.margin.sm),
+            text = entry.pathWithQuery(),
+            style = MaterialTheme.typography.labelLarge,
         )
     }
 
-    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
+
+
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
     // Calculate sizes from content
     val requestSize = entry.requestSize ?: 0
     val responseSize = entry.responseSize ?: 0L
 
     // Detect format from Content-Type header
-    val responseFormat = detectFormatFromContentType(entry.responseContentType)
+//    val responseFormat = detectFormatFromContentType(entry.responseContentType)
 
-    // Hero stats (STATUS, LATENCY, SIZE, FORMAT)
     HeroStatsSection(
         statusCode = entry.status ?: 0,
         latencyMs = entry.duration ?: 0,
         responseSize = responseSize,
         requestSize = requestSize,
-        format = responseFormat,
+        format = entry.responseContentType ?: "*",
     )
 
     AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.xxxl))
@@ -200,23 +215,50 @@ private fun OverviewTab(entry: TrafficEntry) {
 private fun RequestTab(trace: TrafficEntry) {
     val clipboard = LocalClipboardManager.current
     Column {
-        // Method badge and endpoint
-        MethodAndEndpointSection(
-            method = trace.method.orEmpty(),
-            url = trace.url.orEmpty(),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            AlohomoraChip(
+                label = trace.method?.uppercase().orEmpty(),
+            )
+            if (trace.mockedBy != null) {
+                AlohomoraChip(
+                    label = "Mocked",
+                    uppercase = false,
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+        Text(
+            modifier = Modifier.fillMaxWidth()
+                .clip(MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(MaterialTheme.dimens.margin.sm),
+            text = trace.url.orEmpty(),
+            style = MaterialTheme.typography.labelLarge,
         )
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
         // Request headers section with formatted display
-        trace.requestHeaders?.let { headers ->
+        trace.requestHeaders?.ifEmpty { null }?.let { headers ->
             val formattedHeaders = formatHeaders(headers)
             val headerCount = headers.values.sumOf { it.size }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SectionHeader(title = "REQUEST HEADERS")
                 Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                CountBadge(count = headerCount)
+                Badge {
+                    Text(
+                        text = headerCount.toString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
@@ -271,16 +313,16 @@ private fun RequestTab(trace: TrafficEntry) {
 
         // Action buttons
         Row(modifier = Modifier.fillMaxWidth()) {
-            AlohomoraOutlinedButton(
-                text = "Copy JSON",
-                onClick = {
-                    // The body as captured. Redaction has already been applied upstream, so
-                    // this cannot leak a header the UI is hiding.
-                    clipboard.setText(AnnotatedString(requestBody ?: trace.responseBody ?: ""))
-                },
-                modifier = Modifier.weight(1f),
-            )
-            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
+            if (trace.requestBody.isNullOrEmpty().not()) {
+                AlohomoraOutlinedButton(
+                    text = "Copy JSON",
+                    onClick = {
+                        clipboard.setText(AnnotatedString(requestBody ?: trace.responseBody ?: ""))
+                    },
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
+            }
             AlohomoraOutlinedButton(
                 text = "Copy cURL",
                 onClick = { clipboard.setText(AnnotatedString(trace.curlCommand())) },
@@ -291,6 +333,7 @@ private fun RequestTab(trace: TrafficEntry) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.huge))
     }
 }
+
 
 // ============================================================================
 // Response Tab
@@ -306,58 +349,58 @@ private fun ResponseTab(
     val responseSize = trace.responseSize ?: 0L
     val responseFormat = detectFormatFromContentType(trace.responseContentType)
 
-    JsonTreeView(
-        json = trace.responseBody ?: "{}",
-        listState,
-        parentContent = {
-            item {
-                ResponseMetadata(
-                    statusCode = trace.status ?: 0,
-                    format = responseFormat,
-                    sizeBytes = responseSize,
+    Column(
+        modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+    ) {
+        ResponseMetadata(
+            statusCode = trace.status ?: 0,
+            format = responseFormat,
+            sizeBytes = responseSize,
+        )
+        trace.responseHeaders?.let { headers ->
+            val formattedHeaders = formatHeaders(headers)
+            val headerCount = headers.values.sumOf { it.size }
+            var expanded by remember { mutableStateOf(false) }
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(vertical = MaterialTheme.dimens.margin.lg)
+                    .clickable {
+                        expanded = !expanded
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SectionHeader(
+                    modifier = Modifier.weight(1f),
+                    title = "RESPONSE HEADERS",
+                )
+                Badge {
+                    Text(
+                        text = headerCount.toString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                }
+                Icon(
+                    imageVector = Icons.ChevronDown,
+                    contentDescription = "Expand",
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
                 )
             }
-            trace.responseHeaders?.let { headers ->
-                val formattedHeaders = formatHeaders(headers)
-                val headerCount = headers.values.sumOf { it.size }
-                item(
-                    key = "response_headers",
-                ) {
-                    var expanded by remember { mutableStateOf(false) }
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(
-                                horizontal = MaterialTheme.dimens.margin.xxl,
-                                vertical = MaterialTheme.dimens.margin.lg,
-                            )
-                            .clickable {
-                                expanded = !expanded
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        SectionHeader(
-                            modifier = Modifier.weight(1f),
-                            title = "RESPONSE HEADERS",
-                        )
-                        CountBadge(count = headerCount)
-                        Icon(
-                            imageVector = Icons.Download,
-                            contentDescription = "Download",
-                            modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
-                        )
-                    }
-                    if (expanded) {
-                        AlohomoraCodeBlock(
-                            modifier = Modifier.animateItem(),
-                            isScrollable = false,
-                            accentBorder = !trace.isSuccessful(),
-                            content = formattedHeaders.joinToString("\n"),
-                        )
-                    }
-                }
+            if (expanded) {
+                AlohomoraCodeBlock(
+                    isScrollable = false,
+                    accentBorder = !trace.isSuccessful(),
+                    content = formattedHeaders.joinToString("\n"),
+                )
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xl))
             }
-        },
-    )
+        }
+
+        JsonTreeView(
+            json = trace.responseBody ?: "{}",
+            listState = listState,
+        )
+    }
 }
 
 // ============================================================================
@@ -365,68 +408,30 @@ private fun ResponseTab(
 // ============================================================================
 
 @Composable
-private fun MethodAndEndpointSection(
-    method: String,
-    url: String,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            MethodBadgeDetails(method = method)
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
-            Text(
-                text = url,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-    }
-}
-
-@Composable
-private fun MethodBadgeDetails(method: String) {
-    Box(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.extraSmall)
-            .background(color = MaterialTheme.colorScheme.primary)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-    ) {
-        Text(
-            text = method.uppercase(),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onPrimary,
-        )
-    }
-}
-
-@Composable
 private fun HeroStatsSection(
     statusCode: Int,
     latencyMs: Long,
     responseSize: Long,
     requestSize: Long,
-    format: ContentType,
+    format: String,
 ) {
     Column {
-        // Status section (large)
         Text(
             text = "STATUS",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 text = HttpStatusCode.fromValue(statusCode).toString(),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.sm),
             )
         }
 
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
         // Latency, Size, and Format row
         Row(
@@ -439,18 +444,17 @@ private fun HeroStatsSection(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = latencyMs.toString(),
-                        style = MaterialTheme.typography.displaySmall,
+                        style = MaterialTheme.typography.titleLarge,
                     )
                     Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.xs))
                     Text(
                         text = "ms",
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.xs),
                     )
                 }
             }
@@ -461,14 +465,14 @@ private fun HeroStatsSection(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
                 Text(
                     text = formatBytes(responseSize),
-                    style = MaterialTheme.typography.displaySmall,
+                    style = MaterialTheme.typography.titleLarge,
                 )
                 Text(
                     text = "(${formatBytes(requestSize)} up)",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -481,8 +485,9 @@ private fun HeroStatsSection(
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                 Text(
-                    text = format.contentSubtype,
-                    style = MaterialTheme.typography.displaySmall,
+                    text = format,
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.End,
                 )
             }
         }
@@ -508,12 +513,6 @@ private fun InfoRowsSection(trace: TrafficEntry) {
             icon = Icons.RefreshCw,
             label = "SCHEME",
             value = trace.scheme?.uppercase() ?: "HTTPS",
-        )
-
-        InfoRow(
-            icon = Icons.RefreshCw,
-            label = "CLIENT",
-            value = "android-v33 (1.0.4)", // TODO: Get from user agent
         )
 
         // Additional TrafficEntry fields
@@ -587,22 +586,6 @@ private fun FormatBadge(format: String) {
     }
 }
 
-@Composable
-private fun CountBadge(count: Int) {
-    Box(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
-            .background(color = MaterialTheme.colorScheme.secondaryContainer)
-            .padding(horizontal = 8.dp, vertical = 2.dp),
-    ) {
-        Text(
-            text = count.toString(),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
-        )
-    }
-}
-
 // ============================================================================
 // Response Tab Specific Components
 // ============================================================================
@@ -642,7 +625,7 @@ private fun ResponseMetadata(
 ) {
     Row(
         modifier = Modifier
-            .padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.md)
+            .padding(vertical = MaterialTheme.dimens.margin.md)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -725,4 +708,8 @@ private fun formatHeaders(headers: Map<String, List<String>>?): List<String> {
  */
 private fun detectFormatFromContentType(contentType: String?): ContentType =
     if (contentType.isNullOrBlank()) ContentType.Any
-    else try { ContentType.parse(contentType) } catch (_: Exception) { ContentType.Any }
+    else try {
+        ContentType.parse(contentType)
+    } catch (_: Exception) {
+        ContentType.Any
+    }

@@ -102,10 +102,6 @@ data class TrafficEntry(
                 append(" --data '${body.shellEscape()}'")
             }
 
-            // Add URL
-            url?.let {
-                append(" \"$it\"")
-            }
         }
     }
 

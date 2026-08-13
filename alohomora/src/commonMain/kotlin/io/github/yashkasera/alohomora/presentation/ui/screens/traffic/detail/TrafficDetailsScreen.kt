@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -51,8 +50,6 @@ internal fun TrafficDetailsScreen(
     val viewModel = koinViewModel<TrafficDetailsViewModel> { parametersOf(trafficId) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val trace = state.trace
-    // Held across recomposition: the sheet owns the user's edits from here on, so re-deriving the
-    // seed on every frame would reset the form under them.
     var replayDraft by remember { mutableStateOf<ReplayRequest?>(null) }
 
     if (trace == null) {
@@ -69,7 +66,7 @@ internal fun TrafficDetailsScreen(
     Scaffold(
         topBar = {
             AlohomoraTopBar(
-                title = "API Request",
+                title = "Traffic Log",
                 subtitle = state.trace?.path,
                 navigationIcon = {
                     AlohomoraIconButton(onClick = onBackClick) {
@@ -116,9 +113,6 @@ internal fun TrafficDetailsScreen(
         },
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            // Shown for replays triggered from the desktop too, not just from this screen: the
-            // result lands in the same place either way, and hiding it would make a desktop replay
-            // look like it produced nothing.
             state.replayResultTraceId?.let { resultId ->
                 ReplayResultBanner(onClick = { onOpenTraffic(resultId) })
             }

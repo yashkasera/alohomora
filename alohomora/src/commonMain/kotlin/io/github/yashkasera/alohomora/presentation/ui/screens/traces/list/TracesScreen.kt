@@ -1,10 +1,9 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.traces.list
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -20,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -30,7 +30,6 @@ import io.github.yashkasera.alohomora.common.trace.formatDuration
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
-import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
@@ -72,8 +71,6 @@ internal fun TracesScreen(
                 },
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface,
     ) { padding ->
         Column(
             modifier = Modifier
@@ -83,10 +80,7 @@ internal fun TracesScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.dimens.margin.lg,
-                        vertical = MaterialTheme.dimens.margin.sm,
-                    ),
+                    .padding(horizontal = MaterialTheme.dimens.margin.md),
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -113,10 +107,17 @@ internal fun TracesScreen(
                             "Alohomora.recordSpan(...).",
                     )
                 } else {
-                    LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                        contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
+                    ) {
                         items(state.traces, key = { it.traceId }) { trace ->
-                            TraceRowItem(trace = trace, onClick = { onNavigateToTrace(trace.traceId) })
-                            AlohomoraHorizontalDivider()
+                            TraceRowItem(
+                                trace = trace,
+                                onClick = { onNavigateToTrace(trace.traceId) },
+                            )
                         }
                     }
                     ScrollToTopButton(lazyListState)
@@ -135,65 +136,69 @@ internal fun TracesScreen(
 @Composable
 private fun TraceRowItem(trace: TraceSummary, onClick: () -> Unit) {
     val containerColor = when {
-        trace.hasError -> MaterialTheme.colorScheme.errorContainer
-        trace.isViewed -> MaterialTheme.colorScheme.surfaceContainerLowest
-        else -> MaterialTheme.colorScheme.surface
+        trace.isViewed -> MaterialTheme.colorScheme.surfaceContainer
+        else -> MaterialTheme.colorScheme.surfaceContainerHighest
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(containerColor)
-            .clickable(onClick = onClick)
-            .padding(MaterialTheme.dimens.margin.lg),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+        ),
+        onClick = onClick,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(MaterialTheme.dimens.margin.md),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
         ) {
-            Text(
-                text = trace.rootSpanName ?: "(root pending)",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (trace.isViewed) FontWeight.Normal else FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = formatDuration(trace.durationNanos),
-                style = MaterialTheme.typography.labelMedium,
-                fontFamily = FontFamily.Monospace,
-            )
-        }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = DateUtils.format(trace.startMillis, DateUtils.Format.HH_MM_SS_2MS),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = "${trace.spanCount} ${if (trace.spanCount == 1) "span" else "spans"}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (trace.hasError) {
-                AlohomoraChip(
-                    label = "error",
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = trace.rootSpanName ?: "(root pending)",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (trace.isViewed) FontWeight.Normal else FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = formatDuration(trace.durationNanos),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            if (!trace.isComplete) {
-                AlohomoraChip(
-                    label = "partial",
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = DateUtils.format(trace.startMillis, DateUtils.Format.HH_MM_SS_2MS),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Text(
+                    text = "${trace.spanCount} ${if (trace.spanCount == 1) "span" else "spans"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (trace.hasError) {
+                    AlohomoraChip(
+                        label = "error",
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+                if (!trace.isComplete) {
+                    AlohomoraChip(
+                        label = "partial",
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }

@@ -1,23 +1,25 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.traffic.list
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -26,9 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -45,9 +47,13 @@ import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeftRight
+import io.github.yashkasera.alohomora.ui.icons.Check
+import io.github.yashkasera.alohomora.ui.icons.CircleAlert
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
+import io.github.yashkasera.alohomora.ui.utils.drawDiagonalLabel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -59,7 +65,6 @@ internal fun TrafficScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
-        modifier = Modifier.systemBarsPadding(),
         topBar = {
             TrafficTopBar(onBackClick, state, viewModel)
         },
@@ -75,12 +80,15 @@ internal fun TrafficScreen(
             val listState = rememberLazyListState()
             FollowNewest(listState, state.calls.size)
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                    contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
+                ) {
                     items(state.calls, key = { it.id }) { call ->
                         TrafficItem(call = call, onClick = { onTrafficClick(call.id) })
-                        AlohomoraHorizontalDivider()
                     }
-                    // Spacer to avoid bottom bar overlap if scaffold padding isn't enough (usually it is)
                     item { Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl)) }
                 }
                 ScrollToTopButton(listState)
@@ -172,88 +180,113 @@ private fun TrafficTopBar(
 @Composable
 private fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
     val containerColor = when {
-        call.isSuccessful().not() -> MaterialTheme.colorScheme.errorContainer
-        call.isViewed -> MaterialTheme.colorScheme.surfaceContainerLowest
-        else -> MaterialTheme.colorScheme.background
+        call.isViewed -> MaterialTheme.colorScheme.surfaceContainer
+        else -> MaterialTheme.colorScheme.surfaceContainerHighest
     }
 
-    Column(
-        modifier = Modifier.fillMaxWidth()
-            .background(containerColor)
-            .clickable(onClick = onClick)
-            .padding(
-                horizontal = MaterialTheme.dimens.margin.xl,
-                vertical = MaterialTheme.dimens.margin.lg,
-            ),
+    Card(
+        modifier = if (call.isMocked()) {
+            Modifier.clipToBounds()
+                .drawDiagonalLabel(
+                    text = "MOCKED",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+        } else Modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+        ),
+        onClick = onClick,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.padding(MaterialTheme.dimens.margin.md)
+                .height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            Card(
+                modifier = Modifier.fillMaxHeight(),
+                colors = CardDefaults.cardColors(
+                    if (call.isSuccessful())
+                        MaterialTheme.alohomoraColors.successContainer
+                    else
+                        MaterialTheme.colorScheme.errorContainer,
+                ),
             ) {
-                MethodBadge(call.method.orEmpty())
-                Text(
-                    text = DateUtils.format(call.time ?: 0, DateUtils.Format.HH_MM_SS_2MS),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-            ) {
-                if (call.mockedBy != null) {
-                    AlohomoraChip(
-                        label = "Mocked",
-                        uppercase = false,
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary,
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(MaterialTheme.dimens.margin.sm),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(
+                        MaterialTheme.dimens.margin.xs,
+                        Alignment.CenterVertically,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = if (call.isSuccessful())
+                            Icons.Check
+                        else Icons.CircleAlert,
+                        contentDescription = null,
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                    )
+                    Text(
+                        text = call.status?.toString() ?: "???",
+                        style = MaterialTheme.typography.labelSmall,
                     )
                 }
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                    ) {
+                        MethodBadge(call.method.orEmpty())
+                        Text(
+                            text = DateUtils.format(call.time ?: 0, DateUtils.Format.HH_MM_SS_2MS),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    if (call.isMocked().not()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                        ) {
+                            Text(
+                                text = "${call.duration}ms",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            )
+                        }
+                    }
+                }
+
                 Text(
-                    text = "${call.duration}ms",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    text = call.pathWithQuery(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
 
-                val statusColor = when {
-                    call.isSuccessful() -> MaterialTheme.colorScheme.onSurface
-                    else -> MaterialTheme.colorScheme.error
-                }
-                val finalStatusColor =
-                    if (call.status == 201)
-                        MaterialTheme.colorScheme.tertiary
-                    else statusColor
-
                 Text(
-                    text = "${call.status}",
+                    text = "${call.host}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = finalStatusColor,
+                    color = MaterialTheme.colorScheme.secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
-
-        Text(
-            text = call.pathWithQuery(),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(end = MaterialTheme.dimens.margin.xxxl),
-        )
-
-        Text(
-            text = "host: ${call.host}",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.secondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 

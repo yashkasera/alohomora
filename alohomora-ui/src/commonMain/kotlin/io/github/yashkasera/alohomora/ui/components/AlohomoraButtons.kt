@@ -260,8 +260,8 @@ fun AlohomoraIconButton(
             modifier = modifier,
             enabled = enabled,
             colors = IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ),
             shape = MaterialTheme.shapes.medium,
             content = content,

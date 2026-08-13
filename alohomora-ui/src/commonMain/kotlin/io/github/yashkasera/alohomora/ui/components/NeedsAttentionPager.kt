@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
@@ -69,7 +69,7 @@ fun NeedsAttentionPager(
 
         Spacer(Modifier.height(MaterialTheme.dimens.margin.sm))
         BoxWithConstraints {
-            HorizontalPager(
+            VerticalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxWidth(),
                 beyondViewportPageCount = 1,

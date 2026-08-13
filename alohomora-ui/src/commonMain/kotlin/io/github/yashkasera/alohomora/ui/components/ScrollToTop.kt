@@ -6,24 +6,20 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -35,8 +31,8 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 /**
@@ -211,14 +207,29 @@ private fun BoxScope.ScrollToTopButton(
             .align(Alignment.BottomEnd)
             .padding(MaterialTheme.dimens.margin.xxl),
     ) {
-        FloatingActionButton(
-            onClick = onClick,
-        ) {
-            Icon(
-                imageVector = Icons.ArrowLeft,
-                contentDescription = "Scroll to top",
-                modifier = Modifier.rotate(rotation)
-            )
+        BoxWithConstraints {
+            if (maxWidth > 400.dp) {
+                FloatingActionButton(
+                    onClick = onClick,
+                ) {
+                    Icon(
+                        imageVector = Icons.ArrowLeft,
+                        contentDescription = "Scroll to top",
+                        modifier = Modifier.rotate(rotation),
+                    )
+                }
+            } else {
+                AlohomoraIconButton(
+                    onClick = onClick,
+                    style = AlohomoraIconButtonStyle.TONAL
+                ) {
+                    Icon(
+                        imageVector = Icons.ArrowLeft,
+                        contentDescription = "Scroll to top",
+                        modifier = Modifier.rotate(rotation),
+                    )
+                }
+            }
         }
     }
 }

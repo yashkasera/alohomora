@@ -2,21 +2,21 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.events
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,15 +27,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.presentation.ui.components.EventsDetailsSheet
-import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
@@ -85,8 +84,6 @@ internal fun EventsScreen(onBackClick: () -> Unit) {
                 },
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface,
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             EventsSearchBar(
@@ -135,7 +132,7 @@ private fun EventsSearchBar(
         onQueryChange = onQueryChange,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.md),
+            .padding(MaterialTheme.dimens.margin.md),
         placeholder = "Search events by name",
     )
 }
@@ -156,7 +153,12 @@ internal fun EventsList(
         val listState = rememberLazyListState()
         FollowNewest(listState, events.size)
         Box(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+            ) {
                 items(events, key = { it.id }) { event ->
                     EventItem(
                         event = event,
@@ -176,79 +178,63 @@ internal fun EventItem(
     showProperties: Boolean,
     onClick: () -> Unit,
 ) {
-    Column(
-        // Sunken once read, matching the traffic row. Events have no error state, so unlike
-        // TraceItem there is nothing that should override the dimming.
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                if (event.isViewed) {
-                    MaterialTheme.colorScheme.surfaceContainerHigh
-                } else {
-                    Color.Transparent
-                },
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
+    val containerColor = when {
+        event.isViewed -> MaterialTheme.colorScheme.surfaceContainer
+        else -> MaterialTheme.colorScheme.surfaceContainerHighest
+    }
+    Card(
+        onClick = onClick,
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+        ),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(MaterialTheme.dimens.margin.md),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     text = event.name,
-                    // titleMedium is the one list-row title style. Events and Errors used
-                    // titleLarge+Bold, GitHistory bodyLarge mono and Navigation headlineLarge
-                    // italic — four weights for four lists of the same shape.
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurface,
+                )
+
+                Text(
+                    text = DateUtils.format(event.time, DateUtils.Format.HH_MM_SS),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            Text(
-                text = DateUtils.format(event.time, DateUtils.Format.HH_MM_SS),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        if (showProperties) {
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = MaterialTheme.dimens.margin.xs)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .border(MaterialTheme.dimens.stroke.small, MaterialTheme.colorScheme.outline),
-            ) {
-                if (event.name == "App.Exception") {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .width(2.dp)
-                            .fillMaxHeight()
-                            .background(MaterialTheme.colorScheme.onSurface),
-                    )
-                }
-
+            if (showProperties) {
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                 Text(
-                    // JsonNull is not Kotlin null, so `?: "{}"` never fired for an event
-                    // recorded with no properties and the row rendered the word "null".
                     text = event.properties
                         ?.takeUnless { it is JsonNull }
                         ?.toString()
                         ?: "{}",
-                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 5,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
-                        .padding(MaterialTheme.dimens.margin.sm)
-                        .padding(start = if (event.name == "App.Exception") MaterialTheme.dimens.margin.sm else 0.dp),
+                        .fillMaxWidth()
+                        .padding(start = MaterialTheme.dimens.margin.xs)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        .border(
+                            width = MaterialTheme.dimens.stroke.small,
+                            color = MaterialTheme.colorScheme.outline,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                        .padding(MaterialTheme.dimens.margin.sm),
                 )
             }
         }
     }
-    AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = MaterialTheme.dimens.stroke.small)
 }

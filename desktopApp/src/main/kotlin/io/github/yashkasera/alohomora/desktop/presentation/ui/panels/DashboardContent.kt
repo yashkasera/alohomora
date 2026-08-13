@@ -28,7 +28,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,8 +59,8 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
-import io.github.yashkasera.alohomora.ui.components.NeedsAttentionPager
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Link
@@ -177,12 +176,6 @@ fun DashboardContent(
             ) {
                 MetricsStrip(dashboard)
 
-                NeedsAttentionPager(
-                    items = attentionItems,
-                    onErrorClick = onErrorClick,
-                    onTrafficClick = onTrafficItemClick,
-                )
-
                 CurrentBuildCard(buildInfo = buildInfo)
 
                 val eventsCard: @Composable (Modifier) -> Unit = { modifier ->
@@ -236,8 +229,8 @@ fun DashboardContent(
                         modifier = Modifier.fillMaxWidth().weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
                     ) {
-                        eventsCard(Modifier.weight(1f).fillMaxSize())
-                        trafficCard(Modifier.weight(1f).fillMaxSize())
+                        eventsCard(Modifier.weight(2f).fillMaxSize())
+                        trafficCard(Modifier.weight(2f).fillMaxSize())
                     }
                 }
             }
@@ -462,8 +455,8 @@ private fun DashboardListCard(
                     content = content,
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                     contentPadding = PaddingValues(
-                        MaterialTheme.dimens.margin.md
-                    )
+                        MaterialTheme.dimens.margin.md,
+                    ),
                 )
             }
         }

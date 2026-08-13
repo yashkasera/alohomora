@@ -1,20 +1,19 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.githistory
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -23,10 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.data.model.GitHistoryCommit
@@ -77,7 +73,12 @@ internal fun GitHistoryScreen(
             } else {
                 val listState = rememberLazyListState()
                 Box(modifier = Modifier.fillMaxSize()) {
-                    LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                        contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
+                    ) {
                         items(state.commits, key = { it.sha }) { commit ->
                             CommitListItem(commit = commit)
                         }
@@ -93,67 +94,50 @@ internal fun GitHistoryScreen(
 private fun CommitListItem(
     commit: GitHistoryCommit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(width = MaterialTheme.dimens.stroke.thin, color = MaterialTheme.colorScheme.outlineVariant, shape = RectangleShape)
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.lg),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top,
+    Card {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+                .padding(MaterialTheme.dimens.margin.md),
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = commit.sha.take(7),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        letterSpacing = 1.sp,
-                        fontWeight = FontWeight.Medium,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-
-                Text(
-                    text = commit.message,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
-
-                Text(
-                    text = DateUtils.format(
-                        commit.timestamp,
-                        DateUtils.Format.READABLE_DATE_TIME,
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
-
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
                 Text(
+                    text = commit.sha.take(7),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
                     text = commit.author.uppercase(),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                    ),
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
+
+            Text(
+                text = commit.message,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+
+            Text(
+                text = DateUtils.format(
+                    commit.timestamp,
+                    DateUtils.Format.READABLE_DATE_TIME,
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

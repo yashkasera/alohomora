@@ -1,8 +1,10 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.cache
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +34,6 @@ import io.github.yashkasera.alohomora.domain.model.CacheEntry
 import io.github.yashkasera.alohomora.domain.model.CacheType
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
-import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
@@ -62,11 +64,6 @@ internal fun CacheScreen(
                         Icon(Icons.ArrowLeft, contentDescription = "Back")
                     }
                 },
-                actions = {
-                    /*AlohomoraIconButton(onClick = { *//* Clear Cache *//* }) {
-                        Icon(Icons.Trash, contentDescription = "Clear Cache")
-                    }*/
-                }
             )
         },
         bottomBar = {
@@ -77,25 +74,17 @@ internal fun CacheScreen(
                 totalSize = totalSize,
             )
         },
-        containerColor = MaterialTheme.colorScheme.background,
-        contentColor = MaterialTheme.colorScheme.onBackground,
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = MaterialTheme.dimens.margin.xl)
+                .padding(padding),
         ) {
-
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
-
-            // Search Bar
-            SearchTextField(
+            AlohomoraSearchTextField(
+                modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.md),
                 query = state.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChange,
             )
-
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
             // Content
             if (state.entries.isEmpty()) {
@@ -139,14 +128,14 @@ private fun PreferencesList(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+            contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
         ) {
             items(
                 items = entries,
                 key = { "${it.source.name}_${it.key}" },
             ) { entry ->
                 PreferenceItem(entry = entry)
-                AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.outline)
             }
         }
         ScrollToTopButton(listState)
@@ -157,68 +146,69 @@ private fun PreferencesList(
 private fun PreferenceItem(
     entry: CacheEntry,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = MaterialTheme.dimens.margin.lg),
-    ) {
-        // Key row with type chip
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+    Card {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(MaterialTheme.dimens.margin.md),
         ) {
+            // Key row with type chip
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = entry.key,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Normal,
+                    ),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+
+                AlohomoraChip(label = entry.type.displayLabel())
+            }
+
+            Spacer(modifier = Modifier.height(6.dp)) // 6.dp intentional: tight preference value gap
+
+            val valueColor = when (entry.type) {
+                CacheType.BOOLEAN -> MaterialTheme.colorScheme.tertiary
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
+            }
+
+            val displayValue = if (entry.isEncrypted) {
+                "[encrypted]"
+            } else {
+                entry.value
+            }
+
             Text(
-                text = entry.key,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Normal,
-                ),
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
+                text = displayValue,
+                style = MaterialTheme.typography.bodySmall,
+                color = valueColor,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
             )
-
-            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-
-            // Type chip
-            // Was entry.type.name — a raw enum leaking into the UI.
-            AlohomoraChip(label = entry.type.displayLabel())
         }
-
-        Spacer(modifier = Modifier.height(6.dp)) // 6.dp intentional: tight preference value gap
-
-        // Value display with type-specific styling
-        val valueColor = when (entry.type) {
-            CacheType.BOOLEAN -> MaterialTheme.colorScheme.tertiary
-            else -> MaterialTheme.colorScheme.onSurfaceVariant
-        }
-
-        val displayValue = if (entry.isEncrypted) {
-            "[encrypted]"
-        } else {
-            entry.value
-        }
-
-        Text(
-            text = displayValue,
-            style = MaterialTheme.typography.bodySmall,
-            color = valueColor,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
 @Composable
 private fun CacheFooter(
-    modifier:Modifier = Modifier,
+    modifier: Modifier = Modifier,
     totalEntries: Int,
     filteredCount: Int,
     totalSize: String,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .then(modifier),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
