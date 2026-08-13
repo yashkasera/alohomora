@@ -6,23 +6,23 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import io.github.yashkasera.alohomora.ui.icons.ArrowRight
-import io.github.yashkasera.alohomora.ui.theme.dimens
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -34,17 +34,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
+import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
-import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
-import io.github.yashkasera.alohomora.ui.icons.Route
-import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.ChevronDown
+import io.github.yashkasera.alohomora.ui.icons.ChevronRight
+import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
+import io.github.yashkasera.alohomora.ui.icons.Route
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
+import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -64,71 +70,36 @@ internal fun NavigationHistoryScreen(onBackClick: () -> Unit = {}) {
                 },
                 actions = {
                     AlohomoraIconButton(onClick = { viewModel.refresh() }) {
-                        Icon(Icons.RefreshCw, contentDescription = null)
+                        Icon(Icons.RefreshCw, contentDescription = "refresh")
                     }
                 },
             )
         },
-        bottomBar = {
-            // Session Summary
-            AlohomoraHorizontalDivider()
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = MaterialTheme.dimens.margin.xl, vertical = MaterialTheme.dimens.margin.xl),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column {
-                    Text(
-                        "SESSION DURATION",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        state.sessionDuration,
-                        style = MaterialTheme.typography.displaySmall,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
-                    )
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        "STACK OPERATIONS",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        state.stackOperations.toString(),
-                        style = MaterialTheme.typography.displaySmall,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
-                    )
-                }
-            }
-        },
+        bottomBar = { SessionSummaryBar(state) },
     ) { padding ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = MaterialTheme.dimens.margin.xl),
+                .padding(
+                    horizontal = MaterialTheme.dimens.margin.lg,
+                    vertical = MaterialTheme.dimens.margin.md,
+                ),
         ) {
-            // Timeline
             NavigationTimeline(events = state.timelineEvents)
         }
     }
 }
 
 @Composable
-private fun NavigationTimeline(events: List<ActivityTimelineItem>) {
+internal fun NavigationTimeline(events: List<ActivityTimelineItem>) {
     if (events.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = MaterialTheme.dimens.margin.xs),
+                .padding(top = MaterialTheme.dimens.margin.xxxl)
+                .testTag("nav_empty"),
             contentAlignment = Alignment.Center,
         ) {
             EmptyState(
@@ -140,17 +111,14 @@ private fun NavigationTimeline(events: List<ActivityTimelineItem>) {
         return
     }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxWidth().testTag("nav_timeline")) {
         events.forEachIndexed { index, event ->
-            TimelineItem(event = event)
-
-            // Add connector between items (except after last item)
-            if (index < events.lastIndex) {
-                TimelineConnector(
-                    hasArrow = false,
-                    label = null,
-                )
-            }
+            TimelineItem(
+                event = event,
+                index = index,
+                isFirst = index == 0,
+                isLast = index == events.lastIndex,
+            )
         }
     }
 }
@@ -158,242 +126,126 @@ private fun NavigationTimeline(events: List<ActivityTimelineItem>) {
 @Composable
 private fun TimelineItem(
     event: ActivityTimelineItem,
+    index: Int,
+    isFirst: Boolean,
+    isLast: Boolean,
 ) {
     var isIntentExpanded by remember { mutableStateOf(false) }
 
+    val hasExtras = !event.intentExtras.isNullOrEmpty()
     val hasIntentData = !event.intentAction.isNullOrBlank() ||
         !event.intentData.isNullOrBlank() ||
-        !event.intentExtras.isNullOrEmpty()
-    val hasExtras = !event.intentExtras.isNullOrEmpty()
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
-    ) {
-        // Timeline dot
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(MaterialTheme.dimens.margin.xl),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(MaterialTheme.dimens.margin.xl)
-                    .border(
-                        width = MaterialTheme.dimens.stroke.medium,
-                        color = if (event.isActive) MaterialTheme.colorScheme.onBackground
-                        else MaterialTheme.colorScheme.outline,
-                        shape = CircleShape,
-                    )
-                    .background(
-                        color = if (event.isActive) MaterialTheme.colorScheme.onBackground
-                        else Color.Transparent,
-                        shape = CircleShape,
-                    ),
-            )
-        }
+        hasExtras
 
-        // Content Card
-        Box(
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .testTag("nav_timeline_item_$index"),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+    ) {
+        TimelineRail(isActive = event.isActive, isFirst = isFirst, isLast = isLast)
+
+        // Content card. Bottom padding on all but the last leaves the gap the rail bridges.
+        Card(
             modifier = Modifier
                 .weight(1f)
-                .border(
-                    width = if (event.isActive) MaterialTheme.dimens.stroke.medium else MaterialTheme.dimens.stroke.small,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    shape = RectangleShape,
-                )
-                .background(
-                    color = if (event.isActive) MaterialTheme.colorScheme.background
-                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                )
-                .padding(MaterialTheme.dimens.margin.xl),
+                .padding(bottom = if (isLast) MaterialTheme.dimens.margin.xs else MaterialTheme.dimens.margin.md),
+            colors = CardDefaults.cardColors(
+                containerColor = if (event.isActive) MaterialTheme.colorScheme.surfaceContainerHighest
+                else MaterialTheme.colorScheme.surfaceContainer,
+            ),
         ) {
-            Column {
-                // Header row
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(MaterialTheme.dimens.margin.md),
+            ) {
+                // Status chips
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        // State label (RESUMED, POPPED SCREEN, etc)
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = if (event.isActive) "RESUMED" else when {
-                                    event.intentData != null -> "POPPED SCREEN"
-                                    hasExtras -> "PREVIOUS"
-                                    else -> "ENTRY POINT"
-                                },
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-
-                            if (event.badge != null && event.badge != "CURRENT") {
-                                Box(
-                                    modifier = Modifier
-                                        .clip(MaterialTheme.shapes.extraSmall)
-                                        .background(MaterialTheme.colorScheme.onBackground)
-                                        .padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = MaterialTheme.dimens.margin.xs),
-                                ) {
-                                    Text(
-                                        text = event.badge,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.background,
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (event.isActive) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(MaterialTheme.shapes.extraSmall)
-                                    .background(MaterialTheme.colorScheme.onBackground)
-                                    .padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = MaterialTheme.dimens.margin.xs),
-                            ) {
-                                Text(
-                                    text = "ACTIVE",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.background,
-                                )
-                            }
-                        }
-
-                        // Show arrow for PREVIOUS state
-                        if (!event.isActive && hasExtras && event.intentData == null) {
-                            Icon(
-                                imageVector = Icons.ArrowRight,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                            )
-                        }
+                    StateChip(label = event.stateLabel, isActive = event.isActive)
+                    if (event.badge != null) {
+                        AlohomoraChip(label = event.badge)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
                 // Screen name
                 Text(
                     text = event.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontStyle = FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.testTag("nav_screen_title"),
                 )
 
-                // Intent Data Section (expandable)
-                if (hasIntentData) {
-                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+                // Quick intent summary (deeplink / action)
+                if (!event.intentData.isNullOrBlank() || !event.intentAction.isNullOrBlank()) {
+                    Text(
+                        text = event.intentData ?: event.intentAction.orEmpty(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { isIntentExpanded = !isIntentExpanded }
-                            .padding(vertical = MaterialTheme.dimens.margin.xs),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = if (hasExtras) "EXTRAS" else "INTENT DATA",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            text = if (isIntentExpanded) "∧" else "∨",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
-                    if (isIntentExpanded) {
-                        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                // Meta row: timestamp · duration on the left, intent toggle on the right
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = buildString {
+                            append(event.timestamp)
+                            event.duration?.let { append(" · "); append(it) }
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
 
-                        // Show intent extras
-                        event.intentExtras?.forEach { (key, value) ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 2.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                Text(
-                                    text = "$key:",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    if (hasIntentData) {
+                        Row(
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.small)
+                                .clickable { isIntentExpanded = !isIntentExpanded }
+                                .padding(
+                                    horizontal = MaterialTheme.dimens.margin.xs,
+                                    vertical = MaterialTheme.dimens.margin.xs,
                                 )
-                                Text(
-                                    text = value,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-
-                        // Show deeplink if available
-                        if (event.intentData != null) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 2.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                Text(
-                                    text = "deepLink:",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Text(
-                                    text = event.intentData,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
+                                .testTag("nav_intent_toggle")
+                                .semantics {
+                                    contentDescription = if (isIntentExpanded) "expanded" else "collapsed"
+                                },
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = if (hasExtras) "EXTRAS" else "INTENT",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Icon(
+                                imageVector = if (isIntentExpanded) Icons.ChevronDown else Icons.ChevronRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                            )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
-
-                // Metadata row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Column {
-                        Text(
-                            text = "TIMESTAMP",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            text = event.timestamp,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
-                        )
-                    }
-
-                    if (event.duration != null) {
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = if (event.isActive) "RESUME DELAY" else "DURATION",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Text(
-                                text = event.duration,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
-                            )
-                        }
-                    }
+                if (hasIntentData && isIntentExpanded) {
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                    IntentDetails(event)
                 }
             }
         }
@@ -401,48 +253,165 @@ private fun TimelineItem(
 }
 
 @Composable
-private fun TimelineConnector(
-    hasArrow: Boolean = false,
-    label: String? = null,
-) {
-    Row(
+private fun IntentDetails(event: ActivityTimelineItem) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = MaterialTheme.dimens.margin.sm),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(
+                width = MaterialTheme.dimens.stroke.small,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = MaterialTheme.shapes.medium,
+            )
+            .padding(MaterialTheme.dimens.margin.md),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
     ) {
-        // Vertical line
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(MaterialTheme.dimens.margin.xl),
+        event.intentAction?.takeIf { it.isNotBlank() }?.let { IntentRow("action", it) }
+        event.intentData?.takeIf { it.isNotBlank() }?.let { IntentRow("data", it) }
+        event.intentExtras?.forEach { (key, value) -> IntentRow(key, value) }
+    }
+}
+
+@Composable
+private fun IntentRow(
+    label: String,
+    value: String,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.4f),
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+            modifier = Modifier.weight(0.6f),
+        )
+    }
+}
+
+/**
+ * The left rail: a continuous vertical line with a dot at this item's header. The line is drawn as a
+ * top segment (above the dot) and a bottom segment (below, filling the rest of the row). The top
+ * segment is hidden on the first item and the bottom on the last, so the line runs unbroken *through*
+ * every dot between cards but stops cleanly at the ends. The active dot is accent-filled to tie it to
+ * the FOREGROUND chip.
+ */
+@Composable
+private fun TimelineRail(
+    isActive: Boolean,
+    isFirst: Boolean,
+    isLast: Boolean,
+) {
+    val lineColor = MaterialTheme.colorScheme.outlineVariant
+    val accent = MaterialTheme.alohomoraColors.accent
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(MaterialTheme.dimens.icon.lg),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // Top segment: from row top down to the dot, aligned with the card's header padding.
+        Box(
+            modifier = Modifier
+                .width(MaterialTheme.dimens.stroke.small)
+                .height(MaterialTheme.dimens.margin.lg)
+                .background(if (isFirst) Color.Transparent else lineColor),
+        )
+
+        Box(
+            modifier = Modifier
+                .size(MaterialTheme.dimens.margin.md)
+                .semantics { contentDescription = if (isActive) "active screen" else "screen" }
+                .border(
+                    width = MaterialTheme.dimens.stroke.medium,
+                    color = if (isActive) accent else lineColor,
+                    shape = CircleShape,
+                )
+                .background(
+                    color = if (isActive) accent else MaterialTheme.colorScheme.surface,
+                    shape = CircleShape,
+                ),
+        )
+
+        // Bottom segment: fills the remaining row height, bridging the gap to the next dot.
+        Box(
+            modifier = Modifier
+                .width(MaterialTheme.dimens.stroke.small)
+                .weight(1f)
+                .background(if (isLast) Color.Transparent else lineColor),
+        )
+    }
+}
+
+@Composable
+private fun StateChip(
+    label: String,
+    isActive: Boolean,
+) {
+    val accent = MaterialTheme.alohomoraColors.accent
+    // AlohomoraChip exposes no modifier, so the testTag rides on a wrapping Box.
+    Box(modifier = Modifier.testTag(if (isActive) "nav_active_badge" else "nav_state_label")) {
+        AlohomoraChip(
+            label = label,
+            containerColor = if (isActive) accent.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = if (isActive) accent else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun SessionSummaryBar(state: NavigationHistoryState) {
+    Column {
+        AlohomoraHorizontalDivider()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(
+                    horizontal = MaterialTheme.dimens.margin.xl,
+                    vertical = MaterialTheme.dimens.margin.lg,
+                ),
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .height(40.dp)
-                    .background(MaterialTheme.colorScheme.outline),
+            SummaryStat(label = "SESSION DURATION", value = state.sessionDuration)
+            SummaryStat(
+                label = "SCREENS VISITED",
+                value = state.screensVisited.toString(),
+                alignEnd = true,
+                valueTestTag = "nav_screens_visited",
             )
         }
+    }
+}
 
-        // Arrow and label
-        if (hasArrow && label != null) {
-            Row(
-                modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.ArrowLeft,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
+@Composable
+private fun SummaryStat(
+    label: String,
+    value: String,
+    alignEnd: Boolean = false,
+    valueTestTag: String? = null,
+) {
+    Column(horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = (if (valueTestTag != null) Modifier.testTag(valueTestTag) else Modifier)
+                .padding(top = MaterialTheme.dimens.margin.xs),
+        )
     }
 }
