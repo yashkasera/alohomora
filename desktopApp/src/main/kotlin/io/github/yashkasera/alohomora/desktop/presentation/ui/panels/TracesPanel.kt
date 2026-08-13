@@ -26,7 +26,7 @@ import androidx.compose.ui.Modifier
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TraceItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip

@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.TopBarLayout
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagUiState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard

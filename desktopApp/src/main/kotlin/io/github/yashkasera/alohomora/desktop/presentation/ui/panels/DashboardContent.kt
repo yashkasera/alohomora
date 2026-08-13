@@ -47,7 +47,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.model.DashboardUiStat
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.TopBarLayout
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EventItem
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel

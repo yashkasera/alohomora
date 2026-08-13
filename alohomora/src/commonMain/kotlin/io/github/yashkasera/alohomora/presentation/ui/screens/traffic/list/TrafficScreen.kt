@@ -1,6 +1,5 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.traffic.list
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,14 +26,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
-import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
+import io.github.yashkasera.alohomora.ui.components.MethodBadge
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
@@ -289,28 +288,5 @@ private fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
             }
         }
     }
-}
-
-@Composable
-private fun MethodBadge(method: String) {
-    val isWrite = method in listOf("POST", "PUT", "PATCH", "DELETE")
-
-    val backgroundColor =
-        if (isWrite) MaterialTheme.colorScheme.inverseSurface
-        else Color.Transparent
-
-    val contentColor = if (isWrite) MaterialTheme.colorScheme.inverseOnSurface
-    else MaterialTheme.colorScheme.onSurface
-
-    AlohomoraChip(
-        label = method,
-        uppercase = true,
-        containerColor = backgroundColor,
-        contentColor = contentColor,
-        border = BorderStroke(
-            width = MaterialTheme.dimens.stroke.small,
-            color = contentColor,
-        ).takeIf { !isWrite },
-    )
 }
 

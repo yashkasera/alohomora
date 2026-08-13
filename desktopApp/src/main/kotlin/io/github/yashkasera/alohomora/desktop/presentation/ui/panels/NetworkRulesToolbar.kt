@@ -3,8 +3,8 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenu
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -94,7 +94,7 @@ private fun ThrottleDropdown(
         uppercase = false,
         onClick = { onExpandChange(true) },
     )
-    DropdownMenu(expanded = expanded, onDismissRequest = { onExpandChange(false) }) {
+    AlohomoraDropdownMenu(expanded = expanded, onDismissRequest = { onExpandChange(false) }) {
         ThrottleProfiles.PRESETS.forEach { profile ->
             val displayName = when (profile.name) {
                 "none" -> "No throttle"
@@ -104,7 +104,7 @@ private fun ThrottleDropdown(
                 "slow_wifi" -> "Slow WiFi (50ms / 500 KB/s)"
                 else -> profile.name
             }
-            DropdownMenuItem(
+            AlohomoraDropdownMenuItem(
                 text = { Text(displayName) },
                 onClick = {
                     onExpandChange(false)

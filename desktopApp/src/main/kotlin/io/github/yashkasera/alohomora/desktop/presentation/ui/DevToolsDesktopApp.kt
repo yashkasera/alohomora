@@ -67,7 +67,7 @@ import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.CommandPalette
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.HelpDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.OtpPromptDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.buildCommandActions

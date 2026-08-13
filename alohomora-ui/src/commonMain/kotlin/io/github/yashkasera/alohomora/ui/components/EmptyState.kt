@@ -1,4 +1,4 @@
-package io.github.yashkasera.alohomora.desktop.presentation.ui.components
+package io.github.yashkasera.alohomora.ui.components
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -37,9 +37,6 @@ fun EmptyState(
     action: (@Composable () -> Unit)? = null,
 ) {
     Box(
-        // fillMaxSize first, then the caller's modifier. The other order let fillMaxSize
-        // override any size the caller asked for, so an EmptyState could not be constrained
-        // to a card or a list slot.
         modifier = Modifier.fillMaxSize().then(modifier),
         contentAlignment = Alignment.Center,
     ) {
@@ -48,28 +45,43 @@ fun EmptyState(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.xxxl),
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(MaterialTheme.dimens.icon.xl),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Box(
+                modifier = Modifier
+                    .size(MaterialTheme.dimens.icon.illustration)
+                    .border(
+                        width = MaterialTheme.dimens.stroke.medium,
+                        color = MaterialTheme.colorScheme.outline,
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.xl),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.secondary,
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontStyle = FontStyle.Italic,
+                ),
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
             )
 
             if (subtitle != null) {
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.tertiary,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        letterSpacing = 0.5.sp,
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
             }

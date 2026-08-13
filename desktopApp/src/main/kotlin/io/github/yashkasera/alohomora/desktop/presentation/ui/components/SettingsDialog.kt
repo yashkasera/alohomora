@@ -19,9 +19,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraRadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -138,7 +138,7 @@ fun SettingsDialog(
                                 .padding(vertical = MaterialTheme.dimens.margin.xs),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            RadioButton(
+                            AlohomoraRadioButton(
                                 selected = themeMode == mode,
                                 onClick = { onThemeModeChange(mode) },
                             )
@@ -292,10 +292,10 @@ private fun ClearAction(
     var showConfirm by remember { mutableStateOf(false) }
 
     if (showConfirm) {
-        AlertDialog(
+        AlohomoraAlertDialog(
             onDismissRequest = { showConfirm = false },
-            title = { Text(text = confirmTitle, style = MaterialTheme.typography.titleMedium) },
-            text = { Text(text = confirmMessage, style = MaterialTheme.typography.bodyMedium) },
+            title = confirmTitle,
+            content = { Text(text = confirmMessage, style = MaterialTheme.typography.bodyMedium) },
             confirmButton = {
                 AlohomoraTextButton(
                     text = "Clear",

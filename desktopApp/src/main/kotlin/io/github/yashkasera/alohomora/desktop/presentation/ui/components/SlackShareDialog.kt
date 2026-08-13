@@ -3,7 +3,7 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
+import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,10 +40,10 @@ fun SlackShareDialog(
 ) {
     var email by remember { mutableStateOf("") }
 
-    AlertDialog(
+    AlohomoraAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Share to Slack") },
-        text = {
+        title = "Share to Slack",
+        content = {
             Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md)) {
                 if (isConfigured) {
                     AlohomoraTextField(

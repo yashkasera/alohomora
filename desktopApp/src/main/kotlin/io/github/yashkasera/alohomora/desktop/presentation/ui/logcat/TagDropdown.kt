@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenu
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,8 +43,8 @@ fun TagDropdown(
                 .background(Color.Transparent)
                 .clickable { expanded = true },
         )
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            DropdownMenuItem(
+        AlohomoraDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            AlohomoraDropdownMenuItem(
                 text = { Text("All tags") },
                 onClick = {
                     expanded = false
@@ -52,7 +52,7 @@ fun TagDropdown(
                 },
             )
             availableTags.forEach { tag ->
-                DropdownMenuItem(
+                AlohomoraDropdownMenuItem(
                     text = { Text(tag) },
                     onClick = {
                         expanded = false

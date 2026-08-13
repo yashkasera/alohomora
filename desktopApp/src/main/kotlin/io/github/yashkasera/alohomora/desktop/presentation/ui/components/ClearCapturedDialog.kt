@@ -1,8 +1,8 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import androidx.compose.runtime.Composable
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 
@@ -20,10 +20,10 @@ fun ClearCapturedDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    AlohomoraAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = title, style = MaterialTheme.typography.titleMedium) },
-        text = { Text(text = message, style = MaterialTheme.typography.bodyMedium) },
+        title = title,
+        content = { Text(text = message, style = MaterialTheme.typography.bodyMedium) },
         confirmButton = {
             AlohomoraTextButton(
                 text = "Clear",

@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenu
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -33,7 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkEntry
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
@@ -244,12 +244,12 @@ private fun BuilderTab(
                     )
                 },
             )
-            DropdownMenu(
+            AlohomoraDropdownMenu(
                 expanded = showSchemeDropdown,
                 onDismissRequest = { onShowSchemeDropdown(false) },
             ) {
                 SCHEME_OPTIONS.forEach { option ->
-                    DropdownMenuItem(
+                    AlohomoraDropdownMenuItem(
                         text = { Text(option) },
                         onClick = {
                             onSchemeChange(option)

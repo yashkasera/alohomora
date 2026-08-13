@@ -38,7 +38,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.model.CacheUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.cacheSubtitle
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.TopBarLayout
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.CacheViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults

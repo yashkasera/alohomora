@@ -17,10 +17,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.onClick
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCheckbox
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenu
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -29,7 +29,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TriStateCheckbox
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -141,7 +141,7 @@ fun MockRulesSideSheet(
                 AlohomoraOutlinedButton(
                     text = "Enable Mocking",
                     leadingIcon = {
-                        TriStateCheckbox(
+                        AlohomoraTriStateCheckbox(
                             state = state,
                             onClick = null,
                         )
@@ -179,12 +179,12 @@ fun MockRulesSideSheet(
                         size = AlohomoraButtonSize.SMALL,
                         uppercase = false,
                     )
-                    DropdownMenu(
+                    AlohomoraDropdownMenu(
                         expanded = showSessionDropdown,
                         onDismissRequest = { showSessionDropdown = false },
                     ) {
                         if (sessions.isEmpty()) {
-                            DropdownMenuItem(
+                            AlohomoraDropdownMenuItem(
                                 text = {
                                     Text(
                                         "No saved sessions",
@@ -196,7 +196,7 @@ fun MockRulesSideSheet(
                             )
                         }
                         sessions.forEach { summary ->
-                            DropdownMenuItem(
+                            AlohomoraDropdownMenuItem(
                                 text = {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(summary.name)
@@ -230,14 +230,14 @@ fun MockRulesSideSheet(
                         }
                         if (currentSession != null) {
                             HorizontalDivider()
-                            DropdownMenuItem(
+                            AlohomoraDropdownMenuItem(
                                 text = { Text("Detach session") },
                                 onClick = {
                                     showSessionDropdown = false
                                     onDetachSession()
                                 },
                             )
-                            DropdownMenuItem(
+                            AlohomoraDropdownMenuItem(
                                 text = {
                                     Text(
                                         "Delete session",
@@ -479,12 +479,12 @@ private fun EditMockRuleSideSheet(
                             )
                         },
                     )
-                    DropdownMenu(
+                    AlohomoraDropdownMenu(
                         expanded = showMethodDropdown,
                         onDismissRequest = { showMethodDropdown = false },
                     ) {
                         HTTP_METHODS.forEach { m ->
-                            DropdownMenuItem(
+                            AlohomoraDropdownMenuItem(
                                 text = {
                                     Text(
                                         text = m ?: "Any method",
@@ -502,7 +502,7 @@ private fun EditMockRuleSideSheet(
                 AlohomoraTextButton(
                     text = "Regex",
                     leadingIcon = {
-                        Checkbox(checked = isRegex, onCheckedChange = null)
+                        AlohomoraCheckbox(checked = isRegex, onCheckedChange = null)
                     },
                     size = AlohomoraButtonSize.SMALL,
                     uppercase = false,
@@ -541,12 +541,12 @@ private fun EditMockRuleSideSheet(
                         size = AlohomoraButtonSize.SMALL,
                         uppercase = false,
                     )
-                    DropdownMenu(
+                    AlohomoraDropdownMenu(
                         expanded = showGeneratorDropdown,
                         onDismissRequest = { showGeneratorDropdown = false },
                     ) {
                         GENERATORS.forEach { (label, syntax) ->
-                            DropdownMenuItem(
+                            AlohomoraDropdownMenuItem(
                                 text = {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -609,10 +609,10 @@ private fun SaveSessionDialog(
     onDismiss: () -> Unit,
 ) {
     var name by remember { mutableStateOf(initialName) }
-    AlertDialog(
+    AlohomoraAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Save session") },
-        text = {
+        title = "Save session",
+        content = {
             AlohomoraTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -663,7 +663,7 @@ private fun MockRuleRow(
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Checkbox(checked = rule.enabled, onCheckedChange = { onToggle() })
+            AlohomoraCheckbox(checked = rule.enabled, onCheckedChange = { onToggle() })
             Column(modifier = Modifier.weight(1f)) {
                 val ruleName = rule.name
                 ruleName?.ifEmpty { null }?.let {

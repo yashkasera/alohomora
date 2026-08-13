@@ -1,6 +1,5 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +14,6 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
@@ -23,6 +21,7 @@ import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
+import io.github.yashkasera.alohomora.ui.components.MethodBadge
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
@@ -113,27 +112,4 @@ fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
             )
         }
     }
-}
-
-@Composable
-fun MethodBadge(method: String) {
-    val isWrite = method in listOf("POST", "PUT", "PATCH", "DELETE")
-
-    val backgroundColor =
-        if (isWrite) MaterialTheme.colorScheme.inverseSurface
-        else Color.Transparent
-
-    val contentColor = if (isWrite) MaterialTheme.colorScheme.inverseOnSurface
-    else MaterialTheme.colorScheme.onSurface
-
-    AlohomoraChip(
-        label = method,
-        uppercase = true,
-        containerColor = backgroundColor,
-        contentColor = contentColor,
-        border = BorderStroke(
-            width = MaterialTheme.dimens.stroke.small,
-            color = contentColor,
-        ).takeIf { !isWrite },
-    )
 }

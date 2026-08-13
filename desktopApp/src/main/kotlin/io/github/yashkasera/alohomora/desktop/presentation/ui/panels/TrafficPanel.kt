@@ -42,9 +42,9 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.Alohomo
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValueRow
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.MethodBadge
+import io.github.yashkasera.alohomora.ui.components.MethodBadge
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SlackShareDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficItem

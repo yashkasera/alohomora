@@ -14,7 +14,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
+import io.github.yashkasera.alohomora.ui.components.AlohomoraSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -30,7 +30,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.model.eventsSubtitle
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EventItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
@@ -74,7 +74,7 @@ fun EventsPanel(eventsViewModel: EventsViewModel) {
                             style = MaterialTheme.typography.labelLarge,
                         )
 
-                        Switch(
+                        AlohomoraSwitch(
                             checked = showProperties,
                             onCheckedChange = { eventsViewModel.toggleShowProperties() },
                         )

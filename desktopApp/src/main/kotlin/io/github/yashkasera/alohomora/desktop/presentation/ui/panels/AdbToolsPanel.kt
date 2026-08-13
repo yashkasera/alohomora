@@ -21,7 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Switch
+import io.github.yashkasera.alohomora.ui.components.AlohomoraSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -424,7 +424,7 @@ private fun SwitchRow(
             color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-        Switch(
+        AlohomoraSwitch(
             checked = checked,
             onCheckedChange = { onCheckedChange() },
             enabled = enabled,
