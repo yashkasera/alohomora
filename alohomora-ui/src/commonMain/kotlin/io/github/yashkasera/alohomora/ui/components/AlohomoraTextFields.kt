@@ -9,18 +9,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,6 +49,8 @@ fun AlohomoraTextField(
     modifier: Modifier = Modifier,
     placeholder: String? = null,
     label: String? = null,
+    supportingText: String? = null,
+    isError: Boolean = false,
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     singleLine: Boolean = true,
@@ -69,11 +68,13 @@ fun AlohomoraTextField(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
-    val currentBorderColor =
-        if (isFocused)
-            focusedBorderColor
-        else if (!enabled) borderColor.copy(alpha = 0.5f)
-        else borderColor
+    val errorColor = MaterialTheme.colorScheme.error
+    val currentBorderColor = when {
+        isError -> errorColor
+        isFocused -> focusedBorderColor
+        !enabled -> borderColor.copy(alpha = 0.5f)
+        else -> borderColor
+    }
 
     // The caret is remembered here; the text is not.
     //
@@ -95,7 +96,7 @@ fun AlohomoraTextField(
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.secondary,
+                color = if (isError) errorColor else MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.xs),
             )
         }
@@ -141,9 +142,7 @@ fun AlohomoraTextField(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (leadingIcon != null) {
-                        Box(modifier = Modifier.size(MaterialTheme.dimens.icon.md)) {
-                            leadingIcon()
-                        }
+                        leadingIcon()
                         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                     }
 
@@ -154,8 +153,8 @@ fun AlohomoraTextField(
                         if (value.isEmpty() && placeholder != null) {
                             Text(
                                 text = placeholder,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.outlineVariant,
+                                style = textStyle,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         innerTextField()
@@ -163,13 +162,22 @@ fun AlohomoraTextField(
 
                     if (trailingIcon != null) {
                         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                        Box(modifier = Modifier.size(MaterialTheme.dimens.icon.lg)) {
-                            trailingIcon()
-                        }
+                        trailingIcon()
                     }
                 }
             },
         )
+        supportingText?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isError) errorColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(
+                    start = MaterialTheme.dimens.margin.md,
+                    top = MaterialTheme.dimens.margin.xs,
+                ),
+            )
+        }
     }
 }
 

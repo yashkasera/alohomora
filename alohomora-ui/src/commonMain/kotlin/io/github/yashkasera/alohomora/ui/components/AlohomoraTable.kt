@@ -37,7 +37,6 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -279,7 +278,6 @@ private fun TableCell(
                 Text(
                     text = content.value,
                     style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -315,7 +313,6 @@ private fun EditableCell(
             onValueChange = { text = it },
             singleLine = true,
             textStyle = TextStyle(
-                fontFamily = FontFamily.Monospace,
                 fontSize = MaterialTheme.typography.bodySmall.fontSize,
                 color = MaterialTheme.colorScheme.onSurface,
             ),

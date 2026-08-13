@@ -24,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
@@ -161,7 +160,6 @@ private fun TraceHeader(state: TraceDetailsState) {
         Text(
             text = formatDuration(summary.durationNanos),
             style = MaterialTheme.typography.labelMedium,
-            fontFamily = FontFamily.Monospace,
         )
         Text(
             text = DateUtils.format(summary.startMillis, DateUtils.Format.HH_MM_SS_2MS),
@@ -265,7 +263,6 @@ private fun SpanDetailSheet(span: Span, children: List<Span>, traceStartNanos: L
             Text(
                 text = attributes.toString(),
                 style = MaterialTheme.typography.bodySmall,
-                fontFamily = FontFamily.Monospace,
             )
         }
 
@@ -282,7 +279,6 @@ private fun SpanDetailSheet(span: Span, children: List<Span>, traceStartNanos: L
                         text = "  $key = $value",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = FontFamily.Monospace,
                     )
                 }
             }
@@ -304,7 +300,6 @@ private fun SheetRow(label: String, value: String) {
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
             modifier = Modifier.padding(start = MaterialTheme.dimens.margin.md),
         )
     }

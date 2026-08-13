@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -56,38 +55,6 @@ fun AlohomoraSingleChoiceToggleGroup(
                     selected = selected,
                     onClick = { onSelectedIdChange(item.id) },
                     role = Role.RadioButton,
-                ),
-            )
-        }
-    }
-}
-
-@Composable
-fun AlohomoraMultiChoiceToggleGroup(
-    items: List<AlohomoraToggleItem>,
-    selectedIds: Set<String>,
-    onSelectedIdsChange: (Set<String>) -> Unit,
-    modifier: Modifier = Modifier,
-    spacing: Dp = 8.dp,
-    uppercase: Boolean = AlohomoraToggleDefaults.uppercase,
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(spacing),
-    ) {
-        items.forEach { item ->
-            val selected = selectedIds.contains(item.id)
-            AlohomoraToggleItem(
-                item = item,
-                selected = selected,
-                uppercase = uppercase,
-                modifier = Modifier.toggleable(
-                    value = selected,
-                    onValueChange = {
-                        val next = if (selected) selectedIds - item.id else selectedIds + item.id
-                        onSelectedIdsChange(next)
-                    },
-                    role = Role.Checkbox,
                 ),
             )
         }

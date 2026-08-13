@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +21,8 @@ import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.prettyProperties
 import io.github.yashkasera.alohomora.desktop.presentation.model.clampLines
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
@@ -42,11 +42,11 @@ fun LazyItemScope.EventItem(
         event.isViewed -> MaterialTheme.colorScheme.surfaceVariant
         else -> MaterialTheme.colorScheme.surfaceContainer
     }
-    Card(
+    AlohomoraCard(
         modifier = Modifier
             .animateItem()
             .fillMaxWidth(),
-        colors = CardDefaults.cardColors(
+        colors = AlohomoraCardDefaults.colors(
             containerColor = containerColor,
         ),
         onClick = onClick,

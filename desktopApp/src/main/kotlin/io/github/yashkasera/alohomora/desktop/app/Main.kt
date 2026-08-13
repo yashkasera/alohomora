@@ -43,7 +43,6 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
@@ -526,7 +525,6 @@ private fun LauncherScreen(
                         Text(
                             "Authentication Required",
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
                         )
                         Text(
                             "Enter the 4-digit code shown on your device.",
@@ -577,7 +575,6 @@ private fun LauncherScreen(
                             Text(
                                 "Connecting…",
                                 style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
                             )
                             (pendingConnectionState as? DevToolsConnection.Connecting)?.let { conn ->
                                 Text(
@@ -621,7 +618,7 @@ private fun LauncherScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(MaterialTheme.shapes.small)
                                     .background(
                                         if (selected) MaterialTheme.colorScheme.secondaryContainer
                                         else MaterialTheme.colorScheme.surface,

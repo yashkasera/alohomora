@@ -35,7 +35,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -156,7 +155,7 @@ private fun DatabaseSelector(
                 .border(
                     width = MaterialTheme.dimens.stroke.small,
                     color = MaterialTheme.colorScheme.onBackground,
-                    shape = RoundedCornerShape(MaterialTheme.dimens.corner.small)
+                    shape = MaterialTheme.shapes.extraSmall
                 )
                 .clickable(onClick = onClick)
                 .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = MaterialTheme.dimens.margin.sm)
@@ -334,7 +333,7 @@ private fun QueryTabContent(
                 .border(
                     width = MaterialTheme.dimens.stroke.small,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(MaterialTheme.dimens.corner.small)
+                    shape = MaterialTheme.shapes.extraSmall
                 )
                 .padding(MaterialTheme.dimens.margin.sm)
         ) {
@@ -344,7 +343,6 @@ private fun QueryTabContent(
                     onValueChange = onQueryTextChanged,
                     modifier = Modifier.fillMaxWidth().weight(1f),
                     textStyle = MaterialTheme.typography.bodySmall.copy(
-                        fontFamily = FontFamily.Monospace
                     ),
                     singleLine = false,
                     containerColor = Color.Transparent,
@@ -367,7 +365,7 @@ private fun QueryTabContent(
                         onClick = onRunQuery,
                         containerColor = MaterialTheme.colorScheme.inverseSurface,
                         contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-                        shape = RoundedCornerShape(MaterialTheme.dimens.corner.small),
+                        shape = MaterialTheme.shapes.extraSmall,
                         text = "Run",
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -493,7 +491,6 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
                         Text(
                             text = column.name,
                             style = MaterialTheme.typography.bodySmall,
-                            fontFamily = FontFamily.Monospace,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
@@ -502,7 +499,6 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
                             text = column.type,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.tertiary,
-                            fontFamily = FontFamily.Monospace
                         )
                     }
                     if (index < tableSchema.columns.size - 1) {
@@ -526,7 +522,6 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
                 Text(
                     text = tableSchema.primaryKey.orEmpty(),
                     style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
                     modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.sm)
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
@@ -544,7 +539,6 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
                     Text(
                         text = "• $index",
                         style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
                         modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = 2.dp)
                     )
                 }

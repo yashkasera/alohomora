@@ -21,8 +21,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -42,6 +40,15 @@ private val IndentPerDepth = 12.dp
 
 /** Height of one waterfall row. Dense on purpose: comparing 40 bars means fitting 40 on screen. */
 internal val WaterfallRowHeight = 28.dp
+
+/**
+ * Corner radius of a span bar, in [Dp] because it is fed to a draw call rather than a `shape =` slot.
+ *
+ * Deliberately not a theme token: `MaterialTheme.shapes` holds `Shape`s, which a [drawBehind] cannot
+ * consume, and a bar's radius is a detail of this component rather than something a theme should be
+ * able to restyle.
+ */
+private val SpanBarCornerRadius: Dp = 4.dp
 
 /** Test tag prefix for a bar, so the zero-duration invariant is assertable. */
 const val WaterfallBarTestTagPrefix: String = "span-bar-"
@@ -72,7 +79,7 @@ fun WaterfallRowItem(
     val gridColor = MaterialTheme.colorScheme.outlineVariant
     val eventColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
     val minBarWidth = MaterialTheme.dimens.stroke.medium
-    val cornerRadius = MaterialTheme.dimens.corner.small
+    val cornerRadius = SpanBarCornerRadius
 
     val rowBackground = when {
         isSelected -> MaterialTheme.colorScheme.surfaceVariant
@@ -148,7 +155,6 @@ fun WaterfallRowItem(
             text = formatDuration(span.durationNanos()),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontFamily = FontFamily.Monospace,
             maxLines = 1,
             modifier = Modifier
                 .width(DurationColumnWidth)
@@ -196,8 +202,14 @@ private fun NameCell(
         Text(
             text = row.span.name,
             style = MaterialTheme.typography.bodySmall,
-            fontWeight = if (row.span.isViewed) FontWeight.Normal else FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
+            // Unread is carried by contrast, not weight. Only Regular faces are bundled, so the
+            // SemiBold this used to set was synthesised — and a faked weight on 11sp monospace was a
+            // near-invisible way to encode the one thing this row has to say.
+            color = if (row.span.isViewed) {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),

@@ -13,7 +13,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.logcat.LogcatControls
 import io.github.yashkasera.alohomora.desktop.presentation.ui.logcat.LogcatFilters
 import io.github.yashkasera.alohomora.desktop.presentation.ui.logcat.LogcatList
@@ -38,6 +39,7 @@ fun LogcatPanel(
         topBar = {
             AlohomoraTopBar(
                 title = "Logcat",
+                layout = TopBarLayout.START_ALIGNED,
                 subtitle = "Live device logs with filters",
                 actions = {
                     LogcatControls(

@@ -55,7 +55,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -681,7 +680,7 @@ fun ColumnScope.Sidebar(
                             modifier = Modifier
                                 .background(
                                     MaterialTheme.colorScheme.primary,
-                                    RoundedCornerShape(MaterialTheme.dimens.corner.small),
+                                    MaterialTheme.shapes.extraSmall,
                                 )
                                 .padding(horizontal = 6.dp, vertical = 1.dp),
                         )
@@ -754,7 +753,6 @@ private fun SidebarConnectionCard(
                 Text(
                     text = appName,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -762,7 +760,7 @@ private fun SidebarConnectionCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(MaterialTheme.dimens.corner.medium))
+                    .clip(MaterialTheme.shapes.small)
                     .background(MaterialTheme.colorScheme.secondaryContainer)
                     .padding(horizontal = 10.dp, vertical = MaterialTheme.dimens.margin.sm),
                 verticalAlignment = Alignment.CenterVertically,

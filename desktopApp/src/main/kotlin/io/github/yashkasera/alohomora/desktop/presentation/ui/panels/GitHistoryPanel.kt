@@ -15,8 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,9 +26,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.desktop.domain.model.GitHistoryCommit
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
@@ -47,6 +48,7 @@ fun GitHistoryPanel(devToolsViewModel: DevToolsViewModel) {
         topBar = {
             AlohomoraTopBar(
                 title = "Git History",
+                layout = TopBarLayout.START_ALIGNED,
                 subtitle = "Showing last ${commits.size} commits",
             )
         },
@@ -86,9 +88,9 @@ fun GitHistoryPanel(devToolsViewModel: DevToolsViewModel) {
 
 @Composable
 private fun GitHistoryRow(commit: GitHistoryCommit) {
-    Card(
+    AlohomoraCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
+        colors = AlohomoraCardDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ),
     ) {

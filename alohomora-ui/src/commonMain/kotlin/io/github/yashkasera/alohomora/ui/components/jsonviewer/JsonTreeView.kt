@@ -39,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
@@ -91,9 +90,7 @@ fun JsonTreeView(
     }
 
     CompositionLocalProvider(
-        LocalTextStyle provides MaterialTheme.typography.bodyMedium.copy(
-            fontFamily = FontFamily.Monospace,
-        ),
+        LocalTextStyle provides MaterialTheme.typography.bodyMedium,
         LocalContentColor provides MaterialTheme.colorScheme.onBackground,
         LocalTextSelectionColors provides TextSelectionColors(
             handleColor = MaterialTheme.colorScheme.primary,

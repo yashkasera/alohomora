@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -21,13 +19,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.trace.TraceSummary
 import io.github.yashkasera.alohomora.common.trace.formatDuration
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
@@ -142,11 +141,11 @@ private fun TraceRowItem(trace: TraceSummary, onClick: () -> Unit) {
         else -> MaterialTheme.colorScheme.surfaceContainerHighest
     }
 
-    Card(
-        colors = CardDefaults.cardColors(
+    AlohomoraCard(
+        onClick = onClick,
+        colors = AlohomoraCardDefaults.colors(
             containerColor = containerColor,
         ),
-        onClick = onClick,
     ) {
         Column(
             modifier = Modifier
@@ -162,7 +161,12 @@ private fun TraceRowItem(trace: TraceSummary, onClick: () -> Unit) {
                 Text(
                     text = trace.rootSpanName ?: "(root pending)",
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (trace.isViewed) FontWeight.Normal else FontWeight.SemiBold,
+                    // Unread is carried by contrast rather than weight — see WaterfallRow.
+                    color = if (trace.isViewed) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),

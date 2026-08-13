@@ -36,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Error
@@ -46,7 +45,8 @@ import io.github.yashkasera.alohomora.common.mergeAttentionItems
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.github.yashkasera.alohomora.desktop.presentation.model.DashboardUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EventItem
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficItem
@@ -111,6 +111,7 @@ fun DashboardContent(
         topBar = {
             AlohomoraTopBar(
                 title = "Dashboard",
+                layout = TopBarLayout.START_ALIGNED,
                 subtitle = buildString {
                     append(selectedDevice?.model ?: selectedDevice?.id ?: "No device")
                     if (dashboard.androidVersion != "-") {
@@ -304,7 +305,6 @@ private fun MetricTile(
                 Text(
                     value,
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
                     color = resolvedValueColor,
                 )
                 if (subValue != null) {
@@ -329,7 +329,6 @@ private fun CurrentBuildCard(buildInfo: BuildInfo?) {
                 Text(
                     buildInfo?.versionName?.ifBlank { "-" } ?: "-",
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
                 )
                 Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                 Text(
@@ -431,7 +430,6 @@ private fun DashboardListCard(
                     Text(
                         title,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
                     )
                     if (itemCount > 0) {
                         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))

@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -38,6 +37,7 @@ import io.github.yashkasera.alohomora.common.exceptionTypeName
 import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.CircleAlert
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
@@ -164,8 +164,8 @@ private fun TrafficAttentionCard(
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
-                        Color(0xFFF88D0F),
-                        Color(0xCCF88D0F),
+                        MaterialTheme.alohomoraColors.warning,
+                        MaterialTheme.alohomoraColors.warning.copy(alpha = 0.8f),
                     ),
                 ),
             ),

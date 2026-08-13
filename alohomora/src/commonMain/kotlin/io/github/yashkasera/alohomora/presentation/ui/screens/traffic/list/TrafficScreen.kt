@@ -18,8 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -35,6 +33,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
@@ -185,7 +185,8 @@ private fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
         else -> MaterialTheme.colorScheme.surfaceContainerHighest
     }
 
-    Card(
+    AlohomoraCard(
+        onClick = onClick,
         modifier = if (call.isMocked()) {
             Modifier.clipToBounds()
                 .drawDiagonalLabel(
@@ -194,10 +195,9 @@ private fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.primary,
                 )
         } else Modifier,
-        colors = CardDefaults.cardColors(
+        colors = AlohomoraCardDefaults.colors(
             containerColor = containerColor,
         ),
-        onClick = onClick,
     ) {
         Row(
             modifier = Modifier.padding(MaterialTheme.dimens.margin.md)
@@ -205,10 +205,10 @@ private fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
         ) {
-            Card(
+            AlohomoraCard(
                 modifier = Modifier.fillMaxHeight(),
-                colors = CardDefaults.cardColors(
-                    if (call.isSuccessful())
+                colors = AlohomoraCardDefaults.colors(
+                    containerColor = if (call.isSuccessful())
                         MaterialTheme.alohomoraColors.successContainer
                     else
                         MaterialTheme.colorScheme.errorContainer,
@@ -307,7 +307,7 @@ private fun MethodBadge(method: String) {
         uppercase = true,
         containerColor = backgroundColor,
         contentColor = contentColor,
-        borderStroke = BorderStroke(
+        border = BorderStroke(
             width = MaterialTheme.dimens.stroke.small,
             color = contentColor,
         ).takeIf { !isWrite },

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -27,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.data.model.GitHistoryCommit
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
@@ -96,7 +96,7 @@ internal fun GitHistoryScreen(
 private fun CommitListItem(
     commit: GitHistoryCommit,
 ) {
-    Card {
+    AlohomoraCard {
         Column(
             modifier = Modifier.fillMaxWidth()
                 .padding(MaterialTheme.dimens.margin.md),

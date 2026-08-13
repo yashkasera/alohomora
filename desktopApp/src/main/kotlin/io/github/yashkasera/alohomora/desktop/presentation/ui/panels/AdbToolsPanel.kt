@@ -32,12 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.github.yashkasera.alohomora.desktop.presentation.model.AdbCommandLogEntry
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.util.pickApkPath
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
@@ -86,6 +85,7 @@ fun AdbToolsPanel(
         topBar = {
             AlohomoraTopBar(
                 title = "ADB Shortcuts",
+                layout = TopBarLayout.START_ALIGNED,
                 subtitle = if (isDeviceSelected) "Device: $selectedDeviceId" else "No device selected",
             )
         },
@@ -314,7 +314,6 @@ private fun AdbConsoleBar(
                 Text(
                     "ADB Console",
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
                 )
                 AlohomoraTextButton(
                     text = if (expanded) "Hide" else "Show",
@@ -339,7 +338,7 @@ private fun AdbConsoleBar(
                             .height(220.dp)
                             .background(
                                 MaterialTheme.colorScheme.surfaceContainerLow,
-                                RoundedCornerShape(6.dp),
+                                MaterialTheme.shapes.small,
                             )
                             .padding(8.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -348,7 +347,6 @@ private fun AdbConsoleBar(
                             Text(
                                 text = formatLogEntry(entry),
                                 style = MaterialTheme.typography.bodySmall,
-                                fontFamily = FontFamily.Monospace,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -371,7 +369,7 @@ private fun AdbActionButton(
         shape = MaterialTheme.shapes.small,
         border = CardDefaults.outlinedCardBorder(),
     ) {
-        Text(text, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+        Text(text, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -387,7 +385,7 @@ private fun AdbRow(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(title, style = MaterialTheme.typography.bodyMedium)
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     subtitle,
@@ -410,7 +408,6 @@ private fun SectionHeader(title: String) {
         title,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.secondary,
-        fontWeight = FontWeight.Bold,
     )
 }
 

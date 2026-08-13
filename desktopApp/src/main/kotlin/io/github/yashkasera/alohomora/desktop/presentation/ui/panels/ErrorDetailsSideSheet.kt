@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Error
@@ -91,7 +90,6 @@ fun ErrorDetailsSideSheet(
                             Text(
                                 text = selected.exceptionTypeName(),
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f, fill = false),
@@ -161,11 +159,10 @@ private fun ColumnScope.ErrorDetailsContent(error: Error) {
             .padding(MaterialTheme.dimens.margin.xl),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
-        KeyValueRow(label = "Type", value = error.exceptionTypeName(), monospaceValue = true)
+        KeyValueRow(label = "Type", value = error.exceptionTypeName())
         KeyValueRow(
             label = "Time",
             value = DateUtils.format(error.time, DateUtils.Format.ISO_DATE_TIME),
-            monospaceValue = true,
         )
 
         error.reason?.takeIf(String::isNotBlank)?.let { reason ->
@@ -173,7 +170,7 @@ private fun ColumnScope.ErrorDetailsContent(error: Error) {
         }
 
         error.place?.takeIf(String::isNotBlank)?.let { place ->
-            KeyValueRow(label = "Place", value = place, monospaceValue = true)
+            KeyValueRow(label = "Place", value = place)
         }
 
         val trace = error.stackTrace?.takeIf(String::isNotBlank)

@@ -3,29 +3,39 @@ package io.github.yashkasera.alohomora.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.unit.dp
 
 object AlohomoraChipDefaults {
     val shape @Composable get() = MaterialTheme.shapes.extraSmall
     val uppercase: Boolean = true
+    val contentPadding: PaddingValues = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+
+    @Composable
+    fun getContentColorFor(containerColor: Color): Color =
+        contentColorFor(containerColor).takeOrElse { LocalContentColor.current }
 }
 
 @Composable
 fun AlohomoraAssistChip(
     label: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     uppercase: Boolean = AlohomoraChipDefaults.uppercase,
     leadingIcon: (@Composable (() -> Unit))? = null,
@@ -34,6 +44,7 @@ fun AlohomoraAssistChip(
     val text = if (uppercase) label.uppercase() else label
     AssistChip(
         onClick = onClick,
+        modifier = modifier,
         enabled = enabled,
         label = { Text(text = text, style = MaterialTheme.typography.labelSmall) },
         leadingIcon = leadingIcon,
@@ -52,6 +63,7 @@ fun AlohomoraFilterChip(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     uppercase: Boolean = AlohomoraChipDefaults.uppercase,
     leadingIcon: (@Composable (() -> Unit))? = null,
@@ -61,6 +73,7 @@ fun AlohomoraFilterChip(
     FilterChip(
         selected = selected,
         onClick = onClick,
+        modifier = modifier,
         enabled = enabled,
         label = { Text(text = text, style = MaterialTheme.typography.labelSmall) },
         leadingIcon = leadingIcon,
@@ -80,28 +93,24 @@ fun AlohomoraFilterChip(
 @Composable
 fun AlohomoraChip(
     label: String,
+    modifier: Modifier = Modifier,
     uppercase: Boolean = AlohomoraChipDefaults.uppercase,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
-    contentColor: Color = contentColorFor(containerColor),
+    contentColor: Color = AlohomoraChipDefaults.getContentColorFor(containerColor),
     shape: Shape = AlohomoraChipDefaults.shape,
-    borderStroke: BorderStroke? = null
+    border: BorderStroke? = null,
 ) {
     val text = if (uppercase) label.uppercase() else label
-    val modifier = if (borderStroke != null){
-        Modifier.border(borderStroke, shape = shape)
-    } else Modifier
     Text(
         text = text,
         style = MaterialTheme.typography.labelSmall,
         color = contentColor,
         modifier = modifier
-            .background(
-                color = containerColor,
-                shape = AlohomoraChipDefaults.shape
+            .clip(shape)
+            .background(color = containerColor)
+            .then(
+                if (border != null) Modifier.border(border, shape) else Modifier,
             )
-            .padding(
-                horizontal = 6.dp,
-                vertical = 2.dp
-            )
+            .padding(AlohomoraChipDefaults.contentPadding),
     )
 }

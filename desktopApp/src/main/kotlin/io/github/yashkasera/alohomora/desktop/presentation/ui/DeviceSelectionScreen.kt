@@ -37,12 +37,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.util.DevicePortRegistry
@@ -116,7 +116,6 @@ fun DeviceSelectionScreen(
                         Text(
                             "Alohomora.",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
                         )
                     }
                     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
@@ -141,6 +140,7 @@ fun DeviceSelectionScreen(
             topBar = {
                 AlohomoraTopBar(
                     title = "Device Selection",
+                    layout = TopBarLayout.START_ALIGNED,
                     subtitle = "Choose a device, then connect.",
                 )
             },

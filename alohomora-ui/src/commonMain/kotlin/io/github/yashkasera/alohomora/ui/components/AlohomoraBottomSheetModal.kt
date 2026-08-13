@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.AlohomoraBottomSheetShape
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 /**
@@ -29,7 +30,7 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
  */
 object AlohomoraBottomSheetDefaults {
     /** The default shape for the bottom sheet (top corners rounded). */
-    val shape: Shape @Composable get() = RoundedCornerShape(topStart = MaterialTheme.dimens.corner.small, topEnd = MaterialTheme.dimens.corner.small)
+    val shape: Shape get() = AlohomoraBottomSheetShape
 
     /** The default elevation for the bottom sheet. */
     val tonalElevation: Dp = 0.dp

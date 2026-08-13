@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -22,6 +20,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -34,9 +34,9 @@ fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
         else -> MaterialTheme.colorScheme.surfaceContainer
     }
 
-    Card(
+    AlohomoraCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
+        colors = AlohomoraCardDefaults.colors(
             containerColor = containerColor
         ),
         onClick = onClick
@@ -131,7 +131,7 @@ fun MethodBadge(method: String) {
         uppercase = true,
         containerColor = backgroundColor,
         contentColor = contentColor,
-        borderStroke = BorderStroke(
+        border = BorderStroke(
             width = MaterialTheme.dimens.stroke.small,
             color = contentColor,
         ).takeIf { !isWrite },

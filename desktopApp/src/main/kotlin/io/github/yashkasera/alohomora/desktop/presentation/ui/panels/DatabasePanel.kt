@@ -34,7 +34,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTable
@@ -78,6 +79,7 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
         topBar = {
             AlohomoraTopBar(
                 title = "Databases",
+                layout = TopBarLayout.START_ALIGNED,
                 subtitle = buildSubtitle(databases.size, tables.size, tableSnapshot?.rows?.size),
             )
         },

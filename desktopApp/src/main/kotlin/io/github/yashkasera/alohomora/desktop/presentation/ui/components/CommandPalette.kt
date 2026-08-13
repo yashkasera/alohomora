@@ -37,7 +37,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import io.github.yashkasera.alohomora.desktop.app.displayModifier
@@ -194,7 +193,6 @@ fun CommandPalette(
                                         text = action.category.label,
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(
                                             start = MaterialTheme.dimens.margin.lg,
                                             top = MaterialTheme.dimens.margin.md,

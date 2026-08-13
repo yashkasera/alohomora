@@ -40,7 +40,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
@@ -203,7 +202,6 @@ private fun SectionHeader(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
     )
 }
 
@@ -244,11 +242,11 @@ private fun ThemeCard(
 
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(MaterialTheme.dimens.corner.medium))
+            .clip(MaterialTheme.shapes.small)
             .border(
                 borderWidth,
                 borderColor,
-                RoundedCornerShape(MaterialTheme.dimens.corner.medium),
+                MaterialTheme.shapes.small,
             )
             .clickable(onClick = onClick)
             .background(theme.materialColorScheme.surface)

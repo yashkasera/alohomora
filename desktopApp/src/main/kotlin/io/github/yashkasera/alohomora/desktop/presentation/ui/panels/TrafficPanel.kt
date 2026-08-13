@@ -39,7 +39,8 @@ import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.presentation.model.TrafficUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.trafficSubtitle
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValueRow
@@ -92,6 +93,7 @@ fun TrafficPanel(
         topBar = {
             AlohomoraTopBar(
                 title = "Traffic",
+                layout = TopBarLayout.START_ALIGNED,
                 subtitle = trafficSubtitle(uiState),
                 actions = {
                     NetworkRulesActions(

@@ -19,8 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -37,15 +35,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.FeatureFlag
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagUiState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
@@ -72,6 +72,7 @@ fun FeatureFlagsPanel(featureFlagsViewModel: FeatureFlagViewModel) {
         topBar = {
             AlohomoraTopBar(
                 title = "Feature Flags",
+                layout = TopBarLayout.START_ALIGNED,
                 subtitle = featureFlagsSubtitle(uiState),
             )
         },
@@ -159,9 +160,9 @@ private fun FeatureFlagRow(
     onToggle: () -> Unit,
 ) {
     val clipboardManager = LocalClipboardManager.current
-    Card(
+    AlohomoraCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
+        colors = AlohomoraCardDefaults.colors(
             containerColor = if (expanded) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainer,
         ),
         onClick = onToggle,
@@ -265,7 +266,7 @@ private fun FeatureFlagRow(
                                 )
                                 Text(
                                     text = v,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+                                    style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
@@ -282,7 +283,7 @@ private fun FlagValuePreview(flag: FeatureFlag, modifier: Modifier = Modifier) {
     val color = booleanColor(flag.value) ?: MaterialTheme.colorScheme.onSurface
     Text(
         text = flag.value,
-        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+        style = MaterialTheme.typography.bodySmall,
         color = color,
         textAlign = TextAlign.End,
         maxLines = 1,

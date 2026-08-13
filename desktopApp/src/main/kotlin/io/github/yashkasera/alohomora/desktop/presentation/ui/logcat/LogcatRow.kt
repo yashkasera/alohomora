@@ -11,7 +11,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -29,28 +28,24 @@ fun LogcatRow(entry: LogEntry) {
             text = entry.timestamp,
             color = color,
             style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
             modifier = Modifier.width(140.dp),
         )
         Text(
             text = "${entry.pid}:${entry.tid}",
             color = color,
             style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
             modifier = Modifier.width(80.dp),
         )
         Text(
             text = entry.level.shortName,
             color = color,
             style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
             modifier = Modifier.width(20.dp),
         )
         Text(
             text = entry.tag,
             color = color,
             style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
             modifier = Modifier.width(160.dp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -59,7 +54,6 @@ fun LogcatRow(entry: LogEntry) {
             text = entry.message,
             color = color,
             style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
         )
     }
 }

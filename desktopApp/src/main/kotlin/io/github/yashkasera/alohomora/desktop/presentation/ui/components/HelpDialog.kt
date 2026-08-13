@@ -34,7 +34,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogWindow
@@ -151,7 +150,6 @@ private fun ShortcutsTab(actions: List<CommandAction>) {
                     text = action.category.label,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.xs),
                 )
             }
@@ -163,7 +161,6 @@ private fun ShortcutsTab(actions: List<CommandAction>) {
             text = "Data",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.xs),
         )
         ShortcutRow(label = "Clear active panel", shortcut = "$mod+Shift+Del")
@@ -219,7 +216,6 @@ private fun FeaturesTab(visibleSections: List<DesktopSection>) {
                     Text(
                         text = section.title,
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
                     )
                     Text(
                         text = description,

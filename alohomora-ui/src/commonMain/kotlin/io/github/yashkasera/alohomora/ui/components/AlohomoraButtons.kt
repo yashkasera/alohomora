@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.IconButton
@@ -39,7 +38,7 @@ enum class AlohomoraIconButtonStyle {
 }
 
 object AlohomoraButtonDefaults {
-    val shape @Composable get() = MaterialTheme.shapes.extraSmall
+    val shape @Composable get() = MaterialTheme.shapes.small
     val uppercase: Boolean = true
     val iconSpacing: Dp = 8.dp
 
@@ -49,10 +48,10 @@ object AlohomoraButtonDefaults {
         AlohomoraButtonSize.LARGE -> PaddingValues(horizontal = 24.dp, vertical = 12.dp)
     }
 
-    fun minHeight(size: AlohomoraButtonSize): Int = when (size) {
-        AlohomoraButtonSize.SMALL -> 32
-        AlohomoraButtonSize.MEDIUM -> 40
-        AlohomoraButtonSize.LARGE -> 48
+    fun minHeight(size: AlohomoraButtonSize): Dp = when (size) {
+        AlohomoraButtonSize.SMALL -> 32.dp
+        AlohomoraButtonSize.MEDIUM -> 40.dp
+        AlohomoraButtonSize.LARGE -> 48.dp
     }
 
     @Composable
@@ -71,14 +70,15 @@ fun AlohomoraFilledButton(
     enabled: Boolean = true,
     size: AlohomoraButtonSize = AlohomoraButtonSize.MEDIUM,
     uppercase: Boolean = AlohomoraButtonDefaults.uppercase,
-    shape: Shape? = null,
+    shape: Shape = AlohomoraButtonDefaults.shape,
     containerColor: Color = MaterialTheme.colorScheme.onBackground,
     contentColor: Color = MaterialTheme.colorScheme.background,
+    disabledContainerColor: Color = containerColor.copy(alpha = 0.12f),
+    disabledContentColor: Color = contentColor.copy(alpha = 0.38f),
     leadingIcon: (@Composable (() -> Unit))? = null,
     trailingIcon: (@Composable (() -> Unit))? = null,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    val resolvedShape = shape ?: MaterialTheme.shapes.extraSmall
     AlohomoraButtonBase(
         text = text,
         size = size,
@@ -89,51 +89,14 @@ fun AlohomoraFilledButton(
     ) { contentPadding, contentSlot ->
         Button(
             onClick = onClick,
-            modifier = modifier.defaultMinSize(minHeight = AlohomoraButtonDefaults.minHeight(size).dp),
+            modifier = modifier.defaultMinSize(minHeight = AlohomoraButtonDefaults.minHeight(size)),
             enabled = enabled,
-            shape = resolvedShape,
+            shape = shape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = containerColor,
                 contentColor = contentColor,
-            ),
-            contentPadding = contentPadding,
-            content = contentSlot,
-        )
-    }
-}
-
-@Composable
-fun AlohomoraElevatedButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    size: AlohomoraButtonSize = AlohomoraButtonSize.MEDIUM,
-    uppercase: Boolean = AlohomoraButtonDefaults.uppercase,
-    shape: Shape? = null,
-    containerColor: Color = MaterialTheme.colorScheme.surface,
-    contentColor: Color = MaterialTheme.colorScheme.onSurface,
-    leadingIcon: (@Composable (() -> Unit))? = null,
-    trailingIcon: (@Composable (() -> Unit))? = null,
-    content: (@Composable RowScope.() -> Unit)? = null,
-) {
-    val resolvedShape = shape ?: MaterialTheme.shapes.small
-    AlohomoraButtonBase(
-        text = text,
-        size = size,
-        uppercase = uppercase,
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        content = content,
-    ) { contentPadding, contentSlot ->
-        ElevatedButton(
-            onClick = onClick,
-            modifier = modifier.defaultMinSize(minHeight = AlohomoraButtonDefaults.minHeight(size).dp),
-            enabled = enabled,
-            shape = resolvedShape,
-            colors = ButtonDefaults.elevatedButtonColors(
-                containerColor = containerColor,
-                contentColor = contentColor,
+                disabledContainerColor = disabledContainerColor,
+                disabledContentColor = disabledContentColor,
             ),
             contentPadding = contentPadding,
             content = contentSlot,
@@ -149,15 +112,15 @@ fun AlohomoraOutlinedButton(
     enabled: Boolean = true,
     size: AlohomoraButtonSize = AlohomoraButtonSize.MEDIUM,
     uppercase: Boolean = AlohomoraButtonDefaults.uppercase,
-    shape: Shape? = null,
+    shape: Shape = AlohomoraButtonDefaults.shape,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    disabledContentColor: Color = contentColor.copy(alpha = 0.38f),
     borderColor: Color = MaterialTheme.colorScheme.outline,
     borderWidth: Dp = 1.dp,
     leadingIcon: (@Composable (() -> Unit))? = null,
     trailingIcon: (@Composable (() -> Unit))? = null,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    val resolvedShape = shape ?: MaterialTheme.shapes.small
     AlohomoraButtonBase(
         text = text,
         size = size,
@@ -168,13 +131,17 @@ fun AlohomoraOutlinedButton(
     ) { contentPadding, contentSlot ->
         OutlinedButton(
             onClick = onClick,
-            modifier = modifier.defaultMinSize(minHeight = AlohomoraButtonDefaults.minHeight(size).dp),
+            modifier = modifier.defaultMinSize(minHeight = AlohomoraButtonDefaults.minHeight(size)),
             enabled = enabled,
-            shape = resolvedShape,
+            shape = shape,
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = contentColor,
+                disabledContentColor = disabledContentColor,
             ),
-            border = BorderStroke(borderWidth, borderColor),
+            border = BorderStroke(
+                borderWidth,
+                if (enabled) borderColor else borderColor.copy(alpha = 0.12f),
+            ),
             contentPadding = contentPadding,
             content = contentSlot,
         )
@@ -189,13 +156,13 @@ fun AlohomoraTextButton(
     enabled: Boolean = true,
     size: AlohomoraButtonSize = AlohomoraButtonSize.MEDIUM,
     uppercase: Boolean = AlohomoraButtonDefaults.uppercase,
-    shape: Shape? = null,
+    shape: Shape = AlohomoraButtonDefaults.shape,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    disabledContentColor: Color = contentColor.copy(alpha = 0.38f),
     leadingIcon: (@Composable (() -> Unit))? = null,
     trailingIcon: (@Composable (() -> Unit))? = null,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    val resolvedShape = shape ?: MaterialTheme.shapes.small
     AlohomoraButtonBase(
         text = text,
         size = size,
@@ -206,11 +173,12 @@ fun AlohomoraTextButton(
     ) { contentPadding, contentSlot ->
         TextButton(
             onClick = onClick,
-            modifier = modifier.defaultMinSize(minHeight = AlohomoraButtonDefaults.minHeight(size).dp),
+            modifier = modifier.defaultMinSize(minHeight = AlohomoraButtonDefaults.minHeight(size)),
             enabled = enabled,
-            shape = resolvedShape,
+            shape = shape,
             colors = ButtonDefaults.textButtonColors(
                 contentColor = contentColor,
+                disabledContentColor = disabledContentColor,
             ),
             contentPadding = contentPadding,
             content = contentSlot,
@@ -224,6 +192,7 @@ fun AlohomoraIconButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     style: AlohomoraIconButtonStyle = AlohomoraIconButtonStyle.DEFAULT,
+    shape: Shape = MaterialTheme.shapes.medium,
     content: @Composable () -> Unit,
 ) {
     when (style) {
@@ -232,7 +201,7 @@ fun AlohomoraIconButton(
             modifier = modifier,
             enabled = enabled,
             content = content,
-            shape = MaterialTheme.shapes.medium
+            shape = shape,
         )
         AlohomoraIconButtonStyle.FILLED -> FilledIconButton(
             onClick = onClick,
@@ -242,7 +211,7 @@ fun AlohomoraIconButton(
                 containerColor = MaterialTheme.colorScheme.onBackground,
                 contentColor = MaterialTheme.colorScheme.background,
             ),
-            shape = MaterialTheme.shapes.medium,
+            shape = shape,
             content = content,
         )
         AlohomoraIconButtonStyle.OUTLINED -> OutlinedIconButton(
@@ -252,7 +221,7 @@ fun AlohomoraIconButton(
             colors = IconButtonDefaults.outlinedIconButtonColors(
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ),
-            shape = MaterialTheme.shapes.medium,
+            shape = shape,
             content = content,
         )
         AlohomoraIconButtonStyle.TONAL -> FilledTonalIconButton(
@@ -263,7 +232,7 @@ fun AlohomoraIconButton(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ),
-            shape = MaterialTheme.shapes.medium,
+            shape = shape,
             content = content,
         )
     }
@@ -289,11 +258,8 @@ private fun AlohomoraButtonBase(
             text = label,
             style = AlohomoraButtonDefaults.textStyle(size),
             modifier = Modifier.padding(
-                horizontal = if (leadingIcon != null || trailingIcon != null) {
-                    AlohomoraButtonDefaults.iconSpacing
-                } else {
-                    0.dp
-                }
+                start = if (leadingIcon != null) AlohomoraButtonDefaults.iconSpacing else 0.dp,
+                end = if (trailingIcon != null) AlohomoraButtonDefaults.iconSpacing else 0.dp,
             ),
         )
         if (trailingIcon != null) {

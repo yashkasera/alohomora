@@ -22,9 +22,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.durationNanos
 import io.github.yashkasera.alohomora.common.isError
@@ -53,6 +52,14 @@ private val IndentPerDepth = 10.dp
 private val BarLaneWidth = 72.dp
 
 /**
+ * Corner radius of a span bar, in [Dp] because it is fed to a draw call rather than a `shape =` slot.
+ *
+ * Deliberately not a theme token, and deliberately duplicated from the shared waterfall's constant:
+ * `MaterialTheme.shapes` holds `Shape`s, which a draw scope cannot consume.
+ */
+private val SpanBarCornerRadius: Dp = 4.dp
+
+/**
  * One span as a phone-width row: tree-indented name, duration, and a mini bar lane.
  *
  * Reuses `barGeometry` and `spanBarColor` from the shared waterfall rather than reimplementing the
@@ -71,7 +78,7 @@ internal fun TraceSpanRow(
     val barColor = spanBarColor(span.kind, isError, span.isViewed)
     val laneColor = MaterialTheme.colorScheme.outlineVariant
     val minBarWidth = MaterialTheme.dimens.stroke.medium
-    val cornerRadius = MaterialTheme.dimens.corner.small
+    val cornerRadius = SpanBarCornerRadius
 
     Row(
         modifier = Modifier
@@ -112,7 +119,12 @@ internal fun TraceSpanRow(
                 Text(
                     text = span.name,
                     style = MaterialTheme.typography.bodySmall,
-                    fontWeight = if (span.isViewed) FontWeight.Normal else FontWeight.SemiBold,
+                    // Unread is carried by contrast rather than weight — see WaterfallRow.
+                    color = if (span.isViewed) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
@@ -144,7 +156,6 @@ internal fun TraceSpanRow(
                 text = "${span.kind.lowercase()} · ${formatDuration(span.durationNanos())}",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontFamily = FontFamily.Monospace,
             )
         }
 

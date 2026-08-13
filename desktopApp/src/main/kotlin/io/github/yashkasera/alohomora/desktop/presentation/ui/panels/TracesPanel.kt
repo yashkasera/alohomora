@@ -23,7 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TraceItem
@@ -58,6 +59,7 @@ fun TracesPanel(
         topBar = {
             AlohomoraTopBar(
                 title = "Traces",
+                layout = TopBarLayout.START_ALIGNED,
                 subtitle = "Spans grouped by trace, newest first",
                 actions = {
                     AlohomoraIconButton(onClick = { showClearConfirmation = true }) {

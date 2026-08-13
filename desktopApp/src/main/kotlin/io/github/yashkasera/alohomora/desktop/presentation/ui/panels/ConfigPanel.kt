@@ -19,10 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -45,6 +45,7 @@ fun ConfigPanel(devToolsViewModel: DevToolsViewModel) {
         topBar = {
             AlohomoraTopBar(
                 title = "Config",
+                layout = TopBarLayout.START_ALIGNED,
                 subtitle = "Build metadata from the connected app",
             )
         },
@@ -139,7 +140,6 @@ private fun ConfigRow(label: String, value: String?) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Medium,
         )
         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
         Text(
@@ -162,7 +162,6 @@ private fun WorkingTreeRow(isDirty: Boolean) {
         Text(
             text = "Working tree",
             style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Medium,
         )
         Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
         if (isDirty) {

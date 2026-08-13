@@ -7,21 +7,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.trace.TraceSummary
 import io.github.yashkasera.alohomora.common.trace.formatDuration
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
@@ -39,9 +37,9 @@ fun TraceItem(trace: TraceSummary, onClick: () -> Unit) {
         else -> MaterialTheme.colorScheme.surfaceContainer
     }
 
-    Card(
+    AlohomoraCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
+        colors = AlohomoraCardDefaults.colors(
             containerColor = containerColor,
         ),
         onClick = onClick,
@@ -67,8 +65,12 @@ fun TraceItem(trace: TraceSummary, onClick: () -> Unit) {
                         // See TraceSummary.rootSpanName.
                         text = trace.rootSpanName ?: "(root pending)",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = if (trace.isViewed) FontWeight.Normal else FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        // Unread is carried by contrast rather than weight — see WaterfallRow.
+                        color = if (trace.isViewed) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false),
@@ -96,7 +98,6 @@ fun TraceItem(trace: TraceSummary, onClick: () -> Unit) {
                     Text(
                         text = formatDuration(trace.durationNanos),
                         style = MaterialTheme.typography.labelMedium,
-                        fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
@@ -132,7 +133,6 @@ fun TraceItem(trace: TraceSummary, onClick: () -> Unit) {
                     // log line, short enough not to crowd the row.
                     text = trace.traceId.take(TRACE_ID_PREFIX_LENGTH),
                     style = MaterialTheme.typography.labelSmall,
-                    fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

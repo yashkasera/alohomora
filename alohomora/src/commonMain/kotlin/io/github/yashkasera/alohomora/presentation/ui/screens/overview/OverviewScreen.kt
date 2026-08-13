@@ -19,8 +19,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +39,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
@@ -327,11 +327,11 @@ private fun DevToolsStatusCard(
     onToggle: (Boolean) -> Unit,
     onPortChange: (String) -> Unit,
 ) {
-    Card(
+    AlohomoraCard(
         onClick = {
             onToggle.invoke(!state.serverEnabled)
         },
-        colors = CardDefaults.cardColors(
+        colors = AlohomoraCardDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ),
     ) {
@@ -435,8 +435,8 @@ private fun MockRulesActiveBanner(
     ruleCount: Int,
     onClear: () -> Unit,
 ) {
-    Card(
-        colors = CardDefaults.cardColors(
+    AlohomoraCard(
+        colors = AlohomoraCardDefaults.colors(
             containerColor = MaterialTheme.alohomoraColors.warning.copy(alpha = 0.15f),
         ),
     ) {

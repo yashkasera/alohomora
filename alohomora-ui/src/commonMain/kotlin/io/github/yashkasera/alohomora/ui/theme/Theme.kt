@@ -24,15 +24,26 @@ fun AppTheme(
 
     CompositionLocalProvider(
         LocalThemeIsDark provides effectiveState,
-        LocalAlohomoraDimens provides AlohomoraDimens(),
+        LocalAlohomoraDimens provides AlohomoraDimensInstance,
         LocalAlohomoraColors provides theme,
     ) {
         MaterialTheme(
             colorScheme = theme.materialColorScheme,
             typography = AlohomoraTypography(),
+            shapes = AlohomoraShapes,
             content = content,
         )
     }
 }
+
+/**
+ * Hoisted because [LocalAlohomoraDimens] is a `staticCompositionLocalOf`, which does not compare the
+ * values it is handed — a fresh [AlohomoraDimens] identity on each recomposition invalidates the whole
+ * subtree under the theme. The dimens are constant, so one instance is all there ever needs to be.
+ *
+ * [AlohomoraTypography] gets no such treatment: it is `@Composable` (it resolves bundled `Font`s) and
+ * so cannot be hoisted or `remember`ed here. The resource loader caches the faces itself.
+ */
+private val AlohomoraDimensInstance = AlohomoraDimens()
 
 val LocalThemeIsDark = compositionLocalOf { mutableStateOf(true) }

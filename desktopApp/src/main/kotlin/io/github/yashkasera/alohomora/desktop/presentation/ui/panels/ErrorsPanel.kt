@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,15 +23,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.exceptionTypeName
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
@@ -57,6 +56,7 @@ fun ErrorsPanel(
         topBar = {
             AlohomoraTopBar(
                 title = "Errors",
+                layout = TopBarLayout.START_ALIGNED,
                 subtitle = "Crashes and reported failures from connected app",
                 actions = {
                     AlohomoraIconButton(onClick = { showClearConfirmation = true }) {
@@ -126,9 +126,9 @@ private fun ErrorRow(
         error.isViewed -> MaterialTheme.colorScheme.surfaceVariant
         else -> MaterialTheme.colorScheme.surfaceContainer
     }
-    Card(
+    AlohomoraCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
+        colors = AlohomoraCardDefaults.colors(containerColor = containerColor),
         onClick = onClick,
     ) {
         Column(
@@ -145,8 +145,12 @@ private fun ErrorRow(
                 Text(
                     text = error.exceptionTypeName(),
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = if (error.isViewed) FontWeight.Normal else FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    // Unread is carried by contrast rather than weight — see WaterfallRow.
+                    color = if (error.isViewed) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
                 )
                 AlohomoraChip(
                     label = "FATAL",
@@ -174,7 +178,6 @@ private fun ErrorRow(
                 Text(
                     text = place,
                     style = MaterialTheme.typography.labelSmall,
-                    fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
                 )

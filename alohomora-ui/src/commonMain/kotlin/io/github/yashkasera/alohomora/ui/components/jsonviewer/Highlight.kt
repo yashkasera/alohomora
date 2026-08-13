@@ -4,7 +4,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 
@@ -35,7 +34,6 @@ internal fun highlightText(
         withStyle(
             SpanStyle(
                 color = highlight,
-                fontWeight = FontWeight.ExtraBold,
                 textDecoration = TextDecoration.Underline
             ),
         ) {

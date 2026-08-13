@@ -18,17 +18,19 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
  * Extracted from `TrafficPanel`, where it was private, rather than copied into the Traces sheet: two
  * near-identical key-value rows drift, and then the two sheets read differently for no reason.
  */
+// There is deliberately no `monospaceValue` flag. It existed to opt ids and durations into a
+// monospace face "where a proportional font makes two values hard to compare" — but `bodySmall` is
+// already JetBrains Mono, so there was no proportional font to escape. All the flag did was swap the
+// bundled face for `FontFamily.Monospace`, which resolves to a different font on Android, iOS and
+// Desktop. Every caller passed `true`.
 @Composable
-fun KeyValueRow(label: String, value: String, monospaceValue: Boolean = false) {
+fun KeyValueRow(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         SectionLabel(label)
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface,
-            // Opt-in, for ids and durations, where a proportional font makes two values hard to
-            // compare at a glance.
-            fontFamily = if (monospaceValue) FontFamily.Monospace else null,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(start = MaterialTheme.dimens.margin.md),

@@ -22,8 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Span
@@ -138,7 +136,6 @@ private fun TraceSheetHeader(
                 Text(
                     text = summary?.rootSpanName ?: "(root pending)",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
@@ -176,7 +173,6 @@ private fun TraceSheetHeader(
                     append(state.traceId)
                 },
                 style = MaterialTheme.typography.bodySmall,
-                fontFamily = FontFamily.Monospace,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -268,14 +264,12 @@ private fun SpanEventsTab(span: Span, traceStartNanos: Long) {
                 KeyValueRow(
                     label = event.name,
                     value = "+${formatDuration(event.epochNanos - traceStartNanos)}",
-                    monospaceValue = true,
                 )
                 event.attributes?.forEach { (key, value) ->
                     Text(
                         text = "$key = $value",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = FontFamily.Monospace,
                     )
                 }
             }
@@ -293,25 +287,23 @@ private fun SpanOverviewTab(span: Span, children: List<Span>, traceStartNanos: L
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
     ) {
         SectionLabel(span.name)
-        KeyValueRow("Span id", span.spanId, monospaceValue = true)
-        KeyValueRow("Parent span id", span.parentSpanId ?: "— (root)", monospaceValue = true)
+        KeyValueRow("Span id", span.spanId)
+        KeyValueRow("Parent span id", span.parentSpanId ?: "— (root)")
         KeyValueRow("Kind", span.kind)
         KeyValueRow("Status", span.statusCode + (span.statusDescription?.let { " · $it" } ?: ""))
         KeyValueRow("Scope", span.scopeName ?: "-")
-        KeyValueRow("Start", "+${formatDuration(span.startEpochNanos - traceStartNanos)}", monospaceValue = true)
+        KeyValueRow("Start", "+${formatDuration(span.startEpochNanos - traceStartNanos)}")
         KeyValueRow(
             "Wall clock",
             DateUtils.format(span.startEpochMillis(), DateUtils.Format.HH_MM_SS_3MS),
-            monospaceValue = true,
         )
-        KeyValueRow("Duration", formatDuration(span.durationNanos()), monospaceValue = true)
+        KeyValueRow("Duration", formatDuration(span.durationNanos()))
         // Self time is the most actionable derived number here and nothing else in the console shows
         // it: a 400ms span whose children account for 390ms is a slow dependency, whereas one with
         // 10ms of children is a slow parent. The bars alone cannot separate those.
         KeyValueRow(
             "Self time",
             formatDuration(selfTimeNanos(span, children)),
-            monospaceValue = true,
         )
         if (span.endEpochNanos < span.startEpochNanos) {
             KeyValueRow("Clock skew", "reported end precedes start")

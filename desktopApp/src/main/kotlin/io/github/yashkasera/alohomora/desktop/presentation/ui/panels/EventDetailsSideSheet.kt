@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
@@ -103,7 +102,6 @@ fun EventDetailsSideSheet(
                         Text(
                             text = selected.name,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -192,11 +190,10 @@ internal fun ColumnScope.EventDetailsContent(
             .padding(MaterialTheme.dimens.margin.xl),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
-        KeyValueRow(label = "Name", value = event.name, monospaceValue = true)
+        KeyValueRow(label = "Name", value = event.name)
         KeyValueRow(
             label = "Time",
             value = DateUtils.format(event.time, DateUtils.Format.ISO_DATE_TIME),
-            monospaceValue = true,
         )
         KeyValueRow(label = "Read", value = if (event.isViewed) "Yes" else "No")
 

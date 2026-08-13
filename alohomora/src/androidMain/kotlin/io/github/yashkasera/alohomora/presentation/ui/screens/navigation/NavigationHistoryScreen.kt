@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -39,6 +37,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.presentation.ui.components.EmptyState
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
@@ -147,11 +147,11 @@ private fun TimelineItem(
         TimelineRail(isActive = event.isActive, isFirst = isFirst, isLast = isLast)
 
         // Content card. Bottom padding on all but the last leaves the gap the rail bridges.
-        Card(
+        AlohomoraCard(
             modifier = Modifier
                 .weight(1f)
                 .padding(bottom = if (isLast) MaterialTheme.dimens.margin.xs else MaterialTheme.dimens.margin.md),
-            colors = CardDefaults.cardColors(
+            colors = AlohomoraCardDefaults.colors(
                 containerColor = if (event.isActive) MaterialTheme.colorScheme.surfaceContainerHighest
                 else MaterialTheme.colorScheme.surfaceContainer,
             ),

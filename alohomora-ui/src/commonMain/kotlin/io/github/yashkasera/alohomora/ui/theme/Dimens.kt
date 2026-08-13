@@ -13,7 +13,6 @@ data class AlohomoraDimens(
     val stroke: Stroke = Stroke(),
     val margin: Margin = Margin(),
     val icon: Icon = Icon(),
-    val corner: Corner = Corner(),
 ) {
     @Immutable
     data class Stroke(
@@ -45,14 +44,11 @@ data class AlohomoraDimens(
         val xl: Dp = 36.dp,            // empty-state icon glyph
         val illustration: Dp = 80.dp,  // empty-state icon container
     )
-
-    @Immutable
-    data class Corner(
-        val small: Dp = 4.dp,   // badge chips, small cards
-        val medium: Dp = 8.dp,  // medium cards, dropdowns
-        val full: Dp = 50.dp,   // pill / full-round filter chips
-    )
 }
+
+// Corner radii deliberately do not live here. They are `Shape`s, not `Dp`s, and they belong to
+// `MaterialTheme.shapes` — see AlohomoraShapes in Shape.kt. A second scale under different names for
+// the same radii is what this holder used to be.
 
 val LocalAlohomoraDimens = staticCompositionLocalOf { AlohomoraDimens() }
 

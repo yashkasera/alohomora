@@ -27,7 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.desktop.presentation.model.EventsUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.eventsSubtitle
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EventItem
@@ -57,6 +58,7 @@ fun EventsPanel(eventsViewModel: EventsViewModel) {
         topBar = {
             AlohomoraTopBar(
                 title = "Events",
+                layout = TopBarLayout.START_ALIGNED,
                 // Says how much the filters removed, and names the store cap when it bites — a total
                 // stalled at exactly the cap otherwise looks like a stalled stream.
                 subtitle = eventsSubtitle(state),
