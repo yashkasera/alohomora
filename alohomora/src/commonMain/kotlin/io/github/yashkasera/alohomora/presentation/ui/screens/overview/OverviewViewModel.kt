@@ -7,6 +7,7 @@ import io.github.yashkasera.alohomora.common.AttentionItem
 import io.github.yashkasera.alohomora.common.mergeAttentionItems
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
+import io.github.yashkasera.alohomora.devtools.NetworkRuleEngine
 import io.github.yashkasera.alohomora.domain.repository.ErrorRepository
 import io.github.yashkasera.alohomora.domain.repository.TrafficRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,12 +26,14 @@ internal data class OverviewState(
     val pendingOtp: String? = null,
     val rememberDevice: Boolean = false,
     val attentionItems: List<AttentionItem> = emptyList(),
+    val activeMockRuleCount: Int = 0,
 )
 
 internal sealed class OverviewEvent {
     data class ToggleServer(val enabled: Boolean) : OverviewEvent()
     data class PortChanged(val value: String) : OverviewEvent()
     data class RememberDeviceChanged(val remember: Boolean) : OverviewEvent()
+    data object ClearMockRules : OverviewEvent()
 }
 
 internal class OverviewViewModel(
@@ -71,6 +74,11 @@ internal class OverviewViewModel(
                 _state.value = _state.value.copy(attentionItems = items)
             }
         }
+        viewModelScope.launch {
+            NetworkRuleEngine.activeRuleCount.collect { count ->
+                _state.value = _state.value.copy(activeMockRuleCount = count)
+            }
+        }
     }
 
     fun onEvent(event: OverviewEvent) {
@@ -81,6 +89,7 @@ internal class OverviewViewModel(
             is OverviewEvent.PortChanged -> {
                 _state.value = _state.value.copy(serverPort = event.value, serverError = null)
             }
+            is OverviewEvent.ClearMockRules -> NetworkRuleEngine.clear()
         }
     }
 

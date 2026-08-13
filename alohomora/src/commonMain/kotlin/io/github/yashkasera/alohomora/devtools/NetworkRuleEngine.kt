@@ -4,6 +4,8 @@ import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
 import io.github.yashkasera.alohomora.common.mock.TemplateEngine
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlin.concurrent.Volatile
 
 internal const val MOCK_ID_HEADER = "X-Alohomora-Mock-Id"
@@ -16,6 +18,9 @@ internal object NetworkRuleEngine {
     @Volatile
     private var _mockRules: List<CompiledMockRule> = emptyList()
 
+    private val _activeRuleCount = MutableStateFlow(0)
+    val activeRuleCount: StateFlow<Int> = _activeRuleCount
+
     val throttle: ThrottleProfile get() = _throttle
 
     fun setThrottle(profile: ThrottleProfile) {
@@ -24,6 +29,7 @@ internal object NetworkRuleEngine {
 
     fun setMockRules(rules: List<MockRule>) {
         _mockRules = rules.filter { it.enabled }.map(::CompiledMockRule)
+        _activeRuleCount.value = _mockRules.size
     }
 
     fun findMatch(url: String, method: String?): MockRule? {
@@ -35,6 +41,7 @@ internal object NetworkRuleEngine {
     fun clear() {
         _throttle = ThrottleProfiles.NONE
         _mockRules = emptyList()
+        _activeRuleCount.value = 0
     }
 }
 

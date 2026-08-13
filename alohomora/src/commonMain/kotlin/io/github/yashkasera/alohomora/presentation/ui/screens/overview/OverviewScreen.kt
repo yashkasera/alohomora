@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,7 +41,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
+import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
 import io.github.yashkasera.alohomora.ui.components.NeedsAttentionPager
@@ -59,6 +62,7 @@ import io.github.yashkasera.alohomora.ui.icons.Tag
 import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
 import io.github.yashkasera.alohomora.ui.icons.ToggleRight
 import io.github.yashkasera.alohomora.ui.icons.Waypoints
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -251,6 +255,14 @@ internal fun OverviewScreen(
                     )
                 }
             }
+            if (state.activeMockRuleCount > 0) {
+                item(span = { GridItemSpan(4) }) {
+                    MockRulesActiveBanner(
+                        ruleCount = state.activeMockRuleCount,
+                        onClear = { viewModel.onEvent(OverviewEvent.ClearMockRules) },
+                    )
+                }
+            }
             if (state.attentionItems.isNotEmpty()) {
                 item(span = { GridItemSpan(4) }) {
                     Column {
@@ -415,6 +427,47 @@ private fun ModuleCard(
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.secondary,
         )
+    }
+}
+
+@Composable
+private fun MockRulesActiveBanner(
+    ruleCount: Int,
+    onClear: () -> Unit,
+) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.alohomoraColors.warning.copy(alpha = 0.15f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = MaterialTheme.dimens.margin.md,
+                    vertical = MaterialTheme.dimens.margin.sm,
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+        ) {
+            AlohomoraChip(
+                label = "$ruleCount active",
+                containerColor = MaterialTheme.alohomoraColors.warning,
+                contentColor = Color.Black,
+            )
+            Text(
+                text = "Mock rules are intercepting requests",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            AlohomoraTextButton(
+                text = "Clear",
+                onClick = onClear,
+                uppercase = false,
+                contentColor = MaterialTheme.colorScheme.error,
+            )
+        }
     }
 }
 
