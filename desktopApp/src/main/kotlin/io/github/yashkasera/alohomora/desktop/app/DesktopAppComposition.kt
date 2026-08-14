@@ -118,7 +118,10 @@ class DesktopAppComposition(
         // unconditionally and then thrown away whenever a shared view model was supplied.
         val adbRepository = if (ownsDevicesViewModel) AdbRepositoryImpl() else null
         val logcatRepository = LogcatRepositoryImpl()
-        val databaseRepository = io.github.yashkasera.alohomora.desktop.data.local.DatabaseRepositoryImpl(databaseSnapshotStore)
+        val databaseRepository =
+            io.github.yashkasera.alohomora.desktop.data.local.DatabaseRepositoryImpl(
+                databaseSnapshotStore,
+            )
         val cacheRepository = CacheRepositoryImpl(cacheStore)
 
         val connectDevToolsUseCase = ConnectDevToolsUseCase(devToolsRepository)
@@ -140,8 +143,16 @@ class DesktopAppComposition(
             engine {
                 https {
                     trustManager = object : X509TrustManager {
-                        override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
-                        override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
+                        override fun checkClientTrusted(
+                            chain: Array<out X509Certificate>?,
+                            authType: String?,
+                        ) = Unit
+
+                        override fun checkServerTrusted(
+                            chain: Array<out X509Certificate>?,
+                            authType: String?,
+                        ) = Unit
+
                         override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
                     }
                 }
@@ -200,9 +211,10 @@ class DesktopAppComposition(
             requestCacheValueUseCase = requestCacheValueUseCase,
         )
 
-        featureFlagsViewModel = io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel(
-            repository = devToolsRepository,
-        )
+        featureFlagsViewModel =
+            io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel(
+                repository = devToolsRepository,
+            )
         tracesViewModel = TracesViewModel(repository = devToolsRepository)
         eventsViewModel = EventsViewModel(repository = devToolsRepository)
         trafficViewModel = TrafficViewModel(repository = devToolsRepository)

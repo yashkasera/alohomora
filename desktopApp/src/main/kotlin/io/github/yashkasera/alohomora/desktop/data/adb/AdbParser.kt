@@ -31,7 +31,8 @@ internal object AdbParser {
             when {
                 token.startsWith("model:") -> model = token.substringAfter("model:")
                 token.startsWith("product:") -> product = token.substringAfter("product:")
-                token.startsWith("transport_id:") -> transportId = token.substringAfter("transport_id:")
+                token.startsWith("transport_id:") -> transportId =
+                    token.substringAfter("transport_id:")
             }
         }
 

@@ -3,10 +3,8 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -40,21 +38,21 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import io.github.yashkasera.alohomora.desktop.app.displayModifier
-import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
-import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.desktop.app.navigationShortcutDigit
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DesktopSection
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.icons.Activity
 import io.github.yashkasera.alohomora.ui.icons.Camera
 import io.github.yashkasera.alohomora.ui.icons.CircleHelp
 import io.github.yashkasera.alohomora.ui.icons.Globe
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Link
-import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.Server
+import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.icons.ZoomIn
@@ -112,7 +110,7 @@ fun CommandPalette(
     }
 
     Dialog(
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
     ) {
         Card(
             modifier = Modifier
@@ -134,24 +132,30 @@ fun CommandPalette(
                             onDismiss()
                             true
                         }
+
                         Key.DirectionDown -> {
                             if (filtered.isNotEmpty()) {
                                 selectedIndex = (selectedIndex + 1).coerceAtMost(filtered.size - 1)
                             }
                             true
                         }
+
                         Key.DirectionUp -> {
                             if (filtered.isNotEmpty()) {
                                 selectedIndex = (selectedIndex - 1).coerceAtLeast(0)
                             }
                             true
                         }
+
                         Key.Enter -> {
                             filtered.getOrNull(selectedIndex)?.let {
-                                if (it.enabled) { onDismiss(); it.action() }
+                                if (it.enabled) {
+                                    onDismiss(); it.action()
+                                }
                             }
                             true
                         }
+
                         else -> false
                     }
                 },

@@ -69,7 +69,7 @@ internal interface TrafficDao {
             " replayOf, requestBodyTruncated, responseBodyTruncated, mockedBy" +
             " FROM TrafficEntry" +
             " WHERE isViewed = 0 AND (status IS NULL OR status NOT BETWEEN 200 AND 299)" +
-            " ORDER BY time DESC LIMIT :limit"
+            " ORDER BY time DESC LIMIT :limit",
     )
     fun observeUnviewedFailed(limit: Int = 50): Flow<List<TrafficEntry>>
 }

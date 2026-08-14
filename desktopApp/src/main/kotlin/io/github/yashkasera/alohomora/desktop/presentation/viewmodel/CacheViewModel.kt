@@ -58,7 +58,8 @@ class CacheViewModel(
                 // would render every row pending forever.
                 requested.retainAll(state.keys.toSet())
 
-                val missing = state.keys.filter { it !in requested && !state.values.containsKey(it) }
+                val missing =
+                    state.keys.filter { it !in requested && !state.values.containsKey(it) }
                 if (missing.isEmpty()) return@collect
                 requested += missing
                 missing.forEach(requestCacheValueUseCase::invoke)

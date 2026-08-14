@@ -1,11 +1,11 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,12 +33,9 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogWindow
-import androidx.compose.ui.window.rememberDialogState
-import io.github.yashkasera.alohomora.desktop.app.isShortcutModifier
 import io.github.yashkasera.alohomora.desktop.app.displayModifier
+import io.github.yashkasera.alohomora.desktop.app.isShortcutModifier
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DesktopSection
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
@@ -82,8 +79,14 @@ fun HelpDialog(
                     .onPreviewKeyEvent { event ->
                         if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                         when {
-                            event.key == Key.Escape -> { onDismiss(); true }
-                            event.key == Key.W && event.isShortcutModifier() -> { onDismiss(); true }
+                            event.key == Key.Escape -> {
+                                onDismiss(); true
+                            }
+
+                            event.key == Key.W && event.isShortcutModifier() -> {
+                                onDismiss(); true
+                            }
+
                             else -> false
                         }
                     },
@@ -203,7 +206,8 @@ private fun FeaturesTab(visibleSections: List<DesktopSection>) {
         visibleSections.forEach { section ->
             val description = SECTION_DESCRIPTIONS[section] ?: return@forEach
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = MaterialTheme.dimens.margin.sm),
+                modifier = Modifier.fillMaxWidth()
+                    .padding(vertical = MaterialTheme.dimens.margin.sm),
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                 verticalAlignment = Alignment.Top,
             ) {

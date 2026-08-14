@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 internal fun CanvasBackground(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
-    gridColor: Color = MaterialTheme.colorScheme.outlineVariant
+    gridColor: Color = MaterialTheme.colorScheme.outlineVariant,
 ) {
     Canvas(modifier = modifier.fillMaxSize().background(backgroundColor)) {
         val width = size.width
@@ -25,7 +25,7 @@ internal fun CanvasBackground(
                 color = gridColor,
                 start = Offset(x.toFloat(), 0f),
                 end = Offset(x.toFloat(), height),
-                strokeWidth = 1f
+                strokeWidth = 1f,
             )
         }
 
@@ -34,7 +34,7 @@ internal fun CanvasBackground(
                 color = gridColor,
                 start = Offset(0f, y.toFloat()),
                 end = Offset(width, y.toFloat()),
-                strokeWidth = 1f
+                strokeWidth = 1f,
             )
         }
     }

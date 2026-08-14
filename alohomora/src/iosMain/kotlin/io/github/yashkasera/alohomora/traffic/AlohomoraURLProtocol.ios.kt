@@ -15,10 +15,6 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCClass
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
-import platform.darwin.DISPATCH_TIME_NOW
-import platform.darwin.dispatch_after
-import platform.darwin.dispatch_get_main_queue
-import platform.darwin.dispatch_time
 import platform.Foundation.HTTPBody
 import platform.Foundation.HTTPMethod
 import platform.Foundation.NSCachedURLResponse
@@ -46,6 +42,10 @@ import platform.Foundation.allHTTPHeaderFields
 import platform.Foundation.appendData
 import platform.Foundation.create
 import platform.Foundation.setAllHTTPHeaderFields
+import platform.darwin.DISPATCH_TIME_NOW
+import platform.darwin.dispatch_after
+import platform.darwin.dispatch_get_main_queue
+import platform.darwin.dispatch_time
 
 private const val HANDLED_KEY = "AlohomoraHandled"
 

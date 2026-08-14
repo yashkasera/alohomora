@@ -6,18 +6,18 @@ import io.github.yashkasera.alohomora.common.NANOS_PER_MILLI
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.FakeDevToolsRepository
-import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.boolean
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.long
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 
 /**
  * The tool projections are the read surface an agent sees, so they are tested directly over a fake
@@ -36,10 +36,18 @@ class AlohomoraMcpToolDataTest {
             )
         }
 
-        val all = AlohomoraMcpToolData.listTraffic(repo, null, null, null, failedOnly = false, limit = 100)
+        val all = AlohomoraMcpToolData.listTraffic(
+            repo,
+            null,
+            null,
+            null,
+            failedOnly = false,
+            limit = 100,
+        )
         assertEquals(3, all.jsonArray.size)
 
-        val failed = AlohomoraMcpToolData.listTraffic(repo, null, null, null, failedOnly = true, limit = 100)
+        val failed =
+            AlohomoraMcpToolData.listTraffic(repo, null, null, null, failedOnly = true, limit = 100)
         val statuses = failed.jsonArray.map { it.jsonObject["status"]!!.jsonPrimitive.int }.toSet()
         assertEquals(setOf(500, 404), statuses)
     }
@@ -54,16 +62,44 @@ class AlohomoraMcpToolDataTest {
             )
         }
 
-        val byStatus = AlohomoraMcpToolData.listTraffic(repo, status = 200, method = null, host = null, failedOnly = false, limit = 100)
+        val byStatus = AlohomoraMcpToolData.listTraffic(
+            repo,
+            status = 200,
+            method = null,
+            host = null,
+            failedOnly = false,
+            limit = 100,
+        )
         assertEquals(3, byStatus.jsonArray.size)
 
-        val byMethod = AlohomoraMcpToolData.listTraffic(repo, status = null, method = "post", host = null, failedOnly = false, limit = 100)
+        val byMethod = AlohomoraMcpToolData.listTraffic(
+            repo,
+            status = null,
+            method = "post",
+            host = null,
+            failedOnly = false,
+            limit = 100,
+        )
         assertEquals(1, byMethod.jsonArray.size)
 
-        val byHost = AlohomoraMcpToolData.listTraffic(repo, status = null, method = null, host = "cdn", failedOnly = false, limit = 100)
+        val byHost = AlohomoraMcpToolData.listTraffic(
+            repo,
+            status = null,
+            method = null,
+            host = "cdn",
+            failedOnly = false,
+            limit = 100,
+        )
         assertEquals(1, byHost.jsonArray.size)
 
-        val limited = AlohomoraMcpToolData.listTraffic(repo, status = null, method = null, host = null, failedOnly = false, limit = 2)
+        val limited = AlohomoraMcpToolData.listTraffic(
+            repo,
+            status = null,
+            method = null,
+            host = null,
+            failedOnly = false,
+            limit = 2,
+        )
         assertEquals(2, limited.jsonArray.size)
     }
 
@@ -102,7 +138,8 @@ class AlohomoraMcpToolDataTest {
         assertTrue(trace["isComplete"]!!.jsonPrimitive.boolean, "root present so trace is complete")
         assertEquals(4, trace["spanCount"]!!.jsonPrimitive.int)
 
-        val byName = trace["spans"]!!.jsonArray.associateBy { it.jsonObject["name"]!!.jsonPrimitive.content }
+        val byName =
+            trace["spans"]!!.jsonArray.associateBy { it.jsonObject["name"]!!.jsonPrimitive.content }
         assertTrue(byName.getValue("orphan").jsonObject["isOrphan"]!!.jsonPrimitive.boolean)
         assertFalse(byName.getValue("child").jsonObject["isOrphan"]!!.jsonPrimitive.boolean)
         assertTrue(byName.getValue("skewed").jsonObject["hasSkew"]!!.jsonPrimitive.boolean)
@@ -227,16 +264,32 @@ class AlohomoraMcpToolDataTest {
             traffic.value = listOf(
                 entry("1", status = 200, method = "GET", host = "api.example.com", time = 1000L),
             )
-            errors.value = listOf(Error(id = 1, place = "main", reason = "NullPointerException: oops", time = 2000L))
+            errors.value = listOf(
+                Error(
+                    id = 1,
+                    place = "main",
+                    reason = "NullPointerException: oops",
+                    time = 2000L,
+                ),
+            )
             spans.value = listOf(
                 Span(
-                    traceId = "t1", spanId = "s1", name = "http.request",
-                    startEpochNanos = 500L * NANOS_PER_MILLI, endEpochNanos = 600L * NANOS_PER_MILLI,
+                    traceId = "t1",
+                    spanId = "s1",
+                    name = "http.request",
+                    startEpochNanos = 500L * NANOS_PER_MILLI,
+                    endEpochNanos = 600L * NANOS_PER_MILLI,
                 ),
             )
         }
 
-        val timeline = AlohomoraMcpToolData.getTimeline(repo, since = null, until = null, kinds = null, limit = 100)
+        val timeline = AlohomoraMcpToolData.getTimeline(
+            repo,
+            since = null,
+            until = null,
+            kinds = null,
+            limit = 100,
+        )
         val items = timeline.jsonArray
         assertEquals(4, items.size)
 
@@ -257,7 +310,13 @@ class AlohomoraMcpToolDataTest {
             )
         }
 
-        val windowed = AlohomoraMcpToolData.getTimeline(repo, since = 1500L, until = 2500L, kinds = null, limit = 100)
+        val windowed = AlohomoraMcpToolData.getTimeline(
+            repo,
+            since = 1500L,
+            until = 2500L,
+            kinds = null,
+            limit = 100,
+        )
         assertEquals(1, windowed.jsonArray.size)
         assertEquals(2000L, windowed.jsonArray[0].jsonObject["time"]!!.jsonPrimitive.long)
     }
@@ -273,15 +332,33 @@ class AlohomoraMcpToolDataTest {
             errors.value = listOf(Error(id = 1, place = "x", reason = "Err: y", time = 2000L))
         }
 
-        val eventsOnly = AlohomoraMcpToolData.getTimeline(repo, since = null, until = null, kinds = "event", limit = 100)
+        val eventsOnly = AlohomoraMcpToolData.getTimeline(
+            repo,
+            since = null,
+            until = null,
+            kinds = "event",
+            limit = 100,
+        )
         assertEquals(1, eventsOnly.jsonArray.size)
         assertEquals("event", eventsOnly.jsonArray[0].jsonObject["kind"]!!.jsonPrimitive.content)
 
-        val mixed = AlohomoraMcpToolData.getTimeline(repo, since = null, until = null, kinds = "traffic,error", limit = 100)
+        val mixed = AlohomoraMcpToolData.getTimeline(
+            repo,
+            since = null,
+            until = null,
+            kinds = "traffic,error",
+            limit = 100,
+        )
         assertEquals(2, mixed.jsonArray.size)
     }
 
-    private fun entry(id: String, status: Int, method: String, host: String, time: Long = id.toLong()) = TrafficEntry(
+    private fun entry(
+        id: String,
+        status: Int,
+        method: String,
+        host: String,
+        time: Long = id.toLong(),
+    ) = TrafficEntry(
         id = id,
         status = status,
         method = method,

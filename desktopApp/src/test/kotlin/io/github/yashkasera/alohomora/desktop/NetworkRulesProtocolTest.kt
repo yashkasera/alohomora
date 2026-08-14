@@ -116,7 +116,8 @@ class NetworkRulesProtocolTest {
 
     @Test
     fun `custom throttle profile values round-trip`() {
-        val custom = ThrottleProfile(name = "custom", latencyMs = 1000, downloadBytesPerSec = 10_000)
+        val custom =
+            ThrottleProfile(name = "custom", latencyMs = 1000, downloadBytesPerSec = 10_000)
         val msg = SetThrottleProfileMessage(sequence = 1, profile = custom)
         val decoded = assertIs<SetThrottleProfileMessage>(roundTrip(msg))
         assertEquals("custom", decoded.profile.name)

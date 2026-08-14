@@ -36,13 +36,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.ChevronRight
@@ -223,7 +223,8 @@ private fun TimelineItem(
                                 )
                                 .testTag("nav_intent_toggle")
                                 .semantics {
-                                    contentDescription = if (isIntentExpanded) "expanded" else "collapsed"
+                                    contentDescription =
+                                        if (isIntentExpanded) "expanded" else "collapsed"
                                 },
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
                             verticalAlignment = Alignment.CenterVertically,

@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
 import androidx.compose.material3.SnackbarHostState
+import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkEntry
+import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkHistoryStore
 import io.github.yashkasera.alohomora.desktop.domain.model.CommandResult
 import io.github.yashkasera.alohomora.desktop.domain.model.Device
 import io.github.yashkasera.alohomora.desktop.domain.repository.AdbRepository
@@ -10,8 +12,6 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.RefreshDevicesUseCa
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RunAdbCommandUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.SelectDeviceUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.UninstallPackageUseCase
-import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkEntry
-import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkHistoryStore
 import io.github.yashkasera.alohomora.desktop.presentation.model.AdbCommandLogEntry
 import io.github.yashkasera.alohomora.desktop.presentation.model.CustomCommandResult
 import io.github.yashkasera.alohomora.desktop.presentation.model.DarkModeOption
@@ -73,7 +73,8 @@ class DevicesViewModel(
     val dashboardState: StateFlow<DashboardUiState> = _dashboardState.asStateFlow()
 
     private val _developerOptionsState = MutableStateFlow(DeveloperOptionsState())
-    val developerOptionsState: StateFlow<DeveloperOptionsState> = _developerOptionsState.asStateFlow()
+    val developerOptionsState: StateFlow<DeveloperOptionsState> =
+        _developerOptionsState.asStateFlow()
 
     private val _customCommandOutput = MutableStateFlow<CustomCommandResult?>(null)
     val customCommandOutput: StateFlow<CustomCommandResult?> = _customCommandOutput.asStateFlow()
@@ -361,7 +362,8 @@ class DevicesViewModel(
             // runDetached, not runCommand: screenrecord runs until stopScreenRecord signals it,
             // so it must not be awaited — and must not be subject to the command timeout, which
             // would cut the recording short.
-            val error = repository.runDetached(deviceId, listOf("shell", "screenrecord", devicePath))
+            val error =
+                repository.runDetached(deviceId, listOf("shell", "screenrecord", devicePath))
             if (error != null) setActionError(error) else setActionMessage("Screen recording started")
         }
     }
@@ -534,12 +536,14 @@ class DevicesViewModel(
                 deviceId, listOf("shell", "settings", "get", "global", "window_animation_scale"),
             ).stdout.trim().toFloatOrNull() ?: 1.0f
             val transitionScale = repository.runCommandBlocking(
-                deviceId, listOf("shell", "settings", "get", "global", "transition_animation_scale"),
+                deviceId,
+                listOf("shell", "settings", "get", "global", "transition_animation_scale"),
             ).stdout.trim().toFloatOrNull() ?: 1.0f
             val animatorScale = repository.runCommandBlocking(
                 deviceId, listOf("shell", "settings", "get", "global", "animator_duration_scale"),
             ).stdout.trim().toFloatOrNull() ?: 1.0f
-            val animationsDisabled = windowScale == 0f && transitionScale == 0f && animatorScale == 0f
+            val animationsDisabled =
+                windowScale == 0f && transitionScale == 0f && animatorScale == 0f
 
             val darkModeOutput = repository.runCommandBlocking(
                 deviceId, listOf("shell", "cmd", "uimode", "night"),
@@ -576,7 +580,10 @@ class DevicesViewModel(
             val current = _developerOptionsState.value.showTaps == true
             _developerOptionsState.value = _developerOptionsState.value.copy(showTaps = !current)
             val newVal = if (current) "0" else "1"
-            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "system", "show_touches", newVal))
+            runLoggedBlocking(
+                deviceId,
+                listOf("shell", "settings", "put", "system", "show_touches", newVal),
+            )
         }
     }
 
@@ -584,10 +591,14 @@ class DevicesViewModel(
         if (deviceId.isNullOrBlank()) return
         scope.launch {
             val current = _developerOptionsState.value.showLayoutBounds == true
-            _developerOptionsState.value = _developerOptionsState.value.copy(showLayoutBounds = !current)
+            _developerOptionsState.value =
+                _developerOptionsState.value.copy(showLayoutBounds = !current)
             val newVal = if (current) "false" else "true"
             runLoggedBlocking(deviceId, listOf("shell", "setprop", "debug.layout", newVal))
-            runLoggedBlocking(deviceId, listOf("shell", "service", "call", "activity", "1599295570"))
+            runLoggedBlocking(
+                deviceId,
+                listOf("shell", "service", "call", "activity", "1599295570"),
+            )
         }
     }
 
@@ -595,11 +606,21 @@ class DevicesViewModel(
         if (deviceId.isNullOrBlank()) return
         scope.launch {
             val current = _developerOptionsState.value.animationsDisabled == true
-            _developerOptionsState.value = _developerOptionsState.value.copy(animationsDisabled = !current)
+            _developerOptionsState.value =
+                _developerOptionsState.value.copy(animationsDisabled = !current)
             val scale = if (current) "1.0" else "0.0"
-            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "global", "window_animation_scale", scale))
-            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "global", "transition_animation_scale", scale))
-            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "global", "animator_duration_scale", scale))
+            runLoggedBlocking(
+                deviceId,
+                listOf("shell", "settings", "put", "global", "window_animation_scale", scale),
+            )
+            runLoggedBlocking(
+                deviceId,
+                listOf("shell", "settings", "put", "global", "transition_animation_scale", scale),
+            )
+            runLoggedBlocking(
+                deviceId,
+                listOf("shell", "settings", "put", "global", "animator_duration_scale", scale),
+            )
         }
     }
 
@@ -620,9 +641,13 @@ class DevicesViewModel(
         if (deviceId.isNullOrBlank()) return
         scope.launch {
             val current = _developerOptionsState.value.dontKeepActivities == true
-            _developerOptionsState.value = _developerOptionsState.value.copy(dontKeepActivities = !current)
+            _developerOptionsState.value =
+                _developerOptionsState.value.copy(dontKeepActivities = !current)
             val newVal = if (current) "0" else "1"
-            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "global", "always_finish_activities", newVal))
+            runLoggedBlocking(
+                deviceId,
+                listOf("shell", "settings", "put", "global", "always_finish_activities", newVal),
+            )
         }
     }
 
@@ -630,14 +655,18 @@ class DevicesViewModel(
         if (deviceId.isNullOrBlank()) return
         scope.launch {
             _developerOptionsState.value = _developerOptionsState.value.copy(fontScale = scale)
-            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "system", "font_scale", scale.toString()))
+            runLoggedBlocking(
+                deviceId,
+                listOf("shell", "settings", "put", "system", "font_scale", scale.toString()),
+            )
         }
     }
 
     fun runCustomCommand(deviceId: String?, command: String) {
         if (deviceId.isNullOrBlank() || command.isBlank()) return
         scope.launch {
-            _customCommandOutput.value = CustomCommandResult(command = command, output = "", isError = false)
+            _customCommandOutput.value =
+                CustomCommandResult(command = command, output = "", isError = false)
             val args = listOf("shell") + command.trim().split(Regex("\\s+"))
             val result = runLoggedBlocking(deviceId, args)
             val output = result.stdout.ifBlank { result.stderr }

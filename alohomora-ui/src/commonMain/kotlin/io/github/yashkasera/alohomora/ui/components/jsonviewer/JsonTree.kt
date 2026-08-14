@@ -11,24 +11,24 @@ internal sealed interface JsonNode {
 internal data class JsonObjectNode(
     override val path: Path,
     override val key: String?,
-    val children: List<Path>
+    val children: List<Path>,
 ) : JsonNode
 
 internal data class JsonArrayNode(
     override val path: Path,
     override val key: String?,
-    val children: List<Path>
+    val children: List<Path>,
 ) : JsonNode
 
 internal data class JsonValueNode(
     override val path: Path,
     override val key: String?,
-    val value: Any?
+    val value: Any?,
 ) : JsonNode
 
 internal data class JsonTree(
     val root: Path,
     val nodes: Map<Path, JsonNode>,
     val children: Map<Path, List<Path>>,
-    val searchIndex: SearchIndex
+    val searchIndex: SearchIndex,
 )

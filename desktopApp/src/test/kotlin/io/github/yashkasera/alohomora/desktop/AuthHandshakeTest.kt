@@ -5,9 +5,9 @@ import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.AuthSuccessMessage
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
+import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -62,7 +62,8 @@ class AuthHandshakeTest {
 
     @Test
     fun `auth success carries a freshly issued token`() {
-        val decoded = roundTrip(AuthSuccessMessage(sequence = 1, token = "tok")) as AuthSuccessMessage
+        val decoded =
+            roundTrip(AuthSuccessMessage(sequence = 1, token = "tok")) as AuthSuccessMessage
 
         assertEquals("tok", decoded.token)
     }
@@ -117,7 +118,8 @@ class AuthHandshakeTest {
     fun `an old device that never sends the signal still connects`() {
         // Pre-signal devices go straight from the probe to AUTH_SUCCESS. Nothing should block
         // on a message that never arrives.
-        val decoded = decodePayload("""{"type":"AUTH_SUCCESS","sequence":1}""") as AuthSuccessMessage
+        val decoded =
+            decodePayload("""{"type":"AUTH_SUCCESS","sequence":1}""") as AuthSuccessMessage
 
         assertNull(decoded.token)
     }

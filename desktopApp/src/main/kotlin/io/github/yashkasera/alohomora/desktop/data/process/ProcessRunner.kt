@@ -102,18 +102,21 @@ object ProcessRunner {
     /** Drains one stream on a daemon thread so neither pipe can block the other. */
     private class StreamDrainer(stream: InputStream, name: String) {
         private val sb = StringBuilder()
-        private val thread = Thread({
-            runCatching {
-                BufferedReader(InputStreamReader(stream)).use { reader ->
-                    val buffer = CharArray(DEFAULT_BUFFER_SIZE)
-                    while (true) {
-                        val read = reader.read(buffer)
-                        if (read < 0) break
-                        synchronized(sb) { sb.appendRange(buffer, 0, read) }
+        private val thread = Thread(
+            {
+                runCatching {
+                    BufferedReader(InputStreamReader(stream)).use { reader ->
+                        val buffer = CharArray(DEFAULT_BUFFER_SIZE)
+                        while (true) {
+                            val read = reader.read(buffer)
+                            if (read < 0) break
+                            synchronized(sb) { sb.appendRange(buffer, 0, read) }
+                        }
                     }
                 }
-            }
-        }, name).apply {
+            },
+            name,
+        ).apply {
             isDaemon = true
             start()
         }

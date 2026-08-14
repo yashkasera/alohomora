@@ -77,7 +77,10 @@ class SpanSelfTimeTest {
     fun `a zero-duration child covers nothing`() {
         val parent = span("p", start = 0, end = 100)
 
-        assertEquals(100L, selfTimeNanos(parent, listOf(span("tick", parent = "p", start = 50, end = 50))))
+        assertEquals(
+            100L,
+            selfTimeNanos(parent, listOf(span("tick", parent = "p", start = 50, end = 50))),
+        )
     }
 
     @Test

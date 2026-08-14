@@ -18,11 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import io.github.yashkasera.alohomora.ui.components.AlohomoraRadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,33 +32,34 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import io.github.yashkasera.alohomora.desktop.app.MacTitleBarHeight
 import io.github.yashkasera.alohomora.desktop.app.ThemeMode
 import io.github.yashkasera.alohomora.desktop.app.applyMacTitleBar
 import io.github.yashkasera.alohomora.desktop.app.isMacOs
 import io.github.yashkasera.alohomora.desktop.app.isShortcutModifier
-import io.github.yashkasera.alohomora.desktop.util.pickDirectory
 import io.github.yashkasera.alohomora.desktop.mcp.AlohomoraMcpServer
 import io.github.yashkasera.alohomora.desktop.mcp.McpClient
 import io.github.yashkasera.alohomora.desktop.mcp.McpClientConfig
 import io.github.yashkasera.alohomora.desktop.mcp.McpServerStatus
-import androidx.compose.material3.Icon
+import io.github.yashkasera.alohomora.desktop.util.pickDirectory
+import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraRadioButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSingleChoiceToggleGroup
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSwitch
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
@@ -279,7 +278,11 @@ private fun McpServerSection(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(text = "Allow write tools", style = MaterialTheme.typography.bodyMedium)
-        AlohomoraSwitch(checked = writeEnabled, onCheckedChange = onWriteEnabledChange, enabled = enabled)
+        AlohomoraSwitch(
+            checked = writeEnabled,
+            onCheckedChange = onWriteEnabledChange,
+            enabled = enabled,
+        )
     }
 
     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
@@ -373,7 +376,10 @@ private fun SettingsNavItem(label: String, selected: Boolean, onClick: () -> Uni
             .clip(MaterialTheme.shapes.small)
             .background(background)
             .clickable(onClick = onClick)
-            .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = MaterialTheme.dimens.margin.sm),
+            .padding(
+                horizontal = MaterialTheme.dimens.margin.md,
+                vertical = MaterialTheme.dimens.margin.sm,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text = label, style = MaterialTheme.typography.bodyMedium, color = contentColor)
@@ -472,7 +478,8 @@ private fun GeneralSection(
         AlohomoraTextButton(
             text = "Browse",
             onClick = {
-                val dir = pickDirectory("Select screenshot directory", screenshotDir.ifBlank { null })
+                val dir =
+                    pickDirectory("Select screenshot directory", screenshotDir.ifBlank { null })
                 if (dir != null) onScreenshotDirChange(dir)
             },
         )
@@ -494,7 +501,10 @@ private fun GeneralSection(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(text = "Show notification on capture", style = MaterialTheme.typography.bodyMedium)
-        AlohomoraSwitch(checked = screenshotShowToast, onCheckedChange = onScreenshotShowToastChange)
+        AlohomoraSwitch(
+            checked = screenshotShowToast,
+            onCheckedChange = onScreenshotShowToastChange,
+        )
     }
 }
 

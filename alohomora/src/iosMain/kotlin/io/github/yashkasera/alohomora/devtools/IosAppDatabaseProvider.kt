@@ -66,8 +66,10 @@ internal class IosAppDatabaseProvider : DevToolsAppDatabaseProvider {
 
     private fun filesIn(root: String): List<String> {
         val manager = NSFileManager.defaultManager
+
         @Suppress("UNCHECKED_CAST")
-        val names = manager.contentsOfDirectoryAtPath(root, null) as? List<String> ?: return emptyList()
+        val names =
+            manager.contentsOfDirectoryAtPath(root, null) as? List<String> ?: return emptyList()
         return names.map { "$root/$it" }
     }
 

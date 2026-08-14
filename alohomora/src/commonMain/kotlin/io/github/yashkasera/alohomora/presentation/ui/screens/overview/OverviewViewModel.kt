@@ -86,9 +86,11 @@ internal class OverviewViewModel(
             is OverviewEvent.ToggleServer -> handleToggle(event.enabled)
             is OverviewEvent.RememberDeviceChanged ->
                 devToolsRuntime.setRememberDevice(event.remember)
+
             is OverviewEvent.PortChanged -> {
                 _state.value = _state.value.copy(serverPort = event.value, serverError = null)
             }
+
             is OverviewEvent.ClearMockRules -> NetworkRuleEngine.clear()
         }
     }
@@ -97,7 +99,8 @@ internal class OverviewViewModel(
         if (enabled) {
             val port = _state.value.serverPort.toIntOrNull()
             if (port == null || port <= 0) {
-                _state.value = _state.value.copy(serverEnabled = false, serverError = "Invalid port")
+                _state.value =
+                    _state.value.copy(serverEnabled = false, serverError = "Invalid port")
                 return
             }
             try {

@@ -30,21 +30,25 @@ object TemplateEngine {
             val max = args.getOrNull(1)?.toIntOrNull() ?: 100
             MockGenerators.int(min, max)
         }
+
         "float" -> {
             val min = args.getOrNull(0)?.toDoubleOrNull() ?: 0.0
             val max = args.getOrNull(1)?.toDoubleOrNull() ?: 1.0
             MockGenerators.float(min, max)
         }
+
         "amount" -> {
             val min = args.getOrNull(0)?.toDoubleOrNull() ?: 0.0
             val max = args.getOrNull(1)?.toDoubleOrNull() ?: 1000.0
             MockGenerators.amount(min, max)
         }
+
         "date" -> {
             val direction = args.getOrNull(0) ?: "past"
             val offset = args.getOrNull(1)?.toIntOrNull() ?: 30
             MockGenerators.date(direction, offset)
         }
+
         "oneof" -> MockGenerators.oneOf(args)
         else -> null
     }

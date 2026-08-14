@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -171,7 +170,7 @@ fun ReplayRequestSideSheet(
                             shape = SegmentedButtonDefaults.itemShape(
                                 index = index,
                                 count = BodyMode.entries.size,
-                                baseShape = MaterialTheme.shapes.small
+                                baseShape = MaterialTheme.shapes.small,
                             ),
                         ) {
                             Text(mode.label, style = MaterialTheme.typography.labelMedium)
@@ -188,6 +187,7 @@ fun ReplayRequestSideSheet(
                             minLines = 6,
                         )
                     }
+
                     BodyMode.TEXT -> {
                         AlohomoraTextField(
                             value = textBody,

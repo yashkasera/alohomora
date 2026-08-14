@@ -368,7 +368,11 @@ fun DevToolsDesktopApp(
                         pickSavePath(defaultName, "Save Screenshot", ".png")
                     }
                     if (localPath != null) {
-                        devicesViewModel.takeScreenshot(selectedDeviceId, localPath, screenshotShowToast)
+                        devicesViewModel.takeScreenshot(
+                            selectedDeviceId,
+                            localPath,
+                            screenshotShowToast,
+                        )
                     }
                     return@onPreviewKeyEvent true
                 }
@@ -445,7 +449,11 @@ fun DevToolsDesktopApp(
                                         pickSavePath(defaultName, "Save Screenshot", ".png")
                                             ?: return@screenshot
                                     }
-                                    devicesViewModel.takeScreenshot(selectedDeviceId, localPath, screenshotShowToast)
+                                    devicesViewModel.takeScreenshot(
+                                        selectedDeviceId,
+                                        localPath,
+                                        screenshotShowToast,
+                                    )
                                 },
                                 onRecordScreen = record@{
                                     if (!isRecording) {

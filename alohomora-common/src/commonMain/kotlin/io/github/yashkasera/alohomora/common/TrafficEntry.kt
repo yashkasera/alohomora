@@ -107,7 +107,6 @@ data class TrafficEntry(
 
     private fun String.shellEscape(): String = "'${replace("'", "'\\''")}'"
 
-
     fun statusMessage(): String {
         return when (status) {
             200 -> "OK"

@@ -27,7 +27,8 @@ internal class DefaultAdbCommandRunner(
         return ProcessRunner.runDetached(listOf(adb) + args)
     }
 
-    private fun adbMissing() = AdbCommandResult(exitCode = -1, stdout = "", stderr = ADB_MISSING_MESSAGE)
+    private fun adbMissing() =
+        AdbCommandResult(exitCode = -1, stdout = "", stderr = ADB_MISSING_MESSAGE)
 
     private companion object {
         const val ADB_MISSING_MESSAGE =

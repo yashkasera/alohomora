@@ -17,13 +17,13 @@ val Icons.Tag: ImageVector
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
-            viewportHeight = 24f
+            viewportHeight = 24f,
         ).apply {
             path(
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(12.586f, 2.586f)
                 arcTo(2f, 2f, 0f, false, false, 11.172f, 2f)
@@ -42,7 +42,7 @@ val Icons.Tag: ImageVector
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(8f, 7.5f)
                 arcTo(0.5f, 0.5f, 0f, false, true, 7.5f, 8f)

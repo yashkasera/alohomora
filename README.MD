@@ -2,20 +2,26 @@
 
 ## Overview
 
-This project is a developer observability and introspection toolkit designed to make software systems legible while they are running.
+This project is a developer observability and introspection toolkit designed to make software
+systems legible while they are running.
 
-Modern applications fail less often because of syntax errors and more often because of hidden state, invisible side effects, unclear causality, and tools that only show fragments of the truth. Logs are scattered. Databases feel opaque. Events happen, but no one can see them as a system.
+Modern applications fail less often because of syntax errors and more often because of hidden state,
+invisible side effects, unclear causality, and tools that only show fragments of the truth. Logs are
+scattered. Databases feel opaque. Events happen, but no one can see them as a system.
 
 This tool exists to collapse that distance.
 
-It provides a unified environment for inspecting network traffic, databases, events and application state in real time—without requiring invasive instrumentation, fragile dashboards, or postmortem archaeology.
+It provides a unified environment for inspecting network traffic, databases, events and application
+state in real time—without requiring invasive instrumentation, fragile dashboards, or postmortem
+archaeology.
 
 The goal is not monitoring theater.
 The goal is understanding.
 
 ## Installation & Setup
 
-Alohomora is designed for **full observability in debug builds** and **zero-overhead behavior in release builds**.
+Alohomora is designed for **full observability in debug builds** and **zero-overhead behavior in
+release builds**.
 
 ### Dependencies
 
@@ -35,13 +41,14 @@ Publish and consume from GitHub Packages:
 
 - Repository URL: `https://maven.pkg.github.com/<owner>/<repo>`
 - Credentials (Gradle properties or env vars):
-  - `gpr.user` / `GITHUB_ACTOR`
-  - `gpr.key` / `GH_PACKAGES_TOKEN` / `GITHUB_TOKEN`
+    - `gpr.user` / `GITHUB_ACTOR`
+    - `gpr.key` / `GH_PACKAGES_TOKEN` / `GITHUB_TOKEN`
 
 ### Build metadata (Android)
 
 Apply the Gradle plugin to your app module. It runs `git log`, `git rev-parse` and
-`git status --porcelain` at build time and code-generates an `AlohomoraConfig` that Alohomora picks up
+`git status --porcelain` at build time and code-generates an `AlohomoraConfig` that Alohomora picks
+up
 automatically, feeding the Config and Git History panels. Without it those panels show `unknown`.
 
 ```kotlin
@@ -58,8 +65,10 @@ alohomora {
 }
 ```
 
-`versionName` has no default and the generator task requires it, so leave it out and the build fails.
-`slackWebhookUrl` is emitted as a plaintext constant and is **dropped for any non-debuggable variant**
+`versionName` has no default and the generator task requires it, so leave it out and the build
+fails.
+`slackWebhookUrl` is emitted as a plaintext constant and is **dropped for any non-debuggable variant
+**
 — it would otherwise be recoverable from release dex with `strings`.
 
 For the iOS equivalent, see [iOS build metadata](#ios-build-metadata-xcode-run-script-phase).
@@ -137,7 +146,8 @@ and point the target at what it produces:
 FRAMEWORK_SEARCH_PATHS = $(SRCROOT)/../alohomora/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
 ```
 
-Initialize at launch. **Kotlin default arguments do not become Swift defaults**, so every parameter is
+Initialize at launch. **Kotlin default arguments do not become Swift defaults**, so every parameter
+is
 required at the Swift call site — and `init()` is exported as `doInit()` because Swift reserves
 `init`:
 
@@ -206,9 +216,12 @@ console needs none of this: another shake closes it.)
 
 ### iOS build metadata (Xcode run-script phase)
 
-On Android the Gradle plugin code-generates branch, commit sha, dirty flag and recent commits into the
-build, and Alohomora picks them up automatically. An iOS app built from an `.xcodeproj` has no Gradle
-build for the plugin to hook, so the same metadata is collected by a script phase instead. Without it
+On Android the Gradle plugin code-generates branch, commit sha, dirty flag and recent commits into
+the
+build, and Alohomora picks them up automatically. An iOS app built from an `.xcodeproj` has no
+Gradle
+build for the plugin to hook, so the same metadata is collected by a script phase instead. Without
+it
 the Config panel shows `unknown` and GitHistory is empty; everything else works.
 
 Add a **Run Script** phase to your app target, placed **after** *Copy Bundle Resources*:
@@ -219,19 +232,21 @@ Add a **Run Script** phase to your app target, placed **after** *Copy Bundle Res
 
 Then:
 
-- **Untick "Based on dependency analysis"** and leave *Output Files* empty. Git state changes without
+- **Untick "Based on dependency analysis"** and leave *Output Files* empty. Git state changes
+  without
   any input file changing, so a cached phase ships yesterday's commit sha.
 - **Set `ENABLE_USER_SCRIPT_SANDBOXING = NO`** if your project has it on (the Xcode 15+ template
   default). The sandbox blocks reading `.git`, and the manifest ends up with no git metadata.
-- Nothing to add to *Copy Bundle Resources* — the script writes straight into the app bundle Xcode is
+- Nothing to add to *Copy Bundle Resources* — the script writes straight into the app bundle Xcode
+  is
   assembling, so nothing generated lands in git.
 
 Optional environment variables:
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `ALOHOMORA_MAX_COMMITS` | `50` | How much history GitHistory shows |
-| `ALOHOMORA_SLACK_WEBHOOK_URL` | unset | Enables Slack sharing. **Ignored unless `CONFIGURATION` is `Debug`** — it would otherwise ship as plaintext in the `.ipa`, recoverable with `unzip`. |
+| Variable                      | Default | Purpose                                                                                                                                              |
+|-------------------------------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ALOHOMORA_MAX_COMMITS`       | `50`    | How much history GitHistory shows                                                                                                                    |
+| `ALOHOMORA_SLACK_WEBHOOK_URL` | unset   | Enables Slack sharing. **Ignored unless `CONFIGURATION` is `Debug`** — it would otherwise ship as plaintext in the `.ipa`, recoverable with `unzip`. |
 
 `versionName`, `versionCode` and the bundle id are deliberately *not* injected: Alohomora reads them
 from `Bundle.main` at runtime, so `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` stay the single
@@ -249,7 +264,8 @@ This project is built on a few non-negotiable principles:
 - Errors are signals, not crimes
 - Developers should be able to answer “what just happened?” in seconds, not hours
 
-The tool favors explanation over aggregation, structure over noise, and developer agency over automation magic.
+The tool favors explanation over aggregation, structure over noise, and developer agency over
+automation magic.
 
 ## Key Features
 
@@ -291,7 +307,8 @@ Alohomora.registerAppDatabase(name = "app.db")
 Alohomora.excludeAppDatabase(name = "cache.db")
 ```
 
-Inspection is **read-only**. There is no row editing, no write history, and no before/after diffing —
+Inspection is **read-only**. There is no row editing, no write history, and no before/after
+diffing —
 you see current state, and SQL you run yourself.
 
 ### Events
@@ -303,13 +320,15 @@ Alohomora.recordEvent(name = "checkout_started", properties = mapOf("cart_size" 
 ```
 
 The panel lists them newest-first with search by name, a toggle to expand properties inline, and
-clear. It is a searchable log of what your app said happened, in order — not an inferred causal graph.
+clear. It is a searchable log of what your app said happened, in order — not an inferred causal
+graph.
 
 ### Cache
 
 Key-value state, read live off the device.
 
-- **Android:** `SharedPreferences` files, including `EncryptedSharedPreferences` (already decrypted by
+- **Android:** `SharedPreferences` files, including `EncryptedSharedPreferences` (already decrypted
+  by
   the system when read, and flagged as encrypted in the listing)
 - **iOS:** `NSUserDefaults`
 
@@ -317,7 +336,8 @@ Keys load lazily — click one to fetch its value. Read-only; there is no editin
 
 ### Config & Git History
 
-Which build you are actually looking at, which is the first question worth asking when a bug will not
+Which build you are actually looking at, which is the first question worth asking when a bug will
+not
 reproduce.
 
 - **Config:** project name, variant, version name and code, branch, commit sha, dirty flag, build
@@ -341,20 +361,20 @@ content type, and a response body. Rules can be toggled individually or all at o
 Response bodies support `{{generator}}` placeholders that are resolved per-request on the device, so
 each response carries fresh data:
 
-| Syntax | Output |
-|--------|--------|
-| `{{uuid}}` | `550e8400-e29b-41d4-a716-446655440000` |
-| `{{name}}` | `Jane Smith` |
-| `{{firstName}}` / `{{lastName}}` | `Jane` / `Smith` |
-| `{{email}}` | `jane.smith@example.com` |
-| `{{int(1,100)}}` | `42` |
-| `{{float(0,1)}}` | `0.7342` |
-| `{{amount(10,500)}}` | `247.83` (2 decimal places) |
-| `{{date(past,30)}}` | `2026-07-15` (ISO-8601) |
-| `{{date(future,365)}}` | `2027-05-20` |
-| `{{timestamp}}` | `1723456789000` (epoch millis) |
-| `{{bool}}` | `true` or `false` |
-| `{{oneOf(active,inactive,pending)}}` | `inactive` |
+| Syntax                               | Output                                 |
+|--------------------------------------|----------------------------------------|
+| `{{uuid}}`                           | `550e8400-e29b-41d4-a716-446655440000` |
+| `{{name}}`                           | `Jane Smith`                           |
+| `{{firstName}}` / `{{lastName}}`     | `Jane` / `Smith`                       |
+| `{{email}}`                          | `jane.smith@example.com`               |
+| `{{int(1,100)}}`                     | `42`                                   |
+| `{{float(0,1)}}`                     | `0.7342`                               |
+| `{{amount(10,500)}}`                 | `247.83` (2 decimal places)            |
+| `{{date(past,30)}}`                  | `2026-07-15` (ISO-8601)                |
+| `{{date(future,365)}}`               | `2027-05-20`                           |
+| `{{timestamp}}`                      | `1723456789000` (epoch millis)         |
+| `{{bool}}`                           | `true` or `false`                      |
+| `{{oneOf(active,inactive,pending)}}` | `inactive`                             |
 
 Unknown placeholders pass through as-is, so a body that happens to contain `{{` for some other
 reason is not corrupted.
@@ -408,13 +428,16 @@ deep link builder. Each action shows its keyboard shortcut when one exists.
 The desktop app can expose the data it has already captured — traffic, errors, traces, events,
 database, cache, feature flags, build and git metadata — to **your own** AI agent (Claude Code,
 Claude Desktop, Cursor) as an [MCP](https://modelcontextprotocol.io) server. Alohomora stays the
-legible data source; the reasoning stays with the agent you already use. There is no embedded chatbot
+legible data source; the reasoning stays with the agent you already use. There is no embedded
+chatbot
 and no LLM key in the app.
 
-Turn it on in **Preferences → MCP server**: a toggle, a port (default `53900`), the copyable endpoint
+Turn it on in **Preferences → MCP server**: a toggle, a port (default `53900`), the copyable
+endpoint
 URL, and a live status line. Then point your agent at `http://127.0.0.1:<port>/mcp` — or use the
 **"connect your agent"** picker, which generates the exact snippet for Claude Code
-(`claude mcp add --transport http …` or `.mcp.json`), Cursor, or Claude Desktop (`mcp-remote` bridge)
+(`claude mcp add --transport http …` or `.mcp.json`), Cursor, or Claude Desktop (`mcp-remote`
+bridge)
 and copies it to your clipboard. It's **off by default**.
 
 **Read tools** (always available once the server is on):
@@ -431,8 +454,10 @@ and `explain_screen(name)`.
 
 **Write tools** are a separate, explicit opt-in — a second **"Allow write tools"** switch, off by
 default. When on, the agent can act, not just read: `replay_traffic` (re-send a captured request,
-optionally edited, through the app's own client), `list_mock_rules`/`set_mock_rules`/`clear_mock_rules`,
-`get_throttle`/`set_throttle`, and `clear_captured`. These route through the *same* code paths the UI
+optionally edited, through the app's own client), `list_mock_rules`/`set_mock_rules`/
+`clear_mock_rules`,
+`get_throttle`/`set_throttle`, and `clear_captured`. These route through the *same* code paths the
+UI
 uses, so whatever the agent does shows up in the console. `clear_captured` is irreversible, so it
 always asks you to confirm in the desktop app before it runs.
 
@@ -502,7 +527,8 @@ console entry, and there are no log levels.
 Open any captured request, edit the method, URL, headers or payload, and send it again — from the
 console on the device or from the desktop app.
 
-The request is re-issued **by your app, through your own HTTP client**. That distinction is the whole
+The request is re-issued **by your app, through your own HTTP client**. That distinction is the
+whole
 feature. Anything your client derives per-request — a payload signature, a fresh bearer token,
 certificate pinning — is regenerated for the payload you just edited, so changing a body produces a
 matching signature instead of a 401. A request that Alohomora built and sent itself could not do
@@ -525,7 +551,8 @@ Alohomora.registerReplayHandler { request ->
 }
 ```
 
-Pass the client you use for the endpoint being replayed. One without the signing interceptor produces
+Pass the client you use for the endpoint being replayed. One without the signing interceptor
+produces
 authentic-looking auth failures.
 
 #### If you sign requests, name your signature headers
@@ -533,7 +560,8 @@ authentic-looking auth failures.
 Capture redacts `Authorization`, `Cookie`, `X-Api-Key` and a few others, and redacted values are
 dropped rather than replayed — your interceptor resupplies them. A bespoke `X-Signature` or
 `X-Timestamp` is *not* on that list, so it survives into the captured entry and would be forwarded
-verbatim. If your interceptor uses `addHeader` rather than `header`, the stale value then rides along
+verbatim. If your interceptor uses `addHeader` rather than `header`, the stale value then rides
+along
 beside the fresh one. Name them once at startup:
 
 ```kotlin
@@ -541,18 +569,23 @@ ReplayHeaders.additionalStripList = setOf("X-Signature", "X-Timestamp", "X-Nonce
 ```
 
 A signature over a timestamp plus a body hash replays cleanly: your interceptor is handed the edited
-request, so it hashes the new body and stamps a current timestamp. Nothing is reused from capture, and
-because the timestamp differs the server will not mistake the replay for a duplicate of the original.
+request, so it hashes the new body and stamps a current timestamp. Nothing is reused from capture,
+and
+because the timestamp differs the server will not mistake the replay for a duplicate of the
+original.
 
 One caveat if you hash the body: the replayed body is reconstructed from text. JSON is UTF-8 and
-round-trips byte for byte. A protobuf or otherwise binary body does not — capture decodes it as UTF-8,
+round-trips byte for byte. A protobuf or otherwise binary body does not — capture decodes it as
+UTF-8,
 so invalid sequences become replacement characters and your hash would cover corrupted bytes. Replay
 is not currently blocked for that case.
 
 #### Retrofit
 
-Retrofit has no interceptors of its own — it delegates to OkHttp. Yours live on the `OkHttpClient` you
-hand to `Retrofit.Builder()`, which is exactly why replay has to go through that client. Register it,
+Retrofit has no interceptors of its own — it delegates to OkHttp. Yours live on the `OkHttpClient`
+you
+hand to `Retrofit.Builder()`, which is exactly why replay has to go through that client. Register
+it,
 not the `Retrofit` instance:
 
 ```kotlin
@@ -587,7 +620,8 @@ This is not load testing. It is time travel for debugging.
 
 ### Traces
 
-Distributed traces from the tracer your app already runs, rendered as a waterfall in the desktop app:
+Distributed traces from the tracer your app already runs, rendered as a waterfall in the desktop
+app:
 a trace groups spans by trace id, nests them by parent, and shows each one's name, kind, duration,
 status, attributes and events.
 
@@ -625,12 +659,14 @@ Two rules matter more than the rest.
 
 **Timestamps are epoch nanoseconds, and converting is the adapter's job.** OpenTelemetry emits
 nanoseconds already. Sentry emits fractional seconds as a `Double`, so multiply by `1e9`. Anything
-reporting milliseconds multiplies by `1_000_000`. Get it wrong and every span renders as a 1970 date.
+reporting milliseconds multiplies by `1_000_000`. Get it wrong and every span renders as a 1970
+date.
 Nanoseconds rather than the milliseconds Alohomora uses everywhere else because a waterfall needs
 sub-millisecond resolution: at millisecond precision five sequential 200 µs spans render as five
 simultaneous ones, which is a wrong picture rather than a coarse one.
 
-**Put the adapter in `src/main`, not a debug-only source set.** `alohomora-noop` mirrors `recordSpan`
+**Put the adapter in `src/main`, not a debug-only source set.** `alohomora-noop` mirrors
+`recordSpan`
 as a no-op, so the same adapter compiles and runs in release and quietly discards every span — and
 R8 removes the call along with the argument construction. A `debugImplementation`-only adapter would
 mean maintaining a second tracer wiring for release to fall back to. This is the point of the
@@ -642,7 +678,8 @@ stored as given rather than rejected, so a newer SDK's values round-trip. Use `"
 `statusCode` to get the failure styling.
 
 The Traces panel stays hidden until the app has recorded its first span. Because Alohomora ships no
-tracer, there is nothing it could inspect to find out whether one is wired up, so an empty panel would
+tracer, there is nothing it could inspect to find out whether one is wired up, so an empty panel
+would
 be indistinguishable from an app that will never produce a trace.
 
 #### OpenTelemetry
@@ -759,13 +796,15 @@ SentryAndroid.init(context) { options ->
 The transaction's own root span is not in `txn.spans` — read it off `txn.contexts.trace`
 (`getTraceId()`, `getSpanId()`, and `getOperation()`, *not* `getOp()`) with `txn.transaction` as the
 name and `txn.startTimestamp` / `txn.timestamp` as the bounds. Two caveats:
-`io.sentry.protocol.SentrySpan` is annotated `@ApiStatus.Internal` even though `txn.spans` is public,
+`io.sentry.protocol.SentrySpan` is annotated `@ApiStatus.Internal` even though `txn.spans` is
+public,
 so keep the mapping in this one adapter rather than spreading the type around; and `txn.spans`
 returns the live backing list, so do not mutate it.
 
 #### Datadog and Firebase Performance
 
-Neither exposes a general span-export hook, so there is no adapter to write. Call `recordSpan` at the
+Neither exposes a general span-export hook, so there is no adapter to write. Call `recordSpan` at
+the
 trace sites instead — the same place you start and stop the vendor's span:
 
 ```kotlin
@@ -801,22 +840,23 @@ The UI assumes curiosity and rewards exploration.
 
 ### Desktop App Keyboard Shortcuts
 
-The companion desktop app supports keyboard-driven workflows. All shortcuts use **Cmd** on macOS and **Ctrl** on Windows/Linux.
+The companion desktop app supports keyboard-driven workflows. All shortcuts use **Cmd** on macOS and
+**Ctrl** on Windows/Linux.
 
-| Shortcut | Action |
-|----------|--------|
-| Cmd/Ctrl+K | Open command palette |
-| Cmd/Ctrl+1..9 | Switch to Nth sidebar section |
-| Cmd/Ctrl+T | Toggle dark/light theme |
-| Cmd/Ctrl+/ | Open keyboard shortcuts help |
-| Cmd/Ctrl+N | New window (open launcher) |
-| Cmd/Ctrl+W | Close window |
-| Cmd/Ctrl+= | Zoom in (50%–200%) |
-| Cmd/Ctrl+- | Zoom out |
-| Cmd/Ctrl+0 | Reset zoom to 100% |
-| Cmd/Ctrl+Shift+S | Take device screenshot (Android) |
-| Cmd/Ctrl+Shift+Backspace | Clear active panel data |
-| Escape | Close side sheet / dismiss dialog |
+| Shortcut                 | Action                            |
+|--------------------------|-----------------------------------|
+| Cmd/Ctrl+K               | Open command palette              |
+| Cmd/Ctrl+1..9            | Switch to Nth sidebar section     |
+| Cmd/Ctrl+T               | Toggle dark/light theme           |
+| Cmd/Ctrl+/               | Open keyboard shortcuts help      |
+| Cmd/Ctrl+N               | New window (open launcher)        |
+| Cmd/Ctrl+W               | Close window                      |
+| Cmd/Ctrl+=               | Zoom in (50%–200%)                |
+| Cmd/Ctrl+-               | Zoom out                          |
+| Cmd/Ctrl+0               | Reset zoom to 100%                |
+| Cmd/Ctrl+Shift+S         | Take device screenshot (Android)  |
+| Cmd/Ctrl+Shift+Backspace | Clear active panel data           |
+| Escape                   | Close side sheet / dismiss dialog |
 
 Hold Cmd/Ctrl to see number badges on sidebar items.
 

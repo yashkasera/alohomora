@@ -6,6 +6,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import io.github.yashkasera.alohomora.ShakeDetector.Companion.SHAKE_THRESHOLD_G
 import kotlin.math.sqrt
 
 /**

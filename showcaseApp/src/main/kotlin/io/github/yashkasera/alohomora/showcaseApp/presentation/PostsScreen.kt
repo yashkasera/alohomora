@@ -185,7 +185,9 @@ private fun WebViewSection() {
                             .putExtra(WebViewActivity.EXTRA_URL, "https://www.wikipedia.org"),
                     )
                 },
-                modifier = Modifier.fillMaxWidth().testTag(ShowcaseTestTags.OPEN_WEBVIEW),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(ShowcaseTestTags.OPEN_WEBVIEW),
             ) {
                 Text("Open Wikipedia")
             }
@@ -217,7 +219,9 @@ private fun PreferencesSection(
             )
 
             TextField(
-                modifier = Modifier.fillMaxWidth().testTag(ShowcaseTestTags.USERNAME),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(ShowcaseTestTags.USERNAME),
                 value = username,
                 onValueChange = onUsernameChange,
                 label = { Text("Username") },

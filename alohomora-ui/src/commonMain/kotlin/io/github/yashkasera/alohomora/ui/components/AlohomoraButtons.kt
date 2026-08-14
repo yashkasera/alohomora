@@ -25,12 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Plus
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
-import androidx.compose.ui.tooling.preview.Preview
 
 enum class AlohomoraButtonSize {
     SMALL,
@@ -296,6 +296,7 @@ fun AlohomoraIconButton(
             content = content,
             shape = shape,
         )
+
         AlohomoraIconButtonStyle.FILLED -> FilledIconButton(
             onClick = onClick,
             modifier = modifier,
@@ -307,6 +308,7 @@ fun AlohomoraIconButton(
             shape = shape,
             content = content,
         )
+
         AlohomoraIconButtonStyle.OUTLINED -> OutlinedIconButton(
             onClick = onClick,
             modifier = modifier,
@@ -317,6 +319,7 @@ fun AlohomoraIconButton(
             shape = shape,
             content = content,
         )
+
         AlohomoraIconButtonStyle.TONAL -> FilledTonalIconButton(
             onClick = onClick,
             modifier = modifier,

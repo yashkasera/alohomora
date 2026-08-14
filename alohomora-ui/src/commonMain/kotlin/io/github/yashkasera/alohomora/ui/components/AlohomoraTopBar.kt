@@ -21,11 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import androidx.compose.ui.tooling.preview.Preview
 
 enum class TopBarLayout {
     CENTER_ALIGNED,
@@ -79,6 +79,7 @@ fun AlohomoraTopBar(
             ),
             actions = actions,
         )
+
         TopBarLayout.START_ALIGNED -> Column(
             modifier = modifier
                 .fillMaxWidth()

@@ -2,8 +2,8 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import androidx.compose.runtime.Composable
+import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 
 /**

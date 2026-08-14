@@ -32,7 +32,7 @@ internal actual val platformModule = module {
             inDomain = NSUserDomainMask,
             appropriateForURL = null,
             create = false,
-            error = null
+            error = null,
         )
         val dbFilePath = requireNotNull(documentDirectory?.path) + "/$DATABASE_NAME"
         openDatabase(dbFilePath)

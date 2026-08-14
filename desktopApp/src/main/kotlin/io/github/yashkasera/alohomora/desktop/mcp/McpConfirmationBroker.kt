@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.mcp
 
+import io.github.yashkasera.alohomora.desktop.mcp.McpConfirmationBroker.Companion.TIMEOUT_MILLIS
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

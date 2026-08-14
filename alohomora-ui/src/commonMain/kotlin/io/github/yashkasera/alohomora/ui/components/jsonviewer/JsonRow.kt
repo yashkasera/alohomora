@@ -11,11 +11,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Icon
-import androidx.compose.foundation.layout.size
-import io.github.yashkasera.alohomora.ui.icons.ChevronRight
-import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.theme.dimens
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -62,7 +57,7 @@ internal fun LazyItemScope.JsonRow(
             .fillMaxWidth()
             .animateItem()
             .padding(start = indent, top = 2.dp, bottom = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
 
         when (row.kind) {
@@ -89,7 +84,7 @@ internal fun LazyItemScope.JsonRow(
                             text = key,
                             query = visibleState.searchQuery,
                             normal = keyColor,
-                            highlight = MaterialTheme.alohomoraColors.accent
+                            highlight = MaterialTheme.alohomoraColors.accent,
                         ),
                         color = keyColor,
                     )
@@ -115,7 +110,7 @@ internal fun LazyItemScope.JsonRow(
                         },
                         maxLines = 1,
                         overflow = TextOverflow.MiddleEllipsis,
-                        color = MaterialTheme.colorScheme.secondary
+                        color = MaterialTheme.colorScheme.secondary,
                     )
 
                 } else if (!expanded && isEmptyContainer) {
@@ -139,7 +134,7 @@ internal fun LazyItemScope.JsonRow(
                             text = it,
                             query = visibleState.searchQuery,
                             normal = keyColor,
-                            highlight = MaterialTheme.alohomoraColors.accent
+                            highlight = MaterialTheme.alohomoraColors.accent,
                         ),
                         color = keyColor,
                     )
@@ -154,7 +149,7 @@ internal fun LazyItemScope.JsonRow(
                                 text = value.toString(),
                                 query = visibleState.searchQuery,
                                 normal = numberColor,
-                                highlight = MaterialTheme.alohomoraColors.accent
+                                highlight = MaterialTheme.alohomoraColors.accent,
                             ),
                             color = numberColor,
                         )
@@ -166,7 +161,7 @@ internal fun LazyItemScope.JsonRow(
                                 text = "\"$value\"",
                                 query = visibleState.searchQuery,
                                 normal = stringColor,
-                                highlight = MaterialTheme.alohomoraColors.accent
+                                highlight = MaterialTheme.alohomoraColors.accent,
                             ),
                             color = stringColor,
                         )
@@ -178,7 +173,7 @@ internal fun LazyItemScope.JsonRow(
                                 text = value.toString(),
                                 query = visibleState.searchQuery,
                                 normal = LocalContentColor.current,
-                                highlight = MaterialTheme.alohomoraColors.accent
+                                highlight = MaterialTheme.alohomoraColors.accent,
                             ),
                         )
                     }

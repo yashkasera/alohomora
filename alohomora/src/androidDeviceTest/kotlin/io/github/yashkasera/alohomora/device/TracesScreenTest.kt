@@ -35,7 +35,12 @@ class TracesScreenTest {
         console.seedSpans(
             span(traceId = "trace-a", spanId = "root", name = "GET /orders"),
             span(traceId = "trace-a", spanId = "child-1", name = "db.query", parentSpanId = "root"),
-            span(traceId = "trace-a", spanId = "child-2", name = "cache.get", parentSpanId = "root"),
+            span(
+                traceId = "trace-a",
+                spanId = "child-2",
+                name = "cache.get",
+                parentSpanId = "root",
+            ),
         )
 
         compose.launchConsole(Routes.Traces)

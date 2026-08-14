@@ -24,7 +24,10 @@ class DevToolsActivity : ComponentActivity() {
         fun newIntent(context: Context, traceId: String): Intent {
             return Intent(context, DevToolsActivity::class.java).apply {
                 putExtra(EXTRA_TRACE_ID, traceId)
-                putExtra(TrafficNotificationHelper.EXTRA_START_DESTINATION, TrafficNotificationHelper.DESTINATION_TRACE)
+                putExtra(
+                    TrafficNotificationHelper.EXTRA_START_DESTINATION,
+                    TrafficNotificationHelper.DESTINATION_TRACE,
+                )
             }
         }
     }

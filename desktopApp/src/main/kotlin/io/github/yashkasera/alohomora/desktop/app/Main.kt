@@ -28,8 +28,8 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.LauncherWindow
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AboutDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.McpConfirmationDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SettingsDialog
-import kotlinx.coroutines.flow.combine
 import java.util.UUID
+import kotlinx.coroutines.flow.combine
 
 data class DeviceWindowSession(
     val id: String = UUID.randomUUID().toString(),

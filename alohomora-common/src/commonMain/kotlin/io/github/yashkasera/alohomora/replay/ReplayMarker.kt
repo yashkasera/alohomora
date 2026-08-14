@@ -1,5 +1,7 @@
 package io.github.yashkasera.alohomora.replay
 
+import io.github.yashkasera.alohomora.replay.ReplayMarker.HEADER
+
 /**
  * How a replayed request identifies itself to Alohomora's capture layer.
  *

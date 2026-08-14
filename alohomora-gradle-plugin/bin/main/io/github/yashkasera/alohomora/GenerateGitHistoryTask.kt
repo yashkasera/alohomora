@@ -24,7 +24,7 @@ abstract class GenerateGitHistoryTask : DefaultTask() {
                 "git",
                 "log",
                 "-${maxCommits.get()}",
-                "--pretty=format:%h|%an|%s|%ct"
+                "--pretty=format:%h|%an|%s|%ct",
             )
                 .start()
                 .inputStream
@@ -79,7 +79,7 @@ abstract class GenerateGitHistoryTask : DefaultTask() {
                     message = "$message",
                     timestamp = ${timestamp}L
                 ),
-                """.trimIndent().prependIndent("        ")
+                """.trimIndent().prependIndent("        "),
                 )
             }
 
@@ -96,7 +96,6 @@ abstract class GenerateGitHistoryTask : DefaultTask() {
             .bufferedReader()
             .readText()
             .trim()
-
 
     private fun escape(value: String): String =
         value.replace("\\", "\\\\")

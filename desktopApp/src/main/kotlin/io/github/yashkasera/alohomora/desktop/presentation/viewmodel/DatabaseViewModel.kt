@@ -6,9 +6,9 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseTabl
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseUpdateUseCase
 import io.github.yashkasera.alohomora.desktop.presentation.model.DatabaseUiState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -23,7 +23,11 @@ class DatabaseViewModel(
 
     val uiState: StateFlow<DatabaseUiState> = repository.snapshot
         .map { snapshot -> DatabaseUiState(snapshot) }
-        .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, DatabaseUiState(repository.snapshot.value))
+        .stateIn(
+            scope,
+            kotlinx.coroutines.flow.SharingStarted.Eagerly,
+            DatabaseUiState(repository.snapshot.value),
+        )
 
     fun selectDatabase(name: String) {
         repository.selectDatabase(name)

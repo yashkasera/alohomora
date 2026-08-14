@@ -35,7 +35,7 @@ class ComposeTest {
             Column {
                 Text(
                     text = txt,
-                    modifier = Modifier.testTag("t_text")
+                    modifier = Modifier.testTag("t_text"),
                 )
                 AlohomoraFilledButton(
                     text = "click me",

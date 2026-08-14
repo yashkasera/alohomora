@@ -104,16 +104,17 @@ class AdbRepositoryImplTest {
     }
 
     @Test
-    fun `reactivating the same device on a new host port replaces only its own forward`() = runTest {
-        val fake = FakeAdbDataSource(listOf(device("deviceA")))
-        val repo = repoWith(fake)
+    fun `reactivating the same device on a new host port replaces only its own forward`() =
+        runTest {
+            val fake = FakeAdbDataSource(listOf(device("deviceA")))
+            val repo = repoWith(fake)
 
-        repo.activateDevice("deviceA", hostPort = 53999, devicePort = 53999)
-        repo.activateDevice("deviceA", hostPort = 54001, devicePort = 53999)
+            repo.activateDevice("deviceA", hostPort = 53999, devicePort = 53999)
+            repo.activateDevice("deviceA", hostPort = 54001, devicePort = 53999)
 
-        assertEquals(listOf("deviceA" to 53999), fake.removals)
-        assertEquals(listOf("deviceA" to 53999, "deviceA" to 54001), fake.forwards)
-    }
+            assertEquals(listOf("deviceA" to 53999), fake.removals)
+            assertEquals(listOf("deviceA" to 53999, "deviceA" to 54001), fake.forwards)
+        }
 
     @Test
     fun `activating an unknown device reports an error and forwards nothing`() = runTest {

@@ -1,5 +1,7 @@
 package io.github.yashkasera.alohomora.common
 
+import io.github.yashkasera.alohomora.common.HeaderRedaction.REDACTED
+
 /**
  * Redaction policy for captured HTTP headers.
  *
@@ -40,7 +42,12 @@ object HeaderRedaction {
 
     fun isSensitive(name: String): Boolean {
         val lower = name.lowercase()
-        return lower in DEFAULT_DENYLIST || additionalDenylist.any { it.equals(name, ignoreCase = true) }
+        return lower in DEFAULT_DENYLIST || additionalDenylist.any {
+            it.equals(
+                name,
+                ignoreCase = true,
+            )
+        }
     }
 
     /** Returns [headers] with the values of every sensitive header replaced by [REDACTED]. */

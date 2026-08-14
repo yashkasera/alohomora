@@ -8,7 +8,7 @@ data class UiState(
     val preferences: PreferencesState = PreferencesState(
         username = "",
         autoRefresh = false,
-        lastRefreshEpochMillis = 0L
+        lastRefreshEpochMillis = 0L,
     ),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,

@@ -1,5 +1,3 @@
-import org.gradle.api.publish.maven.MavenPublication
-
 /**
  * Publishing convention for every Alohomora artifact.
  *
@@ -28,10 +26,10 @@ publishing {
             credentials {
                 username = providers.gradleProperty("gpr.user").orNull
                     ?: System.getenv("GITHUB_ACTOR")
-                    ?: System.getenv("GITHUB_REPOSITORY_OWNER")
+                        ?: System.getenv("GITHUB_REPOSITORY_OWNER")
                 password = providers.gradleProperty("gpr.key").orNull
                     ?: System.getenv("GH_PACKAGES_TOKEN")
-                    ?: System.getenv("GITHUB_TOKEN")
+                        ?: System.getenv("GITHUB_TOKEN")
             }
         }
     }

@@ -30,7 +30,7 @@ internal class TrafficNotificationHelper(
     suspend fun showLatest(items: List<TrafficEntry>) = withContext(Dispatchers.Main) {
         if (ActivityCompat.checkSelfPermission(
                 context,
-                Manifest.permission.POST_NOTIFICATIONS
+                Manifest.permission.POST_NOTIFICATIONS,
             ) != PackageManager.PERMISSION_GRANTED
         ) return@withContext
 

@@ -34,7 +34,8 @@ class TrafficFilterTest {
     fun `an empty method set shows everything rather than nothing`() {
         // The include set's default. Read the other way round an empty selection would hide the whole list,
         // which is the failure mode the KDoc on TrafficFilterState calls out.
-        val ids = shown(TrafficFilterState(methods = emptySet()), entry("a"), entry("b", method = "POST"))
+        val ids =
+            shown(TrafficFilterState(methods = emptySet()), entry("a"), entry("b", method = "POST"))
 
         assertEquals(listOf("a", "b"), ids)
     }

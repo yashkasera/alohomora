@@ -1,12 +1,12 @@
 package io.github.yashkasera.alohomora.desktop.data.local
 
 import io.github.yashkasera.alohomora.common.MockRule
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import java.io.File
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 
 class MockSessionStore {
 

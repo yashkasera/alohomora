@@ -190,7 +190,12 @@ class TraceTimeScaleTest {
     fun `a skewed bar renders as instantaneous at its start instead of inverted`() {
         val window = TraceWindow(0, 1_000)
 
-        val bar = window.barGeometry(startNanos = 800, endNanos = 200, trackWidth = track, minWidth = minWidth)
+        val bar = window.barGeometry(
+            startNanos = 800,
+            endNanos = 200,
+            trackWidth = track,
+            minWidth = minWidth,
+        )
 
         assertEquals(minWidth, bar.width, "a negative range must not produce a negative width")
         assertTrue(bar.x >= 0f)

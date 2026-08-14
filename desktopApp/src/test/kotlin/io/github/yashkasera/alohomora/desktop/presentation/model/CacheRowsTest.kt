@@ -34,7 +34,10 @@ class CacheRowsTest {
 
         assertTrue(row.isPending)
         assertFalse(row.isLoaded)
-        assertFalse(row.isAbsent, "a value that has not arrived is not the same as one the device lacks")
+        assertFalse(
+            row.isAbsent,
+            "a value that has not arrived is not the same as one the device lacks",
+        )
     }
 
     @Test

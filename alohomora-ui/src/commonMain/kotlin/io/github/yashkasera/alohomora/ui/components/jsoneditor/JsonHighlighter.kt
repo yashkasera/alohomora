@@ -52,6 +52,7 @@ internal fun highlight(
                 color = colors.template,
                 background = colors.templateBackground,
             )
+
             TokenKind.COLON, TokenKind.COMMA, TokenKind.WHITESPACE -> continue
         }
         addStyle(style, token.range.first, token.range.last + 1)

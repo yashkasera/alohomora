@@ -110,7 +110,12 @@ fun EventsFilters(
                 )
             } else {
                 AlohomoraFilterChip(
-                    label = "Since ${DateUtils.format(filters.markFloorMillis, DateUtils.Format.HH_MM_SS)}",
+                    label = "Since ${
+                        DateUtils.format(
+                            filters.markFloorMillis,
+                            DateUtils.Format.HH_MM_SS,
+                        )
+                    }",
                     selected = true,
                     uppercase = false,
                     onClick = onClearMark,

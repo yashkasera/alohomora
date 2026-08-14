@@ -1,14 +1,14 @@
 package io.github.yashkasera.alohomora.desktop.data.logcat
 
 import io.github.yashkasera.alohomora.desktop.data.adb.AdbLocator
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.concurrent.TimeUnit
 
 class LogcatStreamDataSource {
     fun streamThreadtime(deviceId: String): Flow<String> = callbackFlow {

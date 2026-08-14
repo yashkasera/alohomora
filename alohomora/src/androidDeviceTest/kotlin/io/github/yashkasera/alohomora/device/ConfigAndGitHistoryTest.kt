@@ -58,7 +58,14 @@ class ConfigAndGitHistoryTest {
         // `InfoItem` renders the literal "--not-set--" for a null value, and with no config every
         // one of the five is null — including Build Time, whose formatter is skipped entirely
         // rather than being handed a zero timestamp.
-        listOf("Branch", "Build Variant", "Version Name", "Version Code", "Build Time", "Commit Hash")
+        listOf(
+            "Branch",
+            "Build Variant",
+            "Version Name",
+            "Version Code",
+            "Build Time",
+            "Commit Hash",
+        )
             .forEach { label ->
                 compose.onNode(
                     hasText("--not-set--") and hasAnyAncestor(hasTestTag(Config.info(label))),

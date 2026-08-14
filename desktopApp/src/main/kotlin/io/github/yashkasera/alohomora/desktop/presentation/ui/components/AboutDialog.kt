@@ -10,12 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -38,6 +36,7 @@ import io.github.yashkasera.alohomora.desktop.app.isMacOs
 import io.github.yashkasera.alohomora.desktop.app.isShortcutModifier
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.icons.Alohomora
 import io.github.yashkasera.alohomora.ui.icons.Globe
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -75,8 +74,14 @@ fun AboutDialog(
                     .onPreviewKeyEvent { event ->
                         if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                         when {
-                            event.key == Key.Escape -> { onDismiss(); true }
-                            event.key == Key.W && event.isShortcutModifier() -> { onDismiss(); true }
+                            event.key == Key.Escape -> {
+                                onDismiss(); true
+                            }
+
+                            event.key == Key.W && event.isShortcutModifier() -> {
+                                onDismiss(); true
+                            }
+
                             else -> false
                         }
                     },
@@ -113,7 +118,10 @@ fun AboutDialog(
                         AlohomoraTextButton(
                             text = "v${updateInfo.latestVersion} available",
                             onClick = {
-                                try { Desktop.getDesktop().browse(URI(updateInfo.htmlUrl)) } catch (_: Exception) {}
+                                try {
+                                    Desktop.getDesktop().browse(URI(updateInfo.htmlUrl))
+                                } catch (_: Exception) {
+                                }
                             },
                             uppercase = false,
                             contentColor = MaterialTheme.colorScheme.primary,
@@ -142,7 +150,10 @@ fun AboutDialog(
                     AlohomoraTextButton(
                         text = "GitHub",
                         onClick = {
-                            try { Desktop.getDesktop().browse(URI(REPO_URL)) } catch (_: Exception) {}
+                            try {
+                                Desktop.getDesktop().browse(URI(REPO_URL))
+                            } catch (_: Exception) {
+                            }
                         },
                         uppercase = false,
                         leadingIcon = {

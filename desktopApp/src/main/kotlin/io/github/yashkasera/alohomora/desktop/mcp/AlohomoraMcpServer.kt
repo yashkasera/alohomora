@@ -129,7 +129,8 @@ class AlohomoraMcpServer(
 
         // Compared by hostname only (scheme/port ignored), so these cover any loopback origin a local
         // browser-based agent might send. A CLI agent sends no Origin and is allowed regardless.
-        private val LOOPBACK_ORIGINS = listOf("http://localhost", "http://127.0.0.1", "http://[::1]")
+        private val LOOPBACK_ORIGINS =
+            listOf("http://localhost", "http://127.0.0.1", "http://[::1]")
         private const val STOP_GRACE_MILLIS = 200L
         private const val STOP_TIMEOUT_MILLIS = 1_000L
 

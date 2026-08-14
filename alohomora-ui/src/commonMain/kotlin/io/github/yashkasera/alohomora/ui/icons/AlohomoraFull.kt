@@ -15,10 +15,10 @@ val Icons.AlohomoraFull: ImageVector
             defaultWidth = 787.dp,
             defaultHeight = 107.dp,
             viewportWidth = 787f,
-            viewportHeight = 107f
+            viewportHeight = 107f,
         ).apply {
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(776.875f, 96.4497f)
                 horizontalLineTo(786.775f)
@@ -28,7 +28,7 @@ val Icons.AlohomoraFull: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(706.512f, 100.65f)
                 horizontalLineTo(755.412f)
@@ -42,7 +42,7 @@ val Icons.AlohomoraFull: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(657.818f, 61.4999f)
                 lineTo(678.218f, 105.15f)
@@ -69,7 +69,7 @@ val Icons.AlohomoraFull: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(574.051f, 22.7999f)
                 curveTo(570.651f, 21.6999f, 566.451f, 21.1499f, 561.451f, 21.1499f)
@@ -101,7 +101,7 @@ val Icons.AlohomoraFull: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(439.322f, 100.65f)
                 horizontalLineTo(497.222f)
@@ -121,7 +121,7 @@ val Icons.AlohomoraFull: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(378.055f, 22.7999f)
                 curveTo(374.655f, 21.6999f, 370.455f, 21.1499f, 365.455f, 21.1499f)
@@ -153,7 +153,7 @@ val Icons.AlohomoraFull: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(305.784f, 105.15f)
                 horizontalLineTo(301.284f)
@@ -171,7 +171,7 @@ val Icons.AlohomoraFull: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(204.617f, 22.7999f)
                 curveTo(201.217f, 21.6999f, 197.017f, 21.1499f, 192.017f, 21.1499f)
@@ -203,7 +203,7 @@ val Icons.AlohomoraFull: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(143.535f, 100.65f)
                 verticalLineTo(105.15f)
@@ -215,7 +215,7 @@ val Icons.AlohomoraFull: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(14.85f, 100.65f)
                 horizontalLineTo(70.05f)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Cache directory for sharing temp files -->
-    <cache-path
-        name="shared_files"
-        path="." />
+<paths>
+  <!-- Cache directory for sharing temp files -->
+  <cache-path
+    name="shared_files"
+    path="." />
 </paths>

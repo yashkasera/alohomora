@@ -61,7 +61,8 @@ internal actual class DevToolsDatabaseInspector actual constructor(
             val safeLimit = limit.coerceIn(1, MAX_ROW_LIMIT)
 
             connection.prepare("SELECT * FROM `$tableName` LIMIT $safeLimit").use { statement ->
-                val columns = (0 until statement.getColumnCount()).map { statement.getColumnName(it) }
+                val columns =
+                    (0 until statement.getColumnCount()).map { statement.getColumnName(it) }
                 val rows = mutableListOf<Map<String, String?>>()
                 while (statement.step()) {
                     val row = LinkedHashMap<String, String?>(columns.size)

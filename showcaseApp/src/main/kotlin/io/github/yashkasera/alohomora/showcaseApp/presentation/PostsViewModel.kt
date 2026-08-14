@@ -27,13 +27,13 @@ class PostsViewModel(
         observePostsUseCase(),
         getPreferencesUseCase(),
         loadingState,
-        errorState
+        errorState,
     ) { posts, preferences, isLoading, error ->
         UiState(
             posts = posts,
             preferences = preferences,
             isLoading = isLoading,
-            errorMessage = error
+            errorMessage = error,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
 

@@ -34,7 +34,7 @@ internal fun highlightText(
         withStyle(
             SpanStyle(
                 color = highlight,
-                textDecoration = TextDecoration.Underline
+                textDecoration = TextDecoration.Underline,
             ),
         ) {
             append(text.substring(start, start + q.length))

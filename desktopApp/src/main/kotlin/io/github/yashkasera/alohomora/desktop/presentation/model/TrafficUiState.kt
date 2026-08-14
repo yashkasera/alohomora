@@ -50,7 +50,8 @@ data class IndexedTraffic(val entry: TrafficEntry, val haystack: String)
  * One function so the chip label, the filter set and the search text cannot disagree — a `null` method
  * silently matching nothing would look like a dropped request.
  */
-fun TrafficEntry.methodLabel(): String = method?.takeIf { it.isNotBlank() }?.uppercase() ?: "UNKNOWN"
+fun TrafficEntry.methodLabel(): String =
+    method?.takeIf { it.isNotBlank() }?.uppercase() ?: "UNKNOWN"
 
 /**
  * The text a query runs against: method, URL and status.

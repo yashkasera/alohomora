@@ -17,13 +17,13 @@ val Icons.Key: ImageVector
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
-            viewportHeight = 24f
+            viewportHeight = 24f,
         ).apply {
             path(
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveToRelative(15.5f, 7.5f)
                 lineToRelative(2.3f, 2.3f)
@@ -36,7 +36,7 @@ val Icons.Key: ImageVector
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveToRelative(21f, 2f)
                 lineToRelative(-9.6f, 9.6f)
@@ -45,7 +45,7 @@ val Icons.Key: ImageVector
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(2.0f, 15.5f)
                 arcToRelative(5.5f, 5.5f, 0f, true, false, 11.0f, 0f)

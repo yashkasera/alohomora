@@ -146,7 +146,8 @@ class TraceSummaryTest {
 
     @Test
     fun `matches is case insensitive`() {
-        val summary = listOf(span("root", name = "GET /Users", start = 0)).toTraceSummaries().single()
+        val summary =
+            listOf(span("root", name = "GET /Users", start = 0)).toTraceSummaries().single()
 
         assertTrue(summary.matches("get /users"))
     }

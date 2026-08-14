@@ -37,7 +37,7 @@ internal sealed interface Routes {
     data object Error : Routes
 
     @Serializable
-    data class ErrorDetails(val errorId: Long): Routes
+    data class ErrorDetails(val errorId: Long) : Routes
 
     @Serializable
     data object GitHistory : Routes

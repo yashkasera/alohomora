@@ -118,7 +118,11 @@ class SpanStoreTest {
         val held = store.spans.value.groupBy { it.traceId }
         assertTrue(held.isNotEmpty())
         held.forEach { (traceId, group) ->
-            assertEquals(1000, group.size, "trace $traceId was sliced: ${group.size} of 1000 spans held")
+            assertEquals(
+                1000,
+                group.size,
+                "trace $traceId was sliced: ${group.size} of 1000 spans held",
+            )
         }
         assertTrue(store.spans.value.size <= 4000)
     }

@@ -85,7 +85,7 @@ fun AlohomoraSideSheet(
                     .fillMaxHeight(),
                 color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 2.dp,
-                tonalElevation = 1.dp
+                tonalElevation = 1.dp,
             ) {
                 Box {
                     Column(modifier = Modifier.fillMaxSize()) {

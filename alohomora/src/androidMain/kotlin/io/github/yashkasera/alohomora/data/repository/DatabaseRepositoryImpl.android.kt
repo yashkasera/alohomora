@@ -25,7 +25,7 @@ internal actual class PlatformDatabaseAccessor actual constructor() {
 
     internal fun requireContext(): Context {
         return context ?: throw IllegalStateException(
-            "Context not set. Call setContext() before using PlatformDatabaseAccessor."
+            "Context not set. Call setContext() before using PlatformDatabaseAccessor.",
         )
     }
 }
@@ -35,16 +35,16 @@ internal actual suspend fun PlatformDatabaseAccessor.listDatabases(): List<Datab
     return ctx.databaseList()
         .filter { name ->
             name.isNotBlank() &&
-            name != "alohomora.db" &&
-            !name.endsWith("-shm") &&
-            !name.endsWith("-wal") &&
-            !name.endsWith("-journal") &&
-            !name.endsWith(".lck")
+                name != "alohomora.db" &&
+                !name.endsWith("-shm") &&
+                !name.endsWith("-wal") &&
+                !name.endsWith("-journal") &&
+                !name.endsWith(".lck")
         }
         .map { name ->
             DatabaseInfo(
                 name = name,
-                path = ctx.getDatabasePath(name).absolutePath
+                path = ctx.getDatabasePath(name).absolutePath,
             )
         }
 }
@@ -54,7 +54,7 @@ internal actual suspend fun PlatformDatabaseAccessor.listTables(databasePath: St
     return try {
         db.rawQuery(
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'android_%' AND name NOT LIKE 'sqlite_%'",
-            null
+            null,
         ).use { cursor ->
             val tables = mutableListOf<String>()
             while (cursor.moveToNext()) {
@@ -73,7 +73,7 @@ internal actual suspend fun PlatformDatabaseAccessor.listTables(databasePath: St
 internal actual suspend fun PlatformDatabaseAccessor.getTableData(
     databasePath: String,
     tableName: String,
-    limit: Int
+    limit: Int,
 ): TableData {
     val db = openDatabase(databasePath)
         ?: return TableData(emptyList(), emptyList())
@@ -98,7 +98,7 @@ internal actual suspend fun PlatformDatabaseAccessor.getTableData(
                 val name = cursor.getColumnName(index)
                 TableColumn(
                     name = name,
-                    type = columnTypes[name] ?: "TEXT"
+                    type = columnTypes[name] ?: "TEXT",
                 )
             }
 
@@ -116,6 +116,7 @@ internal actual suspend fun PlatformDatabaseAccessor.getTableData(
                             val blob = cursor.getBlob(index)
                             if (blob == null) "NULL" else "BLOB(${blob.size})"
                         }
+
                         else -> ""
                     }
                     row[columnName] = value
@@ -134,10 +135,15 @@ internal actual suspend fun PlatformDatabaseAccessor.getTableData(
 
 internal actual suspend fun PlatformDatabaseAccessor.getTableSchema(
     databasePath: String,
-    tableName: String
+    tableName: String,
 ): TableSchema {
     val db = openDatabase(databasePath)
-        ?: return TableSchema(name = tableName, columns = emptyList(), primaryKey = null, indexes = emptyList())
+        ?: return TableSchema(
+            name = tableName,
+            columns = emptyList(),
+            primaryKey = null,
+            indexes = emptyList(),
+        )
 
     return try {
         // Get columns info
@@ -174,11 +180,20 @@ internal actual suspend fun PlatformDatabaseAccessor.getTableSchema(
             name = tableName,
             columns = columns,
             primaryKey = primaryKey,
-            indexes = indexes
+            indexes = indexes,
         )
     } catch (e: Exception) {
-        Log.e(TAG, "Failed to get table schema for '$tableName' from $databasePath: ${e.message}", e)
-        TableSchema(name = tableName, columns = emptyList(), primaryKey = null, indexes = emptyList())
+        Log.e(
+            TAG,
+            "Failed to get table schema for '$tableName' from $databasePath: ${e.message}",
+            e,
+        )
+        TableSchema(
+            name = tableName,
+            columns = emptyList(),
+            primaryKey = null,
+            indexes = emptyList(),
+        )
     } finally {
         db.close()
     }
@@ -186,7 +201,7 @@ internal actual suspend fun PlatformDatabaseAccessor.getTableSchema(
 
 internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
     databasePath: String,
-    query: String
+    query: String,
 ): QueryResult {
     val db = openDatabase(databasePath)
         ?: return QueryResult(
@@ -194,7 +209,7 @@ internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
             executionTimeMs = 0,
             rowsAffected = 0,
             success = false,
-            errorMessage = "Could not open database"
+            errorMessage = "Could not open database",
         )
 
     return try {
@@ -225,6 +240,7 @@ internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
                                 val blob = cursor.getBlob(index)
                                 if (blob == null) "NULL" else "BLOB(${blob.size})"
                             }
+
                             else -> ""
                         }
                         row[columnName] = value
@@ -258,7 +274,7 @@ internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
             data = resultData,
             executionTimeMs = executionTimeMs,
             rowsAffected = rowsAffected,
-            success = true
+            success = true,
         )
     } catch (e: Exception) {
         Log.e(TAG, "Failed to execute query on $databasePath: ${e.message}", e)
@@ -267,7 +283,7 @@ internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
             executionTimeMs = 0,
             rowsAffected = 0,
             success = false,
-            errorMessage = e.message ?: "Query execution failed"
+            errorMessage = e.message ?: "Query execution failed",
         )
     } finally {
         db.close()
@@ -280,7 +296,7 @@ private fun openDatabase(path: String): SQLiteDatabase? {
         SQLiteDatabase.openDatabase(
             path,
             null,
-            SQLiteDatabase.OPEN_READONLY or SQLiteDatabase.ENABLE_WRITE_AHEAD_LOGGING
+            SQLiteDatabase.OPEN_READONLY or SQLiteDatabase.ENABLE_WRITE_AHEAD_LOGGING,
         )
     } catch (e: Exception) {
         Log.w(TAG, "Failed to open database with WAL mode at $path, trying without: ${e.message}")

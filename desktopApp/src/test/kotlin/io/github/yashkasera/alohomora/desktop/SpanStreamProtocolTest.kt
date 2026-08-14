@@ -13,14 +13,14 @@ import io.github.yashkasera.alohomora.common.StreamSpanMessage
 import io.github.yashkasera.alohomora.common.TraceSpansSnapshotMessage
 import io.github.yashkasera.alohomora.common.UnknownMessage
 import io.github.yashkasera.alohomora.common.durationNanos
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Wire contract for span capture, and the compatibility rules that let it ship without a version

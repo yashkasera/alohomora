@@ -1,6 +1,15 @@
 package io.github.yashkasera.alohomora.ui.components.jsonviewer
 
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
 
 internal object JsonTreeBuilder {
 
@@ -65,7 +74,7 @@ internal object JsonTreeBuilder {
             root = "$",
             nodes = nodes,
             children = children,
-            searchIndex = search
+            searchIndex = search,
         )
     }
 }

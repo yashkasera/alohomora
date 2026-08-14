@@ -30,7 +30,10 @@ class CacheSubtitleTest {
     @Test
     fun `values still in flight are reported as loading`() {
         // The count the reader needs to interpret a miss: those values are not searchable yet.
-        assertEquals("24 keys · 4 loading", cacheSubtitle(state(total = 24, shown = 24, loaded = 20)))
+        assertEquals(
+            "24 keys · 4 loading",
+            cacheSubtitle(state(total = 24, shown = 24, loaded = 20)),
+        )
     }
 
     @Test

@@ -69,16 +69,23 @@ fun registerAlohomoraWriteTools(
             put("id", stringProp("The traffic entry id to replay, from list_traffic."))
             put("method", stringProp("Override HTTP method (optional)."))
             put("url", stringProp("Override full URL (optional)."))
-            put("headers", buildJsonObject {
-                put("type", "object")
-                put("description", "Override request headers (optional). Object of name -> string or array of strings.")
-            })
+            put(
+                "headers",
+                buildJsonObject {
+                    put("type", "object")
+                    put(
+                        "description",
+                        "Override request headers (optional). Object of name -> string or array of strings.",
+                    )
+                },
+            )
             put("body", stringProp("Override request body (optional)."))
             put("contentType", stringProp("Override content type (optional)."))
         },
     ) { request ->
         withSession(registry, request) { handle ->
-            val id = request.str("id") ?: return@withSession errorResult("Missing required argument: id")
+            val id =
+                request.str("id") ?: return@withSession errorResult("Missing required argument: id")
             AlohomoraMcpWriteData.replay(
                 repo = handle.devToolsRepository,
                 id = id,
@@ -108,10 +115,16 @@ fun registerAlohomoraWriteTools(
             "200, contentType application/json. Read list_mock_rules first and send the full desired set.",
         buildSchema {
             put("deviceId", stringProp("Target device; optional when only one is connected."))
-            put("rules", buildJsonObject {
-                put("type", "array")
-                put("description", "The full desired rule set. Objects: {urlPattern, name?, enabled?, isRegex?, method?, statusCode?, responseBody?, contentType?}.")
-            })
+            put(
+                "rules",
+                buildJsonObject {
+                    put("type", "array")
+                    put(
+                        "description",
+                        "The full desired rule set. Objects: {urlPattern, name?, enabled?, isRegex?, method?, statusCode?, responseBody?, contentType?}.",
+                    )
+                },
+            )
         },
     ) { request ->
         withSession(registry, request) { handle ->
@@ -147,14 +160,24 @@ fun registerAlohomoraWriteTools(
             "{latencyMs, downloadBytesPerSec}. Use preset 'none' to turn throttling off.",
         buildSchema {
             put("deviceId", stringProp("Target device; optional when only one is connected."))
-            put("preset", stringProp("One of: none, edge, 3g, fast_3g, slow_wifi. Omit for a custom profile."))
+            put(
+                "preset",
+                stringProp("One of: none, edge, 3g, fast_3g, slow_wifi. Omit for a custom profile."),
+            )
             put("latencyMs", intProp("Custom added latency in ms (used when preset is omitted)."))
-            put("downloadBytesPerSec", intProp("Custom download cap in bytes/sec (used when preset is omitted)."))
+            put(
+                "downloadBytesPerSec",
+                intProp("Custom download cap in bytes/sec (used when preset is omitted)."),
+            )
         },
     ) { request ->
         withSession(registry, request) { handle ->
             val profile = runCatching { parseThrottle(request) }
-                .getOrElse { return@withSession errorResult(it.message ?: "Invalid throttle profile") }
+                .getOrElse {
+                    return@withSession errorResult(
+                        it.message ?: "Invalid throttle profile",
+                    )
+                }
             AlohomoraMcpWriteData.setThrottle(handle.networkRulesViewModel, profile).toCallResult()
         }
     }
@@ -197,7 +220,8 @@ fun registerAlohomoraWriteTools(
         },
     ) { request ->
         withSession(registry, request) { handle ->
-            val id = request.str("id") ?: return@withSession errorResult("Missing required argument: id")
+            val id =
+                request.str("id") ?: return@withSession errorResult("Missing required argument: id")
             AlohomoraMcpWriteData.createMockFromTraffic(
                 repo = handle.devToolsRepository,
                 vm = handle.networkRulesViewModel,
@@ -215,7 +239,10 @@ fun registerAlohomoraWriteTools(
             "'-s <serial>' prefix.",
         buildSchema {
             put("deviceId", stringProp("Target device; optional when only one is connected."))
-            put("command", stringProp("The ADB command without 'adb' prefix. Example: 'shell am force-stop com.example.app'."))
+            put(
+                "command",
+                stringProp("The ADB command without 'adb' prefix. Example: 'shell am force-stop com.example.app'."),
+            )
         },
     ) { request ->
         withSession(registry, request) { handle ->
@@ -267,36 +294,46 @@ internal object AlohomoraMcpWriteData {
         // replayTraffic marks the source in-flight synchronously; wait for the device's result.
         val settled = withTimeoutOrNull(REPLAY_AWAIT_TIMEOUT_MILLIS) {
             repo.replayState.first { !it.isInFlight(id) }
-        } ?: return WriteResult.Error("Replay sent, but the device did not report a result in time.")
+        }
+            ?: return WriteResult.Error("Replay sent, but the device did not report a result in time.")
 
         settled.errorFor(id)?.let { return WriteResult.Error("Replay failed: $it") }
 
         val replayed = repo.traffic.value.filter { it.replayOf == id }.maxByOrNull { it.time ?: 0L }
-        return WriteResult.Ok(buildJsonObject {
-            put("replayed", true)
-            put("sourceId", id)
-            if (replayed != null) {
-                put("resultId", replayed.id)
-                put("status", replayed.status)
-                put("summary", replayed.summary())
-            } else {
-                put("note", "Sent; the replayed entry has not appeared in traffic yet.")
-            }
-        })
+        return WriteResult.Ok(
+            buildJsonObject {
+                put("replayed", true)
+                put("sourceId", id)
+                if (replayed != null) {
+                    put("resultId", replayed.id)
+                    put("status", replayed.status)
+                    put("summary", replayed.summary())
+                } else {
+                    put("note", "Sent; the replayed entry has not appeared in traffic yet.")
+                }
+            },
+        )
     }
 
     fun listMockRules(vm: NetworkRulesViewModel): WriteResult {
         if (!vm.networkRulesSupported.value) return unsupportedMocks()
-        return WriteResult.Ok(json.encodeToJsonElement(ListSerializer(MockRule.serializer()), vm.mockRules.value))
+        return WriteResult.Ok(
+            json.encodeToJsonElement(
+                ListSerializer(MockRule.serializer()),
+                vm.mockRules.value,
+            ),
+        )
     }
 
     fun setMockRules(vm: NetworkRulesViewModel, rules: List<MockRule>): WriteResult {
         if (!vm.networkRulesSupported.value) return unsupportedMocks()
         vm.replaceRules(rules)
-        return WriteResult.Ok(buildJsonObject {
-            put("applied", true)
-            put("count", vm.mockRules.value.size)
-        })
+        return WriteResult.Ok(
+            buildJsonObject {
+                put("applied", true)
+                put("count", vm.mockRules.value.size)
+            },
+        )
     }
 
     fun clearMockRules(vm: NetworkRulesViewModel): WriteResult {
@@ -306,7 +343,12 @@ internal object AlohomoraMcpWriteData {
     }
 
     fun getThrottle(vm: NetworkRulesViewModel): WriteResult =
-        WriteResult.Ok(json.encodeToJsonElement(ThrottleProfile.serializer(), vm.throttleProfile.value))
+        WriteResult.Ok(
+            json.encodeToJsonElement(
+                ThrottleProfile.serializer(),
+                vm.throttleProfile.value,
+            ),
+        )
 
     fun setThrottle(vm: NetworkRulesViewModel, profile: ThrottleProfile): WriteResult {
         if (!vm.networkRulesSupported.value) {
@@ -342,10 +384,12 @@ internal object AlohomoraMcpWriteData {
 
         // NOTE the wire naming trap: clearCaptured(traces = …) clears TRAFFIC; spans clears trace spans.
         repo.clearCaptured(traces = traffic, events = events, errors = errors, spans = spans)
-        return WriteResult.Ok(buildJsonObject {
-            put("cleared", true)
-            put("streams", buildJsonArray { selected.forEach { add(it) } })
-        })
+        return WriteResult.Ok(
+            buildJsonObject {
+                put("cleared", true)
+                put("streams", buildJsonArray { selected.forEach { add(it) } })
+            },
+        )
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -379,13 +423,15 @@ internal object AlohomoraMcpWriteData {
         val result = withContext(Dispatchers.IO) {
             adbRunner.run(listOf("-s", deviceId) + args)
         }
-        return WriteResult.Ok(buildJsonObject {
-            put("exitCode", result.exitCode)
-            put("stdout", result.stdout.take(MAX_ADB_OUTPUT_CHARS))
-            put("stderr", result.stderr.take(MAX_ADB_OUTPUT_CHARS))
-            if (result.stdout.length > MAX_ADB_OUTPUT_CHARS) put("stdoutTruncated", true)
-            if (result.stderr.length > MAX_ADB_OUTPUT_CHARS) put("stderrTruncated", true)
-        })
+        return WriteResult.Ok(
+            buildJsonObject {
+                put("exitCode", result.exitCode)
+                put("stdout", result.stdout.take(MAX_ADB_OUTPUT_CHARS))
+                put("stderr", result.stderr.take(MAX_ADB_OUTPUT_CHARS))
+                if (result.stdout.length > MAX_ADB_OUTPUT_CHARS) put("stdoutTruncated", true)
+                if (result.stderr.length > MAX_ADB_OUTPUT_CHARS) put("stderrTruncated", true)
+            },
+        )
     }
 
     private fun unsupportedMocks() =
@@ -425,7 +471,8 @@ private inline fun withSession(
     request: CallToolRequest,
     block: (DeviceSessionHandle) -> CallToolResult,
 ): CallToolResult {
-    val handle = registry.resolve(request.str("deviceId")) ?: return errorResult(noDeviceMessage(registry))
+    val handle =
+        registry.resolve(request.str("deviceId")) ?: return errorResult(noDeviceMessage(registry))
     return block(handle)
 }
 
@@ -443,6 +490,7 @@ private fun parseHeaders(element: JsonElement?): Map<String, List<String>>? = wh
             else -> emptyList()
         }
     }.filterValues { it.isNotEmpty() }
+
     is JsonPrimitive -> if (element.isString) ReplayHeaderText.parse(element.content) else null
     else -> null
 }

@@ -1,8 +1,8 @@
 package io.github.yashkasera.alohomora.devtools
 
 import platform.Foundation.NSNotificationCenter
-import platform.Foundation.NSThread
 import platform.Foundation.NSOperationQueue
+import platform.Foundation.NSThread
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationDidBecomeActiveNotification
 import platform.UIKit.UIApplicationDidEnterBackgroundNotification

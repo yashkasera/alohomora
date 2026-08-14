@@ -93,7 +93,10 @@ fun registerAlohomoraTools(
             put("deviceId", stringProp("Target device; optional when only one is connected."))
             put("status", intProp("Only entries with this exact HTTP status code."))
             put("method", stringProp("Only entries with this HTTP method (case-insensitive)."))
-            put("host", stringProp("Only entries whose host contains this string (case-insensitive)."))
+            put(
+                "host",
+                stringProp("Only entries whose host contains this string (case-insensitive)."),
+            )
             put("failedOnly", boolProp("When true, only non-2xx entries."))
             put("limit", intProp("Max entries to return (default $DEFAULT_LIST_LIMIT)."))
         },
@@ -122,7 +125,8 @@ fun registerAlohomoraTools(
         },
     ) { request ->
         withRepo(registry, request) { repo ->
-            val id = request.str("id") ?: return@withRepo errorResult("Missing required argument: id")
+            val id =
+                request.str("id") ?: return@withRepo errorResult("Missing required argument: id")
             AlohomoraMcpToolData.getTraffic(repo, id)?.let { result(it) }
                 ?: errorResult("No traffic entry with id $id")
         }
@@ -137,7 +141,12 @@ fun registerAlohomoraTools(
         },
     ) { request ->
         withRepo(registry, request) { repo ->
-            result(AlohomoraMcpToolData.listErrors(repo, request.int("limit") ?: DEFAULT_LIST_LIMIT))
+            result(
+                AlohomoraMcpToolData.listErrors(
+                    repo,
+                    request.int("limit") ?: DEFAULT_LIST_LIMIT,
+                ),
+            )
         }
     }
 
@@ -150,7 +159,8 @@ fun registerAlohomoraTools(
         },
     ) { request ->
         withRepo(registry, request) { repo ->
-            val id = request.long("id") ?: return@withRepo errorResult("Missing required argument: id")
+            val id =
+                request.long("id") ?: return@withRepo errorResult("Missing required argument: id")
             AlohomoraMcpToolData.getError(repo, id)?.let { result(it) }
                 ?: errorResult("No error with id $id")
         }
@@ -187,7 +197,8 @@ fun registerAlohomoraTools(
         },
     ) { request ->
         withRepo(registry, request) { repo ->
-            val traceId = request.str("traceId") ?: return@withRepo errorResult("Missing required argument: traceId")
+            val traceId = request.str("traceId")
+                ?: return@withRepo errorResult("Missing required argument: traceId")
             AlohomoraMcpToolData.getTrace(repo, traceId)?.let { result(it) }
                 ?: errorResult("No spans for traceId $traceId")
         }
@@ -198,7 +209,10 @@ fun registerAlohomoraTools(
         "List captured analytics/system events (newest first) with their properties. Filter by name.",
         buildSchema {
             put("deviceId", stringProp("Target device; optional when only one is connected."))
-            put("name", stringProp("Only events whose name contains this string (case-insensitive)."))
+            put(
+                "name",
+                stringProp("Only events whose name contains this string (case-insensitive)."),
+            )
             put("limit", intProp("Max events to return (default $DEFAULT_LIST_LIMIT)."))
         },
     ) { request ->
@@ -234,9 +248,16 @@ fun registerAlohomoraTools(
         },
     ) { request ->
         withRepo(registry, request) { repo ->
-            val db = request.str("databaseName") ?: return@withRepo errorResult("Missing required argument: databaseName")
-            val tableName = request.str("tableName") ?: return@withRepo errorResult("Missing required argument: tableName")
-            AlohomoraMcpToolData.queryDatabaseTable(repo, db, tableName, request.int("limit") ?: 200)
+            val db = request.str("databaseName")
+                ?: return@withRepo errorResult("Missing required argument: databaseName")
+            val tableName = request.str("tableName")
+                ?: return@withRepo errorResult("Missing required argument: tableName")
+            AlohomoraMcpToolData.queryDatabaseTable(
+                repo,
+                db,
+                tableName,
+                request.int("limit") ?: 200,
+            )
                 ?.let { result(it) }
                 ?: errorResult("Timed out waiting for table $tableName from the device")
         }
@@ -261,7 +282,8 @@ fun registerAlohomoraTools(
         },
     ) { request ->
         withRepo(registry, request) { repo ->
-            val key = request.str("key") ?: return@withRepo errorResult("Missing required argument: key")
+            val key =
+                request.str("key") ?: return@withRepo errorResult("Missing required argument: key")
             AlohomoraMcpToolData.getCacheValue(repo, key)?.let { result(it) }
                 ?: errorResult("Timed out waiting for cache value $key from the device")
         }
@@ -296,7 +318,12 @@ fun registerAlohomoraTools(
         },
     ) { request ->
         withRepo(registry, request) { repo ->
-            result(AlohomoraMcpToolData.gitHistory(repo, request.int("limit") ?: DEFAULT_LIST_LIMIT))
+            result(
+                AlohomoraMcpToolData.gitHistory(
+                    repo,
+                    request.int("limit") ?: DEFAULT_LIST_LIMIT,
+                ),
+            )
         }
     }
 
@@ -307,7 +334,10 @@ fun registerAlohomoraTools(
             "list_traffic + get_traffic when looking for a specific payload, error message, or header value.",
         buildSchema {
             put("deviceId", stringProp("Target device; optional when only one is connected."))
-            put("query", stringProp("The search string (case-insensitive). Matched against URL, host, path, query, method, request/response bodies, and header names and values."))
+            put(
+                "query",
+                stringProp("The search string (case-insensitive). Matched against URL, host, path, query, method, request/response bodies, and header names and values."),
+            )
             put("limit", intProp("Max entries to return (default $DEFAULT_LIST_LIMIT)."))
         },
     ) { request ->
@@ -333,7 +363,10 @@ fun registerAlohomoraTools(
             put("deviceId", stringProp("Target device; optional when only one is connected."))
             put("since", longProp("Only entries at or after this epoch-millis timestamp."))
             put("until", longProp("Only entries at or before this epoch-millis timestamp."))
-            put("kinds", stringProp("Comma-separated subset of: traffic, event, error, span. Default: all four."))
+            put(
+                "kinds",
+                stringProp("Comma-separated subset of: traffic, event, error, span. Default: all four."),
+            )
             put("limit", intProp("Max entries to return (default $DEFAULT_LIST_LIMIT)."))
         },
     ) { request ->
@@ -364,18 +397,20 @@ internal object AlohomoraMcpToolData {
 
     fun listDevices(handles: List<DeviceSessionHandle>): JsonElement = buildJsonArray {
         handles.forEach { handle ->
-            add(buildJsonObject {
-                put("deviceId", handle.deviceId)
-                put("model", handle.model)
-                put("platform", handle.platform)
-                put("connection", handle.devToolsRepository.connectionState.value.label())
-                handle.devToolsRepository.buildInfo.value?.let { build ->
-                    put("app", build.projectName)
-                    put("versionName", build.versionName)
-                    put("branch", build.branch)
-                    put("commitSha", build.commitSha)
-                }
-            })
+            add(
+                buildJsonObject {
+                    put("deviceId", handle.deviceId)
+                    put("model", handle.model)
+                    put("platform", handle.platform)
+                    put("connection", handle.devToolsRepository.connectionState.value.label())
+                    handle.devToolsRepository.buildInfo.value?.let { build ->
+                        put("app", build.projectName)
+                        put("versionName", build.versionName)
+                        put("branch", build.branch)
+                        put("commitSha", build.commitSha)
+                    }
+                },
+            )
         }
     }
 
@@ -384,21 +419,25 @@ internal object AlohomoraMcpToolData {
         return buildJsonArray {
             items.forEach { item ->
                 when (item) {
-                    is AttentionItem.UnviewedError -> add(buildJsonObject {
-                        put("kind", "error")
-                        put("id", item.error.id)
-                        put("title", item.error.exceptionTypeName())
-                        put("place", item.error.place)
-                        put("time", item.error.time)
-                    })
+                    is AttentionItem.UnviewedError -> add(
+                        buildJsonObject {
+                            put("kind", "error")
+                            put("id", item.error.id)
+                            put("title", item.error.exceptionTypeName())
+                            put("place", item.error.place)
+                            put("time", item.error.time)
+                        },
+                    )
 
-                    is AttentionItem.FailedTraffic -> add(buildJsonObject {
-                        put("kind", "traffic")
-                        put("id", item.entry.id)
-                        put("title", item.entry.summary())
-                        put("host", item.entry.host)
-                        put("time", item.entry.time)
-                    })
+                    is AttentionItem.FailedTraffic -> add(
+                        buildJsonObject {
+                            put("kind", "traffic")
+                            put("id", item.entry.id)
+                            put("title", item.entry.summary())
+                            put("host", item.entry.host)
+                            put("time", item.entry.time)
+                        },
+                    )
                 }
             }
         }
@@ -437,13 +476,15 @@ internal object AlohomoraMcpToolData {
         val errors = repo.errors.value.asReversed().take(limit.coerceAtLeast(0))
         return buildJsonArray {
             errors.forEach { error ->
-                add(buildJsonObject {
-                    put("id", error.id)
-                    put("title", error.exceptionTypeName())
-                    put("place", error.place)
-                    put("time", error.time)
-                    put("viewed", error.isViewed)
-                })
+                add(
+                    buildJsonObject {
+                        put("id", error.id)
+                        put("title", error.exceptionTypeName())
+                        put("place", error.place)
+                        put("time", error.time)
+                        put("viewed", error.isViewed)
+                    },
+                )
             }
         }
     }
@@ -485,7 +526,8 @@ internal object AlohomoraMcpToolData {
         return buildJsonArray { events.forEach { add(it.toJson()) } }
     }
 
-    fun databaseSchema(repo: DevToolsRepository): JsonElement = repo.databaseSnapshot.value.toSchemaJson()
+    fun databaseSchema(repo: DevToolsRepository): JsonElement =
+        repo.databaseSnapshot.value.toSchemaJson()
 
     suspend fun queryDatabaseTable(
         repo: DevToolsRepository,
@@ -522,7 +564,14 @@ internal object AlohomoraMcpToolData {
     }
 
     fun listFeatureFlags(repo: DevToolsRepository): JsonElement = buildJsonArray {
-        repo.featureFlags.value.forEach { add(json.encodeToJsonElement(FeatureFlag.serializer(), it)) }
+        repo.featureFlags.value.forEach {
+            add(
+                json.encodeToJsonElement(
+                    FeatureFlag.serializer(),
+                    it,
+                ),
+            )
+        }
     }
 
     fun buildMetadata(repo: DevToolsRepository): JsonElement? {
@@ -547,12 +596,14 @@ internal object AlohomoraMcpToolData {
         val commits = repo.gitHistory.value.take(limit.coerceAtLeast(0))
         return buildJsonArray {
             commits.forEach { commit ->
-                add(buildJsonObject {
-                    put("sha", commit.sha)
-                    put("author", commit.author)
-                    put("message", commit.message)
-                    put("timestamp", commit.timestamp)
-                })
+                add(
+                    buildJsonObject {
+                        put("sha", commit.sha)
+                        put("author", commit.author)
+                        put("message", commit.message)
+                        put("timestamp", commit.timestamp)
+                    },
+                )
             }
         }
     }
@@ -641,11 +692,13 @@ internal object AlohomoraMcpToolData {
 
         return buildJsonArray {
             filtered.forEach { item ->
-                add(buildJsonObject {
-                    put("kind", item.kind)
-                    put("time", item.time)
-                    put("data", item.json)
-                })
+                add(
+                    buildJsonObject {
+                        put("kind", item.kind)
+                        put("time", item.time)
+                        put("data", item.json)
+                    },
+                )
             }
         }
     }
@@ -706,7 +759,8 @@ internal fun noDeviceMessage(registry: DeviceSessionRegistry): String {
 internal inline fun buildSchema(properties: JsonObjectBuilder.() -> Unit): ToolSchema =
     ToolSchema(properties = buildJsonObject(properties), required = emptyList())
 
-internal fun emptySchema(): ToolSchema = ToolSchema(properties = buildJsonObject { }, required = emptyList())
+internal fun emptySchema(): ToolSchema =
+    ToolSchema(properties = buildJsonObject { }, required = emptyList())
 
 internal fun deviceOnlySchema(): ToolSchema = buildSchema {
     put("deviceId", stringProp("Target device; optional when only one is connected."))
@@ -734,9 +788,12 @@ internal fun boolProp(description: String): JsonObject = buildJsonObject {
 
 // --- argument readers --------------------------------------------------------------------------
 
-internal fun CallToolRequest.primitive(key: String): JsonPrimitive? = arguments?.get(key) as? JsonPrimitive
+internal fun CallToolRequest.primitive(key: String): JsonPrimitive? =
+    arguments?.get(key) as? JsonPrimitive
+
 internal fun CallToolRequest.str(key: String): String? =
     primitive(key)?.let { if (it.isString) it.content else it.content.takeIf { c -> c != "null" } }
+
 internal fun CallToolRequest.int(key: String): Int? = primitive(key)?.content?.toIntOrNull()
 internal fun CallToolRequest.long(key: String): Long? = primitive(key)?.content?.toLongOrNull()
 internal fun CallToolRequest.bool(key: String): Boolean? = primitive(key)?.booleanOrNull
@@ -744,7 +801,16 @@ internal fun CallToolRequest.bool(key: String): Boolean? = primitive(key)?.boole
 // --- result helpers ----------------------------------------------------------------------------
 
 internal fun result(element: JsonElement): CallToolResult =
-    CallToolResult(content = listOf(TextContent(json.encodeToString(JsonElement.serializer(), element))))
+    CallToolResult(
+        content = listOf(
+            TextContent(
+                json.encodeToString(
+                    JsonElement.serializer(),
+                    element,
+                ),
+            ),
+        ),
+    )
 
 internal fun errorResult(message: String): CallToolResult =
     CallToolResult(content = listOf(TextContent(message)), isError = true)
@@ -793,38 +859,56 @@ private fun Map<String, String?>.toJson(): JsonObject = buildJsonObject {
 }
 
 private fun DatabaseSnapshot.toSchemaJson(): JsonObject = buildJsonObject {
-    put("databases", buildJsonArray {
-        databases.forEach { db ->
-            add(buildJsonObject {
-                put("name", db.name)
-                put("path", db.path)
-            })
-        }
-    })
+    put(
+        "databases",
+        buildJsonArray {
+            databases.forEach { db ->
+                add(
+                    buildJsonObject {
+                        put("name", db.name)
+                        put("path", db.path)
+                    },
+                )
+            }
+        },
+    )
     selectedDatabase?.let { put("selectedDatabase", it.name) }
     schema?.let { schema ->
-        put("schema", buildJsonObject {
-            put("databaseName", schema.databaseName)
-            put("tables", buildJsonArray { schema.tables.forEach { add(it) } })
-            put("columns", buildJsonArray {
-                schema.schemas.forEach { table ->
-                    add(buildJsonObject {
-                        put("table", table.name)
-                        put("primaryKey", table.primaryKey)
-                        put("columns", buildJsonArray {
-                            table.columns.forEach { column ->
-                                add(buildJsonObject {
-                                    put("name", column.name)
-                                    put("type", column.type)
-                                    put("notNull", column.notNull)
-                                    put("primaryKey", column.primaryKey)
-                                })
-                            }
-                        })
-                    })
-                }
-            })
-        })
+        put(
+            "schema",
+            buildJsonObject {
+                put("databaseName", schema.databaseName)
+                put("tables", buildJsonArray { schema.tables.forEach { add(it) } })
+                put(
+                    "columns",
+                    buildJsonArray {
+                        schema.schemas.forEach { table ->
+                            add(
+                                buildJsonObject {
+                                    put("table", table.name)
+                                    put("primaryKey", table.primaryKey)
+                                    put(
+                                        "columns",
+                                        buildJsonArray {
+                                            table.columns.forEach { column ->
+                                                add(
+                                                    buildJsonObject {
+                                                        put("name", column.name)
+                                                        put("type", column.type)
+                                                        put("notNull", column.notNull)
+                                                        put("primaryKey", column.primaryKey)
+                                                    },
+                                                )
+                                            }
+                                        },
+                                    )
+                                },
+                            )
+                        }
+                    },
+                )
+            },
+        )
     }
 }
 

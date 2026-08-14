@@ -38,11 +38,13 @@ internal object Plist {
                 }
                 append("</dict>")
             }
+
             is List<*> -> {
                 append("<array>")
                 value.forEach { appendValue(it) }
                 append("</array>")
             }
+
             is Boolean -> append(if (value) "<true/>" else "<false/>")
             is Int, is Long -> append("<integer>").append(value.toString()).append("</integer>")
             else -> append("<string>").append(escape(value.toString())).append("</string>")
@@ -95,6 +97,7 @@ internal object Plist {
             }
             map
         }
+
         "array" -> element.childElements().map { parseValue(it) }
         "integer" -> element.textContent.trim().toLongOrNull()
         "real" -> element.textContent.trim().toDoubleOrNull()

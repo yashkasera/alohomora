@@ -47,7 +47,12 @@ class EventsPredicateTest {
         // JsonNull stringifies to "null", so without the guard in searchHaystack a search for "null"
         // would return every property-less event.
         assertFalse(matches(event(properties = null), EventsFilterState(query = "null")))
-        assertFalse(matches(event(properties = nullProperties()), EventsFilterState(query = "null")))
+        assertFalse(
+            matches(
+                event(properties = nullProperties()),
+                EventsFilterState(query = "null"),
+            ),
+        )
     }
 
     @Test

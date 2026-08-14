@@ -20,7 +20,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import kotlinx.io.EOFException
 
 private object DevToolsSocketSelector {
     val manager: SelectorManager = SelectorManager(Dispatchers.IO)
@@ -113,8 +112,11 @@ class DevToolsTcpServer {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // @Volatile so reads/writes from different threads (main, IO) are consistent.
-    @Volatile private var serverSocket: ServerSocket? = null
-    @Volatile private var serverJob: Job? = null
+    @Volatile
+    private var serverSocket: ServerSocket? = null
+
+    @Volatile
+    private var serverJob: Job? = null
 
     fun start(port: Int, onClient: (DevToolsSocket) -> Unit): Boolean {
         if (serverSocket != null) return true

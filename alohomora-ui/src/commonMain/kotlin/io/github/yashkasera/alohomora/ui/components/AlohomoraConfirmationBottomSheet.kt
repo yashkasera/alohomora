@@ -113,7 +113,8 @@ fun ConfirmationBottomSheet(
             ) {
                 // Dismiss/Cancel button
                 AlohomoraOutlinedButton(
-                    modifier = Modifier.weight(1f).testTag(AlohomoraTestTags.Chrome.CONFIRM_DISMISS),
+                    modifier = Modifier.weight(1f)
+                        .testTag(AlohomoraTestTags.Chrome.CONFIRM_DISMISS),
                     text = config.dismissButtonText,
                     onClick = onDismiss,
                 )

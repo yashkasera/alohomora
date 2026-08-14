@@ -6,12 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -21,16 +20,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * Explains why a surface has nothing on it.
@@ -52,7 +49,8 @@ fun EmptyState(
     // Tagged here rather than at each of the ten call sites: "did this screen fall back to its
     // empty state" is the same assertion everywhere, and only the copy differs.
     Box(
-        modifier = Modifier.fillMaxSize().testTag(AlohomoraTestTags.Chrome.EMPTY_STATE).then(modifier),
+        modifier = Modifier.fillMaxSize().testTag(AlohomoraTestTags.Chrome.EMPTY_STATE)
+            .then(modifier),
         contentAlignment = Alignment.Center,
     ) {
         Column(

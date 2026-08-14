@@ -2,7 +2,7 @@ package io.github.yashkasera.alohomora.ui.components.jsonviewer
 
 internal fun preview(
     node: JsonNode,
-    tree: JsonTree
+    tree: JsonTree,
 ): String {
 
     val children = tree.children[node.path] ?: return ""
@@ -16,10 +16,10 @@ internal fun preview(
 
                 is JsonValueNode -> {
                     if (isArray)
-                        if (child.value is String){
+                        if (child.value is String) {
                             "\"${child.value}\""
                         } else
-                        child.value.toString()
+                            child.value.toString()
                     else
                         "${child.key}:\"${child.value}\""
                 }
@@ -28,13 +28,13 @@ internal fun preview(
                     if (isArray)
                         "{…}"
                     else
-                    "${child.key}:{…}"
+                        "${child.key}:{…}"
 
                 is JsonArrayNode ->
                     if (isArray)
                         "[…]"
                     else
-                    "${child.key}:[…]"
+                        "${child.key}:[…]"
 
                 else -> null
             }

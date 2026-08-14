@@ -4,6 +4,7 @@ import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.MockRule
+import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.common.VpnThrottleState
@@ -15,7 +16,6 @@ import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.model.GitHistoryCommit
 import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
 import io.github.yashkasera.alohomora.replay.ReplayRequest
-import io.github.yashkasera.alohomora.common.Span
 import kotlinx.coroutines.flow.StateFlow
 
 interface DevToolsRepository {
@@ -61,6 +61,7 @@ interface DevToolsRepository {
 
     fun switchDevice(host: String, port: Int, deviceId: String? = null) =
         switchDevice(DevToolsTarget.Tcp(host, port), deviceId)
+
     fun disconnect()
     fun submitOtp(otp: String)
 
@@ -124,6 +125,7 @@ interface DevToolsRepository {
         columnName: String,
         newValue: String?,
     )
+
     fun requestCacheValue(key: String)
     fun requestInitialState()
 }

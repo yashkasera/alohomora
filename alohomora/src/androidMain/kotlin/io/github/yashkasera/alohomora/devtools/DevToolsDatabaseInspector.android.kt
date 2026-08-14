@@ -34,8 +34,15 @@ internal actual class DevToolsDatabaseInspector actual constructor(
         }
     }
 
-    actual fun loadTable(databaseName: String, tableName: String, limit: Int): DatabaseTableSnapshot {
-        val path = appDatabaseProvider.resolvePath(databaseName) ?: return emptyTable(databaseName, tableName)
+    actual fun loadTable(
+        databaseName: String,
+        tableName: String,
+        limit: Int,
+    ): DatabaseTableSnapshot {
+        val path = appDatabaseProvider.resolvePath(databaseName) ?: return emptyTable(
+            databaseName,
+            tableName,
+        )
         val db = openDatabase(path) ?: return emptyTable(databaseName, tableName)
         return try {
             // tableName arrives straight off the socket. SQLite has no bind parameter for
@@ -65,6 +72,7 @@ internal actual class DevToolsDatabaseInspector actual constructor(
                             val blob = cursor.getBlob(index)
                             if (blob == null) null else "BLOB(${blob.size})"
                         }
+
                         else -> null
                     }
                     row[columnName] = value
@@ -126,7 +134,7 @@ internal actual class DevToolsDatabaseInspector actual constructor(
                 "AND name NOT LIKE 'android_%' " +
                 "AND name NOT LIKE 'sqlite_%' " +
                 "AND name != 'room_master_table'",
-            null
+            null,
         )
         val tables = mutableListOf<String>()
         while (cursor.moveToNext()) {
@@ -137,7 +145,10 @@ internal actual class DevToolsDatabaseInspector actual constructor(
         return tables
     }
 
-    private fun queryTableSchema(db: SQLiteDatabase, tableName: String): DatabaseTableSchemaPayload {
+    private fun queryTableSchema(
+        db: SQLiteDatabase,
+        tableName: String,
+    ): DatabaseTableSchemaPayload {
         val columnsCursor = db.rawQuery("PRAGMA table_info(`$tableName`)", null)
         val columns = mutableListOf<DatabaseTableColumnPayload>()
         var primaryKey: String? = null
@@ -152,7 +163,8 @@ internal actual class DevToolsDatabaseInspector actual constructor(
             val type = columnsCursor.getString(typeIndex)
             val notNull = columnsCursor.getInt(notNullIndex) == 1
             val pk = columnsCursor.getInt(pkIndex) == 1
-            val defaultValue = if (defaultIndex == -1) null else columnsCursor.getString(defaultIndex)
+            val defaultValue =
+                if (defaultIndex == -1) null else columnsCursor.getString(defaultIndex)
             if (pk) primaryKey = name
             columns.add(
                 DatabaseTableColumnPayload(
@@ -161,7 +173,7 @@ internal actual class DevToolsDatabaseInspector actual constructor(
                     notNull = notNull,
                     primaryKey = pk,
                     defaultValue = defaultValue,
-                )
+                ),
             )
         }
         columnsCursor.close()

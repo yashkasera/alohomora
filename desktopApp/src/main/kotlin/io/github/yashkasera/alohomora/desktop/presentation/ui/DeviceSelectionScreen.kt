@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PermanentDrawerSheet
@@ -37,18 +36,18 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
-import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.util.DevicePortRegistry
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
-import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlinx.coroutines.delay
@@ -103,7 +102,10 @@ fun DeviceSelectionScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = MaterialTheme.dimens.margin.lg, vertical = MaterialTheme.dimens.margin.xxl),
+                        .padding(
+                            horizontal = MaterialTheme.dimens.margin.lg,
+                            vertical = MaterialTheme.dimens.margin.xxl,
+                        ),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -129,7 +131,10 @@ fun DeviceSelectionScreen(
                         "Select a device and connect to DevTools.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.padding(start = MaterialTheme.dimens.margin.md, end = MaterialTheme.dimens.margin.md),
+                        modifier = Modifier.padding(
+                            start = MaterialTheme.dimens.margin.md,
+                            end = MaterialTheme.dimens.margin.md,
+                        ),
                     )
                 }
             }

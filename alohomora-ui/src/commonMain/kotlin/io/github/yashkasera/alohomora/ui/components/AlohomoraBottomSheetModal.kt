@@ -90,7 +90,7 @@ fun AlohomoraBottomSheetModal(
     modifier: Modifier = Modifier,
     skipPartiallyExpanded: Boolean = true,
     sheetState: SheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = skipPartiallyExpanded
+        skipPartiallyExpanded = skipPartiallyExpanded,
     ),
     shape: Shape = AlohomoraBottomSheetDefaults.shape,
     containerColor: Color = MaterialTheme.colorScheme.surface,
@@ -124,7 +124,7 @@ fun AlohomoraBottomSheetModal(
                                 color = dragHandle.color
                                     ?: MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                                 shape = RoundedCornerShape(dragHandle.cornerRadius),
-                            )
+                            ),
                     )
                 }
             }
@@ -147,7 +147,7 @@ fun AlohomoraBottomSheetModal(
     modifier: Modifier = Modifier,
     skipPartiallyExpanded: Boolean = true,
     sheetState: SheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = skipPartiallyExpanded
+        skipPartiallyExpanded = skipPartiallyExpanded,
     ),
     shape: Shape = AlohomoraBottomSheetDefaults.shape,
     containerColor: Color = MaterialTheme.colorScheme.surface,
@@ -183,7 +183,7 @@ fun AlohomoraBottomSheetModal(
                                 color = dragHandle.color
                                     ?: MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                                 shape = RoundedCornerShape(dragHandle.cornerRadius),
-                            )
+                            ),
                     )
                 }
             }

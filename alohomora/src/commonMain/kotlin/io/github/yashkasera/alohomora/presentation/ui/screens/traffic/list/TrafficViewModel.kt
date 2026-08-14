@@ -48,7 +48,7 @@ internal class TrafficViewModel(
         },
     ).cachedIn(viewModelScope)
 
-    val state: StateFlow<TrafficState   > = combine(
+    val state: StateFlow<TrafficState> = combine(
         pager.pagingData,
         query,
         method,

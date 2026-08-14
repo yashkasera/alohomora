@@ -60,7 +60,7 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    needs: [publish-library, package-dmg]
+    needs: [ publish-library, package-dmg ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

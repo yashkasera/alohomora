@@ -5,14 +5,14 @@ import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.FakeDevToolsRepository
 import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
-import kotlinx.coroutines.async
-import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 
 /**
  * The write actions that don't go through NetworkRulesViewModel (replay, clear) — the mock/throttle
@@ -28,7 +28,10 @@ class AlohomoraMcpWriteDataTest {
         }
         val result = AlohomoraMcpWriteData.replay(repo, "1", null, null, null, null, null)
         assertTrue(result is WriteResult.Error)
-        assertTrue(repo.replayedRequests.isEmpty(), "nothing should be sent when replay is unsupported")
+        assertTrue(
+            repo.replayedRequests.isEmpty(),
+            "nothing should be sent when replay is unsupported",
+        )
     }
 
     @Test
@@ -37,8 +40,28 @@ class AlohomoraMcpWriteDataTest {
             replayState.value = ReplayState(supported = true)
             traffic.value = listOf(entry("1").apply { requestBodyTruncated = true })
         }
-        assertTrue(AlohomoraMcpWriteData.replay(repo, "missing", null, null, null, null, null) is WriteResult.Error)
-        assertTrue(AlohomoraMcpWriteData.replay(repo, "1", null, null, null, null, null) is WriteResult.Error)
+        assertTrue(
+            AlohomoraMcpWriteData.replay(
+                repo,
+                "missing",
+                null,
+                null,
+                null,
+                null,
+                null,
+            ) is WriteResult.Error,
+        )
+        assertTrue(
+            AlohomoraMcpWriteData.replay(
+                repo,
+                "1",
+                null,
+                null,
+                null,
+                null,
+                null,
+            ) is WriteResult.Error,
+        )
     }
 
     @Test
@@ -48,7 +71,15 @@ class AlohomoraMcpWriteDataTest {
             traffic.value = listOf(entry("1"))
         }
         val deferred = async {
-            AlohomoraMcpWriteData.replay(repo, "1", method = "post", url = null, headers = null, body = null, contentType = null)
+            AlohomoraMcpWriteData.replay(
+                repo,
+                "1",
+                method = "post",
+                url = null,
+                headers = null,
+                body = null,
+                contentType = null,
+            )
         }
         runCurrent() // let replay send and suspend awaiting the device result
         assertEquals("POST", repo.replayedRequests.single().method, "override should be uppercased")
@@ -63,7 +94,8 @@ class AlohomoraMcpWriteDataTest {
             replayState.value = ReplayState(supported = true)
             traffic.value = listOf(entry("1"))
         }
-        val deferred = async { AlohomoraMcpWriteData.replay(repo, "1", null, null, null, null, null) }
+        val deferred =
+            async { AlohomoraMcpWriteData.replay(repo, "1", null, null, null, null, null) }
         runCurrent()
         repo.deliverReplayFailure("1", "connection refused")
         assertTrue(deferred.await() is WriteResult.Error)
@@ -76,7 +108,17 @@ class AlohomoraMcpWriteDataTest {
             traffic.value = listOf(entry("1"))
         }
         // Never deliver; runTest advances virtual time past the timeout instantly.
-        assertTrue(AlohomoraMcpWriteData.replay(repo, "1", null, null, null, null, null) is WriteResult.Error)
+        assertTrue(
+            AlohomoraMcpWriteData.replay(
+                repo,
+                "1",
+                null,
+                null,
+                null,
+                null,
+                null,
+            ) is WriteResult.Error,
+        )
     }
 
     @Test
@@ -84,7 +126,15 @@ class AlohomoraMcpWriteDataTest {
         val repo = FakeDevToolsRepository()
         val broker = McpConfirmationBroker()
         val deferred = async {
-            AlohomoraMcpWriteData.clearCaptured(repo, broker, "dev", traffic = true, events = false, errors = false, spans = false)
+            AlohomoraMcpWriteData.clearCaptured(
+                repo,
+                broker,
+                "dev",
+                traffic = true,
+                events = false,
+                errors = false,
+                spans = false,
+            )
         }
         runCurrent()
         broker.pending.value!!.resolve(false) // deny
@@ -97,7 +147,15 @@ class AlohomoraMcpWriteDataTest {
         val repo = FakeDevToolsRepository()
         val broker = McpConfirmationBroker()
         val deferred = async {
-            AlohomoraMcpWriteData.clearCaptured(repo, broker, "dev", traffic = true, events = false, errors = false, spans = true)
+            AlohomoraMcpWriteData.clearCaptured(
+                repo,
+                broker,
+                "dev",
+                traffic = true,
+                events = false,
+                errors = false,
+                spans = true,
+            )
         }
         runCurrent()
         broker.pending.value!!.resolve(true)
@@ -112,7 +170,15 @@ class AlohomoraMcpWriteDataTest {
     fun `clear_captured rejects an empty selection without prompting`() = runTest {
         val repo = FakeDevToolsRepository()
         val broker = McpConfirmationBroker()
-        val result = AlohomoraMcpWriteData.clearCaptured(repo, broker, "dev", traffic = false, events = false, errors = false, spans = false)
+        val result = AlohomoraMcpWriteData.clearCaptured(
+            repo,
+            broker,
+            "dev",
+            traffic = false,
+            events = false,
+            errors = false,
+            spans = false,
+        )
         assertTrue(result is WriteResult.Error)
         assertEquals(null, broker.pending.value, "nothing selected: never opens a dialog")
     }
@@ -150,14 +216,28 @@ class AlohomoraMcpWriteDataTest {
     fun `create_mock_from_traffic refuses unknown id`() {
         val repo = FakeDevToolsRepository()
         val vm = testViewModel(supported = true)
-        assertTrue(AlohomoraMcpWriteData.createMockFromTraffic(repo, vm, "missing", null) is WriteResult.Error)
+        assertTrue(
+            AlohomoraMcpWriteData.createMockFromTraffic(
+                repo,
+                vm,
+                "missing",
+                null,
+            ) is WriteResult.Error,
+        )
     }
 
     @Test
     fun `create_mock_from_traffic refuses when mocks are unsupported`() {
         val repo = FakeDevToolsRepository().apply { traffic.value = listOf(entry("1")) }
         val vm = testViewModel(supported = false)
-        assertTrue(AlohomoraMcpWriteData.createMockFromTraffic(repo, vm, "1", null) is WriteResult.Error)
+        assertTrue(
+            AlohomoraMcpWriteData.createMockFromTraffic(
+                repo,
+                vm,
+                "1",
+                null,
+            ) is WriteResult.Error,
+        )
     }
 
     @Test

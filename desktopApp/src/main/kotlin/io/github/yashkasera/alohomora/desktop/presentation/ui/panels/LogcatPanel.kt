@@ -13,13 +13,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
-import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.logcat.LogcatControls
 import io.github.yashkasera.alohomora.desktop.presentation.ui.logcat.LogcatFilters
 import io.github.yashkasera.alohomora.desktop.presentation.ui.logcat.LogcatList
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
@@ -70,11 +70,11 @@ fun LogcatPanel(
                     ) {
                         logcatViewModel.clear()
                     }
-                }
+                },
             )
         },
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-    ){
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+    ) {
         Column(
             modifier = Modifier
                 .padding(it)

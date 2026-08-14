@@ -10,9 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,7 +21,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -46,7 +43,6 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButtonStyle
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -186,7 +182,7 @@ fun JsonTreeView(
                     .align(Alignment.BottomEnd)
                     .padding(MaterialTheme.dimens.margin.xl),
                 enter = fadeIn(),
-                exit = fadeOut()
+                exit = fadeOut(),
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
@@ -239,7 +235,12 @@ internal fun <A, B, C> guardLet(a: A?, b: B?, c: C?, action: (A, B, C) -> Unit):
 }
 
 @Composable
-internal fun <A, B, C, T> T.guardLetCompose(a: A?, b: B?, c: C?, action: @Composable T.(A, B, C) -> Unit) {
+internal fun <A, B, C, T> T.guardLetCompose(
+    a: A?,
+    b: B?,
+    c: C?,
+    action: @Composable T.(A, B, C) -> Unit,
+) {
     if (a != null && b != null && c != null) {
         action(a, b, c)
     }

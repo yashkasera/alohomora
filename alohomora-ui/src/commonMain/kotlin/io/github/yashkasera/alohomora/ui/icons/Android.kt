@@ -15,10 +15,10 @@ val Icons.Android: ImageVector
             defaultWidth = 16.dp,
             defaultHeight = 16.dp,
             viewportWidth = 16f,
-            viewportHeight = 16f
+            viewportHeight = 16f,
         ).apply {
             path(
-                fill = SolidColor(Color.Black)
+                fill = SolidColor(Color.Black),
             ) {
                 moveTo(2.76f, 3.061f)
                 arcToRelative(0.5f, 0.5f, 0f, false, true, 0.679f, 0.2f)

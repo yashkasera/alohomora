@@ -5,6 +5,7 @@ import io.github.yashkasera.alohomora.ActivityState
 import io.github.yashkasera.alohomora.IntentSnapshot
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.DateUtils.Format
+import io.github.yashkasera.alohomora.presentation.ui.screens.navigation.NavigationTimelineMapper.activeSession
 
 /**
  * One screen the user visited, ready to render as a timeline row.

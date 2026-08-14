@@ -28,7 +28,11 @@ class VpnConsentActivity : Activity() {
     }
 
     @Deprecated("Use registerForActivityResult")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: android.content.Intent?,
+    ) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_VPN_CONSENT) {
             VpnThrottleController.onConsentResult(granted = resultCode == RESULT_OK)

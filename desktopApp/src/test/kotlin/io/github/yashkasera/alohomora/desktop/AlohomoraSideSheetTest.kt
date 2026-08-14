@@ -50,7 +50,8 @@ class AlohomoraSideSheetTest {
         }
 
         val rootWidth = onNodeWithTag("root").fetchSemanticsNode().size.width
-        val bodyWidth = onNodeWithTag("body", useUnmergedTree = true).fetchSemanticsNode().size.width
+        val bodyWidth =
+            onNodeWithTag("body", useUnmergedTree = true).fetchSemanticsNode().size.width
 
         assertTrue(rootWidth > 0, "root did not lay out")
         val ratio = bodyWidth.toFloat() / rootWidth.toFloat()
@@ -77,7 +78,8 @@ class AlohomoraSideSheetTest {
         }
 
         val rootWidth = onNodeWithTag("root").fetchSemanticsNode().size.width
-        val bodyWidth = onNodeWithTag("body", useUnmergedTree = true).fetchSemanticsNode().size.width
+        val bodyWidth =
+            onNodeWithTag("body", useUnmergedTree = true).fetchSemanticsNode().size.width
 
         val ratio = bodyWidth.toFloat() / rootWidth.toFloat()
         assertTrue(abs(ratio - 0.5f) < 0.02f, "got ${(ratio * 100).toInt()}%")
@@ -99,36 +101,38 @@ class AlohomoraSideSheetTest {
      * The fix is available only because the slot is a `ColumnScope`, so content can take `weight(1f)`.
      */
     @Test
-    fun `a scrollable code block in the content slot lays out instead of throwing`() = runComposeUiTest {
-        setContent {
-            AppTheme {
-                AlohomoraSideSheet(
-                    visible = true,
-                    onDismiss = {},
-                    header = { Text("header") },
-                    modifier = Modifier.testTag("root"),
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                        AlohomoraCodeBlock(
-                            content = (1..SCROLL_OVERFLOW_LINES).joinToString("\n") { "line $it" },
-                            isScrollable = true,
-                            modifier = Modifier.weight(1f).testTag("block"),
-                        )
+    fun `a scrollable code block in the content slot lays out instead of throwing`() =
+        runComposeUiTest {
+            setContent {
+                AppTheme {
+                    AlohomoraSideSheet(
+                        visible = true,
+                        onDismiss = {},
+                        header = { Text("header") },
+                        modifier = Modifier.testTag("root"),
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                            AlohomoraCodeBlock(
+                                content = (1..SCROLL_OVERFLOW_LINES).joinToString("\n") { "line $it" },
+                                isScrollable = true,
+                                modifier = Modifier.weight(1f).testTag("block"),
+                            )
+                        }
                     }
                 }
             }
+
+            val sheetHeight = onNodeWithTag("root").fetchSemanticsNode().size.height
+            val blockHeight =
+                onNodeWithTag("block", useUnmergedTree = true).fetchSemanticsNode().size.height
+
+            assertTrue(blockHeight > 0, "the code block did not lay out")
+            assertTrue(
+                blockHeight <= sheetHeight,
+                "the block took $blockHeight against a $sheetHeight sheet, so it was measured unbounded " +
+                    "rather than clamped to the space left by the header",
+            )
         }
-
-        val sheetHeight = onNodeWithTag("root").fetchSemanticsNode().size.height
-        val blockHeight = onNodeWithTag("block", useUnmergedTree = true).fetchSemanticsNode().size.height
-
-        assertTrue(blockHeight > 0, "the code block did not lay out")
-        assertTrue(
-            blockHeight <= sheetHeight,
-            "the block took $blockHeight against a $sheetHeight sheet, so it was measured unbounded " +
-                "rather than clamped to the space left by the header",
-        )
-    }
 
     @Test
     fun `nothing renders while the sheet is hidden`() = runComposeUiTest {

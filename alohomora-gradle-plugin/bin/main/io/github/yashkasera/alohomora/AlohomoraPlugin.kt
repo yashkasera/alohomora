@@ -45,18 +45,19 @@ class AlohomoraPlugin : Plugin<Project> {
                 maxCommits.set(extension.maxCommits)
                 outputDir.set(
                     project.layout.buildDirectory.dir(
-                        "generated/alohomora/${variant.name}")
+                        "generated/alohomora/${variant.name}",
+                    ),
                 )
             }
 
             variant.sources.java?.addGeneratedSourceDirectory(
                 task,
-                GenerateGitHistoryTask::outputDir
+                GenerateGitHistoryTask::outputDir,
             )
 
             variant.sources.kotlin?.addGeneratedSourceDirectory(
                 task,
-                GenerateGitHistoryTask::outputDir
+                GenerateGitHistoryTask::outputDir,
             )
         }
     }

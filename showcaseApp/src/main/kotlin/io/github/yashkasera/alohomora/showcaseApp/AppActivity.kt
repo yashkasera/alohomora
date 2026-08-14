@@ -13,7 +13,7 @@ import io.github.yashkasera.alohomora.showcaseApp.presentation.AndroidSampleApp
 class AppActivity : ComponentActivity() {
 
     private val requestNotifications =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) {  }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

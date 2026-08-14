@@ -1,8 +1,8 @@
 package io.github.yashkasera.alohomora.devtools
 
 import android.content.Context
-import java.security.SecureRandom
 import androidx.core.content.edit
+import java.security.SecureRandom
 
 /**
  * [DevToolsTrustStore] backed by SharedPreferences.

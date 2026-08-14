@@ -76,13 +76,18 @@ class TrafficViewModel(
                     .map { it.key },
                 filters = filters,
             )
-        }.stateIn(scope, SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE_MILLIS), TrafficUiState())
+        }.stateIn(
+            scope,
+            SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE_MILLIS),
+            TrafficUiState(),
+        )
 
     fun onQueryChange(query: String) = _filters.update { it.copy(query = query) }
 
     fun onMethodToggle(method: String) = _filters.update { it.withMethodToggled(method) }
 
-    fun onErrorsOnlyChange(errorsOnly: Boolean) = _filters.update { it.copy(errorsOnly = errorsOnly) }
+    fun onErrorsOnlyChange(errorsOnly: Boolean) =
+        _filters.update { it.copy(errorsOnly = errorsOnly) }
 
     fun clearFilters() = _filters.update { it.cleared() }
 

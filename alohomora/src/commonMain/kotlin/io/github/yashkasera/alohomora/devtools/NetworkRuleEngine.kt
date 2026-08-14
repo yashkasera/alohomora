@@ -4,9 +4,9 @@ import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
 import io.github.yashkasera.alohomora.common.mock.TemplateEngine
+import kotlin.concurrent.Volatile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlin.concurrent.Volatile
 
 internal const val MOCK_ID_HEADER = "X-Alohomora-Mock-Id"
 

@@ -17,13 +17,13 @@ val Icons.EyeOff: ImageVector
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
-            viewportHeight = 24f
+            viewportHeight = 24f,
         ).apply {
             path(
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(9.88f, 9.88f)
                 arcTo(3f, 3f, 0f, true, false, 12f, 15f)
@@ -33,7 +33,7 @@ val Icons.EyeOff: ImageVector
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(10.73f, 5.08f)
                 arcTo(10.66f, 10.66f, 0f, false, true, 12f, 5f)
@@ -44,7 +44,7 @@ val Icons.EyeOff: ImageVector
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(17.94f, 17.94f)
                 arcTo(10.07f, 10.07f, 0f, false, true, 12f, 19f)
@@ -55,7 +55,7 @@ val Icons.EyeOff: ImageVector
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(1f, 1f)
                 lineTo(23f, 23f)

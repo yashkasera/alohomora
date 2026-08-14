@@ -25,7 +25,10 @@ internal fun rememberClipboardCopy(): ClipboardCopyState {
                 clipboard.setText(AnnotatedString(text))
                 scope.launch {
                     snackbarHostState.currentSnackbarData?.dismiss()
-                    snackbarHostState.showSnackbar("Copied to clipboard", duration = SnackbarDuration.Short)
+                    snackbarHostState.showSnackbar(
+                        "Copied to clipboard",
+                        duration = SnackbarDuration.Short,
+                    )
                 }
             },
             snackbarHostState = snackbarHostState,

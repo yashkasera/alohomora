@@ -33,9 +33,24 @@ class AndroidApp : Application() {
         // the first one.
         Alohomora.registerReplayHandler(ktorReplayHandler(koin.get<HttpClient>()))
 
-        Alohomora.recordFeatureFlag("dark_mode_v2", "true", source = "Firebase Remote Config", type = "feature_flag")
-        Alohomora.recordFeatureFlag("checkout_redesign", "false", source = "Firebase Remote Config", type = "experiment")
-        Alohomora.recordFeatureFlag("max_cart_items", "25", source = "LaunchDarkly", type = "remote_config")
+        Alohomora.recordFeatureFlag(
+            "dark_mode_v2",
+            "true",
+            source = "Firebase Remote Config",
+            type = "feature_flag",
+        )
+        Alohomora.recordFeatureFlag(
+            "checkout_redesign",
+            "false",
+            source = "Firebase Remote Config",
+            type = "experiment",
+        )
+        Alohomora.recordFeatureFlag(
+            "max_cart_items",
+            "25",
+            source = "LaunchDarkly",
+            type = "remote_config",
+        )
         Alohomora.recordFeatureFlag(
             "onboarding_flow",
             "variant_b",

@@ -21,11 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
-import androidx.compose.ui.tooling.preview.Preview
 
 enum class ConnectionDotState {
     Connected,
@@ -60,7 +60,7 @@ fun ConnectionStatusDot(
                 animationSpec = infiniteRepeatable(
                     animation = tween(
                         durationMillis = 1500,
-                        easing = LinearOutSlowInEasing
+                        easing = LinearOutSlowInEasing,
                     ),
                     repeatMode = RepeatMode.Restart,
                 ),
@@ -72,7 +72,7 @@ fun ConnectionStatusDot(
                 animationSpec = infiniteRepeatable(
                     animation = tween(
                         durationMillis = 1500,
-                        easing = LinearOutSlowInEasing
+                        easing = LinearOutSlowInEasing,
                     ),
                     repeatMode = RepeatMode.Restart,
                 ),

@@ -1,13 +1,5 @@
 package io.github.yashkasera.alohomora
 
-import org.gradle.api.DefaultTask
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
 import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics2D
@@ -16,6 +8,14 @@ import java.awt.geom.Rectangle2D
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
 
 @CacheableTask
 abstract class GenerateDevIconTask : DefaultTask() {
@@ -58,7 +58,8 @@ abstract class GenerateDevIconTask : DefaultTask() {
 
         if (base != null) {
             val background = bgRef.orNull ?: "@color/${base}_background"
-            val hasBar = barText != null && position != null && position != DevIconVariantBarPosition.NONE
+            val hasBar =
+                barText != null && position != null && position != DevIconVariantBarPosition.NONE
 
             val drawableDir = dir.resolve("drawable")
             drawableDir.mkdirs()
@@ -80,7 +81,11 @@ abstract class GenerateDevIconTask : DefaultTask() {
         }
     }
 
-    private fun generateVariantBarPng(text: String, position: DevIconVariantBarPosition, resDir: File) {
+    private fun generateVariantBarPng(
+        text: String,
+        position: DevIconVariantBarPosition,
+        resDir: File,
+    ) {
         DENSITY_BUCKETS.forEach { (qualifier, scale) ->
             val size = (VIEWPORT * scale).toInt()
             val image = renderRibbon(text.uppercase(), position, size, scale)
@@ -99,8 +104,14 @@ abstract class GenerateDevIconTask : DefaultTask() {
         val image = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
         val g = image.createGraphics().apply {
             setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-            setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
-            setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON)
+            setRenderingHint(
+                RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_ON,
+            )
+            setRenderingHint(
+                RenderingHints.KEY_FRACTIONALMETRICS,
+                RenderingHints.VALUE_FRACTIONALMETRICS_ON,
+            )
             setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
         }
 
@@ -111,6 +122,7 @@ abstract class GenerateDevIconTask : DefaultTask() {
                 val isTop = position == DevIconVariantBarPosition.TOP
                 drawHorizontalBar(g, text, isTop)
             }
+
             else -> {
                 val (cx, cy, angleDeg, textOffset) = cornerParams(position)
                 drawDiagonalRibbon(g, text, cx, cy, angleDeg, textOffset)
@@ -195,7 +207,8 @@ abstract class GenerateDevIconTask : DefaultTask() {
 """
 
     private fun buildCompositeForeground(base: String, hasBar: Boolean): String {
-        val barItem = if (hasBar) "\n    <item android:drawable=\"@drawable/alohomora_variant_bar\" />" else ""
+        val barItem =
+            if (hasBar) "\n    <item android:drawable=\"@drawable/alohomora_variant_bar\" />" else ""
         return """<?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@drawable/${base}_foreground" />
@@ -213,7 +226,8 @@ abstract class GenerateDevIconTask : DefaultTask() {
 """
 
     private fun buildCompositeLegacyIcon(base: String, hasBar: Boolean): String {
-        val barItem = if (hasBar) "\n    <item android:drawable=\"@drawable/alohomora_variant_bar\" />" else ""
+        val barItem =
+            if (hasBar) "\n    <item android:drawable=\"@drawable/alohomora_variant_bar\" />" else ""
         return """<?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@mipmap/${base}" />

@@ -1,13 +1,13 @@
 package io.github.yashkasera.alohomora.desktop.mcp
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 
 class McpConfirmationBrokerTest {
 

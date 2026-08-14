@@ -95,7 +95,8 @@ class EventsPanelClickTest {
      */
     @Test
     fun `clicking a row with a large payload still lays out`() = runComposeUiTest {
-        val repository = FakeDevToolsRepository(events = listOf(event(1, "App.Exception", keys = 200)))
+        val repository =
+            FakeDevToolsRepository(events = listOf(event(1, "App.Exception", keys = 200)))
         val vm = EventsViewModel(repository).also { viewModel = it }
 
         setContent {

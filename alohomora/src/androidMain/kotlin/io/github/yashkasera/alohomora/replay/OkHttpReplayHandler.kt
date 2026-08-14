@@ -26,22 +26,23 @@ import okhttp3.RequestBody.Companion.toRequestBody
  *
  * @param client the app's own client, complete with its interceptors
  */
-fun okHttpReplayHandler(client: OkHttpClient): TrafficReplayHandler = TrafficReplayHandler { request ->
-    withContext(Dispatchers.IO) {
-        try {
-            // Closed rather than read: TrafficInterceptor already peeked the body for capture, and
-            // the console renders the replay from the trace it recorded. A non-2xx is a real answer
-            // from the server and shows up as one — only a transport failure is a replay failure.
-            client.newCall(request.toOkHttpRequest()).execute().close()
+fun okHttpReplayHandler(client: OkHttpClient): TrafficReplayHandler =
+    TrafficReplayHandler { request ->
+        withContext(Dispatchers.IO) {
+            try {
+                // Closed rather than read: TrafficInterceptor already peeked the body for capture, and
+                // the console renders the replay from the trace it recorded. A non-2xx is a real answer
+                // from the server and shows up as one — only a transport failure is a replay failure.
+                client.newCall(request.toOkHttpRequest()).execute().close()
 
-            // No id to hand back: the interceptor mints its own, and stamps replayOf with
-            // sourceTraceId, which is how the console finds the resulting trace.
-            ReplayOutcome.Sent()
-        } catch (e: Exception) {
-            ReplayOutcome.Failed(e.message ?: e::class.java.simpleName)
+                // No id to hand back: the interceptor mints its own, and stamps replayOf with
+                // sourceTraceId, which is how the console finds the resulting trace.
+                ReplayOutcome.Sent()
+            } catch (e: Exception) {
+                ReplayOutcome.Failed(e.message ?: e::class.java.simpleName)
+            }
         }
     }
-}
 
 private fun ReplayRequest.toOkHttpRequest(): Request {
     val mediaType = contentType?.toMediaTypeOrNull()

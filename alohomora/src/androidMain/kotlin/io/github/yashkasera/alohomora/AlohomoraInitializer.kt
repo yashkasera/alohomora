@@ -25,7 +25,7 @@ class AlohomoraInitializer : Initializer<Unit> {
     fun discoverConfig(context: Context): AlohomoraConfig? {
         val loader = ServiceLoader.load(
             AlohomoraConfig::class.java,
-            context.classLoader
+            context.classLoader,
         )
         return loader.firstOrNull()
     }

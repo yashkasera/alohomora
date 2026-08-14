@@ -127,7 +127,8 @@ class IosDatabaseInspectorTest {
         assertEquals(emptyList(), sqliteMaster.rows)
         assertEquals(emptyList(), sqliteMaster.columns)
 
-        val injection = inspector().loadTable("fixture.db", "posts` UNION SELECT * FROM posts --", 10)
+        val injection =
+            inspector().loadTable("fixture.db", "posts` UNION SELECT * FROM posts --", 10)
         assertEquals(emptyList(), injection.rows)
     }
 

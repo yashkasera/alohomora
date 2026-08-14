@@ -52,7 +52,10 @@ class EventsMuteTest {
 
     @Test
     fun `toggling an unmuted name mutes it`() {
-        assertEquals(setOf("App.Start"), EventsFilterState().withMuteToggled("App.Start").mutedNames)
+        assertEquals(
+            setOf("App.Start"),
+            EventsFilterState().withMuteToggled("App.Start").mutedNames,
+        )
     }
 
     @Test

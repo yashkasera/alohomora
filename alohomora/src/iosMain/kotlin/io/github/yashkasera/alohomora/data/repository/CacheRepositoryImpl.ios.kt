@@ -46,7 +46,7 @@ internal class CacheRepositoryImpl : CacheRepository {
                 source = CacheSource.NS_USER_DEFAULTS,
                 isEncrypted = false,
                 entryCount = getEntryCount(),
-            )
+            ),
         )
     }
 
@@ -92,7 +92,7 @@ internal class CacheRepositoryImpl : CacheRepository {
                     source = CacheSource.NS_USER_DEFAULTS,
                     isEncrypted = false,
                     storeName = "NSUserDefaults",
-                )
+                ),
             )
         }
 

@@ -32,17 +32,17 @@ internal data class DatabaseState(
     val isLoadingTableData: Boolean = false,
     val isLoadingSchema: Boolean = false,
     val isExecutingQuery: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
 
 internal data class QueryStatus(
     val success: Boolean,
     val executionTimeMs: Long,
-    val rowsAffected: Int = 0
+    val rowsAffected: Int = 0,
 )
 
 internal class DatabaseViewModel(
-    private val vaultRepository: DatabaseRepository
+    private val vaultRepository: DatabaseRepository,
 ) : ViewModel() {
 
     private val databases = MutableStateFlow<List<DatabaseInfo>>(emptyList())
@@ -80,7 +80,7 @@ internal class DatabaseViewModel(
         isLoadingTableData,
         isLoadingSchema,
         isExecutingQuery,
-        error
+        error,
     ) { flows ->
         DatabaseState(
             databases = flows[0] as List<DatabaseInfo>,
@@ -99,12 +99,12 @@ internal class DatabaseViewModel(
             isLoadingTableData = flows[13] as Boolean,
             isLoadingSchema = flows[14] as Boolean,
             isExecutingQuery = flows[15] as Boolean,
-            error = flows[16] as String?
+            error = flows[16] as String?,
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = DatabaseState()
+        initialValue = DatabaseState(),
     )
 
     init {
@@ -237,7 +237,7 @@ internal class DatabaseViewModel(
                     queryStatus.value = QueryStatus(
                         success = result.success,
                         executionTimeMs = result.executionTimeMs,
-                        rowsAffected = result.rowsAffected
+                        rowsAffected = result.rowsAffected,
                     )
                     if (!result.success) {
                         error.value = result.errorMessage
@@ -248,7 +248,7 @@ internal class DatabaseViewModel(
                 queryStatus.value = QueryStatus(
                     success = false,
                     executionTimeMs = 0,
-                    rowsAffected = 0
+                    rowsAffected = 0,
                 )
             } finally {
                 isExecutingQuery.value = false

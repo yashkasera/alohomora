@@ -17,13 +17,13 @@ val Icons.CircleHelp: ImageVector
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
-            viewportHeight = 24f
+            viewportHeight = 24f,
         ).apply {
             path(
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(2f, 12f)
                 arcToRelative(10f, 10f, 0f, true, false, 20f, 0f)
@@ -34,7 +34,7 @@ val Icons.CircleHelp: ImageVector
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(9.09f, 9f)
                 arcToRelative(3f, 3f, 0f, false, true, 5.83f, 1f)
@@ -45,7 +45,7 @@ val Icons.CircleHelp: ImageVector
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(12f, 17f)
                 horizontalLineToRelative(0.01f)

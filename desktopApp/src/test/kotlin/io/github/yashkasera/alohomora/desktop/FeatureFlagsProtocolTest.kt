@@ -1,12 +1,12 @@
 package io.github.yashkasera.alohomora.desktop
 
+import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.FeatureFlagsSnapshotMessage
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.InitialStatePayload
-import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
 import io.github.yashkasera.alohomora.desktop.data.local.FeatureFlagStore
 import kotlin.test.Test
 import kotlin.test.assertEquals

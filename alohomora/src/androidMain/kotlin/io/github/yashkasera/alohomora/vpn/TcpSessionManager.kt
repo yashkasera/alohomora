@@ -32,9 +32,11 @@ internal class TcpSessionManager(
             tcpHeader.isRst -> {
                 closeSession(key)
             }
+
             tcpHeader.isSyn && !tcpHeader.isAck -> {
                 handleSyn(key, ipHeader, tcpHeader)
             }
+
             else -> {
                 val session = sessions[key] ?: return
                 session.lastActive = System.currentTimeMillis()
@@ -48,7 +50,8 @@ internal class TcpSessionManager(
                     session.state = TcpSessionState.ESTABLISHED
                 }
 
-                val payloadLength = ipHeader.totalLength - ipHeader.headerLength - tcpHeader.dataOffset
+                val payloadLength =
+                    ipHeader.totalLength - ipHeader.headerLength - tcpHeader.dataOffset
                 if (payloadLength > 0 && session.state == TcpSessionState.ESTABLISHED) {
                     handleData(key, session, ipHeader, tcpHeader, packet, payloadLength)
                 }

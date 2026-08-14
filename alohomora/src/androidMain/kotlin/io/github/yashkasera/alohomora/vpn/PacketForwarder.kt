@@ -6,7 +6,6 @@ import io.github.yashkasera.alohomora.common.ThrottleProfile
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
-import java.nio.channels.SelectionKey
 import java.nio.channels.Selector
 
 private const val DNS_PORT = 53
@@ -116,6 +115,7 @@ internal class PacketForwarder(
                                         }
                                         tcpManager.handleReadable(key)
                                     }
+
                                     is UdpSession -> {
                                         if (!isDnsSession(attachment.key)) {
                                             throttle.injectLatencyIfNewSession(attachment.key)
@@ -147,6 +147,7 @@ internal class PacketForwarder(
                 val tcpHeader = IpPacketParser.parseTcpHeader(buffer, ipHeader) ?: return
                 tcpManager.processPacket(ipHeader, tcpHeader, buffer, rawPacket)
             }
+
             IP_PROTOCOL_UDP -> {
                 val udpHeader = IpPacketParser.parseUdpHeader(buffer) ?: return
                 udpForwarder.processPacket(ipHeader, udpHeader, buffer, rawPacket)

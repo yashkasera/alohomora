@@ -25,9 +25,9 @@ import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.DevToolsActivity
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags.Overview
 import org.junit.Rule
+import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
-import org.junit.rules.TestRule
 
 /**
  * Base for every showcase end-to-end test: real app, real console, real network.

@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.ui.components
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -7,7 +8,6 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.TopAppBarState
 import androidx.compose.material3.rememberTopAppBarState as materialRememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.ui.Modifier
 
 object AlohomoraTopAppBarDefaults {

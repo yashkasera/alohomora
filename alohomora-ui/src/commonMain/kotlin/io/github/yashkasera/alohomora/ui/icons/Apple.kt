@@ -15,10 +15,10 @@ val Icons.Apple: ImageVector
             defaultWidth = 16.dp,
             defaultHeight = 16.dp,
             viewportWidth = 16f,
-            viewportHeight = 16f
+            viewportHeight = 16f,
         ).apply {
             path(
-                fill = SolidColor(Color.Black)
+                fill = SolidColor(Color.Black),
             ) {
                 moveTo(11.182f, 0.008f)
                 curveTo(11.148f, -0.03f, 9.923f, 0.023f, 8.857f, 1.18f)
@@ -46,7 +46,7 @@ val Icons.Apple: ImageVector
                 quadToRelative(0.52f, -1.185f, 0.473f, -1.282f)
             }
             path(
-                fill = SolidColor(Color.Black)
+                fill = SolidColor(Color.Black),
             ) {
                 moveTo(11.182f, 0.008f)
                 curveTo(11.148f, -0.03f, 9.923f, 0.023f, 8.857f, 1.18f)

@@ -74,7 +74,8 @@ class EventsTimeWindowTest {
     @Test
     fun `a mark floor alone still filters when the window is all`() {
         val filters = EventsFilterState(window = EventsTimeWindow.All, markFloorMillis = 900)
-        val effective = listOfNotNull(filters.window.floorAt(now), filters.markFloorMillis).maxOrNull()
+        val effective =
+            listOfNotNull(filters.window.floorAt(now), filters.markFloorMillis).maxOrNull()
 
         assertEquals(900L, effective)
         assertFalse(matches(event(time = 800), filters, effective))

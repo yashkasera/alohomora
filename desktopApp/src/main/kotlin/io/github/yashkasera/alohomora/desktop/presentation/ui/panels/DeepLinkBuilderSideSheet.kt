@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenu
-import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -30,13 +28,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkEntry
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
-import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenu
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenuItem
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
@@ -45,6 +43,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.Clock
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -76,7 +75,8 @@ fun DeepLinkBuilderSideSheet(
     var host by remember(initialUrl) { mutableStateOf(parsed.host) }
     var port by remember(initialUrl) { mutableStateOf(parsed.port) }
     var path by remember(initialUrl) { mutableStateOf(parsed.path) }
-    val queryParams = remember(initialUrl) { mutableStateListOf(*parsed.queryParams.toTypedArray()) }
+    val queryParams =
+        remember(initialUrl) { mutableStateListOf(*parsed.queryParams.toTypedArray()) }
     var fragment by remember(initialUrl) { mutableStateOf(parsed.fragment) }
 
     val composedUrl by remember {

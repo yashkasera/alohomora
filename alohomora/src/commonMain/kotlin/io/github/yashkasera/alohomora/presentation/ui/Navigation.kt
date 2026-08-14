@@ -17,9 +17,9 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.events.EventsScree
 import io.github.yashkasera.alohomora.presentation.ui.screens.featureflags.FeatureFlagsScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.githistory.GitHistoryScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.overview.OverviewScreen
-import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail.TrafficDetailsScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.traces.detail.TraceDetailsScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.traces.list.TracesScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail.TrafficDetailsScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.list.TrafficScreen
 
 @Composable
@@ -44,7 +44,7 @@ internal fun AlohomoraNavHost(
         composable<Routes.Traffic> {
             TrafficScreen(
                 onTrafficClick = { id -> navController.navigate(Routes.TrafficDetails(id)) },
-                onBackClick = navController::navigateUp
+                onBackClick = navController::navigateUp,
             )
         }
 

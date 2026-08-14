@@ -28,9 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -199,7 +199,7 @@ private fun BoxScope.ScrollToTopButton(
             } else {
                 AlohomoraIconButton(
                     onClick = onClick,
-                    style = AlohomoraIconButtonStyle.TONAL
+                    style = AlohomoraIconButtonStyle.TONAL,
                 ) {
                     Icon(
                         imageVector = Icons.ArrowLeft,

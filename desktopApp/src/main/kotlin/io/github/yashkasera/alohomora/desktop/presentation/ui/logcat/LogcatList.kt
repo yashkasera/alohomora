@@ -12,8 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import io.github.yashkasera.alohomora.ui.components.ScrollToBottomButton
-import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -22,6 +20,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.LogEntry
+import io.github.yashkasera.alohomora.ui.components.ScrollToBottomButton
+import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
@@ -59,9 +59,12 @@ fun LogcatList(
                     MaterialTheme.colorScheme.outlineVariant,
                     MaterialTheme.shapes.medium,
                 )
-                .padding(MaterialTheme.dimens.margin.md)
+                .padding(MaterialTheme.dimens.margin.md),
         ) {
-            Text(text = "Logcat output will appear here.", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = "Logcat output will appear here.",
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
         return
     }
@@ -75,7 +78,7 @@ fun LogcatList(
                 MaterialTheme.colorScheme.outlineVariant,
                 MaterialTheme.shapes.medium,
             )
-            .padding(MaterialTheme.dimens.margin.sm)
+            .padding(MaterialTheme.dimens.margin.sm),
     ) {
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
             items(entries) { entry ->

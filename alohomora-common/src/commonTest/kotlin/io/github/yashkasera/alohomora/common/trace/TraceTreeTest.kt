@@ -135,7 +135,11 @@ class TraceTreeTest {
 
         val a = rows.single { it.span.spanId == "a" }
         assertEquals(100L, a.subtreeStartNanos)
-        assertEquals(900L, a.subtreeEndNanos, "the deep child's end must widen the collapsed window")
+        assertEquals(
+            900L,
+            a.subtreeEndNanos,
+            "the deep child's end must widen the collapsed window",
+        )
     }
 
     @Test
@@ -147,7 +151,10 @@ class TraceTreeTest {
 
     @Test
     fun `an empty span list yields no rows`() {
-        assertEquals(emptyList(), emptyList<io.github.yashkasera.alohomora.common.Span>().toTraceRows())
+        assertEquals(
+            emptyList(),
+            emptyList<io.github.yashkasera.alohomora.common.Span>().toTraceRows(),
+        )
     }
 
     @Test

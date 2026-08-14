@@ -61,7 +61,8 @@ fun buildTraceTree(spans: List<Span>): List<TraceNode> {
         .filter { it.parentSpanId != null && bySpanId.containsKey(it.parentSpanId) }
         .groupBy { it.parentSpanId!! }
 
-    val rootSpans = spans.filter { it.parentSpanId == null || !bySpanId.containsKey(it.parentSpanId) }
+    val rootSpans =
+        spans.filter { it.parentSpanId == null || !bySpanId.containsKey(it.parentSpanId) }
 
     val visited = mutableSetOf<String>()
     val roots = rootSpans
@@ -111,7 +112,15 @@ fun List<Span>.toTraceRows(collapsed: Set<String> = emptySet()): List<TraceRow> 
     val orphanIds = filter { it.parentSpanId != null && it.parentSpanId !in presentIds }
         .mapTo(mutableSetOf()) { it.spanId }
     val rows = mutableListOf<TraceRow>()
-    buildTraceTree(this).forEach { appendRows(it, depth = 0, collapsed = collapsed, orphanIds = orphanIds, out = rows) }
+    buildTraceTree(this).forEach {
+        appendRows(
+            it,
+            depth = 0,
+            collapsed = collapsed,
+            orphanIds = orphanIds,
+            out = rows,
+        )
+    }
     return rows
 }
 

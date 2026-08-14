@@ -17,7 +17,11 @@ internal actual class ShareManager {
         val activityViewController = UIActivityViewController(activityItems, null)
 
         val rootViewController = UIApplication.sharedApplication.keyWindow?.rootViewController
-        rootViewController?.presentViewController(activityViewController, animated = true, completion = null)
+        rootViewController?.presentViewController(
+            activityViewController,
+            animated = true,
+            completion = null,
+        )
     }
 
     @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
@@ -35,6 +39,10 @@ internal actual class ShareManager {
         val activityViewController = UIActivityViewController(activityItems, null)
 
         val rootViewController = UIApplication.sharedApplication.keyWindow?.rootViewController
-        rootViewController?.presentViewController(activityViewController, animated = true, completion = null)
+        rootViewController?.presentViewController(
+            activityViewController,
+            animated = true,
+            completion = null,
+        )
     }
 }

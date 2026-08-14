@@ -79,7 +79,11 @@ class RepositoryCacheInspectorTest {
 
         RepositoryCacheInspector(repository).getAllKeys()
 
-        assertEquals(1, repository.refreshCount, "a connect must see the device's current preferences")
+        assertEquals(
+            1,
+            repository.refreshCount,
+            "a connect must see the device's current preferences",
+        )
     }
 
     @Test
@@ -129,11 +133,17 @@ class RepositoryCacheInspectorTest {
         val inspector = RepositoryCacheInspector(repository)
 
         assertEquals(listOf("version"), inspector.getAllKeys())
-        assertEquals("1", inspector.getValue("version"), "must resolve to the first entry consistently")
+        assertEquals(
+            "1",
+            inspector.getValue("version"),
+            "must resolve to the first entry consistently",
+        )
     }
 
     @Test
     fun `an empty cache yields no keys`() = runTest {
-        assertTrue(RepositoryCacheInspector(FakeCacheRepository(emptyList())).getAllKeys().isEmpty())
+        assertTrue(
+            RepositoryCacheInspector(FakeCacheRepository(emptyList())).getAllKeys().isEmpty(),
+        )
     }
 }

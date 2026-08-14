@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.common
 
+import io.github.yashkasera.alohomora.common.DateUtils.format
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -85,7 +86,7 @@ object DateUtils {
     fun format(
         timestamp: Long,
         format: Format,
-        unit: TimeUnit = TimeUnit.MILLISECONDS
+        unit: TimeUnit = TimeUnit.MILLISECONDS,
     ): String = try {
         val instant = when (unit) {
             TimeUnit.MILLISECONDS -> Instant.fromEpochMilliseconds(timestamp)
@@ -122,7 +123,8 @@ object DateUtils {
     private fun LocalDateTime.ss() = second.toString().padStart(2, '0')
     private fun LocalDateTime.ms2() = (nanosecond / 1_000_000).toString().padStart(3, '0').take(2)
     private fun LocalDateTime.ms3() = (nanosecond / 1_000_000).toString().padStart(3, '0')
-    private fun LocalDateTime.monthShort() = month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
+    private fun LocalDateTime.monthShort() =
+        month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
 
     private val Format.fallback: String
         get() = when (this) {

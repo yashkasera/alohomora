@@ -102,7 +102,8 @@ class EventSearchIndexTest {
     fun `the index preserves list order`() {
         // The panel renders this list directly, and it must stay newest-first as the store hands it over.
         val index = EventSearchIndex()
-        val events = listOf(event(id = 3, time = 300), event(id = 2, time = 200), event(id = 1, time = 100))
+        val events =
+            listOf(event(id = 3, time = 300), event(id = 2, time = 200), event(id = 1, time = 100))
 
         val result = index.reindex(events)
 

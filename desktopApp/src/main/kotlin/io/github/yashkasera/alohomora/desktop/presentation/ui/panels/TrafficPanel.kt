@@ -1,7 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,8 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,18 +32,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.presentation.model.TrafficUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.trafficSubtitle
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
-import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
-import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValueRow
-import io.github.yashkasera.alohomora.ui.components.MethodBadge
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SlackShareDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficItem
@@ -64,8 +59,12 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
+import io.github.yashkasera.alohomora.ui.components.MethodBadge
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
 import io.github.yashkasera.alohomora.ui.icons.Copy
@@ -135,8 +134,8 @@ fun TrafficPanel(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                         contentPadding = PaddingValues(
-                            MaterialTheme.dimens.margin.md
-                        )
+                            MaterialTheme.dimens.margin.md,
+                        ),
                     ) {
                         items(uiState.entries, key = { log -> log.id }) { log ->
                             TrafficItem(
@@ -580,8 +579,8 @@ private fun DesktopResponseTab(traffic: TrafficEntry) {
             modifier = Modifier.padding(
                 horizontal = MaterialTheme.dimens.margin.xl,
                 vertical = MaterialTheme.dimens.margin.lg,
-            )
-        ){
+            ),
+        ) {
             JsonTreeView(
                 json = traffic.responseBody.orEmpty().ifBlank { "{}" },
             )

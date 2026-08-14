@@ -39,6 +39,7 @@ sealed interface DevToolsTarget {
         fun forDevice(device: Device, host: String, port: Int): DevToolsTarget = when {
             device.platform == DevicePlatform.IOS && device.usbmuxDeviceId != null ->
                 Usbmux(device.usbmuxDeviceId, port)
+
             else -> Tcp(host, port)
         }
     }

@@ -144,7 +144,7 @@ internal class CacheRepositoryImpl(
                             },
                             isEncrypted = isEncrypted,
                             storeName = storeName,
-                        )
+                        ),
                     )
                 }
             } catch (e: Exception) {
@@ -158,7 +158,7 @@ internal class CacheRepositoryImpl(
                         source = CacheSource.ENCRYPTED_SHARED_PREFERENCES,
                         isEncrypted = true,
                         storeName = storeName,
-                    )
+                    ),
                 )
             }
         }

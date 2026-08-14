@@ -28,6 +28,7 @@ class AlohomoraVpnService : VpnService() {
                 startForegroundWithNotification()
                 startTunnel(profile)
             }
+
             ACTION_UPDATE_PROFILE -> {
                 val profileJson = intent.getStringExtra(EXTRA_PROFILE)
                 val profile = profileJson?.let {
@@ -35,6 +36,7 @@ class AlohomoraVpnService : VpnService() {
                 } ?: return START_NOT_STICKY
                 onProfileUpdated(profile)
             }
+
             ACTION_STOP -> {
                 stopTunnel()
                 stopForeground(STOP_FOREGROUND_REMOVE)

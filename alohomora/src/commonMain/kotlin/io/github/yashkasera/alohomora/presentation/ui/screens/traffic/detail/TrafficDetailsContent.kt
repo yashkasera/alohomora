@@ -42,7 +42,6 @@ import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
-import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
@@ -238,7 +237,7 @@ private fun RequestTab(trace: TrafficEntry, onCopy: (String) -> Unit) {
                 SectionHeader(title = "REQUEST HEADERS")
                 Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
                 AlohomoraChip(label = headerCount.toString())
-                }
+            }
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 

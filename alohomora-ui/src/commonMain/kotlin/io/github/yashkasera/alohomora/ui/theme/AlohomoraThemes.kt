@@ -1,11 +1,11 @@
 package io.github.yashkasera.alohomora.ui.theme
 
-import io.github.yashkasera.alohomora.ui.theme.themes.MonochromeDarkTheme
-import io.github.yashkasera.alohomora.ui.theme.themes.MonochromeLightTheme
 import io.github.yashkasera.alohomora.ui.theme.themes.DraculaDarkTheme
 import io.github.yashkasera.alohomora.ui.theme.themes.DraculaLightTheme
 import io.github.yashkasera.alohomora.ui.theme.themes.MaterialDarkTheme
 import io.github.yashkasera.alohomora.ui.theme.themes.MaterialLightTheme
+import io.github.yashkasera.alohomora.ui.theme.themes.MonochromeDarkTheme
+import io.github.yashkasera.alohomora.ui.theme.themes.MonochromeLightTheme
 import io.github.yashkasera.alohomora.ui.theme.themes.NordDarkTheme
 import io.github.yashkasera.alohomora.ui.theme.themes.NordLightTheme
 import io.github.yashkasera.alohomora.ui.theme.themes.SolarizedDarkTheme

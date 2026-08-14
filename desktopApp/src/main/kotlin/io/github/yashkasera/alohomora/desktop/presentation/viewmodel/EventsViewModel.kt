@@ -144,7 +144,8 @@ class EventsViewModel(
                 // The transient filters are dropped along with the reload, not just the mutes: a Mark
                 // floor pinned against the previous device's clock can sit above everything the new one
                 // sends, which reads as a dead stream. Every store was just cleared anyway.
-                _filters.value = EventsFilterState(mutedNames = DesktopEventPrefs.mutedNames(deviceId))
+                _filters.value =
+                    EventsFilterState(mutedNames = DesktopEventPrefs.mutedNames(deviceId))
                 _selectedEventId.value = null
             }
         }
@@ -152,7 +153,8 @@ class EventsViewModel(
 
     fun onQueryChange(query: String) = _filters.update { it.copy(query = query) }
 
-    fun onUnreadOnlyChange(unreadOnly: Boolean) = _filters.update { it.copy(unreadOnly = unreadOnly) }
+    fun onUnreadOnlyChange(unreadOnly: Boolean) =
+        _filters.update { it.copy(unreadOnly = unreadOnly) }
 
     fun onWindowChange(window: EventsTimeWindow) = _filters.update { it.copy(window = window) }
 

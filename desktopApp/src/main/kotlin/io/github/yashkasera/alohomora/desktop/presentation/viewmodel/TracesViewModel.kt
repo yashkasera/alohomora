@@ -158,7 +158,8 @@ class TracesViewModel(
         _collapsed.value = _collapsed.value.toMutableMap().apply {
             // Collapse everything, or expand everything if it is already fully collapsed — one button
             // that always does the thing the current state makes useful.
-            this[traceId] = if (this[traceId].orEmpty().containsAll(parents)) emptySet() else parents
+            this[traceId] =
+                if (this[traceId].orEmpty().containsAll(parents)) emptySet() else parents
         }
     }
 

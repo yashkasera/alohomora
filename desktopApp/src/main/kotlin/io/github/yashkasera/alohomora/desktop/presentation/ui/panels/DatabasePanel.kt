@@ -34,12 +34,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
-import io.github.yashkasera.alohomora.ui.components.TopBarLayout
-import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTable
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.TableColumn
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.ChevronRight
 import io.github.yashkasera.alohomora.ui.icons.Database
@@ -135,7 +135,7 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
                                 TableItem(
                                     name = table,
                                     selected = table == tableSnapshot?.name
-                                            && database.name == tableSnapshot.databaseName,
+                                        && database.name == tableSnapshot.databaseName,
                                     onClick = {
                                         databaseViewModel.requestTable(database.name, table)
                                     },
@@ -179,7 +179,8 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
                             modifier = Modifier.fillMaxSize(),
                             onCellEdit = onCellEdit@{ rowIndex, columnName, newValue ->
                                 val dbName = tableSnapshot.databaseName ?: return@onCellEdit
-                                val row = tableSnapshot.rows.getOrNull(rowIndex) ?: return@onCellEdit
+                                val row =
+                                    tableSnapshot.rows.getOrNull(rowIndex) ?: return@onCellEdit
                                 val pkMap = primaryKeyColumns.associateWith { pk ->
                                     row[pk] ?: return@onCellEdit
                                 }

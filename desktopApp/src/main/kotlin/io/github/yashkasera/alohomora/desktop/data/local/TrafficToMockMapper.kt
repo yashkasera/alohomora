@@ -6,7 +6,8 @@ import io.github.yashkasera.alohomora.common.TrafficEntry
 fun TrafficEntry.toMockRule(): MockRule = MockRule(
     id = "",
     enabled = true,
-    urlPattern = path ?: url?.substringAfter("://")?.substringAfter('/')?.substringBefore('?')?.let { "/$it" } ?: "/",
+    urlPattern = path ?: url?.substringAfter("://")?.substringAfter('/')?.substringBefore('?')
+        ?.let { "/$it" } ?: "/",
     isRegex = false,
     method = method,
     statusCode = status ?: 200,

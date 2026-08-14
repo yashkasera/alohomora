@@ -49,7 +49,10 @@ class MockRuleWebViewClient(
     }
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
-        delegate?.shouldOverrideUrlLoading(view, request) ?: super.shouldOverrideUrlLoading(view, request)
+        delegate?.shouldOverrideUrlLoading(view, request) ?: super.shouldOverrideUrlLoading(
+            view,
+            request,
+        )
 
     override fun onPageFinished(view: WebView, url: String?) {
         delegate?.onPageFinished(view, url) ?: super.onPageFinished(view, url)
@@ -60,6 +63,10 @@ class MockRuleWebViewClient(
         request: WebResourceRequest,
         error: android.webkit.WebResourceError,
     ) {
-        delegate?.onReceivedError(view, request, error) ?: super.onReceivedError(view, request, error)
+        delegate?.onReceivedError(view, request, error) ?: super.onReceivedError(
+            view,
+            request,
+            error,
+        )
     }
 }

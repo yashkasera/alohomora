@@ -74,7 +74,14 @@ fun EventDetailsSideSheet(
         event?.let {
             buildString {
                 appendLine("Event: ${it.name}")
-                appendLine("Time: ${DateUtils.format(it.time, DateUtils.Format.ISO_DATE_TIME_SECONDS)}")
+                appendLine(
+                    "Time: ${
+                        DateUtils.format(
+                            it.time,
+                            DateUtils.Format.ISO_DATE_TIME_SECONDS,
+                        )
+                    }",
+                )
                 appendLine()
                 appendLine("Properties:")
                 appendLine(properties)

@@ -77,6 +77,7 @@ internal object AdbLocator {
                 System.getenv("LOCALAPPDATA")?.let { "$it\\Android\\Sdk" },
                 "$home\\AppData\\Local\\Android\\Sdk",
             )
+
             else -> listOf("$home/Android/Sdk", "$home/android-sdk", "/usr/lib/android-sdk")
         }
     }

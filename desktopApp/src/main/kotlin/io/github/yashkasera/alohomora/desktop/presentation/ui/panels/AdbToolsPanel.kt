@@ -160,7 +160,10 @@ fun AdbToolsPanel(
                         )
                     }
                     AdbActionButton("Force Stop", isDeviceSelected && packageName.isNotBlank()) {
-                        devicesViewModel.runCommand(selectedDeviceId, "shell am force-stop $packageName")
+                        devicesViewModel.runCommand(
+                            selectedDeviceId,
+                            "shell am force-stop $packageName",
+                        )
                     }
                     AdbActionButton("Clear Data", isDeviceSelected && packageName.isNotBlank()) {
                         devicesViewModel.runCommand(selectedDeviceId, "shell pm clear $packageName")
@@ -209,14 +212,22 @@ fun AdbToolsPanel(
                             pickSavePath(defaultName, "Save Screenshot", ".png")
                                 ?: return@AdbActionButton
                         }
-                        devicesViewModel.takeScreenshot(selectedDeviceId, localPath, screenshotShowToast)
+                        devicesViewModel.takeScreenshot(
+                            selectedDeviceId,
+                            localPath,
+                            screenshotShowToast,
+                        )
                     }
                     AlohomoraFilledButton(
                         text = if (isRecording) "Stop Recording" else "Record Screen",
                         onClick = {
                             if (!isRecording) {
                                 val ts = System.currentTimeMillis()
-                                val localPath = pickSavePath("alohomora_record_$ts.mp4", "Save Recording", ".mp4")
+                                val localPath = pickSavePath(
+                                    "alohomora_record_$ts.mp4",
+                                    "Save Recording",
+                                    ".mp4",
+                                )
                                     ?: return@AlohomoraFilledButton
                                 val devicePath = "/sdcard/${File(localPath).name}"
                                 recordingDevicePath = devicePath
@@ -244,8 +255,9 @@ fun AdbToolsPanel(
                     )
                     AdbActionButton("Bugreport", isDeviceSelected) {
                         val ts = System.currentTimeMillis()
-                        val localPath = pickSavePath("alohomora_bugreport_$ts.zip", "Save Bugreport", ".zip")
-                            ?: return@AdbActionButton
+                        val localPath =
+                            pickSavePath("alohomora_bugreport_$ts.zip", "Save Bugreport", ".zip")
+                                ?: return@AdbActionButton
                         val devicePath = "/sdcard/${File(localPath).name}"
                         devicesViewModel.takeBugreport(selectedDeviceId, devicePath, localPath)
                     }
@@ -361,7 +373,10 @@ fun AdbToolsPanel(
                             .weight(1f)
                             .onKeyEvent { event ->
                                 if (event.key == Key.Enter && isDeviceSelected && customCommand.isNotBlank()) {
-                                    devicesViewModel.runCustomCommand(selectedDeviceId, customCommand)
+                                    devicesViewModel.runCustomCommand(
+                                        selectedDeviceId,
+                                        customCommand,
+                                    )
                                     true
                                 } else {
                                     false
@@ -370,7 +385,12 @@ fun AdbToolsPanel(
                     )
                     AlohomoraFilledButton(
                         text = "Run",
-                        onClick = { devicesViewModel.runCustomCommand(selectedDeviceId, customCommand) },
+                        onClick = {
+                            devicesViewModel.runCustomCommand(
+                                selectedDeviceId,
+                                customCommand,
+                            )
+                        },
                         enabled = isDeviceSelected && customCommand.isNotBlank(),
                     )
                 }

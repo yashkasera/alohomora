@@ -34,7 +34,7 @@ class PreferencesRepositoryImpl(
         return PreferencesState(
             username = dataSource.readUsername(),
             autoRefresh = dataSource.readAutoRefresh(),
-            lastRefreshEpochMillis = dataSource.readLastRefreshEpochMillis()
+            lastRefreshEpochMillis = dataSource.readLastRefreshEpochMillis(),
         )
     }
 }

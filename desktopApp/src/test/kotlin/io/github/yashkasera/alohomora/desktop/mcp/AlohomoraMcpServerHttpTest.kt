@@ -9,14 +9,14 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * End-to-end MCP protocol tests: start the real server and drive it over HTTP through the actual
@@ -35,7 +35,10 @@ class AlohomoraMcpServerHttpTest {
             server.start(port)
             awaitListening(port)
             val status = server.status.value
-            assertTrue(status is McpServerStatus.Listening && status.port == port, "expected Listening($port), was $status")
+            assertTrue(
+                status is McpServerStatus.Listening && status.port == port,
+                "expected Listening($port), was $status",
+            )
         } finally {
             server.stop()
         }
@@ -43,24 +46,60 @@ class AlohomoraMcpServerHttpTest {
     }
 
     @Test
-    fun `read tools are listed and write tools are hidden when writes are off`() = withServer(writeEnabled = false, devices = listOf("dev-1")) { client ->
-        val names = client.toolNames()
-        // A sample of the read surface is present…
-        listOf("list_devices", "get_attention", "list_traffic", "get_trace", "get_build_metadata")
-            .forEach { assertTrue(it in names, "read tool $it should be listed") }
-        // …and no write tool leaks when the toggle is off.
-        listOf("replay_traffic", "set_mock_rules", "clear_mock_rules", "set_throttle", "clear_captured", "create_mock_from_traffic", "run_adb_command")
-            .forEach { assertFalse(it in names, "write tool $it must be hidden when writes are off") }
-        assertEquals(18, names.size, "18 read-only tools when writes are off")
-    }
+    fun `read tools are listed and write tools are hidden when writes are off`() =
+        withServer(writeEnabled = false, devices = listOf("dev-1")) { client ->
+            val names = client.toolNames()
+            // A sample of the read surface is present…
+            listOf(
+                "list_devices",
+                "get_attention",
+                "list_traffic",
+                "get_trace",
+                "get_build_metadata",
+            )
+                .forEach { assertTrue(it in names, "read tool $it should be listed") }
+            // …and no write tool leaks when the toggle is off.
+            listOf(
+                "replay_traffic",
+                "set_mock_rules",
+                "clear_mock_rules",
+                "set_throttle",
+                "clear_captured",
+                "create_mock_from_traffic",
+                "run_adb_command",
+            )
+                .forEach {
+                    assertFalse(
+                        it in names,
+                        "write tool $it must be hidden when writes are off",
+                    )
+                }
+            assertEquals(18, names.size, "18 read-only tools when writes are off")
+        }
 
     @Test
-    fun `write tools appear only when writes are enabled`() = withServer(writeEnabled = true) { client ->
-        val names = client.toolNames()
-        listOf("replay_traffic", "list_mock_rules", "set_mock_rules", "clear_mock_rules", "get_throttle", "set_throttle", "clear_captured", "create_mock_from_traffic", "run_adb_command")
-            .forEach { assertTrue(it in names, "write tool $it should be listed when writes are on") }
-        assertEquals(27, names.size, "18 read + 9 write tools when writes are on")
-    }
+    fun `write tools appear only when writes are enabled`() =
+        withServer(writeEnabled = true) { client ->
+            val names = client.toolNames()
+            listOf(
+                "replay_traffic",
+                "list_mock_rules",
+                "set_mock_rules",
+                "clear_mock_rules",
+                "get_throttle",
+                "set_throttle",
+                "clear_captured",
+                "create_mock_from_traffic",
+                "run_adb_command",
+            )
+                .forEach {
+                    assertTrue(
+                        it in names,
+                        "write tool $it should be listed when writes are on",
+                    )
+                }
+            assertEquals(27, names.size, "18 read + 9 write tools when writes are on")
+        }
 
     @Test
     fun `the canned prompts are listed`() = withServer(writeEnabled = false) { client ->
@@ -68,11 +107,12 @@ class AlohomoraMcpServerHttpTest {
     }
 
     @Test
-    fun `list_devices round-trips the connected device`() = withServer(writeEnabled = false, devices = listOf("dev-1")) { client ->
-        val text = client.callToolText("list_devices", "{}")
-        val devices = Json.parseToJsonElement(text).jsonArray
-        assertEquals("dev-1", devices.single().jsonObject["deviceId"]!!.jsonPrimitive.content)
-    }
+    fun `list_devices round-trips the connected device`() =
+        withServer(writeEnabled = false, devices = listOf("dev-1")) { client ->
+            val text = client.callToolText("list_devices", "{}")
+            val devices = Json.parseToJsonElement(text).jsonArray
+            assertEquals("dev-1", devices.single().jsonObject["deviceId"]!!.jsonPrimitive.content)
+        }
 
     // --- harness ----------------------------------------------------------------------------------
 
@@ -144,7 +184,10 @@ private class McpHttpClient(port: Int) {
             .map { it.jsonObject["name"]!!.jsonPrimitive.content }.toSet()
 
     fun callToolText(name: String, arguments: String): String =
-        rpc("tools/call", """{"name":"$name","arguments":$arguments}""")["result"]!!.jsonObject["content"]!!
+        rpc(
+            "tools/call",
+            """{"name":"$name","arguments":$arguments}""",
+        )["result"]!!.jsonObject["content"]!!
             .jsonArray[0].jsonObject["text"]!!.jsonPrimitive.content
 
     private fun rpc(method: String, params: String = "{}") =

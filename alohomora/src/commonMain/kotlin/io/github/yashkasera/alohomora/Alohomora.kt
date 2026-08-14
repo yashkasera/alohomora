@@ -3,6 +3,8 @@ package io.github.yashkasera.alohomora
 import co.touchlab.kermit.Logger
 import io.github.yashkasera.alohomora.Alohomora.initLock
 import io.github.yashkasera.alohomora.Alohomora.isReplaySupported
+import io.github.yashkasera.alohomora.Alohomora.persistError
+import io.github.yashkasera.alohomora.Alohomora.persistSpan
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.FeatureFlag
@@ -138,7 +140,10 @@ object Alohomora {
      * [config] is assigned only on the initializing call: a later `init()` with a null
      * config must not wipe the build metadata discovered by `AlohomoraInitializer`.
      */
-    internal fun initInternal(config: AlohomoraConfig? = null, appDeclaration: KoinAppDeclaration = {}) {
+    internal fun initInternal(
+        config: AlohomoraConfig? = null,
+        appDeclaration: KoinAppDeclaration = {},
+    ) {
         initLock.withLock {
             if (koinApplication != null) return
             this.config = config

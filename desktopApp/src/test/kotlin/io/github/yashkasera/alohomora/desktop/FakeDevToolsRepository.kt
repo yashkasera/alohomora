@@ -38,7 +38,8 @@ class FakeDevToolsRepository(
     override val events: StateFlow<List<Event>> = _events
     override val cacheState: StateFlow<CacheState> = _cacheState
 
-    override val connectionState = MutableStateFlow<DevToolsConnection>(DevToolsConnection.Disconnected)
+    override val connectionState =
+        MutableStateFlow<DevToolsConnection>(DevToolsConnection.Disconnected)
     override val currentDeviceId = MutableStateFlow<String?>("test-device")
     override val switching = MutableStateFlow(false)
     override val errors = MutableStateFlow<List<Error>>(emptyList())
@@ -79,7 +80,13 @@ class FakeDevToolsRepository(
     }
 
     /** Records which streams a clear_captured asked to wipe, so a test can assert the mapping. */
-    data class ClearCall(val traces: Boolean, val events: Boolean, val errors: Boolean, val spans: Boolean)
+    data class ClearCall(
+        val traces: Boolean,
+        val events: Boolean,
+        val errors: Boolean,
+        val spans: Boolean,
+    )
+
     val clearCalls = mutableListOf<ClearCall>()
 
     override fun clearCaptured(traces: Boolean, events: Boolean, errors: Boolean, spans: Boolean) {
@@ -97,13 +104,15 @@ class FakeDevToolsRepository(
 
     override fun replayTraffic(request: ReplayRequest) {
         replayedRequests += request
-        replayState.value = replayState.value.copy(inFlight = replayState.value.inFlight + request.sourceTraceId)
+        replayState.value =
+            replayState.value.copy(inFlight = replayState.value.inFlight + request.sourceTraceId)
     }
 
     /** Answers a pending replay the way a `ReplayResultMessage(sent = true)` would. */
     fun deliverReplaySuccess(sourceTraceId: String, entry: TrafficEntry) {
         traffic.value = traffic.value + entry
-        replayState.value = replayState.value.copy(inFlight = replayState.value.inFlight - sourceTraceId)
+        replayState.value =
+            replayState.value.copy(inFlight = replayState.value.inFlight - sourceTraceId)
     }
 
     /** Answers a pending replay the way a `ReplayResultMessage(sent = false)` would. */
@@ -114,8 +123,13 @@ class FakeDevToolsRepository(
         )
     }
 
-    override fun setThrottleProfile(profile: ThrottleProfile) { throttleSet += profile }
-    override fun setMockRules(rules: List<MockRule>) { mockRulesSent += rules }
+    override fun setThrottleProfile(profile: ThrottleProfile) {
+        throttleSet += profile
+    }
+
+    override fun setMockRules(rules: List<MockRule>) {
+        mockRulesSent += rules
+    }
 
     override fun connect(target: DevToolsTarget) = Unit
     override fun switchDevice(target: DevToolsTarget, deviceId: String?) = Unit
@@ -137,5 +151,6 @@ class FakeDevToolsRepository(
         columnName: String,
         newValue: String?,
     ) = Unit
+
     override fun requestInitialState() = Unit
 }

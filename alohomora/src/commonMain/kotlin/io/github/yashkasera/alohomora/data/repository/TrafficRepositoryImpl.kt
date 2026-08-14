@@ -22,7 +22,8 @@ internal class TrafficRepositoryImpl(private val dao: TrafficDao) : TrafficRepos
 
     override fun getById(id: String): Flow<TrafficEntry?> = dao.getById(id)
 
-    override fun observeReplayOf(sourceId: String): Flow<TrafficEntry?> = dao.observeReplayOf(sourceId)
+    override fun observeReplayOf(sourceId: String): Flow<TrafficEntry?> =
+        dao.observeReplayOf(sourceId)
 
     override suspend fun save(item: TrafficEntry): String {
         dao.insert(item)

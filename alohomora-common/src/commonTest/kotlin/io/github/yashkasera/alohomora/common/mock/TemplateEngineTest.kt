@@ -46,20 +46,29 @@ class TemplateEngineTest {
         val result = TemplateEngine.resolve("{{amount(100,200)}}")
         val value = result.toDoubleOrNull()
         assertTrue(value != null, "Expected decimal output")
-        assertTrue(value >= 100.0 && value <= 200.0, "Expected value between 100 and 200 but got $value")
+        assertTrue(
+            value >= 100.0 && value <= 200.0,
+            "Expected value between 100 and 200 but got $value",
+        )
         assertTrue(result.contains("."), "Expected decimal point")
     }
 
     @Test
     fun dateDirectionPast() {
         val result = TemplateEngine.resolve("{{date(past,7)}}")
-        assertTrue(result.matches(Regex("""\d{4}-\d{2}-\d{2}""")), "Expected ISO date but got $result")
+        assertTrue(
+            result.matches(Regex("""\d{4}-\d{2}-\d{2}""")),
+            "Expected ISO date but got $result",
+        )
     }
 
     @Test
     fun dateDirectionFuture() {
         val result = TemplateEngine.resolve("{{date(future,30)}}")
-        assertTrue(result.matches(Regex("""\d{4}-\d{2}-\d{2}""")), "Expected ISO date but got $result")
+        assertTrue(
+            result.matches(Regex("""\d{4}-\d{2}-\d{2}""")),
+            "Expected ISO date but got $result",
+        )
     }
 
     @Test
@@ -80,7 +89,10 @@ class TemplateEngineTest {
     @Test
     fun oneOfGenerator() {
         val result = TemplateEngine.resolve("{{oneOf(active,inactive,pending)}}")
-        assertTrue(result in listOf("active", "inactive", "pending"), "Expected one of the options but got $result")
+        assertTrue(
+            result in listOf("active", "inactive", "pending"),
+            "Expected one of the options but got $result",
+        )
     }
 
     @Test

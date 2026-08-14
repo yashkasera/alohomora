@@ -129,7 +129,8 @@ class NetworkRulesViewModel(
      */
     @OptIn(ExperimentalUuidApi::class)
     fun replaceRules(rules: List<MockRule>) {
-        _mockRules.value = rules.map { if (it.id.isBlank()) it.copy(id = Uuid.random().toString()) else it }
+        _mockRules.value =
+            rules.map { if (it.id.isBlank()) it.copy(id = Uuid.random().toString()) else it }
         sendRules()
     }
 
@@ -237,7 +238,8 @@ class NetworkRulesViewModel(
                 sendRules()
             }
             return null
-        } catch (_: Exception) { }
+        } catch (_: Exception) {
+        }
 
         return try {
             val harRules = importHar(text)

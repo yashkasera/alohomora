@@ -1,6 +1,5 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
@@ -23,17 +21,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.desktop.domain.model.GitHistoryCommit
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
-import io.github.yashkasera.alohomora.ui.components.TopBarLayout
-import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
-import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -60,8 +56,8 @@ fun GitHistoryPanel(devToolsViewModel: DevToolsViewModel) {
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                 contentPadding = PaddingValues(
-                    MaterialTheme.dimens.margin.md
-                )
+                    MaterialTheme.dimens.margin.md,
+                ),
             ) {
 
                 if (commits.isEmpty()) {
@@ -109,10 +105,12 @@ private fun GitHistoryRow(commit: GitHistoryCommit) {
                     color = MaterialTheme.colorScheme.secondary,
                 )
                 Text(
-                    text = "${DateUtils.format(
-                        commit.timestamp,
-                        DateUtils.Format.READABLE_DATE_TIME,
-                    )} | ${commit.author}",
+                    text = "${
+                        DateUtils.format(
+                            commit.timestamp,
+                            DateUtils.Format.READABLE_DATE_TIME,
+                        )
+                    } | ${commit.author}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onBackground,
                 )

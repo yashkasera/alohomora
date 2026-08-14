@@ -27,16 +27,14 @@ import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
-import io.github.yashkasera.alohomora.common.SetMockRulesMessage
-import io.github.yashkasera.alohomora.common.SetThrottleProfileMessage
-import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
-import io.github.yashkasera.alohomora.common.VpnStateMessage
-import io.github.yashkasera.alohomora.common.VpnThrottleState
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
 import io.github.yashkasera.alohomora.common.RequestTraceSpansMessage
+import io.github.yashkasera.alohomora.common.SetMockRulesMessage
+import io.github.yashkasera.alohomora.common.SetThrottleProfileMessage
+import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.StreamErrorMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
@@ -44,6 +42,7 @@ import io.github.yashkasera.alohomora.common.StreamSpanMessage
 import io.github.yashkasera.alohomora.common.StreamTrafficMessage
 import io.github.yashkasera.alohomora.common.TraceSpansSnapshotMessage
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.common.VpnStateMessage
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults.ERROR_SNAPSHOT_LIMIT
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults.MAX_TABLE_RELOAD_LIMIT
@@ -140,6 +139,7 @@ internal class DevToolsRuntime(
 
     @Volatile
     private var isObservingOtp = false
+
     @Volatile
     private var isObservingServerActive = false
     private val _serverState = MutableStateFlow(DevToolsServerState())
@@ -292,7 +292,8 @@ internal class DevToolsRuntime(
     private inner class DevToolsConnection(
         private val socket: DevToolsSocket,
     ) {
-        private val connectionScope = CoroutineScope(Dispatchers.IO + SupervisorJob() + exceptionHandler)
+        private val connectionScope =
+            CoroutineScope(Dispatchers.IO + SupervisorJob() + exceptionHandler)
 
         // Two channels, not one. Control messages (AUTH_*, INITIAL_STATE, snapshots) are
         // unbounded and must never be dropped: the desktop client only leaves its
@@ -307,6 +308,7 @@ internal class DevToolsRuntime(
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
         )
         private val eventAdapter = DevToolsStreamAdapter { event: Event -> event.time }
+
         // Keyed on `id`, not `time`: ids are monotonic, so two errors recorded inside the same
         // millisecond are still ordered and neither is silently dropped as "not newer".
         private val errorAdapter = DevToolsStreamAdapter { error: Error -> error.id }
@@ -427,6 +429,7 @@ internal class DevToolsRuntime(
                                 message.tableName,
                                 message.limit,
                             )
+
                             is RequestDatabaseUpdateMessage -> handleDatabaseUpdate(message)
                             is RequestCacheValueMessage -> handleCacheRequest(message.key)
                             is RequestReplayTraceMessage -> handleReplayRequest(message)
@@ -711,12 +714,13 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun streamTraffic() {
-            database.trafficDao().observeLatest(DevToolsDefaults.TRAFFIC_SNAPSHOT_LIMIT).collect { logs ->
-                val changedItems = changedTraffic(logs)
-                changedItems.forEach { item ->
-                    sendStream(StreamTrafficMessage(nextSequence(), item))
+            database.trafficDao().observeLatest(DevToolsDefaults.TRAFFIC_SNAPSHOT_LIMIT)
+                .collect { logs ->
+                    val changedItems = changedTraffic(logs)
+                    changedItems.forEach { item ->
+                        sendStream(StreamTrafficMessage(nextSequence(), item))
+                    }
                 }
-            }
         }
 
         private suspend fun streamFeatureFlags() {
@@ -788,22 +792,30 @@ internal class DevToolsRuntime(
                 time,
             ).hashCode()
 
-        private suspend fun handleDatabaseRequest(databaseName: String?, tableName: String, limit: Int) {
+        private fun handleDatabaseRequest(
+            databaseName: String?,
+            tableName: String,
+            limit: Int,
+        ) {
             val resolvedName = databaseName ?: defaultDatabaseName ?: return
             val tableSnapshot = databaseInspector.loadTable(resolvedName, tableName, limit)
-            send(DatabaseSnapshotMessage(
-                nextSequence(),
-                DatabaseSnapshotPayload(databaseName = resolvedName, table = tableSnapshot),
-            ))
+            send(
+                DatabaseSnapshotMessage(
+                    nextSequence(),
+                    DatabaseSnapshotPayload(databaseName = resolvedName, table = tableSnapshot),
+                ),
+            )
         }
 
         private suspend fun handleDatabaseSchemaRequest(databaseName: String) {
             defaultDatabaseName = databaseName
             val schema = databaseInspector.loadSchema(databaseName)
-            send(DatabaseSnapshotMessage(
-                nextSequence(),
-                DatabaseSnapshotPayload(databaseName = databaseName, schema = schema),
-            ))
+            send(
+                DatabaseSnapshotMessage(
+                    nextSequence(),
+                    DatabaseSnapshotPayload(databaseName = databaseName, schema = schema),
+                ),
+            )
         }
 
         private suspend fun handleDatabaseUpdate(message: RequestDatabaseUpdateMessage) {
@@ -822,10 +834,12 @@ internal class DevToolsRuntime(
 
         private suspend fun handleCacheRequest(key: String) {
             val value = cacheInspector.getValue(key)
-            send(CacheSnapshotMessage(
-                nextSequence(),
-                CacheSnapshotPayload(values = mapOf(key to value)),
-            ))
+            send(
+                CacheSnapshotMessage(
+                    nextSequence(),
+                    CacheSnapshotPayload(values = mapOf(key to value)),
+                ),
+            )
         }
 
         /** Queues a control message. Never dropped — [control] is unbounded. */

@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora
 
 import androidx.compose.ui.window.ComposeUIViewController
 import io.github.yashkasera.alohomora.presentation.ui.AlohomoraApp
+import kotlin.math.sqrt
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import platform.CoreMotion.CMMotionManager
@@ -14,7 +15,6 @@ import platform.UIKit.UIWindow
 import platform.UIKit.sheetPresentationController
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
-import kotlin.math.sqrt
 
 /**
  * iOS shake detection via Core Motion. Unlike Android, the library both listens and presents here,

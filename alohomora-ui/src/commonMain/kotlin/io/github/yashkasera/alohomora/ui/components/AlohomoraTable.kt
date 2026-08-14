@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,12 +51,12 @@ fun AlohomoraTable(
     if (columns.isEmpty()) {
         Box(
             modifier = modifier,
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = "No columns",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.tertiary
+                color = MaterialTheme.colorScheme.tertiary,
             )
         }
         return
@@ -77,9 +76,9 @@ fun AlohomoraTable(
             .border(
                 width = MaterialTheme.dimens.stroke.small,
                 color = MaterialTheme.colorScheme.outlineVariant,
-                shape = MaterialTheme.shapes.small
+                shape = MaterialTheme.shapes.small,
             )
-            .clip(MaterialTheme.shapes.small)
+            .clip(MaterialTheme.shapes.small),
     ) {
         val density = LocalDensity.current
         val availableWidthPx = with(density) { maxWidth.toPx() }
@@ -100,7 +99,7 @@ fun AlohomoraTable(
         Box(
             modifier = Modifier
                 .verticalScroll(verticalScrollState)
-                .then(scrollModifier)
+                .then(scrollModifier),
         ) {
             Column {
                 TableRow(
@@ -195,14 +194,14 @@ private fun TableRow(
                     Color.Transparent
                 } else {
                     MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-                }
-            )
+                },
+            ),
     ) {
         cells.forEachIndexed { index, cell ->
             val width = columnWidths.getOrElse(index) { 80.dp }
             val isEditing = !isHeader && editingCell != null
-                    && editingCell.rowIndex == rowIndex
-                    && editingCell.colIndex == index
+                && editingCell.rowIndex == rowIndex
+                && editingCell.colIndex == index
 
             val widthModifier = if (fillWidth && index == cells.lastIndex) {
                 Modifier.weight(1f)
@@ -222,7 +221,7 @@ private fun TableRow(
                     content = cell,
                     modifier = widthModifier,
                     editable = !isHeader && columns.getOrNull(index)?.editable == true
-                            && onCellDoubleClick != null,
+                        && onCellDoubleClick != null,
                     onDoubleClick = if (!isHeader) {
                         { onCellDoubleClick?.invoke(index) }
                     } else null,
@@ -243,17 +242,17 @@ private fun TableCell(
         modifier = modifier
             .border(
                 width = MaterialTheme.dimens.stroke.thin,
-                color = MaterialTheme.colorScheme.outlineVariant
+                color = MaterialTheme.colorScheme.outlineVariant,
             )
             .then(
                 if (onDoubleClick != null) {
                     Modifier.pointerInput(Unit) {
                         detectTapGestures(onDoubleTap = { onDoubleClick() })
                     }
-                } else Modifier
+                } else Modifier,
             )
             .padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = 6.dp),
-        contentAlignment = Alignment.CenterStart
+        contentAlignment = Alignment.CenterStart,
     ) {
         when (content) {
             is CellContent.Header -> {
@@ -263,23 +262,24 @@ private fun TableCell(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = content.type,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.tertiary,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
+
             is CellContent.Data -> {
                 Text(
                     text = content.value,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -302,11 +302,11 @@ private fun EditableCell(
         modifier = modifier
             .border(
                 width = 2.dp,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             .padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = 6.dp),
-        contentAlignment = Alignment.CenterStart
+        contentAlignment = Alignment.CenterStart,
     ) {
         BasicTextField(
             value = text,
@@ -336,6 +336,7 @@ private fun EditableCell(
                             }
                             true
                         }
+
                         Key.Escape -> {
                             if (!committed) {
                                 committed = true
@@ -343,6 +344,7 @@ private fun EditableCell(
                             }
                             true
                         }
+
                         else -> false
                     }
                 },
@@ -356,7 +358,7 @@ private fun EditableCell(
 
 private fun calculateColumnWidths(
     columns: List<TableColumn>,
-    rows: List<Map<String, String?>>
+    rows: List<Map<String, String?>>,
 ): List<Int> {
     val baseWidths = columns.map { column ->
         val nameWidth = column.name.length * 8 + 24

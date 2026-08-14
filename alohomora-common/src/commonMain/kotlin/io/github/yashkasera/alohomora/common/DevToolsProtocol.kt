@@ -1,5 +1,7 @@
 package io.github.yashkasera.alohomora.common
 
+import io.github.yashkasera.alohomora.common.DevToolsProtocol.VERSION
+import io.github.yashkasera.alohomora.common.DevToolsProtocol.readEnvelope
 import io.github.yashkasera.alohomora.devtools.DevToolsSocket
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule

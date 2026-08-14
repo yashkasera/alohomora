@@ -3,7 +3,6 @@ package io.github.yashkasera.alohomora.error
 import co.touchlab.kermit.Logger
 import io.github.yashkasera.alohomora.Alohomora
 import kotlin.experimental.ExperimentalNativeApi
-import kotlin.native.setUnhandledExceptionHook
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull

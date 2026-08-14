@@ -1,8 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -39,17 +36,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.desktop.presentation.model.CacheRow
 import io.github.yashkasera.alohomora.desktop.presentation.model.CacheUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.cacheSubtitle
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
-import io.github.yashkasera.alohomora.ui.components.TopBarLayout
-import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.CacheViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
-import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
+import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.ChevronRight
@@ -121,8 +117,8 @@ fun CachePanel(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                         contentPadding = PaddingValues(
-                            MaterialTheme.dimens.margin.md
-                        )
+                            MaterialTheme.dimens.margin.md,
+                        ),
                     ) {
                         items(uiState.rows, key = { it.key }) { row ->
                             CacheEntryRow(
@@ -152,23 +148,23 @@ private fun CacheEntryRow(
     AlohomoraCard(
         modifier = Modifier.fillMaxWidth(),
         colors = AlohomoraCardDefaults.colors(
-            containerColor = if (expanded) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainer
+            containerColor = if (expanded) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainer,
         ),
-        onClick = onToggle
+        onClick = onToggle,
     ) {
         Column(
             modifier = Modifier.padding(
                 horizontal = MaterialTheme.dimens.margin.xxl,
-                vertical = MaterialTheme.dimens.margin.md
-            )
+                vertical = MaterialTheme.dimens.margin.md,
+            ),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = if (expanded) Icons.ChevronDown else Icons.ChevronRight,
-                        contentDescription = if (expanded) "Collapse" else "Expand",
-                        modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                Icon(
+                    imageVector = if (expanded) Icons.ChevronDown else Icons.ChevronRight,
+                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
 
                 // Weighted rather than a fixed key column: the old 200.dp truncated long keys on a narrow
@@ -187,7 +183,7 @@ private fun CacheEntryRow(
             AnimatedVisibility(expanded) {
                 Row(
                     modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     AlohomoraCodeBlock(
                         modifier = Modifier.weight(1f),

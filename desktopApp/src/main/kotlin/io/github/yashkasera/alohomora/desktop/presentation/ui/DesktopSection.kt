@@ -12,7 +12,6 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Key
 import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.icons.ScrollText
-import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
 import io.github.yashkasera.alohomora.ui.icons.Terminal
 import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
@@ -37,6 +36,7 @@ enum class DesktopSection(
 
     // Everything below is delivered over the DevTools protocol, so it is platform-agnostic.
     Traffic("Traffic", Icons.Route),
+
     // Directly under Traffic because the two are read together — a trace explains where a request's
     // time went. Platform-agnostic: spans arrive over the DevTools protocol like everything below.
     Traces("Traces", Icons.Waypoints),

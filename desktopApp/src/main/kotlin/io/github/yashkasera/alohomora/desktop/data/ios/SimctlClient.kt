@@ -40,7 +40,8 @@ class SimctlClient(
      */
     fun listBootedSimulators(): List<SimulatorDevice> {
         if (!isAvailable()) return emptyList()
-        val result = ProcessRunner.run(listOf(xcrunPath, "simctl", "list", "-j", "devices", "booted"))
+        val result =
+            ProcessRunner.run(listOf(xcrunPath, "simctl", "list", "-j", "devices", "booted"))
         if (!result.isSuccess) return emptyList()
 
         return try {

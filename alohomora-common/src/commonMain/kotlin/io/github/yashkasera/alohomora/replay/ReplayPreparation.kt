@@ -37,6 +37,7 @@ enum class ReplayBlockedReason {
             UNPARSEABLE_BODY ->
                 "The request body was not captured as text (multipart, streaming or one-shot), " +
                     "so it cannot be reproduced."
+
             TRUNCATED_BODY ->
                 "The request body was too large to capture in full. Replaying the truncated copy " +
                     "would send incomplete data."

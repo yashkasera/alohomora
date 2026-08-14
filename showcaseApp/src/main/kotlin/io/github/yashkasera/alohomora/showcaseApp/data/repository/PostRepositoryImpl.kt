@@ -30,7 +30,7 @@ class PostRepositoryImpl(
                     id = entity.id,
                     userId = entity.userId,
                     title = entity.title,
-                    body = entity.body
+                    body = entity.body,
                 )
             }
         }
@@ -88,22 +88,22 @@ class PostRepositoryImpl(
                                 userId = dto.userId,
                                 title = dto.title,
                                 body = dto.body,
-                                updatedAtEpochMillis = now
+                                updatedAtEpochMillis = now,
                             )
-                        }
+                        },
                     )
                 }
 
                 preferencesRepository.updateLastRefreshEpochMillis(now)
                 Alohomora.recordEvent(
                     "posts_refresh_success",
-                    mapOf("count" to posts.size.toString())
+                    mapOf("count" to posts.size.toString()),
                 )
             }
         } catch (e: Exception) {
             Alohomora.recordEvent(
                 "posts_refresh_failure",
-                mapOf("error" to (e.message ?: "unknown"))
+                mapOf("error" to (e.message ?: "unknown")),
             )
             throw e
         }

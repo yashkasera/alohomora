@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [PostEntity::class],
     version = 1,
-    exportSchema = false
+    exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun postDao(): PostDao

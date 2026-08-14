@@ -60,7 +60,8 @@ class CrashHandlerTest {
 
         installCrashHandler()
         val boom = IllegalStateException("boom")
-        Thread.getDefaultUncaughtExceptionHandler()!!.uncaughtException(Thread.currentThread(), boom)
+        Thread.getDefaultUncaughtExceptionHandler()!!
+            .uncaughtException(Thread.currentThread(), boom)
 
         assertEquals(1, seen.size, "the displaced handler was not called exactly once")
         assertSame(boom, seen.single().second, "a different throwable was forwarded")

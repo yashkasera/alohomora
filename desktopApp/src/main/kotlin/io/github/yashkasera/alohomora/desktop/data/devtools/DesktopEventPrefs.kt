@@ -64,11 +64,14 @@ internal object DesktopEventPrefs {
      * [DesktopTrustPrefs] applies, but measured against the key *including* its suffix.
      */
     private fun String.mutedKey(): String {
-        val base = if (length + KEY_SUFFIX.length <= Preferences.MAX_KEY_LENGTH) this else "h${hashCode()}"
+        val base =
+            if (length + KEY_SUFFIX.length <= Preferences.MAX_KEY_LENGTH) this else "h${hashCode()}"
         return base + KEY_SUFFIX
     }
 
-    fun clearAll() { prefs.clear() }
+    fun clearAll() {
+        prefs.clear()
+    }
 
     private const val KEY_SUFFIX = ".mutedEvents"
 }

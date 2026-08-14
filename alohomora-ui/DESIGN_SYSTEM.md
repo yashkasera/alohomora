@@ -20,9 +20,11 @@ values are the exception, not the default.
    family. Asking for `FontWeight.Medium`/`Bold` gets a synthetic stroke-widen that differs per
    platform. Lean on the type scale, `onSurface` vs `onSurfaceVariant`, and the serif display face.
 3. **Tokens everywhere.** Spacing, radius, stroke and colour come from `MaterialTheme.dimens`,
-   `MaterialTheme.shapes`, `MaterialTheme.colorScheme` and `MaterialTheme.alohomoraColors`. A literal
+   `MaterialTheme.shapes`, `MaterialTheme.colorScheme` and `MaterialTheme.alohomoraColors`. A
+   literal
    `16.dp` or `Color(0xFF…)` in a screen is a refactoring smell.
-4. **Every component wraps in a theme.** Tokens resolve through composition locals; `alohomoraColors`
+4. **Every component wraps in a theme.** Tokens resolve through composition locals;
+   `alohomoraColors`
    throws if `AppTheme { }` is not an ancestor.
 
 ---
@@ -31,37 +33,37 @@ values are the exception, not the default.
 
 ### Spacing — `MaterialTheme.dimens.margin`
 
-| Token | Value | Typical use |
-|-------|-------|-------------|
-| `xs` | 4.dp | chip/badge internal gap, label bottom gap |
-| `sm` | 8.dp | tight row gap, icon–label spacing |
-| `md` | 12.dp | compact section gap |
-| `lg` | 16.dp | standard card / list-item padding |
-| `xl` | 20.dp | screen horizontal edge padding |
-| `xxl` | 24.dp | section container padding |
-| `xxxl` | 32.dp | section separator, empty-state outer padding |
-| `huge` | 48.dp | tall section spacers |
-| `fab` | 88.dp | trailing scroll space clearing a floating action button |
+| Token  | Value | Typical use                                             |
+|--------|-------|---------------------------------------------------------|
+| `xs`   | 4.dp  | chip/badge internal gap, label bottom gap               |
+| `sm`   | 8.dp  | tight row gap, icon–label spacing                       |
+| `md`   | 12.dp | compact section gap                                     |
+| `lg`   | 16.dp | standard card / list-item padding                       |
+| `xl`   | 20.dp | screen horizontal edge padding                          |
+| `xxl`  | 24.dp | section container padding                               |
+| `xxxl` | 32.dp | section separator, empty-state outer padding            |
+| `huge` | 48.dp | tall section spacers                                    |
+| `fab`  | 88.dp | trailing scroll space clearing a floating action button |
 
 ### Icon sizes — `MaterialTheme.dimens.icon`
 
-| Token | Value | Typical use |
-|-------|-------|-------------|
-| `xs` | 12.dp | tiny dot / indicator |
-| `sm` | 14.dp | metadata row icons (clock, drive) |
-| `md` | 16.dp | small action icons, search-field icon |
-| `lg` | 20.dp | standard trailing / leading icons |
-| `standard` | 24.dp | primary nav / toolbar icons |
-| `xl` | 36.dp | empty-state icon glyph |
-| `illustration` | 80.dp | empty-state icon container |
+| Token          | Value | Typical use                           |
+|----------------|-------|---------------------------------------|
+| `xs`           | 12.dp | tiny dot / indicator                  |
+| `sm`           | 14.dp | metadata row icons (clock, drive)     |
+| `md`           | 16.dp | small action icons, search-field icon |
+| `lg`           | 20.dp | standard trailing / leading icons     |
+| `standard`     | 24.dp | primary nav / toolbar icons           |
+| `xl`           | 36.dp | empty-state icon glyph                |
+| `illustration` | 80.dp | empty-state icon container            |
 
 ### Stroke — `MaterialTheme.dimens.stroke`
 
-| Token | Value | Typical use |
-|-------|-------|-------------|
-| `thin` | 0.5.dp | subtle dividers, list-item separators |
-| `small` | 1.dp | standard borders, field outlines |
-| `medium` | 2.dp | emphasis borders (e.g. EmptyState icon ring) |
+| Token    | Value  | Typical use                                  |
+|----------|--------|----------------------------------------------|
+| `thin`   | 0.5.dp | subtle dividers, list-item separators        |
+| `small`  | 1.dp   | standard borders, field outlines             |
+| `medium` | 2.dp   | emphasis borders (e.g. EmptyState icon ring) |
 
 ### Shapes / corners — `MaterialTheme.shapes`
 
@@ -69,13 +71,13 @@ Corner radii are `Shape`s, not `Dp`s, and live in `MaterialTheme.shapes`. **Ther
 `corner` token** — a second scale under different names for the same radii was deleted. Use
 `MaterialTheme.shapes.*` in any `shape =` / `.clip()` / `.border()`.
 
-| Role | Radius |
-|------|--------|
-| `extraSmall` | 4.dp |
-| `small` | 8.dp |
-| `medium` | 12.dp |
-| `large` | 16.dp |
-| `extraLarge` | 28.dp |
+| Role         | Radius |
+|--------------|--------|
+| `extraSmall` | 4.dp   |
+| `small`      | 8.dp   |
+| `medium`     | 12.dp  |
+| `large`      | 16.dp  |
+| `extraLarge` | 28.dp  |
 
 `AlohomoraBottomSheetShape` (top corners only, 4.dp) covers the one asymmetric case the symmetric
 scale can't express.
@@ -85,11 +87,11 @@ scale can't express.
 Three bundled families, one `Regular` face each. Emphasis roles render identically to their base
 (the console has one weight — reach for a larger size or a stronger colour role instead).
 
-| M3 roles | Family |
-|----------|--------|
-| `display*`, `headline*` | Instrument Serif |
-| `title*` | Newsreader (serif) |
-| `body*`, `label*` | JetBrains Mono |
+| M3 roles                | Family             |
+|-------------------------|--------------------|
+| `display*`, `headline*` | Instrument Serif   |
+| `title*`                | Newsreader (serif) |
+| `body*`, `label*`       | JetBrains Mono     |
 
 `labelLarge` is tracked to `0.5.sp` to match its label siblings once its faux-Medium weight is gone.
 
@@ -100,13 +102,13 @@ Two layers. Standard Material roles come from `MaterialTheme.colorScheme` (`prim
 
 Semantic status colours come from the extension `MaterialTheme.alohomoraColors`:
 
-| Token | Meaning |
-|-------|---------|
-| `accent` | brand/interactive accent |
+| Token                          | Meaning                              |
+|--------------------------------|--------------------------------------|
+| `accent`                       | brand/interactive accent             |
 | `success` / `successContainer` | success state + its low-opacity fill |
-| `warning` | warning state |
-| `info` | informational state |
-| `fatal` | fatal error / crash accent |
+| `warning`                      | warning state                        |
+| `info`                         | informational state                  |
+| `fatal`                        | fatal error / crash accent           |
 
 Also on the theme object: `id`, `displayName`, `isDark`, `materialColorScheme`.
 
@@ -202,7 +204,8 @@ AlohomoraSearchTextField(query = q, onQueryChange = { q = it })
 
 - `AlohomoraTextField` — labelled field with `isError`/`supportingText`, focus-aware border, caret
   preserved across `StateFlow`-driven updates.
-- `AlohomoraSearchTextField` — search field with leading search icon and a clearable trailing button.
+- `AlohomoraSearchTextField` — search field with leading search icon and a clearable trailing
+  button.
 
 ### Toggles & tabs — `AlohomoraToggleGroups.kt`, `AlohomoraTabs.kt`
 
@@ -237,10 +240,13 @@ AlohomoraCircularProgressIndicator()   // defaults color = onBackground (NOT M3'
 
 ### Selection controls — `AlohomoraSelectionControls.kt`
 
-`AlohomoraCheckbox`, `AlohomoraTriStateCheckbox`, `AlohomoraSwitch`, `AlohomoraRadioButton` — standard
+`AlohomoraCheckbox`, `AlohomoraTriStateCheckbox`, `AlohomoraSwitch`, `AlohomoraRadioButton` —
+standard
 selection controls tuned to the console palette.
 
-### Dialogs & sheets — `AlohomoraAlertDialog.kt`, `AlohomoraBottomSheetModal.kt`, `AlohomoraConfirmationBottomSheet.kt`
+### Dialogs & sheets — `AlohomoraAlertDialog.kt`, `AlohomoraBottomSheetModal.kt`,
+
+`AlohomoraConfirmationBottomSheet.kt`
 
 ```kotlin
 AlohomoraAlertDialog(
@@ -257,7 +263,8 @@ ConfirmationBottomSheet(title = "…", message = "…", onConfirm = ::go, onDism
 
 - `AlohomoraBottomSheetModal` — modal sheet with configurable `DragHandleConfig` and default padding
   (`AlohomoraBottomSheetDefaults`).
-- `ConfirmationBottomSheet` — pre-built confirm/cancel sheet (`ConfirmationConfig`, `isDestructive`).
+- `ConfirmationBottomSheet` — pre-built confirm/cancel sheet (`ConfirmationConfig`,
+  `isDestructive`).
 
 ### Dropdowns — `AlohomoraDropdownMenu.kt`
 
@@ -280,7 +287,8 @@ AlohomoraTopBar(title = "Traffic", subtitle = "42 requests", layout = TopBarLayo
 
 ### Floating action buttons — `AlohomoraFloatingActionButton.kt`
 
-`AlohomoraFloatingActionButton` and `AlohomoraExtendedFloatingActionButton` — emphasis-coloured FABs.
+`AlohomoraFloatingActionButton` and `AlohomoraExtendedFloatingActionButton` — emphasis-coloured
+FABs.
 Pair with `Modifier`-side `fabClearanceItem()` (below) so the last list row isn't covered.
 
 ### Feedback & display
@@ -301,7 +309,8 @@ Pair with `Modifier`-side `fabClearanceItem()` (below) so the last list row isn'
 ### List helpers — `ScrollToTop.kt`, `FabClearance.kt`
 
 - `FollowNewest(listState, itemCount)` — auto-scrolls a newest-first list to the top on new items.
-- `BoxScope.ScrollToTopButton(...)` / `BoxScope.ScrollToBottomButton(...)` — floating scroll buttons.
+- `BoxScope.ScrollToTopButton(...)` / `BoxScope.ScrollToBottomButton(...)` — floating scroll
+  buttons.
 - `LazyListScope.fabClearanceItem()` / `LazyGridScope.fabClearanceItem()` — trailing FAB clearance.
 
 ---
@@ -310,23 +319,23 @@ Pair with `Modifier`-side `fabClearanceItem()` (below) so the last list row isn'
 
 Reach for the wrapper. Raw M3 renders in the wrong emphasis colour and skips the console defaults.
 
-| Don't (`androidx.compose.material3`) | Do (`…ui.components`) |
-|--------------------------------------|-----------------------|
-| `IconButton` | `AlohomoraIconButton` |
-| `Button` | `AlohomoraFilledButton` |
-| `OutlinedButton` | `AlohomoraOutlinedButton` |
-| `TextButton` | `AlohomoraTextButton` |
-| `Badge` | `AlohomoraChip` |
-| `FilterChip` / `AssistChip` | `AlohomoraFilterChip` / `AlohomoraAssistChip` |
-| `Card` / `OutlinedCard` | `AlohomoraCard` / `AlohomoraOutlinedCard` |
-| `HorizontalDivider` | `AlohomoraHorizontalDivider` |
-| `CircularProgressIndicator` | `AlohomoraCircularProgressIndicator` |
-| `Checkbox` / `TriStateCheckbox` | `AlohomoraCheckbox` / `AlohomoraTriStateCheckbox` |
-| `Switch` / `RadioButton` | `AlohomoraSwitch` / `AlohomoraRadioButton` |
-| `AlertDialog` | `AlohomoraAlertDialog` |
-| `DropdownMenu` / `DropdownMenuItem` | `AlohomoraDropdownMenu` / `AlohomoraDropdownMenuItem` |
-| `FloatingActionButton` | `AlohomoraFloatingActionButton` |
-| `TopAppBar` / `CenterAlignedTopAppBar` | `AlohomoraTopBar` |
+| Don't (`androidx.compose.material3`)   | Do (`…ui.components`)                                 |
+|----------------------------------------|-------------------------------------------------------|
+| `IconButton`                           | `AlohomoraIconButton`                                 |
+| `Button`                               | `AlohomoraFilledButton`                               |
+| `OutlinedButton`                       | `AlohomoraOutlinedButton`                             |
+| `TextButton`                           | `AlohomoraTextButton`                                 |
+| `Badge`                                | `AlohomoraChip`                                       |
+| `FilterChip` / `AssistChip`            | `AlohomoraFilterChip` / `AlohomoraAssistChip`         |
+| `Card` / `OutlinedCard`                | `AlohomoraCard` / `AlohomoraOutlinedCard`             |
+| `HorizontalDivider`                    | `AlohomoraHorizontalDivider`                          |
+| `CircularProgressIndicator`            | `AlohomoraCircularProgressIndicator`                  |
+| `Checkbox` / `TriStateCheckbox`        | `AlohomoraCheckbox` / `AlohomoraTriStateCheckbox`     |
+| `Switch` / `RadioButton`               | `AlohomoraSwitch` / `AlohomoraRadioButton`            |
+| `AlertDialog`                          | `AlohomoraAlertDialog`                                |
+| `DropdownMenu` / `DropdownMenuItem`    | `AlohomoraDropdownMenu` / `AlohomoraDropdownMenuItem` |
+| `FloatingActionButton`                 | `AlohomoraFloatingActionButton`                       |
+| `TopAppBar` / `CenterAlignedTopAppBar` | `AlohomoraTopBar`                                     |
 
 Legitimate raw-M3 exceptions: `Text`, `Icon`, `Scaffold`, `Surface` (primitives the theme already
 styles), a modal `Card` that genuinely needs elevation, and `SingleChoiceSegmentedButtonRow` for a
@@ -366,12 +375,15 @@ Size icons with `dimens.icon.*`; tint with a `colorScheme`/`alohomoraColors` rol
 
 Adding a component, token or icon — keep it consistent:
 
-- **Name it `Alohomora*`** and put it in `…/ui/components/`. Model it on the closest existing wrapper.
-- **Add a `*Defaults` object** for shape, colours and padding rather than inlining literals, following
+- **Name it `Alohomora*`** and put it in `…/ui/components/`. Model it on the closest existing
+  wrapper.
+- **Add a `*Defaults` object** for shape, colours and padding rather than inlining literals,
+  following
   `AlohomoraButtonDefaults` / `AlohomoraChipDefaults` / `AlohomoraCardDefaults`.
 - **`modifier: Modifier = Modifier` is the first optional parameter.** Non-negotiable Compose API
   guideline; callers must be able to pad/size/position without a wrapper `Box`.
-- **Add a content-slot overload** wherever a `text: String` would go dead once a caller passes custom
+- **Add a content-slot overload** wherever a `text: String` would go dead once a caller passes
+  custom
   content (see the button overloads).
 - **Wrap, don't re-skin.** Default emphasis to `onBackground`/`background`, not `primary`. Default
   progress/indicators to `onBackground`.

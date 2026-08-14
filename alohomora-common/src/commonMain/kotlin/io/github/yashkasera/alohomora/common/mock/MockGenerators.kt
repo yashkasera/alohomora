@@ -2,9 +2,9 @@ package io.github.yashkasera.alohomora.common.mock
 
 import kotlin.math.roundToInt
 import kotlin.random.Random
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
@@ -71,7 +71,9 @@ internal object MockGenerators {
         }
         val local = instant.toLocalDateTime(TimeZone.UTC)
         @Suppress("DEPRECATION")
-        return "${local.year}-${local.monthNumber.toString().padStart(2, '0')}-${local.dayOfMonth.toString().padStart(2, '0')}"
+        return "${local.year}-${
+            local.monthNumber.toString().padStart(2, '0')
+        }-${local.dayOfMonth.toString().padStart(2, '0')}"
     }
 
     fun oneOf(options: List<String>): String {

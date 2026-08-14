@@ -107,7 +107,10 @@ class EventsScreenTest {
 
     @Test
     fun clearAllEmptiesTheListOnceConfirmed() {
-        console.seedEvents(event(name = "Checkout.Started"), event(name = "Session.Resumed", index = 1))
+        console.seedEvents(
+            event(name = "Checkout.Started"),
+            event(name = "Session.Resumed", index = 1),
+        )
 
         compose.launchConsole(Routes.Events)
         compose.onNodeWithTag(Chrome.CLEAR_ALL).performClick()

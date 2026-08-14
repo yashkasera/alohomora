@@ -101,7 +101,8 @@ class HeartbeatTest {
     @Test
     fun `a fresh peer is not silent`() {
         val clock = FakeClock()
-        val liveness = DevToolsLiveness(silenceTimeoutMillis = 20_000, elapsedMillis = clock.reader())
+        val liveness =
+            DevToolsLiveness(silenceTimeoutMillis = 20_000, elapsedMillis = clock.reader())
 
         assertFalse(liveness.isPeerSilent())
     }
@@ -109,7 +110,8 @@ class HeartbeatTest {
     @Test
     fun `an answering peer never goes silent no matter how long the session runs`() {
         val clock = FakeClock()
-        val liveness = DevToolsLiveness(silenceTimeoutMillis = 20_000, elapsedMillis = clock.reader())
+        val liveness =
+            DevToolsLiveness(silenceTimeoutMillis = 20_000, elapsedMillis = clock.reader())
 
         // A well-behaved peer pongs every ping. This is the case a read timeout got wrong.
         repeat(500) {
@@ -122,7 +124,8 @@ class HeartbeatTest {
     @Test
     fun `a peer that stops answering is condemned, but not on the first missed interval`() {
         val clock = FakeClock()
-        val liveness = DevToolsLiveness(silenceTimeoutMillis = 20_000, elapsedMillis = clock.reader())
+        val liveness =
+            DevToolsLiveness(silenceTimeoutMillis = 20_000, elapsedMillis = clock.reader())
 
         // One dropped or delayed frame must not end a healthy session.
         clock.millis = 5_000
@@ -137,7 +140,8 @@ class HeartbeatTest {
     @Test
     fun `a late reply rescues a peer that was nearly condemned`() {
         val clock = FakeClock()
-        val liveness = DevToolsLiveness(silenceTimeoutMillis = 20_000, elapsedMillis = clock.reader())
+        val liveness =
+            DevToolsLiveness(silenceTimeoutMillis = 20_000, elapsedMillis = clock.reader())
 
         clock.millis = 19_000
         liveness.recordSignOfLife()
@@ -151,7 +155,8 @@ class HeartbeatTest {
         // If the window were one interval, a single scheduling hiccup on either side would end the
         // session. If it were minutes, the wedged slot this exists to free would outlast the
         // developer's patience and they would restart the app anyway.
-        val intervals = DevToolsHeartbeat.SILENCE_TIMEOUT_MILLIS / DevToolsHeartbeat.PING_INTERVAL_MILLIS
+        val intervals =
+            DevToolsHeartbeat.SILENCE_TIMEOUT_MILLIS / DevToolsHeartbeat.PING_INTERVAL_MILLIS
 
         assertTrue(intervals >= 3, "too tight: a single missed frame would drop a healthy session")
         assertTrue(

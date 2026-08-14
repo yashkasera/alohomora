@@ -12,10 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
-import androidx.compose.ui.tooling.preview.Preview
 
 data class AlohomoraToggleItem(
     val id: String,
@@ -26,10 +26,11 @@ data class AlohomoraToggleItem(
 object AlohomoraToggleDefaults {
     val shape @Composable get() = MaterialTheme.shapes.extraSmall
     val borderWidth: Dp = 1.dp
-    val itemPadding @Composable get() = androidx.compose.foundation.layout.PaddingValues(
-        horizontal = 16.dp,
-        vertical = 10.dp,
-    )
+    val itemPadding
+        @Composable get() = androidx.compose.foundation.layout.PaddingValues(
+            horizontal = 16.dp,
+            vertical = 10.dp,
+        )
 
     val uppercase: Boolean = true
 }
@@ -71,14 +72,19 @@ private fun AlohomoraToggleItem(
     modifier: Modifier = Modifier,
 ) {
     val label = if (uppercase) item.label.uppercase() else item.label
-    val containerColor = if (selected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.surface
-    val contentColor = if (selected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onSurface
+    val containerColor =
+        if (selected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.surface
+    val contentColor =
+        if (selected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onSurface
     Surface(
         modifier = modifier,
         shape = AlohomoraToggleDefaults.shape,
         color = containerColor,
         contentColor = contentColor,
-        border = BorderStroke(AlohomoraToggleDefaults.borderWidth, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(
+            AlohomoraToggleDefaults.borderWidth,
+            MaterialTheme.colorScheme.outline,
+        ),
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),

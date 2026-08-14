@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -49,7 +49,8 @@ fun UpdateBanner(
             onClick = {
                 try {
                     Desktop.getDesktop().browse(URI(updateInfo.htmlUrl))
-                } catch (_: Exception) { }
+                } catch (_: Exception) {
+                }
             },
             uppercase = false,
             contentColor = MaterialTheme.colorScheme.primary,

@@ -75,7 +75,8 @@ private fun TickLabels(window: TraceWindow, unit: TimeUnitScale, ticks: List<Lon
             placeables.forEachIndexed { index, placeable ->
                 val fraction = window.fractionOf(window.startNanos + ticks[index])
                 val centred = (constraints.maxWidth * fraction).roundToInt() - placeable.width / 2
-                val x = centred.coerceIn(0, (constraints.maxWidth - placeable.width).coerceAtLeast(0))
+                val x =
+                    centred.coerceIn(0, (constraints.maxWidth - placeable.width).coerceAtLeast(0))
                 placeable.place(IntOffset(x, 0))
             }
         }

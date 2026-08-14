@@ -25,14 +25,14 @@ val Icons.Waypoints: ImageVector
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
-            viewportHeight = 24f
+            viewportHeight = 24f,
         ).apply {
             // The three connecting segments.
             path(
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(10.586f, 5.414f)
                 lineToRelative(-5.172f, 5.172f)
@@ -41,7 +41,7 @@ val Icons.Waypoints: ImageVector
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(18.586f, 13.414f)
                 lineToRelative(-5.172f, 5.172f)
@@ -50,7 +50,7 @@ val Icons.Waypoints: ImageVector
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(6f, 12f)
                 horizontalLineToRelative(12f)
@@ -71,7 +71,7 @@ private fun ImageVector.Builder.spanNode(cx: Float, cy: Float, r: Float = 2f) {
         stroke = SolidColor(Color.Black),
         strokeLineWidth = 2f,
         strokeLineCap = StrokeCap.Round,
-        strokeLineJoin = StrokeJoin.Round
+        strokeLineJoin = StrokeJoin.Round,
     ) {
         moveTo(cx - r, cy)
         arcToRelative(r, r, 0f, true, false, 2 * r, 0f)

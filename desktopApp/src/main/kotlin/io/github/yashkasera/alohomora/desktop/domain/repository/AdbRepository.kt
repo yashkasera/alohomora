@@ -12,6 +12,7 @@ interface AdbRepository {
 
     fun refreshDevices()
     suspend fun activateDevice(deviceId: String, hostPort: Int, devicePort: Int): String?
+
     /** [deviceId] identifies whose forward to remove; null falls back to the port's owner. */
     suspend fun deactivateDevice(deviceId: String?, hostPort: Int): String?
     suspend fun enableTcpAndConnect(deviceId: String, host: String, tcpPort: Int): String?

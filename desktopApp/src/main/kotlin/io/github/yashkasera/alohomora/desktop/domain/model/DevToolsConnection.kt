@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.desktop.domain.model
 sealed class DevToolsConnection {
     data object Disconnected : DevToolsConnection()
     data class Connecting(val host: String, val port: Int) : DevToolsConnection()
+
     /**
      * Handshake in progress.
      *
@@ -15,7 +16,9 @@ sealed class DevToolsConnection {
         val port: Int,
         val otpRequired: Boolean = false,
     ) : DevToolsConnection()
+
     data class Connected(val host: String, val port: Int) : DevToolsConnection()
+
     /**
      * The device stopped answering and we are trying to get back in.
      *

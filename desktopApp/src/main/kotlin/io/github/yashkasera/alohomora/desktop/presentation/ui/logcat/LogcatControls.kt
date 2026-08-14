@@ -23,7 +23,7 @@ fun LogcatControls(
             text = "Stop",
             size = AlohomoraButtonSize.SMALL,
             containerColor = MaterialTheme.colorScheme.error,
-            onClick = onStop
+            onClick = onStop,
         )
     } else {
         AlohomoraOutlinedButton(
@@ -36,6 +36,6 @@ fun LogcatControls(
     AlohomoraOutlinedButton(
         text = "Clear",
         size = AlohomoraButtonSize.SMALL,
-        onClick = onClear
+        onClick = onClear,
     )
 }

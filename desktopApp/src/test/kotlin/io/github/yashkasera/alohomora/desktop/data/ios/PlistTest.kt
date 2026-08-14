@@ -30,6 +30,7 @@ class PlistTest {
             "network" to false,
             "ports" to listOf(1, 2, 3),
         )
+
         @Suppress("UNCHECKED_CAST")
         val decoded = Plist.decode(Plist.encode(original)) as Map<String, Any?>
 

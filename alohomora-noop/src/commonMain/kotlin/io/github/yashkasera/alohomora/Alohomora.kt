@@ -38,22 +38,26 @@ object Alohomora {
         requestSize: Long? = null,
         responseSize: Long? = null,
         mockedBy: String? = null,
-    ) {}
+    ) {
+    }
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordEvent(name: String, properties: Map<String, String>? = null) {}
+    fun recordEvent(name: String, properties: Map<String, String>? = null) {
+    }
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordError(throwable: Throwable, place: String? = null) {}
+    fun recordError(throwable: Throwable, place: String? = null) {
+    }
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordError(reason: String, stackTrace: String? = null, place: String? = null) {}
+    fun recordError(reason: String, stackTrace: String? = null, place: String? = null) {
+    }
 
     /** No-op. Defaults are literals to avoid depending on `:alohomora-common`. */
     @Suppress("UNUSED_PARAMETER")
@@ -72,16 +76,19 @@ object Alohomora {
         attributes: Map<String, String>? = null,
         events: List<SpanEvent> = emptyList(),
         scopeName: String? = null,
-    ) {}
+    ) {
+    }
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordSpan(name: String, durationNanos: Long, attributes: Map<String, String>? = null) {}
+    fun recordSpan(name: String, durationNanos: Long, attributes: Map<String, String>? = null) {
+    }
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
-    fun setShakeToOpenEnabled(enabled: Boolean) {}
+    fun setShakeToOpenEnabled(enabled: Boolean) {
+    }
 
     @Suppress("UNUSED_PARAMETER")
     fun startDevToolsServer(port: Int = 53999): Boolean {
@@ -91,15 +98,18 @@ object Alohomora {
     fun stopDevToolsServer() {}
 
     @Suppress("UNUSED_PARAMETER")
-    fun registerAppDatabase(name: String, path: String? = null) {}
+    fun registerAppDatabase(name: String, path: String? = null) {
+    }
 
     @Suppress("UNUSED_PARAMETER")
-    fun excludeAppDatabase(name: String) {}
+    fun excludeAppDatabase(name: String) {
+    }
 
     fun clearAppDatabaseOverrides() {}
 
     @Suppress("UNUSED_PARAMETER")
-    fun registerReplayHandler(handler: TrafficReplayHandler) {}
+    fun registerReplayHandler(handler: TrafficReplayHandler) {
+    }
 
     fun clearReplayHandler() {}
 
@@ -114,7 +124,8 @@ object Alohomora {
         source: String? = null,
         type: String? = null,
         metadata: Map<String, String>? = null,
-    ) {}
+    ) {
+    }
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
@@ -122,13 +133,16 @@ object Alohomora {
     fun setFeatureFlags(
         flags: List<FeatureFlag>,
         source: String? = null,
-    ) {}
+    ) {
+    }
 
     @JvmStatic
-    fun clearFeatureFlags() {}
+    fun clearFeatureFlags() {
+    }
 
     @Suppress("UNUSED_PARAMETER")
-    fun registerPlugin(plugin: CustomScreenPlugin) {}
+    fun registerPlugin(plugin: CustomScreenPlugin) {
+    }
 
     @Suppress("UNUSED_PARAMETER")
     fun unregisterPlugin(pluginId: String): Boolean {

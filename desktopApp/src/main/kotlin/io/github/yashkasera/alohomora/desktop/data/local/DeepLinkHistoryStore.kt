@@ -1,10 +1,10 @@
 package io.github.yashkasera.alohomora.desktop.data.local
 
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.io.File
 
 @Serializable
 data class DeepLinkEntry(

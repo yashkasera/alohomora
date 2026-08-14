@@ -13,6 +13,7 @@ import io.github.yashkasera.alohomora.common.TableData
 import io.github.yashkasera.alohomora.common.TableSchema
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
 import io.github.yashkasera.alohomora.domain.repository.QueryResult
+import kotlin.time.measureTime
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSDocumentDirectory
@@ -20,7 +21,6 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSLibraryDirectory
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
-import kotlin.time.measureTime
 
 private const val MAX_ROW_LIMIT = 1000
 
@@ -64,7 +64,10 @@ internal actual suspend fun PlatformDatabaseAccessor.getTableData(
     tableName: String,
     limit: Int,
 ): TableData = withConnection(databasePath, { TableData(emptyList(), emptyList()) }) { connection ->
-    if (tableName !in queryTables(connection)) return@withConnection TableData(emptyList(), emptyList())
+    if (tableName !in queryTables(connection)) return@withConnection TableData(
+        emptyList(),
+        emptyList(),
+    )
     val safeLimit = limit.coerceIn(1, MAX_ROW_LIMIT)
 
     val columnTypes = mutableMapOf<String, String>()
@@ -94,9 +97,17 @@ internal actual suspend fun PlatformDatabaseAccessor.getTableData(
 internal actual suspend fun PlatformDatabaseAccessor.getTableSchema(
     databasePath: String,
     tableName: String,
-): TableSchema = withConnection(databasePath, {
-    TableSchema(name = tableName, columns = emptyList(), primaryKey = null, indexes = emptyList())
-}) { connection ->
+): TableSchema = withConnection(
+    databasePath,
+    {
+        TableSchema(
+            name = tableName,
+            columns = emptyList(),
+            primaryKey = null,
+            indexes = emptyList(),
+        )
+    },
+) { connection ->
     val columns = mutableListOf<TableColumn>()
     var primaryKey: String? = null
 
@@ -120,21 +131,25 @@ internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
     databasePath: String,
     query: String,
 ): QueryResult {
-    return withConnection(databasePath, {
-        QueryResult(
-            data = TableData(emptyList(), emptyList()),
-            executionTimeMs = 0,
-            rowsAffected = 0,
-            success = false,
-            errorMessage = "Could not open database",
-        )
-    }) { connection ->
+    return withConnection(
+        databasePath,
+        {
+            QueryResult(
+                data = TableData(emptyList(), emptyList()),
+                executionTimeMs = 0,
+                rowsAffected = 0,
+                success = false,
+                errorMessage = "Could not open database",
+            )
+        },
+    ) { connection ->
         var resultData = TableData(emptyList(), emptyList())
         var rowsAffected = 0
 
         val elapsed = measureTime {
             connection.prepare(query).use { statement ->
-                val columnNames = (0 until statement.getColumnCount()).map { statement.getColumnName(it) }
+                val columnNames =
+                    (0 until statement.getColumnCount()).map { statement.getColumnName(it) }
                 val rows = mutableListOf<Map<String, String>>()
                 val inferredTypes = mutableMapOf<String, String>()
 
@@ -157,7 +172,12 @@ internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
 
                 rowsAffected = rows.size
                 resultData = TableData(
-                    columns = columnNames.map { TableColumn(name = it, type = inferredTypes[it] ?: "TEXT") },
+                    columns = columnNames.map {
+                        TableColumn(
+                            name = it,
+                            type = inferredTypes[it] ?: "TEXT",
+                        )
+                    },
                     rows = rows,
                 )
             }

@@ -55,7 +55,11 @@ internal enum class CacheType {
          */
         fun detect(value: String): CacheType {
             // Check for boolean
-            if (value.equals("true", ignoreCase = true) || value.equals("false", ignoreCase = true)) {
+            if (value.equals("true", ignoreCase = true) || value.equals(
+                    "false",
+                    ignoreCase = true,
+                )
+            ) {
                 return BOOLEAN
             }
 

@@ -10,15 +10,14 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.StopLogcatUseCase
 import io.github.yashkasera.alohomora.desktop.presentation.model.LogcatFilterState
 import io.github.yashkasera.alohomora.desktop.presentation.model.LogcatUiState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -66,7 +65,7 @@ class LogcatViewModel(
             running = false,
             errorMessage = null,
             selectedDeviceId = null,
-        )
+        ),
     )
 
     fun setSelectedDevice(deviceId: String?) {
@@ -140,7 +139,11 @@ class LogcatViewModel(
             .filter { it.isNotEmpty() }
 
         val searchRegex = if (filter.isRegex && filter.searchQuery.isNotBlank()) {
-            try { Regex(filter.searchQuery.trim(), RegexOption.IGNORE_CASE) } catch (_: Exception) { null }
+            try {
+                Regex(filter.searchQuery.trim(), RegexOption.IGNORE_CASE)
+            } catch (_: Exception) {
+                null
+            }
         } else null
 
         val searchTokens = if (!filter.isRegex) {
@@ -171,8 +174,10 @@ class LogcatViewModel(
                     searchRegex.containsMatchIn(haystack)
                 } else {
                     if (searchIncludes.isEmpty() && searchExcludes.isEmpty()) return@filter true
-                    val haystack = "${entry.tag} ${entry.message} ${entry.pid} ${entry.tid}".lowercase()
-                    val includePass = searchIncludes.isEmpty() || searchIncludes.any { haystack.contains(it) }
+                    val haystack =
+                        "${entry.tag} ${entry.message} ${entry.pid} ${entry.tid}".lowercase()
+                    val includePass =
+                        searchIncludes.isEmpty() || searchIncludes.any { haystack.contains(it) }
                     val excludePass = searchExcludes.none { haystack.contains(it) }
                     includePass && excludePass
                 }

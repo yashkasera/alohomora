@@ -6,11 +6,11 @@ import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.AuthSuccessMessage
 import io.github.yashkasera.alohomora.common.CacheSnapshotMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
-import io.github.yashkasera.alohomora.common.DeviceErrorMessage
 import io.github.yashkasera.alohomora.common.DevToolsHeartbeat
 import io.github.yashkasera.alohomora.common.DevToolsLiveness
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
+import io.github.yashkasera.alohomora.common.DeviceErrorMessage
 import io.github.yashkasera.alohomora.common.EnvelopeRead
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
@@ -18,39 +18,37 @@ import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.FeatureFlagsSnapshotMessage
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.MockRule
-import io.github.yashkasera.alohomora.common.PingMessage
-import io.github.yashkasera.alohomora.common.PongMessage
 import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
-import io.github.yashkasera.alohomora.common.SetMockRulesMessage
-import io.github.yashkasera.alohomora.common.SetThrottleProfileMessage
-import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
-import io.github.yashkasera.alohomora.common.VpnStateMessage
-import io.github.yashkasera.alohomora.common.VpnThrottleState
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
 import io.github.yashkasera.alohomora.common.RequestTraceSpansMessage
+import io.github.yashkasera.alohomora.common.SetMockRulesMessage
+import io.github.yashkasera.alohomora.common.SetThrottleProfileMessage
+import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.StreamErrorMessage
-import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.StreamEventMessage
 import io.github.yashkasera.alohomora.common.StreamSpanMessage
 import io.github.yashkasera.alohomora.common.StreamTrafficMessage
+import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.TraceSpansSnapshotMessage
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.common.VpnStateMessage
+import io.github.yashkasera.alohomora.common.VpnThrottleState
 import io.github.yashkasera.alohomora.desktop.data.local.BuildMetadataStore
 import io.github.yashkasera.alohomora.desktop.data.local.CacheStore
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
-import io.github.yashkasera.alohomora.desktop.data.local.FeatureFlagStore
-import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
+import io.github.yashkasera.alohomora.desktop.data.local.FeatureFlagStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
+import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
 import io.github.yashkasera.alohomora.desktop.data.local.TrafficStore
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.github.yashkasera.alohomora.desktop.domain.model.CacheState
@@ -63,7 +61,6 @@ import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsReposito
 import io.github.yashkasera.alohomora.devtools.DevToolsSocket
 import io.github.yashkasera.alohomora.replay.ReplayRequest
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -71,7 +68,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -326,7 +322,6 @@ class DevToolsRepositoryImpl(
         }
     }
 
-
     override fun switchDevice(target: DevToolsTarget, deviceId: String?) {
         _currentDeviceId.value = deviceId
         clearAll()
@@ -386,7 +381,13 @@ class DevToolsRepositoryImpl(
 
     override fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int) {
         scope.launch {
-            sendMessage(RequestDatabaseTableMessage(databaseName = databaseName, tableName = tableName, limit = limit))
+            sendMessage(
+                RequestDatabaseTableMessage(
+                    databaseName = databaseName,
+                    tableName = tableName,
+                    limit = limit,
+                ),
+            )
         }
     }
 
@@ -495,7 +496,7 @@ class DevToolsRepositoryImpl(
                 withContext(Dispatchers.Default) {
                     val payload = message.payload
                     eventStore.replace(payload.events)
-                errorStore.replace(payload.errors)
+                    errorStore.replace(payload.errors)
                     spanStore.replace(payload.spans)
                     spanStore.setCaptureSupported(payload.spanCaptureSupported)
                     _networkRulesSupported.value = payload.networkRulesSupported

@@ -95,7 +95,7 @@ abstract class ConsumerParityTask : DefaultTask() {
                 }
                 appendLine()
                 append("Mirror the member in the module that is behind, then run ./gradlew apiDump.")
-            }
+            },
         )
     }
 
@@ -113,7 +113,7 @@ abstract class ConsumerParityTask : DefaultTask() {
         if (start < 0) {
             throw GradleException(
                 "No `$header` block in ${dump.path} (module $module). Either the object was renamed " +
-                    "or the dump is stale — run ./gradlew apiDump and update objectFqName if needed."
+                    "or the dump is stale — run ./gradlew apiDump and update objectFqName if needed.",
             )
         }
         val end = lines.subList(start + 1, lines.size).indexOfFirst { it == "}" }
@@ -154,7 +154,8 @@ tasks.named("check") {
 // All four modules must ship together: :alohomora's POM lists :alohomora-common and
 // :alohomora-ui as runtime dependencies, so publishing only the first two leaves every
 // external consumer with unresolvable dependencies.
-val publishedProjects = listOf(":alohomora", ":alohomora-noop", ":alohomora-common", ":alohomora-ui")
+val publishedProjects =
+    listOf(":alohomora", ":alohomora-noop", ":alohomora-common", ":alohomora-ui")
 
 tasks.register("publishGithubPackages") {
     group = "publishing"

@@ -36,7 +36,7 @@ internal interface DatabaseRepository {
     fun getTableData(
         databasePath: String,
         tableName: String,
-        limit: Int = 100
+        limit: Int = 100,
     ): Flow<TableData>
 
     /**
@@ -48,7 +48,7 @@ internal interface DatabaseRepository {
      */
     fun getTableSchema(
         databasePath: String,
-        tableName: String
+        tableName: String,
     ): Flow<TableSchema>
 
     /**
@@ -60,7 +60,7 @@ internal interface DatabaseRepository {
      */
     fun executeQuery(
         databasePath: String,
-        query: String
+        query: String,
     ): Flow<QueryResult>
 }
 
@@ -72,5 +72,5 @@ internal data class QueryResult(
     val executionTimeMs: Long,
     val rowsAffected: Int,
     val success: Boolean = true,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )

@@ -155,6 +155,7 @@ private fun isInsideObject(text: String, tokens: List<JsonToken>): Boolean {
                 if (depth == 0) return true
                 depth--
             }
+
             ch == '[' && token.kind == TokenKind.BRACKET -> {
                 if (depth == 0) return false
                 depth--

@@ -5,6 +5,9 @@ import android.net.VpnService
 import io.github.yashkasera.alohomora.ActivityTracker
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.VpnThrottleState
+import io.github.yashkasera.alohomora.vpn.VpnThrottleController.disable
+import io.github.yashkasera.alohomora.vpn.VpnThrottleController.enable
+import io.github.yashkasera.alohomora.vpn.VpnThrottleController.state
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -86,10 +89,12 @@ internal object VpnThrottleController {
                 _state.value = VpnThrottleState.ACTIVE
                 _activeProfile.value = serviceState.profile
             }
+
             is VpnServiceState.Stopped -> {
                 _state.value = VpnThrottleState.OFF
                 _activeProfile.value = null
             }
+
             is VpnServiceState.Error -> {
                 _state.value = VpnThrottleState.ERROR
                 println("[Alohomora] VPN error: ${serviceState.message}")

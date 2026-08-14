@@ -5,8 +5,6 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Parcelable
-import java.io.Serializable
 import java.lang.ref.WeakReference
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -75,8 +73,6 @@ internal object ActivityTracker : Application.ActivityLifecycleCallbacks {
         state: ActivityState,
         includeIntent: Boolean = false,
     ) {
-//        if (activity is DevToolsActivity) return
-
         _events += ActivityEvent(
             activityName = activity::class.java.name,
             timestamp = System.currentTimeMillis(),

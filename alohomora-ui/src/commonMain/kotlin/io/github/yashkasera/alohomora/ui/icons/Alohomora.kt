@@ -15,10 +15,10 @@ val Icons.Alohomora: ImageVector
             defaultWidth = 175.dp,
             defaultHeight = 183.dp,
             viewportWidth = 175f,
-            viewportHeight = 183f
+            viewportHeight = 183f,
         ).apply {
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(157.636f, 167.013f)
                 horizontalLineTo(174.779f)
@@ -28,7 +28,7 @@ val Icons.Alohomora: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFFFFFFFF))
+                fill = SolidColor(Color(0xFFFFFFFF)),
             ) {
                 moveTo(25.7143f, 174.286f)
                 horizontalLineTo(121.299f)

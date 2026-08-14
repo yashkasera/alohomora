@@ -29,7 +29,10 @@ class MarkViewedTest {
         store.markViewed("a")
 
         assertTrue(store.logs.value.first { it.id == "a" }.isViewed)
-        assertFalse(store.logs.value.first { it.id == "b" }.isViewed, "marked a neighbour by mistake")
+        assertFalse(
+            store.logs.value.first { it.id == "b" }.isViewed,
+            "marked a neighbour by mistake",
+        )
     }
 
     @Test

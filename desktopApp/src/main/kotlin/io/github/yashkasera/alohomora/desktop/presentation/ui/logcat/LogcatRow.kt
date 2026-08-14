@@ -14,11 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
-import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.LogEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.LogLevel
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 
 @Composable
 fun LogcatRow(

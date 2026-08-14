@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.showcaseApp.di
 
 import androidx.room.Room
+import io.github.yashkasera.alohomora.network.AlohomoraInspector
 import io.github.yashkasera.alohomora.showcaseApp.data.api.PostsApi
 import io.github.yashkasera.alohomora.showcaseApp.data.db.AppDatabase
 import io.github.yashkasera.alohomora.showcaseApp.data.preferences.PreferencesDataSource
@@ -15,7 +16,6 @@ import io.github.yashkasera.alohomora.showcaseApp.domain.usecase.UpdatePreferenc
 import io.github.yashkasera.alohomora.showcaseApp.presentation.PostsViewModel
 import io.github.yashkasera.alohomora.showcaseApp.tracing.SHOWCASE_TRACER_NAME
 import io.github.yashkasera.alohomora.showcaseApp.tracing.showcaseTracerProvider
-import io.github.yashkasera.alohomora.network.AlohomoraInspector
 import io.github.yashkasera.alohomora.traffic.MockRuleInterceptor
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -50,7 +50,7 @@ val appModule = module {
         Room.databaseBuilder(
             get(),
             AppDatabase::class.java,
-            "android_sample.db"
+            "android_sample.db",
         )
             .fallbackToDestructiveMigration(true)
             .build()

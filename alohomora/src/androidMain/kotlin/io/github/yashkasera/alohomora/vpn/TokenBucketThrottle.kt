@@ -73,7 +73,8 @@ internal class TokenBucketThrottle {
         if (isNew) {
             try {
                 Thread.sleep(latencyMs)
-            } catch (_: InterruptedException) {}
+            } catch (_: InterruptedException) {
+            }
         }
     }
 

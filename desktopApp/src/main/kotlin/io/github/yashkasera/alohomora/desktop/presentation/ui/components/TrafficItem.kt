@@ -1,16 +1,12 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +18,6 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.MethodBadge
-import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
@@ -36,11 +31,16 @@ fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
     AlohomoraCard(
         modifier = Modifier.fillMaxWidth(),
         colors = AlohomoraCardDefaults.colors(
-            containerColor = containerColor
+            containerColor = containerColor,
         ),
-        onClick = onClick
+        onClick = onClick,
     ) {
-        Column(modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.xxl, vertical = MaterialTheme.dimens.margin.lg)){
+        Column(
+            modifier = Modifier.padding(
+                horizontal = MaterialTheme.dimens.margin.xxl,
+                vertical = MaterialTheme.dimens.margin.lg,
+            ),
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -66,7 +66,7 @@ fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
                         AlohomoraChip(
                             label = "Mocked",
                             uppercase = true,
-                            shape = MaterialTheme.shapes.small
+                            shape = MaterialTheme.shapes.small,
                         )
                     }
                     Text(
