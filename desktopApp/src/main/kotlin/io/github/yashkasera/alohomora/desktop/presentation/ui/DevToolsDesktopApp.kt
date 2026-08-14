@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.app.isClearShortcut
+import io.github.yashkasera.alohomora.desktop.app.isMacOs
 import io.github.yashkasera.alohomora.desktop.app.isModifierKeyOnly
 import io.github.yashkasera.alohomora.desktop.app.isScreenshotShortcut
 import io.github.yashkasera.alohomora.desktop.app.matchesNavigation
@@ -110,6 +111,7 @@ import io.github.yashkasera.alohomora.ui.icons.Android
 import io.github.yashkasera.alohomora.ui.icons.Apple
 import io.github.yashkasera.alohomora.ui.icons.HardDrive
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -133,6 +135,7 @@ fun DevToolsDesktopApp(
     onShowHelp: () -> Unit = {},
     onDismissHelp: () -> Unit = {},
     showCommandPalette: Boolean = false,
+    onOpenCommandPalette: () -> Unit = {},
     onDismissCommandPalette: () -> Unit = {},
     onShowSettings: () -> Unit = {},
     onZoomIn: () -> Unit = {},
@@ -380,6 +383,7 @@ fun DevToolsDesktopApp(
                             appName = buildInfo?.projectName,
                             onDisconnect = onDisconnectWindow,
                             onSectionClick = { activeSection = it },
+                            onOpenCommandPalette = onOpenCommandPalette,
                             isModifierHeld = isModifierHeld,
                             visibleSections = visibleSections,
                         )
@@ -618,6 +622,52 @@ private fun NoDevicePanel(
     )
 }
 
+// Top padding for the sidebar logo on macOS: enough to clear the ~28px native traffic lights that
+// now overlay the top-left corner, plus a little breathing room.
+private val SidebarTopInsetMac = 40.dp
+
+/**
+ * A non-editable "search" affordance that opens the command palette. Lives at the top of the sidebar
+ * so the palette has a discoverable home on every platform; the ⌘K / Ctrl K hint mirrors the actual
+ * shortcut. Replaces the old empty macOS title-bar strip.
+ */
+@Composable
+private fun CommandPaletteSearchPill(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .clickable(onClick = onClick)
+            .padding(
+                horizontal = MaterialTheme.dimens.margin.md,
+                vertical = MaterialTheme.dimens.margin.sm,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Search,
+            contentDescription = null,
+            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+        Text(
+            text = "Search",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = if (isMacOs) "⌘K" else "Ctrl K",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
 @Composable
 fun ColumnScope.Sidebar(
     activeSection: DesktopSection,
@@ -627,6 +677,7 @@ fun ColumnScope.Sidebar(
     devices: List<DeviceUi>,
     selectedDeviceId: String?,
     appName: String? = null,
+    onOpenCommandPalette: () -> Unit = {},
     isModifierHeld: Boolean = false,
     visibleSections: List<DesktopSection> = emptyList(),
 ) {
@@ -634,12 +685,23 @@ fun ColumnScope.Sidebar(
         imageVector = Icons.AlohomoraFull,
         contentDescription = null,
         modifier = Modifier
-            .padding(top = MaterialTheme.dimens.margin.xxl)
+            // Extra top room on macOS so the logo clears the native traffic lights, which overlay
+            // the top-left of the window now that the title bar is transparent.
+            .padding(top = if (isMacOs) SidebarTopInsetMac else MaterialTheme.dimens.margin.xxl)
             .padding(horizontal = MaterialTheme.dimens.margin.xxl)
             .width(148.dp),
     )
 
-    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxxl))
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+
+    CommandPaletteSearchPill(
+        onClick = onOpenCommandPalette,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = MaterialTheme.dimens.margin.lg),
+    )
+
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
     SidebarConnectionCard(
         connection = connection,

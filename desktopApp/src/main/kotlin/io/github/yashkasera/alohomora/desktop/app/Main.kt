@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.desktop.app
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -84,6 +85,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.icons.AlohomoraFull
 import java.awt.Dimension
 import java.util.UUID
+import javax.swing.RootPaneContainer
 import kotlin.coroutines.resume
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
@@ -110,6 +112,29 @@ data class DeviceWindowSession(
     val devicePort: Int,
     val composition: DesktopAppComposition,
 )
+
+// Height of the macOS traffic-light strip we reserve at the top of each window. The native buttons
+// are a fixed pixel size, so this inset is applied at base density (outside any zoom scaling).
+// internal so the About/Preferences dialog windows can reserve the same space.
+internal val MacTitleBarHeight = 28.dp
+
+/**
+ * On macOS, hides the native title bar and lets the app's own dark background run under it. The three
+ * client properties are ignored on Windows/Linux, so callers need no platform guard beyond [isMacOs].
+ * Set once per window via [LaunchedEffect]; the native traffic-light controls and window dragging are
+ * untouched. internal so every [DialogWindow] (About, Preferences, launcher) can share it.
+ */
+@Composable
+internal fun applyMacTitleBar(window: RootPaneContainer) {
+    if (!isMacOs) return
+    LaunchedEffect(window) {
+        window.rootPane.apply {
+            putClientProperty("apple.awt.fullWindowContent", true)
+            putClientProperty("apple.awt.transparentTitleBar", true)
+            putClientProperty("apple.awt.windowTitleVisible", false)
+        }
+    }
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
@@ -270,9 +295,14 @@ fun main() {
                     window.requestFocus()
                 }
                 AppTheme(isDarkState = sharedIsDark, themeId = themeId) {
+                    applyMacTitleBar(window)
                     Surface(modifier = Modifier.fillMaxSize()) {
                         Column(
-                            modifier = Modifier.fillMaxSize().padding(MaterialTheme.dimens.margin.xxl),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                // Clear the macOS traffic lights that overlay the transparent title bar.
+                                .padding(top = if (isMacOs) MacTitleBarHeight else 0.dp)
+                                .padding(MaterialTheme.dimens.margin.xxl),
                             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                         ) {
                             Text(pending.title, style = MaterialTheme.typography.titleMedium)
@@ -311,32 +341,40 @@ fun main() {
             ) {
                 AppTheme(isDarkState = sharedIsDark, themeId = themeId) {
                     window.minimumSize = Dimension(900, 560)
+                    applyMacTitleBar(window)
 
-                    Column {
-                        val pending = updateInfo
-                        if (pending != null && !updateDismissed) {
-                            UpdateBanner(
-                                updateInfo = pending,
-                                onDismiss = { updateDismissed = true },
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(top = if (isMacOs) MacTitleBarHeight else 0.dp),
+                    ) {
+                        Column {
+                            val pending = updateInfo
+                            if (pending != null && !updateDismissed) {
+                                UpdateBanner(
+                                    updateInfo = pending,
+                                    onDismiss = { updateDismissed = true },
+                                )
+                            }
+
+                            LauncherScreen(
+                                sharedDevicesComposition = sharedComposition,
+                                onOpenDeviceWindow = { deviceId, host, hostPort, devicePort, composition ->
+                                    val duplicate = sessions.any { it.deviceId == deviceId }
+                                    if (!duplicate) {
+                                        sessions += DeviceWindowSession(
+                                            deviceId = deviceId,
+                                            host = host,
+                                            hostPort = hostPort,
+                                            devicePort = devicePort,
+                                            composition = composition,
+                                        )
+                                    }
+                                    launcherVisible = false
+                                },
                             )
                         }
-
-                        LauncherScreen(
-                            sharedDevicesComposition = sharedComposition,
-                            onOpenDeviceWindow = { deviceId, host, hostPort, devicePort, composition ->
-                                val duplicate = sessions.any { it.deviceId == deviceId }
-                                if (!duplicate) {
-                                    sessions += DeviceWindowSession(
-                                        deviceId = deviceId,
-                                        host = host,
-                                        hostPort = hostPort,
-                                        devicePort = devicePort,
-                                        composition = composition,
-                                    )
-                                }
-                                launcherVisible = false
-                            },
-                        )
                     }
                 }
             }
@@ -494,6 +532,7 @@ fun main() {
                             }
                         }
                         window.minimumSize = Dimension(1080, 600)
+                        applyMacTitleBar(window)
 
                         val baseDensity = LocalDensity.current
                         val scaledDensity = remember(baseDensity, zoomScale) {
@@ -526,6 +565,7 @@ fun main() {
                                     onShowHelp = { showHelp = true },
                                     onDismissHelp = { showHelp = false },
                                     showCommandPalette = showCommandPalette,
+                                    onOpenCommandPalette = { showCommandPalette = true },
                                     onDismissCommandPalette = { showCommandPalette = false },
                                     onShowSettings = { showSettings = true },
                                     onZoomIn = zoomIn,

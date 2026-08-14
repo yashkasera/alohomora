@@ -47,7 +47,10 @@ import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import io.github.yashkasera.alohomora.desktop.app.MacTitleBarHeight
 import io.github.yashkasera.alohomora.desktop.app.ThemeMode
+import io.github.yashkasera.alohomora.desktop.app.applyMacTitleBar
+import io.github.yashkasera.alohomora.desktop.app.isMacOs
 import io.github.yashkasera.alohomora.desktop.app.isShortcutModifier
 import io.github.yashkasera.alohomora.desktop.mcp.AlohomoraMcpServer
 import io.github.yashkasera.alohomora.desktop.mcp.McpClient
@@ -96,6 +99,7 @@ fun SettingsDialog(
         resizable = false,
     ) {
         AppTheme(initialIsDark = isDark, themeId = themeId) {
+            applyMacTitleBar(window)
             val focusRequester = remember { FocusRequester() }
             LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
@@ -121,7 +125,12 @@ fun SettingsDialog(
             ) {
                 var section by remember { mutableStateOf(SettingsSection.APPEARANCE) }
 
-                Row(modifier = Modifier.fillMaxSize()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        // Clear the macOS traffic lights that overlay the transparent title bar.
+                        .padding(top = if (isMacOs) MacTitleBarHeight else 0.dp),
+                ) {
                     Column(
                         modifier = Modifier
                             .width(184.dp)
