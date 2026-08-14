@@ -117,7 +117,6 @@ internal fun AlohomoraNavHost(
             )
         }
 
-        // Dynamic route for custom plugin screens
         composable<Routes.Extension> { backStackEntry ->
             val route: Routes.Extension = backStackEntry.toRoute()
             val plugin = PluginRegistry.getPlugin(route.extensionId)

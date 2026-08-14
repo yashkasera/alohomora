@@ -49,6 +49,7 @@ internal class EventsViewModel(
         pagingSourceFactory = { EventsPagingSource(telemetryRepository, searchQuery.value) },
     ).cachedIn(viewModelScope)
 
+    @Suppress("UNCHECKED_CAST")
     val state: StateFlow<EventsState> = combine(
         pager.pagingData,
         searchQuery,
@@ -110,10 +111,6 @@ internal class EventsViewModel(
 
     fun dismissEventDetail() {
         selectedEvent.value = null
-    }
-
-    fun showSlackSheet() {
-        showSlackSheet.value = true
     }
 
     fun hideSlackSheet() {

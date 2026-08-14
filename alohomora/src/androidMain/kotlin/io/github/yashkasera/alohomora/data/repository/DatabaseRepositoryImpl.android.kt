@@ -215,12 +215,10 @@ internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
 
         val executionTimeMs = measureTimeMillis {
             db.rawQuery(query, null).use { cursor ->
-                // Build columns with names only first
                 val columnNames = (0 until cursor.columnCount).map { index ->
                     cursor.getColumnName(index)
                 }
 
-                // Build rows
                 val rows = mutableListOf<Map<String, String>>()
                 val columnTypes = mutableMapOf<String, String>()
 
@@ -242,7 +240,6 @@ internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
                         }
                         row[columnName] = value
 
-                        // Infer type from first row if not already set
                         if (!columnTypes.containsKey(columnName)) {
                             columnTypes[columnName] = when (cursor.getType(index)) {
                                 Cursor.FIELD_TYPE_NULL -> "NULL"
@@ -257,7 +254,6 @@ internal actual suspend fun PlatformDatabaseAccessor.executeQuery(
                     rows.add(row)
                 }
 
-                // Build columns with types (default to TEXT if no data)
                 val columns = columnNames.map { name ->
                     TableColumn(name = name, type = columnTypes[name] ?: "TEXT")
                 }

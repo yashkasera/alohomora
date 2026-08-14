@@ -23,9 +23,6 @@ internal interface ScreenDao {
     @Delete
     suspend fun delete(entity: Screen)
 
-    /**
-     * Lists screens with pagination and query filtering.
-     */
     @Query("SELECT * FROM Screen WHERE name LIKE '%' || :query || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
     fun list(query: String, page: Int, pageSize: Int): Flow<List<Screen>>
 }

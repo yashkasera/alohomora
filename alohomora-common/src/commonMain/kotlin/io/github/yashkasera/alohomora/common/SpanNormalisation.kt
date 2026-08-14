@@ -17,16 +17,13 @@ const val SPAN_ATTRIBUTE_VALUE_MAX_CHARS: Int = 4096
 /** Suffix marking a value cut by [SPAN_ATTRIBUTE_VALUE_MAX_CHARS], matching the traffic bodies' convention. */
 private const val TRUNCATION_SUFFIX = "…truncated"
 
-/** OpenTelemetry's "no parent" sentinel: a span id of all zeros rather than an absent field. */
-private const val ABSENT_SPAN_ID = "0000000000000000"
-
 /**
  * Normalises a raw span id to the form the rest of the code assumes, or null when there isn't one.
  *
  * Two jobs, both load-bearing:
  * - **Lowercase**, because grouping and parent lookup are string equality. A tracer that emits
  *   uppercase hex would put every span in its own trace and orphan every child.
- * - **All-zeros to null.** OpenTelemetry reports an absent parent as [ABSENT_SPAN_ID], not as a
+ * - **All-zeros to null.** OpenTelemetry reports an absent parent as all-zero hex, not as a
  *   missing field. Treat that as a real id and no span is ever a root, so a whole trace renders as
  *   a flat list of orphans under a parent that does not exist.
  */

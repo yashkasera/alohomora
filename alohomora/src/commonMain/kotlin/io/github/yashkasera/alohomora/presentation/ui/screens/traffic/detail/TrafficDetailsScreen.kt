@@ -150,7 +150,6 @@ internal fun TrafficDetailsScreen(
         }
     }
 
-    // Share Bottom Sheet
     if (state.showShareSheet) {
         ShareBottomSheet(
             onDismiss = viewModel::hideShareSheet,
@@ -160,7 +159,6 @@ internal fun TrafficDetailsScreen(
         )
     }
 
-    // Slack Share Bottom Sheet
     if (state.showSlackSheet) {
         SlackShareBottomSheet(
             title = "Share to Slack",

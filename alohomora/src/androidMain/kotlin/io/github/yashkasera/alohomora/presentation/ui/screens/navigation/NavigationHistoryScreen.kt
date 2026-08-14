@@ -161,7 +161,6 @@ private fun TimelineItem(
                     .fillMaxWidth()
                     .padding(MaterialTheme.dimens.margin.md),
             ) {
-                // Status chips
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
                     verticalAlignment = Alignment.CenterVertically,
@@ -174,7 +173,6 @@ private fun TimelineItem(
 
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
-                // Screen name
                 Text(
                     text = event.title,
                     style = MaterialTheme.typography.titleMedium,

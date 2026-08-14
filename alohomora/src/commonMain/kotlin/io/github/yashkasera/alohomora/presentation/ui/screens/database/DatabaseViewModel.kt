@@ -63,6 +63,7 @@ internal class DatabaseViewModel(
     private val isExecutingQuery = MutableStateFlow(false)
     private val error = MutableStateFlow<String?>(null)
 
+    @Suppress("UNCHECKED_CAST")
     val state: StateFlow<DatabaseState> = combine(
         databases,
         selectedDatabase,
@@ -256,10 +257,6 @@ internal class DatabaseViewModel(
 
     fun toggleDatabaseSelector(show: Boolean) {
         showDatabaseSelector.value = show
-    }
-
-    fun clearError() {
-        error.value = null
     }
 
     fun refresh() {

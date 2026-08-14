@@ -71,18 +71,15 @@ internal fun TrafficDetailsContent(
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
 
-    // Hoist scroll states to persist across tab switches
     val overviewScrollState = rememberScrollState()
     val requestScrollState = rememberScrollState()
     val responseListState = rememberLazyListState()
 
-    // Use derivedStateOf to batch tab selection updates and reduce recompositions
     val currentPage by remember { derivedStateOf { pagerState.currentPage } }
 
     Column(
         modifier = modifier.fillMaxSize(),
     ) {
-        // Tab Row
         AlohomoraPrimaryTabRow(
             selectedTabIndex = currentPage,
             modifier = Modifier.fillMaxWidth(),
@@ -176,7 +173,6 @@ private fun OverviewTab(entry: TrafficEntry) {
 
     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
 
-    // Calculate sizes from content
     val requestSize = entry.requestSize ?: 0
     val responseSize = entry.responseSize ?: 0L
 
@@ -190,7 +186,6 @@ private fun OverviewTab(entry: TrafficEntry) {
 
     AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.xxxl))
 
-    // Info rows with all TrafficEntry fields
     InfoRowsSection(trace = entry)
 
     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.huge))
@@ -321,7 +316,6 @@ private fun ResponseTab(
     listState: LazyListState,
     modifier: Modifier = Modifier,
 ) {
-    // Calculate size and detect format
     val responseSize = trace.responseSize ?: 0L
     val responseFormat = detectFormatFromContentType(trace.responseContentType)
 
@@ -399,7 +393,6 @@ private fun HeroStatsSection(
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
-        // Latency, Size, and Format row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

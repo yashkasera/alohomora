@@ -59,7 +59,6 @@ internal class CacheRepositoryImpl(
                     CacheSource.SHARED_PREFERENCES
                 }
 
-                // Count entries by reading the file
                 val count = try {
                     val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
                     prefs.all.size
@@ -86,25 +85,12 @@ internal class CacheRepositoryImpl(
         }
     }
 
-    /**
-     * Scans all preference sources and returns a combined list of entries.
-     */
     private suspend fun scanAllPreferences(): List<CacheEntry> = withContext(Dispatchers.IO) {
         val allEntries = mutableListOf<CacheEntry>()
-
-        // Scan SharedPreferences
         allEntries.addAll(scanSharedPreferences())
-
-        // Note: DataStore reading requires androidx.datastore dependency
-        // This is a placeholder for future implementation
-        // allEntries.addAll(scanDataStore())
-
         allEntries.sortedBy { it.key }
     }
 
-    /**
-     * Scans all SharedPreferences files in the app's shared_prefs directory.
-     */
     private fun scanSharedPreferences(): List<CacheEntry> {
         val entries = mutableListOf<CacheEntry>()
         val prefsDir = File(context.applicationInfo.dataDir, "shared_prefs")
@@ -148,8 +134,6 @@ internal class CacheRepositoryImpl(
                     )
                 }
             } catch (e: Exception) {
-                // Likely an encrypted preference file we can't read
-                // Add a placeholder entry indicating the encrypted store
                 entries.add(
                     CacheEntry(
                         key = "[$storeName]",

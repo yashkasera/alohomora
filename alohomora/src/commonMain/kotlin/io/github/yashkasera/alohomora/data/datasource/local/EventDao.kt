@@ -26,21 +26,12 @@ internal interface EventDao {
     @Delete
     suspend fun delete(entity: Event)
 
-    /**
-     * Lists events with pagination and query filtering.
-     */
     @Query("SELECT * FROM Event WHERE name LIKE '%' || :query || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
     fun list(query: String, page: Int, pageSize: Int): Flow<List<Event>>
 
-    /**
-     * Counts events matching the query.
-     */
     @Query("SELECT COUNT(*) FROM Event WHERE name LIKE '%' || :query || '%'")
     fun count(query: String): Flow<Long>
 
-    /**
-     * Gets latest events.
-     */
     @Query("SELECT * FROM Event ORDER BY time DESC LIMIT :limit")
     suspend fun getLatest(limit: Int): List<Event>
 }

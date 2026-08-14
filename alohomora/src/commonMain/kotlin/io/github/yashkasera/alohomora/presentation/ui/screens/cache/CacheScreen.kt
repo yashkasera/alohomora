@@ -95,7 +95,6 @@ internal fun CacheScreen(
                 onQueryChange = viewModel::onSearchQueryChange,
             )
 
-            // Content
             if (state.entries.isEmpty()) {
                 EmptyState(
                     icon = Icons.Database,
@@ -113,19 +112,6 @@ internal fun CacheScreen(
             }
         }
     }
-}
-
-@Composable
-private fun SearchTextField(
-    query: String,
-    onQueryChange: (String) -> Unit,
-) {
-    AlohomoraSearchTextField(
-        query = query,
-        onQueryChange = onQueryChange,
-        modifier = Modifier.fillMaxWidth(),
-        placeholder = "Filter keys or values...",
-    )
 }
 
 @Composable
@@ -168,7 +154,6 @@ private fun PreferenceItem(
                 .fillMaxWidth()
                 .padding(MaterialTheme.dimens.margin.md),
         ) {
-            // Key row with type chip
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

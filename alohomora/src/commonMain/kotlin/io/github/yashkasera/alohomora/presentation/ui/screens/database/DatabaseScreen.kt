@@ -113,7 +113,6 @@ internal fun DatabaseScreen(
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
-            // Tabs and Content
             TabsWithContent(
                 currentTab = state.currentTab,
                 onTabSelected = { viewModel.selectTab(it) },
@@ -127,7 +126,6 @@ internal fun DatabaseScreen(
             )
         }
 
-        // Bottom Sheet for Database Selection
         if (state.showDatabaseSelector) {
             DatabaseSelectorBottomSheet(
                 databases = state.databases,
@@ -304,7 +302,6 @@ private fun TabsWithContent(
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
-        // Pager Content
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
@@ -414,7 +411,6 @@ private fun QueryTabContent(
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
-        // Query Results
         Column(
             modifier = Modifier
                 .weight(0.65f)

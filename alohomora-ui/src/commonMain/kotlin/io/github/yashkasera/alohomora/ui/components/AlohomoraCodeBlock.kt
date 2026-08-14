@@ -106,18 +106,12 @@ fun AlohomoraCodeBlock(
     }
 }
 
-/**
- * Attempts to prettify a JSON string. If the content is not valid JSON,
- * returns the original string unchanged.
- */
 private fun prettifyJson(content: String): String {
     return try {
-        // Try to parse and format as JSON
         val json = Json { prettyPrint = true; prettyPrintIndent = "  " }
         val element = json.decodeFromString(JsonElement.serializer(), content)
         json.encodeToString(JsonElement.serializer(), element)
     } catch (e: Exception) {
-        // If parsing fails, try manual prettification for common JSON patterns
         try {
             manualPrettifyJson(content)
         } catch (e: Exception) {
@@ -167,9 +161,7 @@ private fun manualPrettifyJson(json: String): String {
                 result.append(' ')
             }
 
-            char == ' ' && !inString -> {
-                // Skip spaces outside strings
-            }
+            char == ' ' && !inString -> { }
 
             else -> result.append(char)
         }

@@ -45,6 +45,7 @@ fun ErrorDetailsSideSheet(
     devToolsViewModel: DevToolsViewModel,
     onDismiss: () -> Unit,
 ) {
+    @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     val slackShareError by devToolsViewModel.slackShareError.collectAsState()
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()

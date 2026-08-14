@@ -15,6 +15,9 @@ plugins {
 
 kotlin {
     jvmToolchain(17)
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
     android {
         namespace = "io.github.yashkasera.alohomora"
         // Deliberately not the newest SDK. A published library's compileSdk becomes a hard floor for

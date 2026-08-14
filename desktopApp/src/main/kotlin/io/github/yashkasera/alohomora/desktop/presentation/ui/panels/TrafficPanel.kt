@@ -555,7 +555,7 @@ private fun DesktopRequestTab(traffic: TrafficEntry) {
 
 @Composable
 private fun DesktopResponseTab(traffic: TrafficEntry) {
-    Column() {
+    Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

@@ -50,7 +50,7 @@ internal object JsonTreeBuilder {
 
                 is JsonPrimitive -> {
 
-                    val value: Any? =
+                    val value: Any =
                         when {
                             el.isString -> el.content
                             el.booleanOrNull != null -> el.boolean
@@ -61,9 +61,7 @@ internal object JsonTreeBuilder {
 
                     nodes[path] = JsonValueNode(path, key, value)
 
-                    value?.toString()?.let {
-                        search.insert(it.lowercase(), path)
-                    }
+                    search.insert(value.toString().lowercase(), path)
                 }
             }
         }

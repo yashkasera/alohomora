@@ -114,15 +114,13 @@ fun SettingsDialog(
                     .focusable()
                     .onPreviewKeyEvent { event ->
                         if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                        when {
-                            event.key == Key.Escape -> {
+                        when (event.key) {
+                            Key.Escape -> {
                                 onDismiss(); true
                             }
-
-                            event.key == Key.W && event.isShortcutModifier() -> {
+                            Key.W if event.isShortcutModifier() -> {
                                 onDismiss(); true
                             }
-
                             else -> false
                         }
                     },
@@ -332,6 +330,7 @@ private fun McpServerSection(
 
 /** A right-aligned copy affordance over a code block, so the action reads as a button, not a stray label. */
 @Composable
+@Suppress("DEPRECATION")
 private fun LabeledCopyBlock(label: String, content: String) {
     val clipboard = LocalClipboardManager.current
     Row(
@@ -618,7 +617,7 @@ private fun ThemeCard(
 }
 
 @Composable
-private fun ColorDot(color: androidx.compose.ui.graphics.Color) {
+private fun ColorDot(color: Color) {
     Box(
         modifier = Modifier
             .size(12.dp)

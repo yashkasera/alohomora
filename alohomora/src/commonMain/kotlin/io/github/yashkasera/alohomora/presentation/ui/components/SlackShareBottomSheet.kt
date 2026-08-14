@@ -76,7 +76,6 @@ internal fun SlackShareBottomSheet(
             )
 
             if (isConfigured) {
-                // Email input
                 Text(
                     text = "Recipient Email",
                     style = MaterialTheme.typography.labelMedium,
@@ -100,7 +99,6 @@ internal fun SlackShareBottomSheet(
                     modifier = Modifier.padding(bottom = 24.dp),
                 )
 
-                // Share options
                 shareOptions.forEachIndexed { index, option ->
                     ShareOption(
                         icon = option.icon,
@@ -119,7 +117,6 @@ internal fun SlackShareBottomSheet(
                     }
                 }
             } else {
-                // Not configured state
                 Text(
                     text = "Slack is not configured",
                     style = MaterialTheme.typography.bodyLarge,

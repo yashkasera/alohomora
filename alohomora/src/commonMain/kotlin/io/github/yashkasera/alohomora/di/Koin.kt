@@ -56,7 +56,6 @@ internal fun initKoin(appDeclaration: KoinAppDeclaration = {}) = koinApplication
     modules(appModule, platformModule)
 }
 
-// Common modules
 internal val appModule = module {
     single { get<AlohomoraDb>().trafficDao() }
     single { get<AlohomoraDb>().eventDao() }
@@ -73,7 +72,6 @@ internal val appModule = module {
     single { DevToolsRuntime(get(), get(), get(), get(), get(), get(), get()) }
 
 
-    // UseCases
     factory { GetErrorDetailsUseCase(get()) }
     factory { MarkErrorAsViewedUseCase(get()) }
     factory { ClearErrorsUseCase(get()) }
@@ -94,7 +92,6 @@ internal val appModule = module {
         SlackShareService(httpClient = get())
     }
 
-    // ViewModels
     viewModel { OverviewViewModel(get(), get(), get()) }
     viewModel { TrafficViewModel(get()) }
     viewModel { (traceId: String) ->

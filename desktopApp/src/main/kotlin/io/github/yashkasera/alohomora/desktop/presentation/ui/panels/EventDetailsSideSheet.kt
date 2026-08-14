@@ -61,6 +61,7 @@ fun EventDetailsSideSheet(
     val slackShareError by devToolsViewModel.slackShareError.collectAsState()
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()
     val isSlackConfigured = buildInfo?.slackWebhookUrl.isNullOrBlank().not()
+    @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
 
     // Keyed on the event, not bare `remember`: this composable is reused as the selection changes, so

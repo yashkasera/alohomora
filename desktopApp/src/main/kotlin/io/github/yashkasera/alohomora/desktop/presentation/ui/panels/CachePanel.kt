@@ -144,6 +144,7 @@ private fun CacheEntryRow(
     expanded: Boolean,
     onToggle: () -> Unit,
 ) {
+    @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     AlohomoraCard(
         modifier = Modifier.fillMaxWidth(),

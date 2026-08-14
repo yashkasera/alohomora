@@ -166,6 +166,7 @@ private fun FeatureFlagRow(
     expanded: Boolean,
     onToggle: () -> Unit,
 ) {
+    @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     AlohomoraCard(
         modifier = Modifier.fillMaxWidth(),
@@ -237,9 +238,6 @@ private fun FeatureFlagRow(
                         AlohomoraIconButton(
                             onClick = {
                                 clipboardManager.setText(
-                                    /*AnnotatedString(
-                                        flag.value + "\n" + flag.metadata,
-                                    ),*/
                                     buildAnnotatedString {
                                         append("Key:")
                                         appendLine("`${flag.key}`")

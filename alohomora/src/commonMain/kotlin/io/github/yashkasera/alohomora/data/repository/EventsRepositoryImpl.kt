@@ -10,7 +10,6 @@ import kotlinx.serialization.json.JsonElement
 
 internal class EventsRepositoryImpl(private val db: AlohomoraDb) : EventsRepository {
 
-    // Base Repository implementations
     override fun list(query: String, page: Int, pageSize: Int): Flow<List<Event>> =
         db.eventDao().list(query, page, pageSize)
 
@@ -23,7 +22,6 @@ internal class EventsRepositoryImpl(private val db: AlohomoraDb) : EventsReposit
 
     override suspend fun markAsViewed(id: Long) = db.eventDao().markAsViewed(id)
 
-    // Events-specific implementations
     override fun count(query: String): Flow<Long> =
         db.eventDao().count(query)
 

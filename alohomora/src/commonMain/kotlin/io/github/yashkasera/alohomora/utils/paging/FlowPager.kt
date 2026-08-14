@@ -25,7 +25,6 @@ internal class FlowPager<Key, Item>(
     private var isEndReached = false
     private var scope: CoroutineScope? = null
 
-    // Use a MutableStateFlow to trigger updates when pages change
     private val _pagesUpdateTrigger = MutableStateFlow(0)
 
     private val _pagingData = MutableStateFlow(
@@ -47,7 +46,6 @@ internal class FlowPager<Key, Item>(
 
         val job = pagingSource.load(LoadParams(key, config.pageSize))
             .map { result ->
-                // Store the items for this page
                 loadedPages[key] = result.items
 
                 if (result.items.size < config.pageSize) {
@@ -56,7 +54,6 @@ internal class FlowPager<Key, Item>(
                     currentKey = result.nextKey ?: getNextKey(key)
                 }
 
-                // Trigger update
                 _pagesUpdateTrigger.value += 1
 
                 result
@@ -67,7 +64,6 @@ internal class FlowPager<Key, Item>(
     }
 
     private fun updatePagingData() {
-        // Flatten all loaded pages - LinkedHashMap preserves insertion order
         val allItems = loadedPages.values.flatten()
 
         _pagingData.value = PagingData(
@@ -104,7 +100,6 @@ internal class FlowPager<Key, Item>(
     fun cachedIn(scope: CoroutineScope): FlowPager<Key, Item> {
         this.scope = scope
 
-        // Collect the trigger to update paging data when pages change
         scope.launch {
             _pagesUpdateTrigger.collect {
                 updatePagingData()

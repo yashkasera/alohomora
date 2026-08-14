@@ -14,6 +14,7 @@ internal data class ClipboardCopyState(
     val snackbarHostState: SnackbarHostState,
 )
 
+@Suppress("DEPRECATION")
 @Composable
 internal fun rememberClipboardCopy(): ClipboardCopyState {
     val clipboard = LocalClipboardManager.current

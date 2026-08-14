@@ -49,9 +49,6 @@ data class TrafficEntry(
     var mockedBy: String? = null,
 ) {
 
-    fun isShareable(): Boolean =
-        requestBody != UNABLE_PARSE_MESSAGE
-
     fun isSuccessful(): Boolean = status in 200..299
 
     fun isMocked(): Boolean = mockedBy != null
@@ -59,8 +56,6 @@ data class TrafficEntry(
     fun pathWithQuery(): String = "$path${if (query.isNullOrEmpty()) "" else "?$query"}"
 
     fun summary(): String = "$status $method ${pathWithQuery()}"
-
-    fun schemeHostPath(): String = url?.split("?")?.get(0) ?: ""
 
     fun curlCommand(): String = generateCurlCommand()
 
@@ -96,9 +91,7 @@ data class TrafficEntry(
                 append(" \\\n  -H ${"Content-Type: $contentType".shellEscape()}")
             }
 
-            // Add request body if present
             requestBody?.takeIf { it.isNotBlank() && it != UNABLE_PARSE_MESSAGE }?.let { body ->
-                // Escape single quotes in the body
                 append(" --data '${body.shellEscape()}'")
             }
 
@@ -148,7 +141,6 @@ data class TrafficEntry(
             appendLine("Total size: ${formatBytes(totalSize)}")
             appendLine()
 
-            // Request section
             appendLine("---------- Request ----------")
             appendLine()
 
@@ -164,7 +156,6 @@ data class TrafficEntry(
                 appendLine()
             }
 
-            // Response section
             appendLine("---------- Response ----------")
             appendLine()
 

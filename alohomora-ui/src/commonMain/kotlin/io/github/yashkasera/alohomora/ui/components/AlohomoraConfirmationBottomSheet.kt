@@ -73,7 +73,6 @@ fun ConfirmationBottomSheet(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Optional icon
             config.icon?.let { icon ->
                 Icon(
                     imageVector = icon,
@@ -87,7 +86,6 @@ fun ConfirmationBottomSheet(
                 )
             }
 
-            // Title
             Text(
                 text = config.title,
                 style = MaterialTheme.typography.titleLarge,
@@ -96,7 +94,6 @@ fun ConfirmationBottomSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Message
             Text(
                 text = config.message,
                 style = MaterialTheme.typography.bodyMedium,
@@ -106,12 +103,10 @@ fun ConfirmationBottomSheet(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // Dismiss/Cancel button
                 AlohomoraOutlinedButton(
                     modifier = Modifier.weight(1f)
                         .testTag(AlohomoraTestTags.Chrome.CONFIRM_DISMISS),
@@ -139,38 +134,4 @@ fun ConfirmationBottomSheet(
             }
         }
     }
-}
-
-/**
- * Convenience overload for simple confirmations without custom configuration.
- *
- * @param title The title text to display
- * @param message The message/description text
- * @param onConfirm Callback when user confirms the action
- * @param onDismiss Callback when user dismisses the sheet
- * @param confirmButtonText Text for the confirm button
- * @param dismissButtonText Text for the dismiss button
- * @param isDestructive Whether this is a destructive action
- */
-@Composable
-fun ConfirmationBottomSheet(
-    title: String,
-    message: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-    confirmButtonText: String = "Confirm",
-    dismissButtonText: String = "Cancel",
-    isDestructive: Boolean = false,
-) {
-    ConfirmationBottomSheet(
-        config = ConfirmationConfig(
-            title = title,
-            message = message,
-            confirmButtonText = confirmButtonText,
-            dismissButtonText = dismissButtonText,
-            isDestructive = isDestructive,
-        ),
-        onConfirm = onConfirm,
-        onDismiss = onDismiss,
-    )
 }
