@@ -68,6 +68,18 @@ class DesktopAppComposition(
 
     /** Everything [close] has to release. Held so per-window teardown is complete. */
     private val devToolsRepositoryRef: DevToolsRepositoryImpl
+
+    /**
+     * This window's captured data, exposed read-only for the app-scoped MCP server.
+     *
+     * The MCP server is one listener for the whole app but data is per-device-window, so
+     * [io.github.yashkasera.alohomora.desktop.mcp.DeviceSessionRegistry] pulls this off each open
+     * session. Returns the interface, not the impl, so nothing outside this class can mutate device
+     * state through it.
+     */
+    val devToolsRepository: io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
+        get() = devToolsRepositoryRef
+
     private val slackHttpClientRef: HttpClient
 
     /** True when [devicesViewModel] is owned by another composition and must not be closed. */

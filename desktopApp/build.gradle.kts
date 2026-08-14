@@ -46,13 +46,20 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
-    // Ktor client only. There is no embedded server here — the desktop app is a TCP
-    // *client* of the in-app DevTools server over an adb port forward.
+    // Ktor client — the desktop app is a TCP *client* of the in-app DevTools server over an
+    // adb port forward.
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.json)
     implementation(libs.ktor.client.logging)
+
+    // Ktor server — the read-only MCP server's only inbound listener, bound to loopback. The MCP
+    // SDK ships no engine of its own, so we supply CIO here at the same Ktor version as the client.
+    implementation(libs.mcp.kotlin.sdk)
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.cio)
+    implementation(libs.ktor.server.sse)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)

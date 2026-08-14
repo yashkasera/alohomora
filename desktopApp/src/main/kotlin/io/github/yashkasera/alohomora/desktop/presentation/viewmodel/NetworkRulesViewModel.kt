@@ -121,6 +121,18 @@ class NetworkRulesViewModel(
         sendRules()
     }
 
+    /**
+     * Replaces the whole rule set at once, assigning ids to any that arrive blank.
+     *
+     * The set/clear MCP tools need a single replace operation rather than a sequence of add/delete,
+     * each of which would send rules and reschedule the autosave. Mirrors [addRule]'s id handling.
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    fun replaceRules(rules: List<MockRule>) {
+        _mockRules.value = rules.map { if (it.id.isBlank()) it.copy(id = Uuid.random().toString()) else it }
+        sendRules()
+    }
+
     fun toggleAllRules() {
         val anyEnabled = _mockRules.value.any { it.enabled }
         _mockRules.update { list ->

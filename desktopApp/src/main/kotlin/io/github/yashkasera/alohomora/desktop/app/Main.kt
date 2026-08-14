@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -32,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -68,7 +70,12 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateChecker
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
 import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopEventPrefs
+import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopMcpPrefs
 import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopTrustPrefs
+import io.github.yashkasera.alohomora.desktop.mcp.AlohomoraMcpServer
+import io.github.yashkasera.alohomora.desktop.mcp.DeviceSessionHandle
+import io.github.yashkasera.alohomora.desktop.mcp.DeviceSessionRegistry
+import io.github.yashkasera.alohomora.desktop.mcp.McpConfirmationBroker
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AboutDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SettingsDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.UpdateBanner
@@ -80,6 +87,7 @@ import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
@@ -143,6 +151,54 @@ fun main() {
             }
         }
 
+        // MCP server: app-scoped (one listener) with per-device data bridged through the registry.
+        // Off unless the user opts in via Settings; write tools need a second opt-in.
+        val mcpRegistry = remember { DeviceSessionRegistry() }
+        val mcpConfirmation = remember { McpConfirmationBroker() }
+        var mcpEnabled by remember { mutableStateOf(DesktopMcpPrefs.loadEnabled()) }
+        var mcpPort by remember { mutableStateOf(DesktopMcpPrefs.loadPort()) }
+        var mcpWriteEnabled by remember { mutableStateOf(DesktopMcpPrefs.loadWriteEnabled()) }
+        val mcpServer = remember {
+            AlohomoraMcpServer(
+                registry = mcpRegistry,
+                serverVersion = DesktopBuildConfig.version,
+                writeEnabled = { mcpWriteEnabled },
+                confirmation = mcpConfirmation,
+            )
+        }
+        val mcpStatus by mcpServer.status.collectAsState()
+        val pendingMcpConfirmation by mcpConfirmation.pending.collectAsState()
+
+        // Mirror the open windows into the registry reactively. Combine the window list with the ADB
+        // devices flow so late-arriving model/platform metadata refreshes the handles too — otherwise
+        // list_devices could keep reporting null model/platform for a session opened before ADB reported.
+        LaunchedEffect(Unit) {
+            combine(
+                snapshotFlow { sessions.toList() },
+                sharedComposition.devicesViewModel.devices,
+            ) { open, devices -> open to devices }.collect { (open, devices) ->
+                mcpRegistry.update(
+                    open.map { session ->
+                        val device = devices.firstOrNull { it.id == session.deviceId }
+                        DeviceSessionHandle(
+                            deviceId = session.deviceId,
+                            model = device?.model,
+                            platform = device?.platform?.name,
+                            devToolsRepository = session.composition.devToolsRepository,
+                            networkRulesViewModel = session.composition.networkRulesViewModel,
+                        )
+                    },
+                )
+            }
+        }
+
+        LaunchedEffect(mcpEnabled, mcpPort) {
+            if (mcpEnabled) mcpServer.start(mcpPort) else mcpServer.stop()
+        }
+        DisposableEffect(Unit) {
+            onDispose { mcpServer.stop() }
+        }
+
         if (showAbout) {
             AboutDialog(
                 isDark = effectiveIsDark,
@@ -171,11 +227,75 @@ fun main() {
                     DesktopThemePrefs.clear()
                     DesktopTrustPrefs.clearAll()
                     DesktopEventPrefs.clearAll()
+                    DesktopMcpPrefs.clear()
                     themeMode = ThemeMode.SYSTEM
                     themeId = "default"
+                    mcpEnabled = false
+                    mcpPort = DesktopMcpPrefs.DEFAULT_PORT
+                    mcpWriteEnabled = false
+                },
+                mcpEnabled = mcpEnabled,
+                mcpPort = mcpPort,
+                mcpStatus = mcpStatus,
+                mcpWriteEnabled = mcpWriteEnabled,
+                onMcpEnabledChange = { enabled ->
+                    mcpEnabled = enabled
+                    DesktopMcpPrefs.saveEnabled(enabled)
+                },
+                onMcpPortChange = { port ->
+                    mcpPort = port
+                    DesktopMcpPrefs.savePort(port)
+                },
+                onMcpWriteEnabledChange = { enabled ->
+                    mcpWriteEnabled = enabled
+                    DesktopMcpPrefs.saveWriteEnabled(enabled)
                 },
                 onDismiss = { showSettings = false },
             )
+        }
+
+        // A write tool (clear_captured) is asking the developer to approve a destructive action. Shown
+        // at app scope in its own dialog window so it appears regardless of which window has focus.
+        pendingMcpConfirmation?.let { pending ->
+            DialogWindow(
+                title = "Alohomora",
+                onCloseRequest = { pending.resolve(false) },
+                state = rememberDialogState(width = 440.dp, height = 220.dp),
+                resizable = false,
+            ) {
+                // A maximized device window otherwise buries this on macOS — force it to the front.
+                LaunchedEffect(Unit) {
+                    window.isAlwaysOnTop = true
+                    window.toFront()
+                    window.requestFocus()
+                }
+                AppTheme(isDarkState = sharedIsDark, themeId = themeId) {
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(MaterialTheme.dimens.margin.xxl),
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                        ) {
+                            Text(pending.title, style = MaterialTheme.typography.titleMedium)
+                            Text(pending.message, style = MaterialTheme.typography.bodyMedium)
+                            Spacer(Modifier.weight(1f))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm, Alignment.End),
+                            ) {
+                                AlohomoraOutlinedButton(
+                                    text = "Deny",
+                                    size = AlohomoraButtonSize.SMALL,
+                                    onClick = { pending.resolve(false) },
+                                )
+                                AlohomoraFilledButton(
+                                    text = "Allow",
+                                    onClick = { pending.resolve(true) },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         if (launcherVisible) {

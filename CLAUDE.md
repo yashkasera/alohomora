@@ -271,6 +271,47 @@ keyboard navigation (arrow keys + Enter), and shortcut chips.
 
 Manual DI (no Koin): `DesktopAppComposition` constructs all stores (`MockSessionStore`, `DeepLinkHistoryStore`), repositories, use cases, and ViewModels. `LauncherScreen` dialog lets users select an ADB device and open per-device windows. Each window owns its own `DesktopAppComposition`. ADB port forwarding sets up the TCP tunnel from host to device. Includes an embedded terminal panel (`LocalTerminal`, `TerminalView`) via pty4j.
 
+### MCP server (desktop-only)
+
+`desktopApp/.../mcp/` exposes the captured data as MCP tools over **Streamable HTTP on loopback** — the
+**first and only inbound listener** on the desktop side (everything else is an outbound TCP client of
+the in-app DevTools server). Uses the official `io.modelcontextprotocol:kotlin-sdk` with a
+`ktor-server-cio` engine we supply at the catalog's Ktor `3.5.1` (the SDK ships no engine).
+
+- **App-scoped, not per-window.** `AlohomoraMcpServer` is one instance for the whole application,
+  started/stopped from `Main.kt`'s `application {}` scope by a `LaunchedEffect` on the Settings toggle
+  — so N open device windows produce exactly one listener. Data is per-device-window, so
+  `DeviceSessionRegistry` (kept in step with `Main.kt`'s `sessions` via `snapshotFlow`) bridges the two,
+  and every tool takes an optional `deviceId` (defaulting to the sole session, else requiring one).
+- **Tool logic is a pure layer.** `AlohomoraMcpToolData` holds functions over a `DevToolsRepository`
+  returning `JsonElement`; the `addTool` handlers in `AlohomoraMcpTools` are thin adapters (parse args →
+  resolve device → project → wrap). One code path, unit-testable with `FakeDevToolsRepository`. It reuses
+  `alohomora-common` `@Serializable` models directly and hand-projects the desktop-side models
+  (build/git/cache/database), which is also where `BuildInfo.slackWebhookUrl` is dropped — the one secret
+  that must never be served.
+- **Loopback + Origin-checked.** Binds `127.0.0.1` with the SDK's DNS-rebinding protection on;
+  `allowedOrigins` is passed **explicitly** (loopback hosts) because a null `allowedOrigins` skips Origin
+  validation. Origin-less requests (a CLI agent) are allowed, a browser Origin outside loopback gets 403.
+- **Write tools are a second opt-in.** `buildServer()` registers read tools + prompts always, and
+  `AlohomoraMcpWriteTools` only when `writeEnabled()` is true (read fresh at each session-create, so the
+  toggle takes effect on the next connection). Write tools route through the **same code paths as the
+  UI**: replay/clear via `DevToolsRepository`, but mocks/throttle via `NetworkRulesViewModel` (its
+  `_mockRules`/`_throttleProfile` are the UI's source of truth — going straight to the repo would desync
+  it), which is why `DeviceSessionHandle` carries the view model too. The one destructive tool,
+  `clear_captured`, awaits `McpConfirmationBroker.confirm()` — an app-scoped Allow/Deny dialog window —
+  before running; note the wire trap that `clearCaptured(traces=…)` clears *traffic*, `spans` clears
+  trace spans.
+- **Prompts + discovery.** `McpPrompts` registers `triage`/`debug_request`/`explain_screen` (canned
+  read-tool flows). `McpClientConfig` builds the copy-paste connect snippet per client (Claude Code
+  native http, Cursor url-only, Claude Desktop via the `mcp-remote` npx bridge) for the Settings picker.
+- **Prefs:** `DesktopMcpPrefs` (`java.util.prefs`, node `.../desktop/mcp`) persists `enabled`,
+  `writeEnabled`, and `port` (all default off / **53900**; DevTools itself uses 53999).
+- **Tool logic stays a pure layer.** `AlohomoraMcpToolData` (reads) and `AlohomoraMcpWriteData` (writes)
+  are functions over the repo/view-model returning `JsonElement`/`WriteResult`; the `addTool` handlers
+  are thin adapters, unit-testable with `FakeDevToolsRepository`. `BuildInfo.slackWebhookUrl` is dropped
+  in the build-metadata projection — the one secret that must never be served. The mock/throttle write
+  path is view-model-backed (disk-coupled `MockSessionStore`), so it's covered by manual E2E, not units.
+
 ## Compose UI Architecture
 
 Both mobile and desktop use Compose for the DevTools UI. **The mobile console runs inside the debug app; the desktop app connects to the device via ADB and TCP.** This means the Compose UI code is shared (`alohomora-ui`), but the hosting context differs sharply.

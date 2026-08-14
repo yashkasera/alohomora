@@ -78,12 +78,44 @@ class FakeDevToolsRepository(
         )
     }
 
+    /** Records which streams a clear_captured asked to wipe, so a test can assert the mapping. */
+    data class ClearCall(val traces: Boolean, val events: Boolean, val errors: Boolean, val spans: Boolean)
+    val clearCalls = mutableListOf<ClearCall>()
+
     override fun clearCaptured(traces: Boolean, events: Boolean, errors: Boolean, spans: Boolean) {
+        clearCalls += ClearCall(traces, events, errors, spans)
         if (events) {
             clearedEvents = true
             _events.value = emptyList()
         }
     }
+
+    /** Replay requests the UI/agent sent; the fake also marks the source in-flight, like the real store. */
+    val replayedRequests = mutableListOf<ReplayRequest>()
+    val mockRulesSent = mutableListOf<List<MockRule>>()
+    val throttleSet = mutableListOf<ThrottleProfile>()
+
+    override fun replayTraffic(request: ReplayRequest) {
+        replayedRequests += request
+        replayState.value = replayState.value.copy(inFlight = replayState.value.inFlight + request.sourceTraceId)
+    }
+
+    /** Answers a pending replay the way a `ReplayResultMessage(sent = true)` would. */
+    fun deliverReplaySuccess(sourceTraceId: String, entry: TrafficEntry) {
+        traffic.value = traffic.value + entry
+        replayState.value = replayState.value.copy(inFlight = replayState.value.inFlight - sourceTraceId)
+    }
+
+    /** Answers a pending replay the way a `ReplayResultMessage(sent = false)` would. */
+    fun deliverReplayFailure(sourceTraceId: String, error: String) {
+        replayState.value = replayState.value.copy(
+            inFlight = replayState.value.inFlight - sourceTraceId,
+            errors = replayState.value.errors + (sourceTraceId to error),
+        )
+    }
+
+    override fun setThrottleProfile(profile: ThrottleProfile) { throttleSet += profile }
+    override fun setMockRules(rules: List<MockRule>) { mockRulesSent += rules }
 
     override fun connect(target: DevToolsTarget) = Unit
     override fun switchDevice(target: DevToolsTarget, deviceId: String?) = Unit
@@ -93,12 +125,9 @@ class FakeDevToolsRepository(
     override fun markErrorViewed(id: Long) = Unit
     override fun markTraceViewed(traceId: String) = Unit
     override fun requestTraceSpans(traceId: String) = Unit
-    override fun replayTraffic(request: ReplayRequest) = Unit
     override fun dismissReplayError(sourceTraceId: String) = Unit
     override fun dismissDeviceError() = Unit
     override fun requestDatabaseSchema(databaseName: String) = Unit
-    override fun setThrottleProfile(profile: ThrottleProfile) = Unit
-    override fun setMockRules(rules: List<MockRule>) = Unit
     override fun setVpnThrottle(profile: ThrottleProfile, enabled: Boolean) = Unit
     override fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int) = Unit
     override fun requestDatabaseUpdate(

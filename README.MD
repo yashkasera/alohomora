@@ -403,6 +403,50 @@ navigation to any panel, theme toggle, zoom controls, device actions (force stop
 screenshot, Wi-Fi/data toggle, clear logcat), data actions (clear traffic/traces/events), and the
 deep link builder. Each action shows its keyboard shortcut when one exists.
 
+### MCP server
+
+The desktop app can expose the data it has already captured — traffic, errors, traces, events,
+database, cache, feature flags, build and git metadata — to **your own** AI agent (Claude Code,
+Claude Desktop, Cursor) as an [MCP](https://modelcontextprotocol.io) server. Alohomora stays the
+legible data source; the reasoning stays with the agent you already use. There is no embedded chatbot
+and no LLM key in the app.
+
+Turn it on in **Preferences → MCP server**: a toggle, a port (default `53900`), the copyable endpoint
+URL, and a live status line. Then point your agent at `http://127.0.0.1:<port>/mcp` — or use the
+**"connect your agent"** picker, which generates the exact snippet for Claude Code
+(`claude mcp add --transport http …` or `.mcp.json`), Cursor, or Claude Desktop (`mcp-remote` bridge)
+and copies it to your clipboard. It's **off by default**.
+
+**Read tools** (always available once the server is on):
+`get_attention` (unviewed errors + failed traffic — the best starting point),
+`list_traffic`/`get_traffic`, `list_errors`/`get_error`, `list_traces`/`get_trace`, `list_events`,
+`get_database_schema`/`query_database_table`, `list_cache_keys`/`get_cache_value`,
+`list_feature_flags`, `get_build_metadata`/`get_git_history`, and `list_devices`. Each tool takes an
+optional `deviceId`; with one device connected it defaults to that one, otherwise `list_devices`
+enumerates the choices.
+
+**Prompts** package common flows so the agent knows how to chain the read tools: `triage` (what's
+broken now), `debug_request(id)` (why is this request failing, taken through to a source-level fix),
+and `explain_screen(name)`.
+
+**Write tools** are a separate, explicit opt-in — a second **"Allow write tools"** switch, off by
+default. When on, the agent can act, not just read: `replay_traffic` (re-send a captured request,
+optionally edited, through the app's own client), `list_mock_rules`/`set_mock_rules`/`clear_mock_rules`,
+`get_throttle`/`set_throttle`, and `clear_captured`. These route through the *same* code paths the UI
+uses, so whatever the agent does shows up in the console. `clear_captured` is irreversible, so it
+always asks you to confirm in the desktop app before it runs.
+
+Security posture:
+
+- **Loopback only.** The server binds `127.0.0.1` and validates the `Origin` header (DNS-rebinding
+  protection): a page served from a non-loopback origin is rejected, while a loopback-local page or
+  agent (and origin-less clients like a CLI) may connect. Same trust boundary as `adb forward`.
+- **Off by default, and writes are a second opt-in.** It is the desktop app's only inbound listener;
+  with writes off, the agent literally cannot see the write tools.
+- **Captured headers and bodies are served raw** — the same values the console shows. `[REDACTED]`
+  handling lives on the *replay* path, not storage, so an agent reading your debug app over loopback
+  sees real captured header values. That is your own agent on your own machine, but worth knowing.
+
 ### Desktop-only panels
 
 Traffic, Events, Database, Cache, Errors, Config and Git History all work for any connected device,
