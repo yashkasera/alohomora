@@ -1,11 +1,14 @@
 package io.github.yashkasera.alohomora.desktop.mcp
 
+import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.FakeDevToolsRepository
 import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -114,6 +117,65 @@ class AlohomoraMcpWriteDataTest {
         assertEquals(null, broker.pending.value, "nothing selected: never opens a dialog")
     }
 
+    @Test
+    fun `create_mock_from_traffic creates a rule from a captured entry`() {
+        val repo = FakeDevToolsRepository().apply {
+            traffic.value = listOf(
+                TrafficEntry(
+                    id = "1",
+                    status = 200,
+                    method = "GET",
+                    url = "https://api.example.com/users",
+                    host = "api.example.com",
+                    path = "/users",
+                    responseBody = """{"name":"Alice"}""",
+                    responseContentType = "application/json; charset=utf-8",
+                ),
+            )
+        }
+        val vm = testViewModel(supported = true)
+        val result = AlohomoraMcpWriteData.createMockFromTraffic(repo, vm, "1", "mock users")
+        assertTrue(result is WriteResult.Ok)
+        val rule = Json.decodeFromJsonElement(MockRule.serializer(), result.json)
+        assertEquals("/users", rule.urlPattern)
+        assertEquals("GET", rule.method)
+        assertEquals(200, rule.statusCode)
+        assertEquals("""{"name":"Alice"}""", rule.responseBody)
+        assertEquals("application/json", rule.contentType)
+        assertEquals("mock users", rule.name)
+        assertTrue(rule.id.isNotBlank(), "id must be auto-generated")
+    }
+
+    @Test
+    fun `create_mock_from_traffic refuses unknown id`() {
+        val repo = FakeDevToolsRepository()
+        val vm = testViewModel(supported = true)
+        assertTrue(AlohomoraMcpWriteData.createMockFromTraffic(repo, vm, "missing", null) is WriteResult.Error)
+    }
+
+    @Test
+    fun `create_mock_from_traffic refuses when mocks are unsupported`() {
+        val repo = FakeDevToolsRepository().apply { traffic.value = listOf(entry("1")) }
+        val vm = testViewModel(supported = false)
+        assertTrue(AlohomoraMcpWriteData.createMockFromTraffic(repo, vm, "1", null) is WriteResult.Error)
+    }
+
+    @Test
+    fun `adb allowlist permits shell am and blocks install`() {
+        assertTrue(isAllowedAdbCommand(listOf("shell", "am", "force-stop", "com.example")))
+        assertTrue(isAllowedAdbCommand(listOf("shell", "dumpsys", "wifi")))
+        assertTrue(isAllowedAdbCommand(listOf("logcat", "-d")))
+        assertTrue(isAllowedAdbCommand(listOf("shell", "pm", "clear", "com.example")))
+        assertFalse(isAllowedAdbCommand(listOf("install", "-r", "app.apk")))
+        assertFalse(isAllowedAdbCommand(listOf("uninstall", "com.example")))
+        assertFalse(isAllowedAdbCommand(listOf("push", "local", "/sdcard/remote")))
+        assertFalse(isAllowedAdbCommand(listOf("pull", "/sdcard/remote", "local")))
+        assertFalse(isAllowedAdbCommand(listOf("reboot")))
+        assertFalse(isAllowedAdbCommand(listOf("root")))
+        assertFalse(isAllowedAdbCommand(listOf("shell", "rm", "-rf", "/")))
+        assertFalse(isAllowedAdbCommand(listOf("shell", "su")))
+    }
+
     private fun entry(id: String) = TrafficEntry(
         id = id,
         status = 500,
@@ -122,5 +184,9 @@ class AlohomoraMcpWriteDataTest {
         host = "api.example.com",
         path = "/things",
         time = id.hashCode().toLong(),
+    )
+
+    private fun testViewModel(supported: Boolean) = NetworkRulesViewModel(
+        FakeDevToolsRepository().apply { networkRulesSupported.value = supported },
     )
 }

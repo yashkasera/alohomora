@@ -49,17 +49,17 @@ class AlohomoraMcpServerHttpTest {
         listOf("list_devices", "get_attention", "list_traffic", "get_trace", "get_build_metadata")
             .forEach { assertTrue(it in names, "read tool $it should be listed") }
         // …and no write tool leaks when the toggle is off.
-        listOf("replay_traffic", "set_mock_rules", "clear_mock_rules", "set_throttle", "clear_captured")
+        listOf("replay_traffic", "set_mock_rules", "clear_mock_rules", "set_throttle", "clear_captured", "create_mock_from_traffic", "run_adb_command")
             .forEach { assertFalse(it in names, "write tool $it must be hidden when writes are off") }
-        assertEquals(16, names.size, "16 read-only tools when writes are off")
+        assertEquals(18, names.size, "18 read-only tools when writes are off")
     }
 
     @Test
     fun `write tools appear only when writes are enabled`() = withServer(writeEnabled = true) { client ->
         val names = client.toolNames()
-        listOf("replay_traffic", "list_mock_rules", "set_mock_rules", "clear_mock_rules", "get_throttle", "set_throttle", "clear_captured")
+        listOf("replay_traffic", "list_mock_rules", "set_mock_rules", "clear_mock_rules", "get_throttle", "set_throttle", "clear_captured", "create_mock_from_traffic", "run_adb_command")
             .forEach { assertTrue(it in names, "write tool $it should be listed when writes are on") }
-        assertEquals(23, names.size, "16 read + 7 write tools when writes are on")
+        assertEquals(27, names.size, "18 read + 9 write tools when writes are on")
     }
 
     @Test

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -691,9 +692,22 @@ private fun MockRuleRow(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                rule.responseBody.ifBlank { null }?.let {
+                rule.responseBody.ifBlank { null }?.let { body ->
                     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-                    AlohomoraCodeBlock(content = it, isScrollable = false)
+                    val maxPreviewChars = 200
+                    val truncated = body.length > maxPreviewChars
+                    AlohomoraCodeBlock(
+                        content = if (truncated) body.take(maxPreviewChars) + " …" else body,
+                        isScrollable = false,
+                    )
+                    if (truncated) {
+                        Text(
+                            text = "Click to view full response",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
+                        )
+                    }
                 }
             }
             AlohomoraIconButton(onClick = onDelete) {

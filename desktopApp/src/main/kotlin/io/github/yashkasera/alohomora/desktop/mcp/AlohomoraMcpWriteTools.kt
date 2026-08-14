@@ -3,6 +3,8 @@ package io.github.yashkasera.alohomora.desktop.mcp
 import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
+import io.github.yashkasera.alohomora.desktop.data.adb.DefaultAdbCommandRunner
+import io.github.yashkasera.alohomora.desktop.data.local.toMockRule
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
 import io.github.yashkasera.alohomora.replay.ReplayHeaderText
@@ -11,7 +13,11 @@ import io.github.yashkasera.alohomora.replay.toReplayRequest
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.JsonArray
@@ -178,6 +184,49 @@ fun registerAlohomoraWriteTools(
             ).toCallResult()
         }
     }
+
+    server.addTool(
+        "create_mock_from_traffic",
+        "Create a mock rule from a captured traffic entry's response. Matches the request's path and " +
+            "method, returns its status code and body. The rule is added to the current set and sent " +
+            "to the device immediately.",
+        buildSchema {
+            put("deviceId", stringProp("Target device; optional when only one is connected."))
+            put("id", stringProp("The traffic entry id, from list_traffic or search_traffic."))
+            put("name", stringProp("Optional human-readable name for the rule."))
+        },
+    ) { request ->
+        withSession(registry, request) { handle ->
+            val id = request.str("id") ?: return@withSession errorResult("Missing required argument: id")
+            AlohomoraMcpWriteData.createMockFromTraffic(
+                repo = handle.devToolsRepository,
+                vm = handle.networkRulesViewModel,
+                id = id,
+                name = request.str("name"),
+            ).toCallResult()
+        }
+    }
+
+    server.addTool(
+        "run_adb_command",
+        "Run an ADB shell command on the connected device. Allowed: shell am/pm/dumpsys/settings/" +
+            "getprop/svc/input/screencap/monkey/wm/cmd, logcat. Not allowed: install, uninstall, " +
+            "push, pull, reboot, root, shell rm/su. Pass the command without the 'adb' or " +
+            "'-s <serial>' prefix.",
+        buildSchema {
+            put("deviceId", stringProp("Target device; optional when only one is connected."))
+            put("command", stringProp("The ADB command without 'adb' prefix. Example: 'shell am force-stop com.example.app'."))
+        },
+    ) { request ->
+        withSession(registry, request) { handle ->
+            val command = request.str("command")
+                ?: return@withSession errorResult("Missing required argument: command")
+            AlohomoraMcpWriteData.runAdbCommand(
+                deviceId = handle.deviceId,
+                command = command,
+            ).toCallResult()
+        }
+    }
 }
 
 /**
@@ -299,8 +348,74 @@ internal object AlohomoraMcpWriteData {
         })
     }
 
+    @OptIn(ExperimentalUuidApi::class)
+    fun createMockFromTraffic(
+        repo: DevToolsRepository,
+        vm: NetworkRulesViewModel,
+        id: String,
+        name: String?,
+    ): WriteResult {
+        if (!vm.networkRulesSupported.value) return unsupportedMocks()
+        val entry = repo.traffic.value.firstOrNull { it.id == id }
+            ?: return WriteResult.Error("No traffic entry with id $id")
+        val rule = entry.toMockRule()
+            .copy(id = Uuid.random().toString())
+            .let { if (name != null) it.copy(name = name) else it }
+        vm.addRule(rule)
+        return WriteResult.Ok(json.encodeToJsonElement(MockRule.serializer(), rule))
+    }
+
+    suspend fun runAdbCommand(
+        deviceId: String,
+        command: String,
+    ): WriteResult {
+        val args = command.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+        if (args.isEmpty()) return WriteResult.Error("Empty command.")
+        if (!isAllowedAdbCommand(args)) {
+            return WriteResult.Error(
+                "Command not allowed. Permitted prefixes: ${ALLOWED_ADB_PREFIXES.joinToString(", ")}.",
+            )
+        }
+        val result = withContext(Dispatchers.IO) {
+            adbRunner.run(listOf("-s", deviceId) + args)
+        }
+        return WriteResult.Ok(buildJsonObject {
+            put("exitCode", result.exitCode)
+            put("stdout", result.stdout.take(MAX_ADB_OUTPUT_CHARS))
+            put("stderr", result.stderr.take(MAX_ADB_OUTPUT_CHARS))
+            if (result.stdout.length > MAX_ADB_OUTPUT_CHARS) put("stdoutTruncated", true)
+            if (result.stderr.length > MAX_ADB_OUTPUT_CHARS) put("stderrTruncated", true)
+        })
+    }
+
     private fun unsupportedMocks() =
         WriteResult.Error("Mock rules are not available for this device.")
+}
+
+// --- adb allowlist -----------------------------------------------------------------------------
+
+private val adbRunner = DefaultAdbCommandRunner()
+private const val MAX_ADB_OUTPUT_CHARS = 50_000
+
+private val ALLOWED_ADB_PREFIXES = listOf(
+    "shell am",
+    "shell pm",
+    "shell dumpsys",
+    "shell settings",
+    "shell getprop",
+    "shell svc wifi",
+    "shell svc data",
+    "shell input",
+    "shell screencap",
+    "shell monkey",
+    "shell wm",
+    "shell cmd",
+    "logcat",
+)
+
+internal fun isAllowedAdbCommand(args: List<String>): Boolean {
+    val joined = args.joinToString(" ")
+    return ALLOWED_ADB_PREFIXES.any { joined.startsWith(it, ignoreCase = true) }
 }
 
 // --- adapters + parsing ------------------------------------------------------------------------
