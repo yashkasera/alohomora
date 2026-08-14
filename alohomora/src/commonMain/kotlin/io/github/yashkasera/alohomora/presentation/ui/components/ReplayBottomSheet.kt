@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.replay.ReplayHeaderText
 import io.github.yashkasera.alohomora.replay.ReplayRequest
@@ -31,6 +32,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.jsoneditor.JsonEditor
 import io.github.yashkasera.alohomora.ui.components.jsoneditor.JsonEditorState
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 /** Whether the body is edited as structured JSON (validated, formattable) or as raw text. */
@@ -88,7 +90,8 @@ internal fun ReplayBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .testTag(AlohomoraTestTags.ReplaySheet.ROOT),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
         ) {
             Text(
@@ -108,7 +111,9 @@ internal fun ReplayBottomSheet(
                 label = "Method",
                 singleLine = true,
                 enabled = !isReplaying,
-                modifier = Modifier.width(110.dp),
+                modifier = Modifier
+                    .width(110.dp)
+                    .testTag(AlohomoraTestTags.ReplaySheet.METHOD),
             )
 
             AlohomoraTextField(
@@ -116,6 +121,7 @@ internal fun ReplayBottomSheet(
                 onValueChange = { url = it },
                 label = "URL",
                 enabled = !isReplaying,
+                modifier = Modifier.testTag(AlohomoraTestTags.ReplaySheet.URL),
             )
 
             AlohomoraTextField(
@@ -125,7 +131,9 @@ internal fun ReplayBottomSheet(
                 placeholder = "Accept: application/json",
                 singleLine = false,
                 enabled = !isReplaying,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(AlohomoraTestTags.ReplaySheet.HEADERS),
             )
 
             // Body, with a JSON/Text switch matching the desktop console.
@@ -167,7 +175,8 @@ internal fun ReplayBottomSheet(
                     minLines = 6,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp),
+                        .height(220.dp)
+                        .testTag(AlohomoraTestTags.ReplaySheet.BODY),
                 )
 
                 BodyMode.TEXT -> AlohomoraTextField(
@@ -178,7 +187,8 @@ internal fun ReplayBottomSheet(
                     enabled = !isReplaying,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 120.dp),
+                        .heightIn(min = 120.dp)
+                        .testTag(AlohomoraTestTags.ReplaySheet.BODY),
                 )
             }
 
@@ -187,6 +197,7 @@ internal fun ReplayBottomSheet(
                     text = error,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.testTag(AlohomoraTestTags.ReplaySheet.ERROR),
                 )
             }
 
@@ -209,7 +220,9 @@ internal fun ReplayBottomSheet(
                     )
                 },
                 enabled = !isReplaying && url.isNotBlank() && method.isNotBlank(),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(AlohomoraTestTags.ReplaySheet.SEND),
                 leadingIcon = if (!isReplaying) {
                     null
                 } else {

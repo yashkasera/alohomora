@@ -408,3 +408,65 @@ The console implements trust-on-first-use (TOFU) authentication:
 - **Mock/template tests:** `TemplateEngineTest` and `MockGeneratorsTest` are in `alohomora-common`'s `commonTest` — run with `./gradlew :alohomora-common:jvmTest`. They cover plain passthrough, single/multiple placeholders, parameterised generators, unknown placeholder passthrough, and output format validation. The "no commas in backticked names" rule applies here too.
 - **Flaky UI tests:** The Compose test harness can be brittle with timing. If a test flakes, increase timeouts or break the assertion into smaller steps
 - **Message round-trips:** Use `DevToolsProtocol.encodeEnvelope()` and `decodeFrame()` to verify message serialization round-trips (see `AuthHandshakeTest` for the pattern)
+
+### Instrumentation (device) tests
+
+The console UI is only exercisable on a device — `runComposeUiTest` NPEs on the Android host, as
+above — so it is covered by two instrumented suites, split by what each can actually observe.
+
+```bash
+./gradlew :alohomora:connectedAndroidDeviceTest    # the console, seeded and driven directly
+./gradlew :showcaseApp:connectedDebugAndroidTest   # the library inside a real host app
+```
+
+**Physical device only.** No Gradle Managed Device is configured; the emulator system image is a
+multi-GB download and nothing here needs a reproducible headless target yet. Turn *off* "Don't keep
+activities" before running — it destroys backgrounded activities and breaks every
+navigate-and-return assertion.
+
+- **`check` compiles them but never runs them.** The connected tasks hang off `connectedCheck`/
+  `deviceCheck`, and the KMP device-test component is built without a Kotlin `testRegistry`, so
+  `allTests` misses it too. Root `check` therefore depends on `assembleAndroidDeviceTest` and
+  `assembleDebugAndroidTest` — enough to type-check every device test with no device attached.
+- **`androidDeviceTest` does not see `commonTest`.** AGP gives the device-test compilation a `None`
+  source-set tree, unlike `androidHostTest` which sits on the `test` tree. Shared fixtures live in
+  `androidDeviceTest` itself (`ConsoleTestRule`, `Seed`, `ConsoleHost`, `ConsoleAssertions`). Do not
+  force the tree name to "fix" it — that drags every `commonTest` file into a device compilation.
+  `internal` declarations are visible regardless: AGP puts the main compilation's classes.jar on
+  `friendPaths`, which is what lets a test open `Routes.TrafficDetails(id)` directly. A declaration
+  in this source set that names an `internal` type in its *signature* must itself be `internal`.
+- **`withDeviceTest {}` now depends on `withHostTest {}`.** AGP's device-test DSL info reads
+  `androidTestOnJvmOptions!!.enableCoverage`; removing the host-test block NPEs at configuration
+  time. `applicationId` inside `withDeviceTest {}` is dead code in AGP 9.2.1 — the test APK is
+  always `<namespace>.test`.
+- **`Alohomora.config` is null in `:alohomora`'s device tests** — the Gradle plugin is not applied
+  to the library itself, so `ServiceLoader` finds no `AlohomoraConfig`. Init still succeeds; every
+  consumer is null-safe. But it means **Config, Git History and the Slack affordance can only be
+  covered from `:showcaseApp`**, where the plugin generates a real config into the debug variant.
+  In `:alohomora` they get empty-state tests only.
+- **Seed through the repositories, not `Alohomora.record*`.** The public ingestion methods are
+  fire-and-forget on `Dispatchers.Default`, which the Compose clock cannot see, so an assertion
+  straight after one races. `Seed` writes through the internal repositories inside `runBlocking`;
+  `RecordApiTest` covers the public path and polls for exactly this reason.
+- **No fatal-crash tests on device.** `installCrashHandler` runs from a `ContentProvider` before the
+  runner exists, so the handler it chains to is ART's `KillApplicationHandler`: a genuinely uncaught
+  exception kills the process and takes the whole class with it. The chaining contract stays in
+  `androidHostTest/CrashHandlerTest`. showcaseApp's "Crash" FAB is tagged but deliberately never
+  tapped; `ShowcaseTestTags.RECORD_ERROR` drives the caught path instead.
+- **Reset in `@Before`, never `@After`.** A test that fails mid-way skips its own cleanup and the
+  next one inherits its rows. `ConsoleTestRule` does all of it on the way in.
+- **The whole run shares one `Alohomora`.** `initInternal` returns early once `koinApplication` is
+  set and there is no teardown, so one Koin container, one Room file (which survives between runs)
+  and one `PluginRegistry` serve every class. Never call `Alohomora.init()` from a test — the
+  startup provider already did, and a second call is a silent no-op.
+- **Test tags come from `AlohomoraTestTags`** in `alohomora-ui` — public so both suites and any
+  consumer can address the console, and free of `.api` churn because `alohomora-ui` is not
+  api-validated. Putting tags in `:alohomora` `commonMain` instead *would* change
+  `alohomora.klib.api`.
+- **A tagged `AlohomoraTextField` is not the editable node.** The caller's modifier lands on a
+  wrapping `Column`; the `SetText` action belongs to the `BasicTextField` beneath, and Compose does
+  not merge an editable field into its parent. Use `onTextFieldIn(tag)`, not
+  `onNodeWithTag(tag).performTextInput(...)`.
+- **Infinite animations hang `waitForIdle()`.** `ConnectionStatusDot` pulses via
+  `infiniteRepeatable` when connected, so no test may put the console into a connected state without
+  taking manual control of `mainClock`.

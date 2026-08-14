@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.Alohomora
@@ -49,6 +50,7 @@ import io.github.yashkasera.alohomora.ui.icons.Eye
 import io.github.yashkasera.alohomora.ui.icons.EyeOff
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlinx.serialization.json.JsonNull
 import org.koin.compose.viewmodel.koinViewModel
@@ -66,19 +68,28 @@ internal fun EventsScreen(onBackClick: () -> Unit) {
                 title = "Events",
                 subtitle = if (state.events.isEmpty()) null else "${state.events.size} EVENTS",
                 navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                    ) {
                         Icon(Icons.ArrowLeft, contentDescription = "back")
                     }
                 },
                 actions = {
-                    AlohomoraIconButton(onClick = viewModel::toggleShowProperties) {
+                    AlohomoraIconButton(
+                        onClick = viewModel::toggleShowProperties,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Events.PROPERTIES_TOGGLE),
+                    ) {
                         Icon(
                             imageVector = if (state.showProperties) Icons.Eye else Icons.EyeOff,
                             contentDescription = if (state.showProperties) "Hide properties" else "Show properties",
                         )
                     }
                     if (state.events.isNotEmpty()) {
-                        AlohomoraIconButton(onClick = viewModel::showClearConfirmation) {
+                        AlohomoraIconButton(
+                            onClick = viewModel::showClearConfirmation,
+                            modifier = Modifier.testTag(AlohomoraTestTags.Chrome.CLEAR_ALL),
+                        ) {
                             Icon(imageVector = Icons.Trash, contentDescription = "Clear all events")
                         }
                     }
@@ -104,6 +115,7 @@ internal fun EventsScreen(onBackClick: () -> Unit) {
                 isSlackConfigured = isSlackConfigured,
                 onDismiss = viewModel::dismissEventDetail,
                 onShareToSlack = { viewModel.hideSlackSheet() },
+                modifier = Modifier.testTag(AlohomoraTestTags.Events.DETAILS_SHEET),
             )
         }
 
@@ -133,7 +145,8 @@ private fun EventsSearchBar(
         onQueryChange = onQueryChange,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(MaterialTheme.dimens.margin.md),
+            .padding(MaterialTheme.dimens.margin.md)
+            .testTag(AlohomoraTestTags.Chrome.SEARCH),
         placeholder = "Search events by name",
     )
 }
@@ -156,7 +169,9 @@ internal fun EventsList(
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(AlohomoraTestTags.Events.LIST),
                 contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
             ) {
@@ -165,6 +180,7 @@ internal fun EventsList(
                         event = event,
                         showProperties = showProperties,
                         onClick = { onEventClick(event) },
+                        modifier = Modifier.testTag(AlohomoraTestTags.Events.item(event.id)),
                     )
                 }
                 fabClearanceItem()
@@ -179,6 +195,7 @@ internal fun EventItem(
     event: Event,
     showProperties: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val containerColor = when {
         event.isViewed -> MaterialTheme.colorScheme.surfaceContainer
@@ -186,6 +203,7 @@ internal fun EventItem(
     }
     AlohomoraCard(
         onClick = onClick,
+        modifier = modifier,
         colors = AlohomoraCardDefaults.colors(
             containerColor = containerColor,
         ),

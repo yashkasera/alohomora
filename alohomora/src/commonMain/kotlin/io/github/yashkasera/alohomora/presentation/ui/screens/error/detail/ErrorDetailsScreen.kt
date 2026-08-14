@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.exceptionTypeName
@@ -28,6 +29,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.presentation.ui.components.rememberClipboardCopy
 import org.koin.compose.viewmodel.koinViewModel
@@ -49,7 +51,10 @@ internal fun ErrorDetailsScreen(
                 title = state.error?.exceptionTypeName().orEmpty(),
                 subtitle = state.error?.place,
                 navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                    ) {
                         Icon(Icons.ArrowLeft, contentDescription = "back")
                     }
                 },
@@ -66,6 +71,7 @@ internal fun ErrorDetailsScreen(
                                     },
                                 )
                             },
+                            modifier = Modifier.testTag(AlohomoraTestTags.ErrorDetails.COPY),
                         ) {
                             Icon(
                                 Icons.Copy,
@@ -93,7 +99,8 @@ internal fun ErrorDetailsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(rememberScrollState())
+                    .testTag(AlohomoraTestTags.ErrorDetails.ROOT),
             ) {
 
                 Column(
@@ -107,6 +114,7 @@ internal fun ErrorDetailsScreen(
 
                     AlohomoraCodeBlock(
                         content = error.stackTrace ?: "No stack trace available",
+                        modifier = Modifier.testTag(AlohomoraTestTags.ErrorDetails.STACK_TRACE),
                         isScrollable = false,
                     )
 

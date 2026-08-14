@@ -90,6 +90,10 @@ fun AlohomoraFilterChip(
     )
 }
 
+/**
+ * [modifier] exists so callers can attach a test tag. Before it did, the only way to address a chip
+ * was to wrap it in a tagged `Box` — see the note this replaced in `NavigationHistoryScreen`.
+ */
 @Composable
 fun AlohomoraChip(
     label: String,

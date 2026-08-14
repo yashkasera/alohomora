@@ -34,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -56,6 +57,7 @@ import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.X
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlinx.coroutines.launch
@@ -74,7 +76,10 @@ internal fun DatabaseScreen(
                 title = "Vault",
                 subtitle = null,
                 navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                    ) {
                         Icon(Icons.ArrowLeft, contentDescription = "Back")
                     }
                 },
@@ -158,6 +163,7 @@ private fun DatabaseSelector(
                     shape = MaterialTheme.shapes.extraSmall
                 )
                 .clickable(onClick = onClick)
+                .testTag(AlohomoraTestTags.Database.SELECTOR)
                 .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = MaterialTheme.dimens.margin.sm)
         ) {
             Row(
@@ -189,7 +195,7 @@ private fun TablesSection(
     selectedTable: String?,
     onTableSelected: (String) -> Unit
 ) {
-    Column {
+    Column(modifier = Modifier.testTag(AlohomoraTestTags.Database.TABLES)) {
         Text(
             text = "TABLES",
             style = MaterialTheme.typography.labelSmall,
@@ -211,6 +217,7 @@ private fun TablesSection(
                     label = table,
                     selected = table == selectedTable,
                     onClick = { onTableSelected(table) },
+                    modifier = Modifier.testTag(AlohomoraTestTags.Database.table(table)),
                 )
             }
         }
@@ -233,26 +240,39 @@ private fun TabsWithContent(
     val pagerState = rememberPagerState(initialPage = currentTab, pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
 
+    // `settledPage`, not `currentPage`, and the guard is not redundant — together they break a
+    // feedback loop that made a two-page jump land on the wrong tab.
+    //
+    // `currentPage` tracks the *closest* page mid-scroll, so animating BROWSE -> SCHEMA passes
+    // through QUERY. That fired `onTabSelected(1)`, which set `currentTab` to 1, which re-ran the
+    // effect below and animated back to QUERY — so tapping SCHEMA from BROWSE simply never got
+    // there. Only a one-page move was ever unaffected, which is why it looked fine in use.
     LaunchedEffect(currentTab) {
-        pagerState.animateScrollToPage(currentTab)
+        if (pagerState.currentPage != currentTab) {
+            pagerState.animateScrollToPage(currentTab)
+        }
     }
 
-    LaunchedEffect(pagerState.currentPage) {
-        onTabSelected(pagerState.currentPage)
+    LaunchedEffect(pagerState.settledPage) {
+        onTabSelected(pagerState.settledPage)
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Tabs - Compact
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(AlohomoraTestTags.Database.TABS),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl)
         ) {
             tabs.forEachIndexed { index, tab ->
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable {
-                        scope.launch { pagerState.animateScrollToPage(index) }
-                    }
+                    modifier = Modifier
+                        .testTag(AlohomoraTestTags.Database.tab(tab))
+                        .clickable {
+                            scope.launch { pagerState.animateScrollToPage(index) }
+                        }
                 ) {
                     Text(
                         text = tab,
@@ -305,10 +325,15 @@ private fun TabsWithContent(
 @Composable
 private fun BrowseTabContent(tableData: TableData?) {
     if (tableData != null) {
-        DataTableViewer(tableData = tableData)
+        DataTableViewer(
+            tableData = tableData,
+            modifier = Modifier.testTag(AlohomoraTestTags.Database.BROWSE),
+        )
     } else {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag(AlohomoraTestTags.Database.BROWSE),
             contentAlignment = Alignment.Center
         ) {
             Text("No data available", style = MaterialTheme.typography.bodyMedium)
@@ -341,7 +366,8 @@ private fun QueryTabContent(
                 AlohomoraTextField(
                     value = queryText,
                     onValueChange = onQueryTextChanged,
-                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    modifier = Modifier.fillMaxWidth().weight(1f)
+                        .testTag(AlohomoraTestTags.Database.QUERY_EDITOR),
                     textStyle = MaterialTheme.typography.bodySmall.copy(
                     ),
                     singleLine = false,
@@ -363,6 +389,7 @@ private fun QueryTabContent(
 
                     AlohomoraFilledButton(
                         onClick = onRunQuery,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Database.QUERY_RUN),
                         containerColor = MaterialTheme.colorScheme.inverseSurface,
                         contentColor = MaterialTheme.colorScheme.inverseOnSurface,
                         shape = MaterialTheme.shapes.extraSmall,
@@ -385,7 +412,11 @@ private fun QueryTabContent(
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
         // Query Results
-        Column(modifier = Modifier.weight(0.65f)) {
+        Column(
+            modifier = Modifier
+                .weight(0.65f)
+                .testTag(AlohomoraTestTags.Database.QUERY_RESULT),
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -399,6 +430,7 @@ private fun QueryTabContent(
 
                 queryStatus?.let { status ->
                     Surface(
+                        modifier = Modifier.testTag(AlohomoraTestTags.Database.QUERY_STATUS),
                         color = if (status.success) {
                             MaterialTheme.alohomoraColors.successContainer
                         } else {
@@ -457,6 +489,7 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .testTag(AlohomoraTestTags.Database.SCHEMA)
         ) {
             // Columns Section - Compact
             Text(
@@ -546,7 +579,9 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
         }
     } else {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag(AlohomoraTestTags.Database.SCHEMA),
             contentAlignment = Alignment.Center
         ) {
             Text("No schema available", style = MaterialTheme.typography.bodyMedium)
@@ -555,11 +590,15 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
 }
 
 @Composable
-private fun DataTableViewer(tableData: TableData) {
+private fun DataTableViewer(
+    tableData: TableData,
+    modifier: Modifier = Modifier,
+) {
     val columns = tableData.columns.map { TableColumn(it.name, it.type) }
     AlohomoraTable(
         columns = columns,
-        rows = tableData.rows
+        rows = tableData.rows,
+        modifier = modifier
     )
 }
 
@@ -579,6 +618,7 @@ private fun DatabaseSelectorBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(MaterialTheme.dimens.margin.lg)
+                .testTag(AlohomoraTestTags.Database.SELECTOR_SHEET)
         ) {
             Text(
                 text = "Select Database",
@@ -592,6 +632,7 @@ private fun DatabaseSelectorBottomSheet(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .testTag(AlohomoraTestTags.Database.database(database.name))
                         .clickable { onDatabaseSelected(database) }
                         .background(
                             if (database == selectedDatabase) {

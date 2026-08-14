@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
@@ -43,6 +44,7 @@ import io.github.yashkasera.alohomora.ui.components.waterfall.TraceWaterfall
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -79,12 +81,18 @@ internal fun TraceDetailsScreen(
                 title = state.summary?.rootSpanName ?: "Trace",
                 subtitle = state.summary?.let { "${it.spanCount} SPANS" },
                 navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                    ) {
                         Icon(Icons.ArrowLeft, contentDescription = "back")
                     }
                 },
                 actions = {
-                    AlohomoraIconButton(onClick = viewModel::toggleWaterfall) {
+                    AlohomoraIconButton(
+                        onClick = viewModel::toggleWaterfall,
+                        modifier = Modifier.testTag(AlohomoraTestTags.TraceDetails.VIEW_TOGGLE),
+                    ) {
                         Icon(
                             Icons.ChartLine,
                             contentDescription = if (state.showWaterfall) {
@@ -116,7 +124,12 @@ internal fun TraceDetailsScreen(
             if (state.showWaterfall) {
                 WaterfallMode(state = state, viewModel = viewModel)
             } else {
-                LazyColumn(state = lazyListState, modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    state = lazyListState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag(AlohomoraTestTags.TraceDetails.SPAN_LIST),
+                ) {
                     items(state.rows, key = { it.span.spanId }) { row ->
                         TraceSpanRow(
                             row = row,
@@ -150,6 +163,7 @@ private fun TraceHeader(state: TraceDetailsState) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(AlohomoraTestTags.TraceDetails.HEADER)
             .padding(
                 horizontal = MaterialTheme.dimens.margin.lg,
                 vertical = MaterialTheme.dimens.margin.sm,
@@ -214,6 +228,7 @@ private fun WaterfallMode(state: TraceDetailsState, viewModel: TraceDetailsViewM
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .testTag(AlohomoraTestTags.TraceDetails.WATERFALL)
                 .horizontalScroll(rememberScrollState()),
         ) {
             TraceWaterfall(
@@ -238,6 +253,7 @@ private fun SpanDetailSheet(span: Span, children: List<Span>, traceStartNanos: L
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(AlohomoraTestTags.TraceDetails.SPAN_SHEET)
             .verticalScroll(rememberScrollState())
             .padding(MaterialTheme.dimens.margin.lg),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),

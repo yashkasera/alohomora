@@ -17,7 +17,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 enum class TopBarLayout {
@@ -25,6 +27,11 @@ enum class TopBarLayout {
     START_ALIGNED,
 }
 
+/**
+ * The title and subtitle carry test tags of their own. Every console screen renders this bar, so
+ * one pair of tags covers all of them — and the subtitle is where several screens publish their
+ * live counts ("12 REQUESTS"), which is the cheapest assertion a list test can make.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AlohomoraTopBar(
@@ -48,6 +55,7 @@ fun AlohomoraTopBar(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.TOP_BAR_TITLE),
                     )
                     subtitle.takeUnless { it.isNullOrBlank() }?.let {
                         Text(
@@ -56,6 +64,7 @@ fun AlohomoraTopBar(
                             style = MaterialTheme.typography.labelSmall,
                             maxLines = 1,
                             overflow = TextOverflow.StartEllipsis,
+                            modifier = Modifier.testTag(AlohomoraTestTags.Chrome.TOP_BAR_SUBTITLE),
                         )
                     }
                 }
@@ -75,6 +84,7 @@ fun AlohomoraTopBar(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.TOP_BAR_TITLE),
                     )
                 },
                 subtitle = {
@@ -84,6 +94,7 @@ fun AlohomoraTopBar(
                             text = it,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.testTag(AlohomoraTestTags.Chrome.TOP_BAR_SUBTITLE),
                         )
                     }
                 },

@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,6 +43,7 @@ import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Search
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -60,7 +62,10 @@ internal fun CacheScreen(
                 title = "Cache",
                 subtitle = "key-value store",
                 navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                    ) {
                         Icon(Icons.ArrowLeft, contentDescription = "Back")
                     }
                 },
@@ -68,7 +73,9 @@ internal fun CacheScreen(
         },
         bottomBar = {
             CacheFooter(
-                modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                modifier = Modifier
+                    .padding(MaterialTheme.dimens.margin.lg)
+                    .testTag(AlohomoraTestTags.Cache.FOOTER),
                 totalEntries = state.totalEntries,
                 filteredCount = state.filteredCount,
                 totalSize = totalSize,
@@ -81,7 +88,9 @@ internal fun CacheScreen(
                 .padding(padding),
         ) {
             AlohomoraSearchTextField(
-                modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.md),
+                modifier = Modifier
+                    .padding(horizontal = MaterialTheme.dimens.margin.md)
+                    .testTag(AlohomoraTestTags.Chrome.SEARCH),
                 query = state.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChange,
             )
@@ -127,7 +136,9 @@ private fun PreferencesList(
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(AlohomoraTestTags.Cache.LIST),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
             contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
         ) {
@@ -135,7 +146,10 @@ private fun PreferencesList(
                 items = entries,
                 key = { "${it.source.name}_${it.key}" },
             ) { entry ->
-                PreferenceItem(entry = entry)
+                PreferenceItem(
+                    entry = entry,
+                    modifier = Modifier.testTag(AlohomoraTestTags.Cache.item(entry.key)),
+                )
             }
             fabClearanceItem()
         }
@@ -146,8 +160,9 @@ private fun PreferencesList(
 @Composable
 private fun PreferenceItem(
     entry: CacheEntry,
+    modifier: Modifier = Modifier,
 ) {
-    AlohomoraCard {
+    AlohomoraCard(modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

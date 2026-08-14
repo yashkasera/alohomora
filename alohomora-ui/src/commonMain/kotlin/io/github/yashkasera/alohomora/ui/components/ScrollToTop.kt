@@ -26,7 +26,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -172,13 +174,16 @@ private fun BoxScope.ScrollToTopButton(
     modifier: Modifier = Modifier,
     rotation: Float = 90f,
 ) {
+    // One tag on the AnimatedVisibility, not on each branch below: which of the two controls a
+    // device renders depends on its width, and no test should have to care which it got.
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn() + scaleIn(initialScale = 0.8f),
         exit = fadeOut() + scaleOut(targetScale = 0.8f),
         modifier = modifier
             .align(Alignment.BottomEnd)
-            .padding(MaterialTheme.dimens.margin.xxl),
+            .padding(MaterialTheme.dimens.margin.xxl)
+            .testTag(AlohomoraTestTags.Chrome.SCROLL_TO_TOP),
     ) {
         BoxWithConstraints {
             if (maxWidth > 400.dp) {

@@ -29,8 +29,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.showcaseApp.ShowcaseTestTags
 import io.github.yashkasera.alohomora.showcaseApp.WebViewActivity
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -57,15 +60,38 @@ fun PostsScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    throw IllegalStateException("Intentional crash to demo Alohomora error capture")
-                },
-            ) {
-                // A label rather than an icon from :alohomora-ui. This app compiles against
-                // alohomora-noop in release, and the no-op module deliberately does not depend on
-                // the design system, so an Alohomora ImageVector here breaks the release variant.
-                Text("Crash")
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                // The caught path, and the one instrumentation tests drive. `recordError` is also
+                // the API most consumers actually reach for — the crash handler below only exists
+                // for the failures nobody caught.
+                FloatingActionButton(
+                    onClick = {
+                        try {
+                            error("Handled failure to demo Alohomora.recordError")
+                        } catch (e: IllegalStateException) {
+                            Alohomora.recordError(e, place = "PostsScreen")
+                        }
+                    },
+                    modifier = Modifier.testTag(ShowcaseTestTags.RECORD_ERROR),
+                ) {
+                    // A label rather than an icon from :alohomora-ui. This app compiles against
+                    // alohomora-noop in release, and the no-op module deliberately does not depend
+                    // on the design system, so an Alohomora ImageVector here breaks the release
+                    // variant.
+                    Text("Record")
+                }
+
+                // Genuinely uncaught: this reaches the installed crash handler and kills the
+                // process. Deliberately never tapped by an instrumentation test — doing so takes
+                // the whole test class down with it.
+                FloatingActionButton(
+                    onClick = {
+                        throw IllegalStateException("Intentional crash to demo Alohomora error capture")
+                    },
+                    modifier = Modifier.testTag(ShowcaseTestTags.CRASH),
+                ) {
+                    Text("Crash")
+                }
             }
         },
     ) { padding ->
@@ -73,7 +99,8 @@ fun PostsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .testTag(ShowcaseTestTags.POSTS_LIST),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
@@ -99,7 +126,10 @@ fun PostsScreen(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    Button(onClick = viewModel::refreshPosts) {
+                    Button(
+                        onClick = viewModel::refreshPosts,
+                        modifier = Modifier.testTag(ShowcaseTestTags.REFRESH),
+                    ) {
                         Text(if (state.isLoading) "Refreshing..." else "Refresh")
                     }
                 }
@@ -111,6 +141,7 @@ fun PostsScreen(
                         text = state.errorMessage ?: "",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.testTag(ShowcaseTestTags.ERROR_MESSAGE),
                     )
                 }
             }
@@ -120,6 +151,7 @@ fun PostsScreen(
                     title = post.title,
                     body = post.body,
                     onClick = { viewModel.onPostClicked(post.id) },
+                    modifier = Modifier.testTag(ShowcaseTestTags.post(post.id)),
                 )
             }
         }
@@ -153,7 +185,7 @@ private fun WebViewSection() {
                             .putExtra(WebViewActivity.EXTRA_URL, "https://www.wikipedia.org"),
                     )
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag(ShowcaseTestTags.OPEN_WEBVIEW),
             ) {
                 Text("Open Wikipedia")
             }
@@ -185,7 +217,7 @@ private fun PreferencesSection(
             )
 
             TextField(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag(ShowcaseTestTags.USERNAME),
                 value = username,
                 onValueChange = onUsernameChange,
                 label = { Text("Username") },
@@ -197,12 +229,17 @@ private fun PreferencesSection(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("Auto refresh")
-                Switch(checked = autoRefresh, onCheckedChange = onAutoRefreshToggle)
+                Switch(
+                    checked = autoRefresh,
+                    onCheckedChange = onAutoRefreshToggle,
+                    modifier = Modifier.testTag(ShowcaseTestTags.AUTO_REFRESH),
+                )
             }
 
             Text(
                 text = "Last refresh: ${formatTime(lastRefreshMillis)}",
                 style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.testTag(ShowcaseTestTags.LAST_REFRESH),
             )
         }
     }
@@ -214,9 +251,10 @@ private fun PostCard(
     title: String,
     body: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         onClick = onClick,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

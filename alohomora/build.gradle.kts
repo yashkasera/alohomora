@@ -31,7 +31,25 @@ kotlin {
         // expect/actual pair goes unexercised — the build warned about it instead of failing, so
         // the gap was invisible. `androidHostTest` is also the only place the crash-handler
         // chaining test can live: `Thread.setDefaultUncaughtExceptionHandler` has no iOS analogue.
+        //
+        // Also load-bearing for `withDeviceTest` below: AGP's device-test DSL info reads
+        // `androidTestOnJvmOptions!!.enableCoverage`, so removing this NPEs at configuration time.
         withHostTest {}
+
+        // The console UI can only be exercised on a device. `runComposeUiTest` on the Android
+        // host reads `Build.FINGERPRINT` and NPEs inside Compose's Robolectric idling strategy —
+        // the reason `ComposeTest` lives in `iosTest`. `androidDeviceTest` is the Android half.
+        //
+        // Note the source set does NOT see `commonTest`: AGP gives the device-test compilation a
+        // `None` source-set tree, unlike host tests which sit on the `test` tree. Shared fixtures
+        // must live in `androidDeviceTest` itself. Do not "fix" this by forcing the tree name —
+        // that would drag every `commonTest` file into a device compilation it was never written
+        // for. `internal` declarations from `commonMain` and `androidMain` are visible either
+        // way: AGP puts the main compilation's classes.jar on `friendPaths`.
+        withDeviceTest {
+            instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+            animationsDisabled = true
+        }
     }
 
     // iosX64 is intentionally absent: Compose Multiplatform 1.11.x no longer publishes
@@ -107,6 +125,20 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+        }
+
+        // Declared separately from `commonTest` on purpose — see the `withDeviceTest` comment
+        // above; the device-test compilation does not inherit it.
+        getByName("androidDeviceTest").dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
+
+            implementation(libs.androidx.compose.ui.test.junit4)
+            implementation(libs.androidx.compose.ui.test.manifest)
+            implementation(libs.androidx.test.core)
+            implementation(libs.androidx.test.runner)
+            implementation(libs.androidx.test.rules)
+            implementation(libs.androidx.test.ext.junit)
         }
 
     }

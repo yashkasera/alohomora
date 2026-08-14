@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.presentation.ui.components.ReplayBottomSheet
 import io.github.yashkasera.alohomora.presentation.ui.components.ShareBottomSheet
@@ -38,6 +39,7 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Repeat
 import io.github.yashkasera.alohomora.ui.icons.Share
 import io.github.yashkasera.alohomora.ui.icons.Slack
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -73,7 +75,10 @@ internal fun TrafficDetailsScreen(
                 title = "Traffic Log",
                 subtitle = state.trace?.path,
                 navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                    ) {
                         Icon(
                             imageVector = Icons.ArrowLeft,
                             contentDescription = "back",
@@ -84,6 +89,7 @@ internal fun TrafficDetailsScreen(
                     if (state.canReplay) {
                         AlohomoraIconButton(
                             onClick = { replayDraft = viewModel.startReplay() },
+                            modifier = Modifier.testTag(AlohomoraTestTags.TrafficDetails.REPLAY),
                             content = {
                                 Icon(
                                     imageVector = Icons.Repeat,
@@ -95,6 +101,9 @@ internal fun TrafficDetailsScreen(
                     if (state.isSlackConfigured) {
                         AlohomoraIconButton(
                             onClick = viewModel::showSlackSheet,
+                            modifier = Modifier.testTag(
+                                AlohomoraTestTags.TrafficDetails.SHARE_SLACK,
+                            ),
                             content = {
                                 Icon(
                                     imageVector = Icons.Slack,
@@ -105,6 +114,7 @@ internal fun TrafficDetailsScreen(
                     }
                     AlohomoraIconButton(
                         onClick = viewModel::showShareSheet,
+                        modifier = Modifier.testTag(AlohomoraTestTags.TrafficDetails.SHARE),
                         content = {
                             Icon(
                                 imageVector = Icons.Share,
@@ -116,7 +126,11 @@ internal fun TrafficDetailsScreen(
             )
         },
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .testTag(AlohomoraTestTags.TrafficDetails.ROOT),
+        ) {
             state.replayResultTraceId?.let { resultId ->
                 ReplayResultBanner(onClick = { onOpenTraffic(resultId) })
             }
@@ -176,6 +190,7 @@ private fun ReplayResultBanner(onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(AlohomoraTestTags.TrafficDetails.REPLAY_RESULT_BANNER)
             .clickable(onClick = onClick)
             .background(MaterialTheme.colorScheme.secondaryContainer)
             .padding(

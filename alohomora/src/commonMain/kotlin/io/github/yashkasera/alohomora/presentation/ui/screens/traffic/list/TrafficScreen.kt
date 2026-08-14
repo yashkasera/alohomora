@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
@@ -51,6 +52,7 @@ import io.github.yashkasera.alohomora.ui.icons.Check
 import io.github.yashkasera.alohomora.ui.icons.CircleAlert
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.utils.drawDiagonalLabel
@@ -82,12 +84,16 @@ internal fun TrafficScreen(
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 LazyColumn(
                     state = listState,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().testTag(AlohomoraTestTags.Traffic.LIST),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                     contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
                 ) {
                     items(state.calls, key = { it.id }) { call ->
-                        TrafficItem(call = call, onClick = { onTrafficClick(call.id) })
+                        TrafficItem(
+                            call = call,
+                            modifier = Modifier.testTag(AlohomoraTestTags.Traffic.item(call.id)),
+                            onClick = { onTrafficClick(call.id) },
+                        )
                     }
                     fabClearanceItem()
                 }
@@ -125,7 +131,10 @@ private fun TrafficTopBar(
             title = "Traffic",
             subtitle = if (state.calls.isEmpty()) null else "${state.calls.size} REQUESTS",
             navigationIcon = {
-                AlohomoraIconButton(onClick = onBackClick) {
+                AlohomoraIconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                ) {
                     Icon(Icons.ArrowLeft, contentDescription = "back")
                 }
             },
@@ -133,6 +142,7 @@ private fun TrafficTopBar(
                 if (state.calls.isNotEmpty()) {
                     AlohomoraIconButton(
                         onClick = viewModel::showClearConfirmation,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.CLEAR_ALL),
                     ) {
                         Icon(
                             imageVector = Icons.Trash,
@@ -147,7 +157,8 @@ private fun TrafficTopBar(
                 query = searchQuery,
                 onQueryChange = viewModel::setQuery,
                 modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = MaterialTheme.dimens.margin.xl),
+                    .padding(horizontal = MaterialTheme.dimens.margin.xl)
+                    .testTag(AlohomoraTestTags.Chrome.SEARCH),
                 placeholder = "Search endpoints",
             )
             Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
@@ -162,6 +173,9 @@ private fun TrafficTopBar(
                     AlohomoraFilterChip(
                         label = method,
                         selected = isSelected,
+                        modifier = Modifier.testTag(
+                            AlohomoraTestTags.Traffic.methodFilter(method),
+                        ),
                         onClick = {
                             if (method != selectedMethod) {
                                 viewModel.setMethod(method)
@@ -178,7 +192,7 @@ private fun TrafficTopBar(
 }
 
 @Composable
-private fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
+private fun TrafficItem(call: TrafficEntry, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val containerColor = when {
         call.isViewed -> MaterialTheme.colorScheme.surfaceContainer
         else -> MaterialTheme.colorScheme.surfaceContainerHighest
@@ -187,13 +201,13 @@ private fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
     AlohomoraCard(
         onClick = onClick,
         modifier = if (call.isMocked()) {
-            Modifier.clipToBounds()
+            modifier.clipToBounds()
                 .drawDiagonalLabel(
                     text = "MOCKED",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
-        } else Modifier,
+        } else modifier,
         colors = AlohomoraCardDefaults.colors(
             containerColor = containerColor,
         ),

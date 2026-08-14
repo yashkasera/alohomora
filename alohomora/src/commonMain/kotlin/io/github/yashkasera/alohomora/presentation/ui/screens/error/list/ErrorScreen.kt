@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
@@ -38,6 +39,7 @@ import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -55,12 +57,18 @@ internal fun ErrorScreen(
                 title = "Errors",
                 subtitle = if (state.errors.isEmpty()) null else "${state.errors.size} OCCURRENCES",
                 navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                    ) {
                         Icon(Icons.ArrowLeft, contentDescription = "back")
                     }
                 },
                 actions = {
-                    AlohomoraIconButton(onClick = { viewModel.clearAllErrors() }) {
+                    AlohomoraIconButton(
+                        onClick = { viewModel.clearAllErrors() },
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.CLEAR_ALL),
+                    ) {
                         Icon(
                             Icons.Trash,
                             contentDescription = "Clear all errors",
@@ -86,7 +94,8 @@ internal fun ErrorScreen(
                     query = state.searchQuery,
                     onQueryChange = { viewModel.onSearchQueryChange(it) },
                     modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = MaterialTheme.dimens.margin.md),
+                        .padding(horizontal = MaterialTheme.dimens.margin.md)
+                        .testTag(AlohomoraTestTags.Chrome.SEARCH),
                     placeholder = "Search exceptions or packages...",
                 )
 
@@ -121,7 +130,9 @@ internal fun ErrorScreen(
                 Box(modifier = Modifier.fillMaxSize()) {
                     LazyColumn(
                         state = listState,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag(AlohomoraTestTags.Errors.LIST),
                         contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                     ) {
@@ -129,6 +140,7 @@ internal fun ErrorScreen(
                             ErrorListItem(
                                 error = error,
                                 onClick = { onNavigateToError(error.id) },
+                                modifier = Modifier.testTag(AlohomoraTestTags.Errors.item(error.id)),
                             )
                         }
                         fabClearanceItem()
@@ -144,9 +156,11 @@ internal fun ErrorScreen(
 private fun ErrorListItem(
     error: Error,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     AlohomoraCard(
         onClick = onClick,
+        modifier = modifier,
     ) {
         Column(
             modifier = Modifier

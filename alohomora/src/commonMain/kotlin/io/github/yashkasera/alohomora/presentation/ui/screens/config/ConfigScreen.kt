@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.DateUtils
@@ -32,6 +33,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
@@ -43,7 +45,10 @@ internal fun ConfigScreen(
             AlohomoraTopBar(
                 title = "Config",
                 navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                    ) {
                         Icon(Icons.ArrowLeft, contentDescription = "Back")
                     }
                 },
@@ -54,7 +59,8 @@ internal fun ConfigScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .testTag(AlohomoraTestTags.Config.ROOT),
         ) {
             ConfigSection(title = "BUILD INFORMATION") {
                 BuildInfoGrid(buildConfig = Alohomora.config?.toBuildMetadata())
@@ -109,7 +115,9 @@ private fun ConfigSection(
 @Composable
 private fun BuildInfoGrid(buildConfig: BuildMetadata?) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(AlohomoraTestTags.Config.BUILD_INFO),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
     ) {
         Row(
@@ -169,6 +177,7 @@ private fun EnvironmentDetails(environment: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(AlohomoraTestTags.Config.ENVIRONMENT)
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .padding(MaterialTheme.dimens.margin.lg),
@@ -206,7 +215,7 @@ private fun InfoItem(
     value: String?,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.testTag(AlohomoraTestTags.Config.info(label))) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,

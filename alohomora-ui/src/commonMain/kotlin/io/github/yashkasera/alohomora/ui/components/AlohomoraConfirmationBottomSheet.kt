@@ -17,8 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 
 /**
  * Configuration for the confirmation bottom sheet.
@@ -111,14 +113,16 @@ fun ConfirmationBottomSheet(
             ) {
                 // Dismiss/Cancel button
                 AlohomoraOutlinedButton(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).testTag(AlohomoraTestTags.Chrome.CONFIRM_DISMISS),
                     text = config.dismissButtonText,
                     onClick = onDismiss,
                 )
 
-                // Confirm button
+                // Confirm button. Tagged here rather than by the caller: every confirmation in the
+                // console goes through this sheet, so one tag covers all of them, and the button
+                // labels ("Clear All", "Delete") are not stable enough to address by text.
                 AlohomoraFilledButton(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).testTag(AlohomoraTestTags.Chrome.CONFIRM_ACCEPT),
                     text = config.confirmButtonText,
                     onClick = {
                         onConfirm()

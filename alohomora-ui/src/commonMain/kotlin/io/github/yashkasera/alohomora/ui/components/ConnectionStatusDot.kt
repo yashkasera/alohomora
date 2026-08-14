@@ -26,9 +26,16 @@ enum class ConnectionDotState {
     Reconnecting,
 }
 
+/**
+ * Note for UI tests: the [ConnectionDotState.Connected] branch runs an `infiniteRepeatable` pulse,
+ * and an infinite Compose animation never lets the test clock go idle — `waitForIdle()` would hang.
+ * Tests that need to observe a connected console must drive `mainClock` manually with
+ * `autoAdvance = false`. The other two states are static and safe.
+ */
 @Composable
 fun ConnectionStatusDot(
     state: ConnectionDotState,
+    modifier: Modifier = Modifier,
     size: Dp = 10.dp,
 ) {
     val color = when (state) {
@@ -37,7 +44,7 @@ fun ConnectionStatusDot(
         ConnectionDotState.Reconnecting -> MaterialTheme.alohomoraColors.warning
     }
 
-    Box {
+    Box(modifier = modifier) {
         if (state == ConnectionDotState.Connected) {
             val transition = rememberInfiniteTransition(label = "connection-dot")
             val pulseScale by transition.animateFloat(

@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.FeatureFlag
@@ -41,6 +42,7 @@ import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -58,7 +60,10 @@ internal fun FeatureFlagsScreen(
                 title = "Feature Flags",
                 subtitle = "flags & config",
                 navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                    ) {
                         Icon(Icons.ArrowLeft, contentDescription = "Back")
                     }
                 },
@@ -66,7 +71,9 @@ internal fun FeatureFlagsScreen(
         },
         bottomBar = {
             FeatureFlagsFooter(
-                modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                modifier = Modifier
+                    .padding(MaterialTheme.dimens.margin.lg)
+                    .testTag(AlohomoraTestTags.FeatureFlags.FOOTER),
                 totalCount = state.totalCount,
                 filteredCount = state.filteredCount,
                 sourceCount = state.sources.size,
@@ -84,14 +91,16 @@ internal fun FeatureFlagsScreen(
                 query = state.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChange,
                 modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = MaterialTheme.dimens.margin.md),
+                    .padding(horizontal = MaterialTheme.dimens.margin.md)
+                    .testTag(AlohomoraTestTags.Chrome.SEARCH),
                 placeholder = "Filter flags...",
             )
 
             if (state.sources.size > 1) {
                 LazyRow(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTag(AlohomoraTestTags.FeatureFlags.SOURCES),
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
                     contentPadding = PaddingValues(horizontal = MaterialTheme.dimens.margin.md),
                 ) {
@@ -100,6 +109,9 @@ internal fun FeatureFlagsScreen(
                             label = source,
                             selected = state.selectedSource == source,
                             onClick = { viewModel.onSourceSelected(source) },
+                            modifier = Modifier.testTag(
+                                AlohomoraTestTags.FeatureFlags.sourceFilter(source),
+                            ),
                         )
                     }
                 }
@@ -130,7 +142,9 @@ private fun FeatureFlagsList(flags: List<FeatureFlag>) {
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(AlohomoraTestTags.FeatureFlags.LIST),
             contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
         ) {
@@ -138,7 +152,10 @@ private fun FeatureFlagsList(flags: List<FeatureFlag>) {
                 items = flags,
                 key = { it.key },
             ) { flag ->
-                FeatureFlagItem(flag = flag)
+                FeatureFlagItem(
+                    flag = flag,
+                    modifier = Modifier.testTag(AlohomoraTestTags.FeatureFlags.item(flag.key)),
+                )
             }
             fabClearanceItem()
         }
@@ -147,9 +164,12 @@ private fun FeatureFlagsList(flags: List<FeatureFlag>) {
 }
 
 @Composable
-private fun FeatureFlagItem(flag: FeatureFlag) {
+private fun FeatureFlagItem(
+    flag: FeatureFlag,
+    modifier: Modifier = Modifier,
+) {
     AlohomoraCard(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth(),
     ) {
         Column(

@@ -142,6 +142,15 @@ val consumerParity = tasks.register<ConsumerParityTask>("consumerParity") {
 
 tasks.named("check") { dependsOn(consumerParity) }
 
+// Instrumentation tests hang off `connectedCheck`/`deviceCheck`, neither of which `check` reaches
+// — and the KMP device-test component is created without a Kotlin `testRegistry`, so `allTests`
+// misses it too. Left alone that means `check` never even *compiles* the device tests, and a test
+// broken by an unrelated refactor stays invisible until someone plugs in a phone. Assembling them
+// is the compromise: it type-checks every device test on every `check` and still needs no device.
+tasks.named("check") {
+    dependsOn(":alohomora:assembleAndroidDeviceTest", ":showcaseApp:assembleDebugAndroidTest")
+}
+
 // All four modules must ship together: :alohomora's POM lists :alohomora-common and
 // :alohomora-ui as runtime dependencies, so publishing only the first two leaves every
 // external consumer with unresolvable dependencies.

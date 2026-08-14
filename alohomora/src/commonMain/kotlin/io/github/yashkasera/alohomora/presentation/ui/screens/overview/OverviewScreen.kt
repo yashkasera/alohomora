@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -64,6 +65,7 @@ import io.github.yashkasera.alohomora.ui.icons.Tag
 import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
 import io.github.yashkasera.alohomora.ui.icons.ToggleRight
 import io.github.yashkasera.alohomora.ui.icons.Waypoints
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
@@ -258,7 +260,8 @@ internal fun OverviewScreen(
         LazyVerticalGrid(
             modifier = Modifier
                 .padding(it)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .testTag(AlohomoraTestTags.Overview.GRID),
             columns = GridCells.Fixed(4),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xl),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
@@ -304,7 +307,9 @@ internal fun OverviewScreen(
                             onTrafficClick = { traffic ->
                                 onNavigate(Routes.TrafficDetails(traffic.id))
                             },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag(AlohomoraTestTags.Overview.NEEDS_ATTENTION),
                         )
                     }
                 }
@@ -327,7 +332,13 @@ internal fun OverviewScreen(
                     else GridItemSpan(1)
                 },
             ) { modules ->
-                ModuleCard(modules, onNavigate = onNavigate)
+                ModuleCard(
+                    modules,
+                    onNavigate = onNavigate,
+                    modifier = Modifier.testTag(
+                        AlohomoraTestTags.Overview.moduleCard(modules.gridKey),
+                    ),
+                )
             }
             customPlugins.ifEmpty { null }?.let { plugins ->
                 item(span = { GridItemSpan(4) }) {
@@ -342,7 +353,13 @@ internal fun OverviewScreen(
                     }
                 }
                 items(plugins, key = { it.gridKey }) { module ->
-                    ModuleCard(module, onNavigate = onNavigate)
+                    ModuleCard(
+                        module,
+                        onNavigate = onNavigate,
+                        modifier = Modifier.testTag(
+                            AlohomoraTestTags.Overview.moduleCard(module.gridKey),
+                        ),
+                    )
                 }
             }
             fabClearanceItem()
@@ -360,6 +377,7 @@ private fun DevToolsStatusCard(
         onClick = {
             onToggle.invoke(!state.serverEnabled)
         },
+        modifier = Modifier.testTag(AlohomoraTestTags.Overview.STATUS_CARD),
         colors = AlohomoraCardDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ),
@@ -384,7 +402,10 @@ private fun DevToolsStatusCard(
                         DevConnectionStatus.Off,
                             -> ConnectionDotState.Disconnected
                     }
-                    ConnectionStatusDot(state = dotState)
+                    ConnectionStatusDot(
+                        state = dotState,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Overview.STATUS_DOT),
+                    )
                     Text(
                         when (state.deviceConnectionStatus) {
                             DevConnectionStatus.Connected -> "Connected"
@@ -410,7 +431,7 @@ private fun DevToolsStatusCard(
                 onValueChange = onPortChange,
                 singleLine = true,
                 enabled = !state.serverEnabled,
-                modifier = Modifier,
+                modifier = Modifier.testTag(AlohomoraTestTags.Overview.STATUS_PORT_FIELD),
             )
         }
     }
@@ -420,6 +441,7 @@ private fun DevToolsStatusCard(
 private fun ModuleCard(
     overviewModule: OverviewModule,
     onNavigate: (Routes) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
 
     val containerColor = if (overviewModule.isInverse)
@@ -428,7 +450,7 @@ private fun ModuleCard(
         MaterialTheme.colorScheme.surfaceContainer
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable {
                 onNavigate.invoke(overviewModule.route)

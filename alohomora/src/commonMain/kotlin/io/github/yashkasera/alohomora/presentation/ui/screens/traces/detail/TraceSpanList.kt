@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,7 @@ import io.github.yashkasera.alohomora.ui.components.waterfall.spanBarColor
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.ChevronRight
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 /** Indent per tree level. Deliberately tight: a 6-deep span still needs room for its name at 360dp. */
@@ -83,6 +85,7 @@ internal fun TraceSpanRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(AlohomoraTestTags.TraceDetails.span(span.spanId))
             .background(
                 if (isSelected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface,
             )
@@ -103,6 +106,7 @@ internal fun TraceSpanRow(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .size(MaterialTheme.dimens.icon.md)
+                    .testTag(AlohomoraTestTags.TraceDetails.spanCollapse(span.spanId))
                     .clickable(onClick = onToggleCollapse),
             )
         } else {

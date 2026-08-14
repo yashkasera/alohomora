@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
@@ -34,6 +35,7 @@ import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -50,7 +52,10 @@ internal fun GitHistoryScreen(
                 title = "Git History",
                 subtitle = "SHOWING LAST ${state.commits.size} COMMITS",
                 navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                    ) {
                         Icon(Icons.ArrowLeft, contentDescription = "back")
                     }
                 },
@@ -76,12 +81,19 @@ internal fun GitHistoryScreen(
                 Box(modifier = Modifier.fillMaxSize()) {
                     LazyColumn(
                         state = listState,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag(AlohomoraTestTags.GitHistory.LIST),
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                         contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
                     ) {
                         items(state.commits, key = { it.sha }) { commit ->
-                            CommitListItem(commit = commit)
+                            CommitListItem(
+                                commit = commit,
+                                modifier = Modifier.testTag(
+                                    AlohomoraTestTags.GitHistory.commit(commit.sha),
+                                ),
+                            )
                         }
                         fabClearanceItem()
                     }
@@ -95,8 +107,9 @@ internal fun GitHistoryScreen(
 @Composable
 private fun CommitListItem(
     commit: GitHistoryCommit,
+    modifier: Modifier = Modifier,
 ) {
-    AlohomoraCard {
+    AlohomoraCard(modifier = modifier) {
         Column(
             modifier = Modifier.fillMaxWidth()
                 .padding(MaterialTheme.dimens.margin.md),

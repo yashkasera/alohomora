@@ -45,6 +45,7 @@ internal fun EventsDetailsSheet(
     isSlackConfigured: Boolean,
     onDismiss: () -> Unit,
     onShareToSlack: (email: String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -72,6 +73,7 @@ internal fun EventsDetailsSheet(
 
     AlohomoraBottomSheetModal(
         onDismissRequest = onDismiss,
+        modifier = modifier,
         sheetState = sheetState,
     ) {
         Scaffold(

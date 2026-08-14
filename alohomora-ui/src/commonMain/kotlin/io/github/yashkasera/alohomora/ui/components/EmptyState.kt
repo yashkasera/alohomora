@@ -17,9 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 /**
@@ -36,8 +38,10 @@ fun EmptyState(
     modifier: Modifier = Modifier,
     action: (@Composable () -> Unit)? = null,
 ) {
+    // Tagged here rather than at each of the ten call sites: "did this screen fall back to its
+    // empty state" is the same assertion everywhere, and only the copy differs.
     Box(
-        modifier = Modifier.fillMaxSize().then(modifier),
+        modifier = Modifier.fillMaxSize().testTag(AlohomoraTestTags.Chrome.EMPTY_STATE).then(modifier),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -72,6 +76,7 @@ fun EmptyState(
                 ),
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
+                modifier = Modifier.testTag(AlohomoraTestTags.Chrome.EMPTY_STATE_TITLE),
             )
 
             if (subtitle != null) {

@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
@@ -38,6 +39,7 @@ import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.Waypoints
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -56,12 +58,18 @@ internal fun TracesScreen(
                 title = "Traces",
                 subtitle = if (state.traces.isEmpty()) null else "${state.traces.size} TRACES",
                 navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
+                    AlohomoraIconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
+                    ) {
                         Icon(Icons.ArrowLeft, contentDescription = "back")
                     }
                 },
                 actions = {
-                    AlohomoraIconButton(onClick = { viewModel.clearAllTraces() }) {
+                    AlohomoraIconButton(
+                        onClick = { viewModel.clearAllTraces() },
+                        modifier = Modifier.testTag(AlohomoraTestTags.Chrome.CLEAR_ALL),
+                    ) {
                         Icon(
                             Icons.Trash,
                             contentDescription = "Clear all traces",
@@ -89,11 +97,14 @@ internal fun TracesScreen(
                     onQueryChange = viewModel::onSearchQueryChange,
                     placeholder = "Filter traces",
                     onClear = { viewModel.onSearchQueryChange("") },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(AlohomoraTestTags.Chrome.SEARCH),
                 )
                 AlohomoraFilterChip(
                     label = "Errors",
                     selected = state.errorsOnly,
+                    modifier = Modifier.testTag(AlohomoraTestTags.Traces.ERROR_FILTER),
                     onClick = { viewModel.onErrorsOnlyChange(!state.errorsOnly) },
                 )
             }
@@ -109,13 +120,16 @@ internal fun TracesScreen(
                 } else {
                     LazyColumn(
                         state = lazyListState,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().testTag(AlohomoraTestTags.Traces.LIST),
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                         contentPadding = PaddingValues(MaterialTheme.dimens.margin.md),
                     ) {
                         items(state.traces, key = { it.traceId }) { trace ->
                             TraceRowItem(
                                 trace = trace,
+                                modifier = Modifier.testTag(
+                                    AlohomoraTestTags.Traces.item(trace.traceId),
+                                ),
                                 onClick = { onNavigateToTrace(trace.traceId) },
                             )
                         }
@@ -135,7 +149,7 @@ internal fun TracesScreen(
  * only thing that identifies the trace to a human.
  */
 @Composable
-private fun TraceRowItem(trace: TraceSummary, onClick: () -> Unit) {
+private fun TraceRowItem(trace: TraceSummary, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val containerColor = when {
         trace.isViewed -> MaterialTheme.colorScheme.surfaceContainer
         else -> MaterialTheme.colorScheme.surfaceContainerHighest
@@ -143,6 +157,7 @@ private fun TraceRowItem(trace: TraceSummary, onClick: () -> Unit) {
 
     AlohomoraCard(
         onClick = onClick,
+        modifier = modifier,
         colors = AlohomoraCardDefaults.colors(
             containerColor = containerColor,
         ),

@@ -20,11 +20,17 @@ android {
         applicationId = "io.github.yashkasera.alohomora.showcaseApp"
         versionCode = 1
         versionName = "1.0.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    testOptions {
+        animationsDisabled = true
     }
 }
 
@@ -67,6 +73,22 @@ dependencies {
     implementation(libs.opentelemetry.sdk.trace)
 
     ksp(libs.androidx.room.compiler)
+
+    // Instrumentation tests. Deliberately no `androidTestImplementation(project(":alohomora"))`:
+    // androidTest only exists for the testBuildType (debug), and AGP already extends the
+    // androidTest compile classpath from the tested variant's implementation configurations, so
+    // `debugImplementation(project(":alohomora"))` above is on it — along with :alohomora-ui
+    // transitively. An explicit entry would additionally bind if a release androidTest variant
+    // ever appeared, which is exactly where :alohomora-noop is the intended binding.
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    // debugImplementation, not androidTestImplementation: ui-test-manifest contributes the bare
+    // ComponentActivity to the *app under test*'s manifest, not the test APK's.
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
 alohomora {
