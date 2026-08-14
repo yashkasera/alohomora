@@ -22,27 +22,6 @@ internal object AlohomoraInternal {
     }
 
     fun recordTraffic(trace: TrafficEntry) {
-        Alohomora.recordTraffic(
-            id = trace.id,
-            status = trace.status,
-            url = trace.url,
-            message = trace.message,
-            method = trace.method,
-            scheme = trace.scheme,
-            host = trace.host,
-            path = trace.path,
-            query = trace.query,
-            requestBody = trace.requestBody,
-            responseBody = trace.responseBody,
-            time = trace.time,
-            duration = trace.duration,
-            requestHeaders = trace.requestHeaders,
-            requestContentType = trace.requestContentType,
-            responseContentType = trace.responseContentType,
-            responseHeaders = trace.responseHeaders,
-            requestSize = trace.requestSize,
-            responseSize = trace.responseSize,
-            mockedBy = trace.mockedBy,
-        )
+        Alohomora.persistTrafficEntry(trace)
     }
 }

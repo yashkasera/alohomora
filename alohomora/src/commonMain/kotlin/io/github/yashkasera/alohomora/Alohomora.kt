@@ -210,6 +210,17 @@ object Alohomora {
         }
     }
 
+    internal fun persistTrafficEntry(entry: TrafficEntry) {
+        scope.launch {
+            val repo = koin?.get<TrafficRepository>() ?: return@launch
+            try {
+                repo.save(entry)
+            } catch (e: Exception) {
+                Logger.d { "[Alohomora] Failed to log API request: ${e.message}" }
+            }
+        }
+    }
+
     @JvmStatic
     @JvmOverloads
     fun recordEvent(name: String, properties: Map<String, String>? = null) {
