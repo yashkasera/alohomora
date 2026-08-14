@@ -53,6 +53,8 @@ fun DeviceWindow(
     )
     var showHelp by remember { mutableStateOf(false) }
     var showCommandPalette by remember { mutableStateOf(false) }
+    var showDeepLinkBuilder by remember { mutableStateOf(false) }
+    var showMockRules by remember { mutableStateOf(false) }
     var zoomScale by remember { mutableStateOf(1.0f) }
 
     val zoomIn = { zoomScale = (zoomScale + 0.1f).coerceAtMost(2.0f) }
@@ -182,7 +184,7 @@ fun DeviceWindow(
                     Item(
                         "Deep Link Builder",
                         shortcut = KeyShortcut(Key.L, meta = isMacOs, ctrl = !isMacOs),
-                        onClick = {},
+                        onClick = { showDeepLinkBuilder = true },
                     )
                     Item(
                         "Mock Rules",
@@ -192,7 +194,7 @@ fun DeviceWindow(
                             meta = isMacOs,
                             ctrl = !isMacOs,
                         ),
-                        onClick = {},
+                        onClick = { showMockRules = true },
                     )
                 }
                 Menu("Help") {
@@ -252,6 +254,12 @@ fun DeviceWindow(
                         showCommandPalette = showCommandPalette,
                         onOpenCommandPalette = { showCommandPalette = true },
                         onDismissCommandPalette = { showCommandPalette = false },
+                        showDeepLinkBuilder = showDeepLinkBuilder,
+                        onOpenDeepLinkBuilder = { showDeepLinkBuilder = true },
+                        onDismissDeepLinkBuilder = { showDeepLinkBuilder = false },
+                        showMockRules = showMockRules,
+                        onOpenMockRules = { showMockRules = true },
+                        onDismissMockRules = { showMockRules = false },
                         onShowSettings = onShowSettings,
                         onZoomIn = zoomIn,
                         onZoomOut = zoomOut,

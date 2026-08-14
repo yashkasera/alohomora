@@ -100,6 +100,12 @@ fun DevToolsDesktopApp(
     showCommandPalette: Boolean = false,
     onOpenCommandPalette: () -> Unit = {},
     onDismissCommandPalette: () -> Unit = {},
+    showDeepLinkBuilder: Boolean = false,
+    onOpenDeepLinkBuilder: () -> Unit = {},
+    onDismissDeepLinkBuilder: () -> Unit = {},
+    showMockRules: Boolean = false,
+    onOpenMockRules: () -> Unit = {},
+    onDismissMockRules: () -> Unit = {},
     onShowSettings: () -> Unit = {},
     onZoomIn: () -> Unit = {},
     onZoomOut: () -> Unit = {},
@@ -126,8 +132,7 @@ fun DevToolsDesktopApp(
             null,
         )
     }
-    var showMockSheet by remember { mutableStateOf(false) }
-    var showDeepLinkBuilder by remember { mutableStateOf(false) }
+    val showMockSheet = showMockRules
     val selectedTraceId by tracesViewModel.selectedTraceId.collectAsState()
     val selectedEventId by eventsViewModel.selectedEventId.collectAsState()
     var selectedDeviceId by remember(initialDeviceId) { mutableStateOf(initialDeviceId) }
@@ -257,7 +262,7 @@ fun DevToolsDesktopApp(
         },
         onOpenDeepLinkBuilder = {
             onDismissCommandPalette()
-            showDeepLinkBuilder = true
+            onOpenDeepLinkBuilder()
         },
         onFocusSearch = {
             onDismissCommandPalette()
@@ -265,7 +270,7 @@ fun DevToolsDesktopApp(
         },
         onOpenMockRules = {
             onDismissCommandPalette()
-            showMockSheet = true
+            onOpenMockRules()
         },
         onClearErrors = { devToolsViewModel.clearErrors() },
     )
@@ -303,7 +308,7 @@ fun DevToolsDesktopApp(
                         }
 
                         showDeepLinkBuilder -> {
-                            showDeepLinkBuilder = false; return@onPreviewKeyEvent true
+                            onDismissDeepLinkBuilder(); return@onPreviewKeyEvent true
                         }
 
                         selectedTrafficForSheet != null -> {
@@ -360,12 +365,12 @@ fun DevToolsDesktopApp(
                 }
 
                 if (event.isDeepLinkShortcut() && isAndroid && !selectedDeviceId.isNullOrBlank()) {
-                    showDeepLinkBuilder = true
+                    onOpenDeepLinkBuilder()
                     return@onPreviewKeyEvent true
                 }
 
                 if (event.isMockRulesShortcut() && isConnected) {
-                    showMockSheet = true
+                    onOpenMockRules()
                     return@onPreviewKeyEvent true
                 }
 
@@ -461,7 +466,7 @@ fun DevToolsDesktopApp(
                                 onEventViewClick = {},
                                 onTrafficClick = { activeSection = DesktopSection.Traffic },
                                 onEventsClick = { activeSection = DesktopSection.Events },
-                                onOpenDeepLinkBuilder = { showDeepLinkBuilder = true },
+                                onOpenDeepLinkBuilder = { onOpenDeepLinkBuilder() },
                             )
 
                             DesktopSection.Logcat -> LogcatPanel(
@@ -483,7 +488,7 @@ fun DevToolsDesktopApp(
                                 trafficViewModel = trafficViewModel,
                                 networkRulesViewModel = networkRulesViewModel,
                                 onLogClick = { selectedTrafficForSheet = it },
-                                onOpenMockRules = { showMockSheet = true },
+                                onOpenMockRules = { onOpenMockRules() },
                                 searchFocusTrigger = searchFocusTrigger,
                             )
 
@@ -589,7 +594,7 @@ fun DevToolsDesktopApp(
                 onDetachSession = networkRulesViewModel::detachSession,
                 onExport = networkRulesViewModel::exportSession,
                 onImport = networkRulesViewModel::importFromFile,
-                onDismiss = { showMockSheet = false },
+                onDismiss = { onDismissMockRules() },
             )
 
             TraceWaterfallSideSheet(
@@ -619,7 +624,7 @@ fun DevToolsDesktopApp(
                 },
                 onRemoveHistoryEntry = devicesViewModel::removeDeepLinkEntry,
                 onClearHistory = devicesViewModel::clearDeepLinkHistory,
-                onDismiss = { showDeepLinkBuilder = false },
+                onDismiss = { onDismissDeepLinkBuilder() },
             )
         }
 
