@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -209,23 +210,24 @@ fun AlohomoraSearchTextField(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
-        trailingIcon = if (query.isNotEmpty()) {
-            {
-                AlohomoraIconButton(
-                    onClick = {
-                        if (onClear != null) onClear() else onQueryChange("")
-                    },
-                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
-                ) {
-                    Icon(
-                        imageVector = Icons.X,
-                        contentDescription = "Clear search",
-                        modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+        trailingIcon = {
+            AlohomoraIconButton(
+                onClick = {
+                    if (onClear != null) onClear() else onQueryChange("")
+                },
+                modifier = Modifier
+                    .size(MaterialTheme.dimens.icon.lg)
+                    .alpha(if (query.isNotEmpty()) 1f else 0f),
+                enabled = query.isNotEmpty(),
+            ) {
+                Icon(
+                    imageVector = Icons.X,
+                    contentDescription = "Clear search",
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-        } else null,
+        },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = { onSearch?.invoke() }),
     )

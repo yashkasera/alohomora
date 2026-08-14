@@ -131,7 +131,26 @@ fun DevToolsDesktopApp(
     val selectedTraceId by tracesViewModel.selectedTraceId.collectAsState()
     val selectedEventId by eventsViewModel.selectedEventId.collectAsState()
     var selectedDeviceId by remember(initialDeviceId) { mutableStateOf(initialDeviceId) }
-    var isModifierHeld by remember { mutableStateOf(false) }
+    var isModifierPhysicallyDown by remember { mutableStateOf(false) }
+    var showModifierBadges by remember { mutableStateOf(false) }
+
+    val anySideSheetOpen = selectedTrafficForSheet != null ||
+        selectedErrorForSheet != null ||
+        selectedTraceId != null ||
+        selectedEventId != null ||
+        showMockSheet ||
+        showDeepLinkBuilder ||
+        showCommandPalette ||
+        showHelp
+
+    LaunchedEffect(isModifierPhysicallyDown, anySideSheetOpen) {
+        if (isModifierPhysicallyDown && !anySideSheetOpen) {
+            delay(250)
+            showModifierBadges = true
+        } else {
+            showModifierBadges = false
+        }
+    }
 
     val onlineDevices = devices.filter { it.state == DeviceState.DEVICE }
     val hasConnectedDevice = onlineDevices.isNotEmpty()
@@ -264,8 +283,11 @@ fun DevToolsDesktopApp(
             .focusable()
             .onPreviewKeyEvent { event ->
                 if (event.isModifierKeyOnly()) {
-                    isModifierHeld = event.type == KeyEventType.KeyDown
+                    isModifierPhysicallyDown = event.type == KeyEventType.KeyDown
                     return@onPreviewKeyEvent false
+                }
+                if (isModifierPhysicallyDown) {
+                    isModifierPhysicallyDown = false
                 }
 
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
@@ -379,7 +401,7 @@ fun DevToolsDesktopApp(
                                 searchFocusTrigger = System.nanoTime()
                             },
                             onOpenCommandPalette = onOpenCommandPalette,
-                            isModifierHeld = isModifierHeld,
+                            isModifierHeld = showModifierBadges,
                             visibleSections = visibleSections,
                         )
                     }
