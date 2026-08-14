@@ -16,9 +16,9 @@ internal object ErrorCapture {
     /**
      * Event name for a fatal, mirrored into the Events timeline alongside the [Error] row.
      *
-     * `EventsScreen` already renders this exact name with a fatal accent bar, and events already
-     * stream to the desktop over `STREAM_EVENT` — so a crash reaches the desktop app without the
-     * protocol gaining an error message type it does not have.
+     * `EventItem` renders events with this name using a left error-coloured accent bar, and events
+     * already stream to the desktop over `STREAM_EVENT` — so a crash reaches the desktop app
+     * without the protocol gaining an error message type it does not have.
      */
     const val CRASH_EVENT_NAME = "App.Exception"
 

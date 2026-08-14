@@ -20,8 +20,8 @@ import org.junit.Test
  * The shared body lives in [assertRoundTrip], so the duplication is the name and nothing else.
  *
  * The titles are asserted, not the routes, because the top bar is the only thing a user can see
- * that distinguishes one destination from another — and two of them do not match the card that
- * opened them (`Database` opens a screen titled "Vault"; `Error` opens one titled "Errors").
+ * that distinguishes one destination from another — one of them does not match the card that
+ * opened it (`Error` opens a screen titled "Errors").
  */
 class NavigationTest {
 
@@ -38,7 +38,7 @@ class NavigationTest {
     fun tracesRoundTripsToOverview() = assertRoundTrip("Traces", "Traces")
 
     @Test
-    fun databaseRoundTripsToOverview() = assertRoundTrip("Database", "Vault")
+    fun databaseRoundTripsToOverview() = assertRoundTrip("Database", "Database")
 
     @Test
     fun errorsRoundTripsToOverview() = assertRoundTrip("Error", "Errors")

@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -32,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.error.ErrorCapture
 import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.presentation.ui.components.EventsDetailsSheet
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
@@ -197,6 +201,7 @@ internal fun EventItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isFatal = event.name == ErrorCapture.CRASH_EVENT_NAME
     val containerColor = when {
         event.isViewed -> MaterialTheme.colorScheme.surfaceContainer
         else -> MaterialTheme.colorScheme.surfaceContainerHighest
@@ -208,52 +213,62 @@ internal fun EventItem(
             containerColor = containerColor,
         ),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(MaterialTheme.dimens.margin.md),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = event.name,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-
-                Text(
-                    text = DateUtils.format(event.time, DateUtils.Format.HH_MM_SS),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
+            if (isFatal) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(MaterialTheme.dimens.stroke.medium)
+                        .background(MaterialTheme.colorScheme.error),
                 )
             }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(MaterialTheme.dimens.margin.md),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = event.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (isFatal) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = DateUtils.format(event.time, DateUtils.Format.HH_MM_SS),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
 
-            if (showProperties) {
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-                Text(
-                    text = event.properties
-                        ?.takeUnless { it is JsonNull }
-                        ?.toString()
-                        ?: "{}",
-                    maxLines = 5,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = MaterialTheme.dimens.margin.xs)
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .border(
-                            width = MaterialTheme.dimens.stroke.small,
-                            color = MaterialTheme.colorScheme.outline,
-                            shape = MaterialTheme.shapes.medium
-                        )
-                        .padding(MaterialTheme.dimens.margin.sm),
-                )
+                if (showProperties) {
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                    Text(
+                        text = event.properties
+                            ?.takeUnless { it is JsonNull }
+                            ?.toString()
+                            ?: "{}",
+                        maxLines = 5,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = MaterialTheme.dimens.margin.xs)
+                            .clip(MaterialTheme.shapes.medium)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            .border(
+                                width = MaterialTheme.dimens.stroke.small,
+                                color = MaterialTheme.colorScheme.outline,
+                                shape = MaterialTheme.shapes.medium,
+                            )
+                            .padding(MaterialTheme.dimens.margin.sm),
+                    )
+                }
             }
         }
     }

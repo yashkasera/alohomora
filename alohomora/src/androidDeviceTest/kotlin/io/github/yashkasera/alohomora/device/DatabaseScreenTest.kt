@@ -125,9 +125,7 @@ class DatabaseScreenTest {
     fun theTopBarNamesTheInspector() {
         compose.launchConsole(Routes.Database)
 
-        // "Vault", not "Database". The screen has not been renamed to match the vocabulary the
-        // rest of the console uses; assert what it renders, not what it should render.
-        compose.onNodeWithTag(Chrome.TOP_BAR_TITLE).assertTextEquals("Vault")
+        compose.onNodeWithTag(Chrome.TOP_BAR_TITLE).assertTextEquals("Database")
     }
 
     /**

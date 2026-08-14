@@ -27,15 +27,15 @@ internal interface ErrorDao {
     suspend fun delete(entity: Error)
 
     /**
-     * Lists errors with pagination and query filtering.
+     * Lists errors with pagination and query filtering across reason, place and stack trace.
      */
-    @Query("SELECT id, place, reason, time, isViewed FROM Error WHERE stackTrace LIKE '%' || :query || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
+    @Query("SELECT id, place, reason, time, isViewed FROM Error WHERE reason LIKE '%' || :query || '%' OR place LIKE '%' || :query || '%' OR stackTrace LIKE '%' || :query || '%' ORDER BY time DESC LIMIT :pageSize OFFSET :page * :pageSize")
     fun list(query: String, page: Int, pageSize: Int): Flow<List<Error>>
 
     /**
-     * Counts errors matching the query.
+     * Counts errors matching the query across reason, place and stack trace.
      */
-    @Query("SELECT COUNT(*) FROM Error WHERE stackTrace LIKE '%' || :query || '%'")
+    @Query("SELECT COUNT(*) FROM Error WHERE reason LIKE '%' || :query || '%' OR place LIKE '%' || :query || '%' OR stackTrace LIKE '%' || :query || '%'")
     fun count(query: String): Flow<Long>
 
     /**

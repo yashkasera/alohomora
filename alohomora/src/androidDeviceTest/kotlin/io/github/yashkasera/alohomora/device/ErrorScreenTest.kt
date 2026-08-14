@@ -55,20 +55,21 @@ class ErrorScreenTest {
     }
 
     /**
-     * `ErrorDao.list` filters on **`stackTrace`**, not on `reason` or `place`, despite the field's
-     * "Search exceptions or packages..." placeholder. Search terms that appear only in the reason
-     * match nothing, so the fixtures differ in their traces.
+     * `ErrorDao.list` filters across `reason`, `place` and `stackTrace`. The fixtures differ in
+     * their place so a search by package name narrows the list.
      */
     @Test
-    fun searchFiltersOnTheStackTrace() {
+    fun searchFiltersAcrossReasonPlaceAndStackTrace() {
         console.seedErrors(
             error(
                 reason = "java.lang.IllegalStateException: boom",
+                place = "com.example.Checkout.submit(Checkout.kt:31)",
                 index = 0,
                 stackTrace = "java.lang.IllegalStateException: boom\n\tat com.example.Checkout.submit(Checkout.kt:31)",
             ),
             error(
                 reason = "java.io.IOException: offline",
+                place = "com.example.Sync.push(Sync.kt:12)",
                 index = 1,
                 stackTrace = "java.io.IOException: offline\n\tat com.example.Sync.push(Sync.kt:12)",
             ),
@@ -76,12 +77,12 @@ class ErrorScreenTest {
         val ids = savedErrorIdsByReason()
 
         compose.launchConsole(Routes.Error)
-        compose.onTextFieldIn(Chrome.SEARCH).performTextInput("Sync.kt")
+        compose.onTextFieldIn(Chrome.SEARCH).performTextInput("Checkout")
         compose.waitForIdle()
 
-        compose.onNodeWithTag(Errors.item(ids.getValue("java.io.IOException: offline")))
-            .assertIsDisplayed()
         compose.onNodeWithTag(Errors.item(ids.getValue("java.lang.IllegalStateException: boom")))
+            .assertIsDisplayed()
+        compose.onNodeWithTag(Errors.item(ids.getValue("java.io.IOException: offline")))
             .assertDoesNotExist()
     }
 

@@ -275,7 +275,7 @@ public final class io/github/yashkasera/alohomora/ui/components/ConnectionDotSta
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/ConnectionStatusDotKt {
-	public static final fun ConnectionStatusDot-rAjV9yQ (Lio/github/yashkasera/alohomora/ui/components/ConnectionDotState;FLandroidx/compose/runtime/Composer;II)V
+	public static final fun ConnectionStatusDot-6a0pyJM (Lio/github/yashkasera/alohomora/ui/components/ConnectionDotState;Landroidx/compose/ui/Modifier;FLandroidx/compose/runtime/Composer;II)V
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/DragHandleConfig {
@@ -690,6 +690,164 @@ public final class io/github/yashkasera/alohomora/ui/icons/ZoomInKt {
 
 public final class io/github/yashkasera/alohomora/ui/icons/ZoomOutKt {
 	public static final fun getZoomOut (Lio/github/yashkasera/alohomora/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags {
+	public static final field $stable I
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Cache {
+	public static final field $stable I
+	public static final field FOOTER Ljava/lang/String;
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Cache;
+	public static final field LIST Ljava/lang/String;
+	public final fun item (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Chrome {
+	public static final field $stable I
+	public static final field BACK Ljava/lang/String;
+	public static final field CLEAR_ALL Ljava/lang/String;
+	public static final field CONFIRM_ACCEPT Ljava/lang/String;
+	public static final field CONFIRM_DISMISS Ljava/lang/String;
+	public static final field EMPTY_STATE Ljava/lang/String;
+	public static final field EMPTY_STATE_TITLE Ljava/lang/String;
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Chrome;
+	public static final field SCROLL_TO_TOP Ljava/lang/String;
+	public static final field SEARCH Ljava/lang/String;
+	public static final field TOP_BAR_SUBTITLE Ljava/lang/String;
+	public static final field TOP_BAR_TITLE Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Config {
+	public static final field $stable I
+	public static final field BUILD_INFO Ljava/lang/String;
+	public static final field ENVIRONMENT Ljava/lang/String;
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Config;
+	public static final field ROOT Ljava/lang/String;
+	public final fun info (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Database {
+	public static final field $stable I
+	public static final field BROWSE Ljava/lang/String;
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Database;
+	public static final field QUERY_EDITOR Ljava/lang/String;
+	public static final field QUERY_RESULT Ljava/lang/String;
+	public static final field QUERY_RUN Ljava/lang/String;
+	public static final field QUERY_STATUS Ljava/lang/String;
+	public static final field SCHEMA Ljava/lang/String;
+	public static final field SELECTOR Ljava/lang/String;
+	public static final field SELECTOR_SHEET Ljava/lang/String;
+	public static final field TABLES Ljava/lang/String;
+	public static final field TABS Ljava/lang/String;
+	public final fun database (Ljava/lang/String;)Ljava/lang/String;
+	public final fun tab (Ljava/lang/String;)Ljava/lang/String;
+	public final fun table (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$ErrorDetails {
+	public static final field $stable I
+	public static final field COPY Ljava/lang/String;
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$ErrorDetails;
+	public static final field ROOT Ljava/lang/String;
+	public static final field STACK_TRACE Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Errors {
+	public static final field $stable I
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Errors;
+	public static final field LIST Ljava/lang/String;
+	public final fun item (J)Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Events {
+	public static final field $stable I
+	public static final field DETAILS_SHEET Ljava/lang/String;
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Events;
+	public static final field LIST Ljava/lang/String;
+	public static final field PROPERTIES_TOGGLE Ljava/lang/String;
+	public final fun item (J)Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$FeatureFlags {
+	public static final field $stable I
+	public static final field FOOTER Ljava/lang/String;
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$FeatureFlags;
+	public static final field LIST Ljava/lang/String;
+	public static final field SOURCES Ljava/lang/String;
+	public final fun item (Ljava/lang/String;)Ljava/lang/String;
+	public final fun sourceFilter (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$GitHistory {
+	public static final field $stable I
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$GitHistory;
+	public static final field LIST Ljava/lang/String;
+	public final fun commit (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Overview {
+	public static final field $stable I
+	public static final field GRID Ljava/lang/String;
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Overview;
+	public static final field NEEDS_ATTENTION Ljava/lang/String;
+	public static final field STATUS_CARD Ljava/lang/String;
+	public static final field STATUS_DOT Ljava/lang/String;
+	public static final field STATUS_PORT_FIELD Ljava/lang/String;
+	public final fun moduleCard (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$ReplaySheet {
+	public static final field $stable I
+	public static final field BODY Ljava/lang/String;
+	public static final field ERROR Ljava/lang/String;
+	public static final field HEADERS Ljava/lang/String;
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$ReplaySheet;
+	public static final field METHOD Ljava/lang/String;
+	public static final field ROOT Ljava/lang/String;
+	public static final field SEND Ljava/lang/String;
+	public static final field URL Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$TraceDetails {
+	public static final field $stable I
+	public static final field HEADER Ljava/lang/String;
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$TraceDetails;
+	public static final field ROOT Ljava/lang/String;
+	public static final field SPAN_LIST Ljava/lang/String;
+	public static final field SPAN_SHEET Ljava/lang/String;
+	public static final field VIEW_TOGGLE Ljava/lang/String;
+	public static final field WATERFALL Ljava/lang/String;
+	public final fun span (Ljava/lang/String;)Ljava/lang/String;
+	public final fun spanCollapse (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Traces {
+	public static final field $stable I
+	public static final field ERROR_FILTER Ljava/lang/String;
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Traces;
+	public static final field LIST Ljava/lang/String;
+	public final fun item (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Traffic {
+	public static final field $stable I
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Traffic;
+	public static final field LIST Ljava/lang/String;
+	public final fun item (Ljava/lang/String;)Ljava/lang/String;
+	public final fun methodFilter (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$TrafficDetails {
+	public static final field $stable I
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$TrafficDetails;
+	public static final field REPLAY Ljava/lang/String;
+	public static final field REPLAY_RESULT_BANNER Ljava/lang/String;
+	public static final field ROOT Ljava/lang/String;
+	public static final field SHARE Ljava/lang/String;
+	public static final field SHARE_SLACK Ljava/lang/String;
 }
 
 public final class io/github/yashkasera/alohomora/ui/theme/AlohomoraColorTheme {

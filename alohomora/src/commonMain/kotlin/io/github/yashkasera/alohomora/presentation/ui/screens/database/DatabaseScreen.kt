@@ -73,7 +73,7 @@ internal fun DatabaseScreen(
     Scaffold(
         topBar = {
             AlohomoraTopBar(
-                title = "Vault",
+                title = "Database",
                 subtitle = null,
                 navigationIcon = {
                     AlohomoraIconButton(
