@@ -187,6 +187,91 @@ fun AlohomoraTextButton(
 }
 
 @Composable
+fun AlohomoraFilledButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    size: AlohomoraButtonSize = AlohomoraButtonSize.MEDIUM,
+    shape: Shape = AlohomoraButtonDefaults.shape,
+    containerColor: Color = MaterialTheme.colorScheme.onBackground,
+    contentColor: Color = MaterialTheme.colorScheme.background,
+    disabledContainerColor: Color = containerColor.copy(alpha = 0.12f),
+    disabledContentColor: Color = contentColor.copy(alpha = 0.38f),
+    content: @Composable RowScope.() -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.defaultMinSize(minHeight = AlohomoraButtonDefaults.minHeight(size)),
+        enabled = enabled,
+        shape = shape,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor,
+            disabledContainerColor = disabledContainerColor,
+            disabledContentColor = disabledContentColor,
+        ),
+        contentPadding = AlohomoraButtonDefaults.contentPadding(size),
+        content = content,
+    )
+}
+
+@Composable
+fun AlohomoraOutlinedButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    size: AlohomoraButtonSize = AlohomoraButtonSize.MEDIUM,
+    shape: Shape = AlohomoraButtonDefaults.shape,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    disabledContentColor: Color = contentColor.copy(alpha = 0.38f),
+    borderColor: Color = MaterialTheme.colorScheme.outline,
+    borderWidth: Dp = 1.dp,
+    content: @Composable RowScope.() -> Unit,
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.defaultMinSize(minHeight = AlohomoraButtonDefaults.minHeight(size)),
+        enabled = enabled,
+        shape = shape,
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = contentColor,
+            disabledContentColor = disabledContentColor,
+        ),
+        border = BorderStroke(
+            borderWidth,
+            if (enabled) borderColor else borderColor.copy(alpha = 0.12f),
+        ),
+        contentPadding = AlohomoraButtonDefaults.contentPadding(size),
+        content = content,
+    )
+}
+
+@Composable
+fun AlohomoraTextButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    size: AlohomoraButtonSize = AlohomoraButtonSize.MEDIUM,
+    shape: Shape = AlohomoraButtonDefaults.shape,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    disabledContentColor: Color = contentColor.copy(alpha = 0.38f),
+    content: @Composable RowScope.() -> Unit,
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = modifier.defaultMinSize(minHeight = AlohomoraButtonDefaults.minHeight(size)),
+        enabled = enabled,
+        shape = shape,
+        colors = ButtonDefaults.textButtonColors(
+            contentColor = contentColor,
+            disabledContentColor = disabledContentColor,
+        ),
+        contentPadding = AlohomoraButtonDefaults.contentPadding(size),
+        content = content,
+    )
+}
+
+@Composable
 fun AlohomoraIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,

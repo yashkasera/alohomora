@@ -24,7 +24,7 @@ allprojects {
 }
 
 apiValidation {
-    ignoredProjects += listOf("showcaseApp", "desktopApp", "alohomora-common", "alohomora-ui")
+    ignoredProjects += listOf("showcaseApp", "desktopApp", "alohomora-common")
 
     // Without this, :alohomora:apiCheck is a no-op: BCV only dumps JVM targets by default,
     // :alohomora has no jvm() target, and klib validation is disabled out of the box. The
