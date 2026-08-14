@@ -27,7 +27,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.PermanentDrawerSheet
@@ -793,7 +793,7 @@ private fun SidebarConnectionCard(
                     )
                 }
                 if (connection is DevToolsConnection.Connected || connection is DevToolsConnection.Reconnecting) {
-                    IconButton(onClick = onDisconnect) {
+                    AlohomoraIconButton(onClick = onDisconnect) {
                         Icon(Icons.X, contentDescription = "Disconnect")
                     }
                 }

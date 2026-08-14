@@ -16,9 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSwitch
@@ -41,6 +39,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesView
 import io.github.yashkasera.alohomora.desktop.util.pickApkPath
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
@@ -363,14 +362,11 @@ private fun AdbActionButton(
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
-    OutlinedButton(
+    AlohomoraOutlinedButton(
+        text = text,
         onClick = onClick,
         enabled = enabled,
-        shape = MaterialTheme.shapes.small,
-        border = CardDefaults.outlinedCardBorder(),
-    ) {
-        Text(text, style = MaterialTheme.typography.bodyMedium)
-    }
+    )
 }
 
 @Composable

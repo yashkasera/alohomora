@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
@@ -27,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.replay.ReplayHeaderText
 import io.github.yashkasera.alohomora.replay.ReplayRequest
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
@@ -231,7 +231,7 @@ fun ReplayRequestSideSheet(
                 uppercase = false,
                 content = if (inFlight) {
                     {
-                        CircularProgressIndicator(
+                        AlohomoraCircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
                             color = MaterialTheme.colorScheme.background,

@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,12 +16,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Scaffold
@@ -50,6 +46,9 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedCard
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlinx.coroutines.delay
@@ -156,7 +155,7 @@ fun DeviceSelectionScreen(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
             ) {
 
-                OutlinedCard(
+                AlohomoraOutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(modifier = Modifier.padding(MaterialTheme.dimens.margin.lg)) {
@@ -167,22 +166,17 @@ fun DeviceSelectionScreen(
                         ) {
                             Text("Devices", style = MaterialTheme.typography.titleSmall)
                             Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm)) {
-                                OutlinedButton(
+                                AlohomoraOutlinedButton(
+                                    text = "Refresh",
                                     onClick = { devicesViewModel.refreshDevices() },
-                                    shape = MaterialTheme.shapes.small,
-                                    contentPadding = PaddingValues(
-                                        horizontal = MaterialTheme.dimens.margin.lg,
-                                        vertical = MaterialTheme.dimens.margin.sm,
-                                    ),
-                                ) {
-                                    Icon(
-                                        Icons.RefreshCw,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
-                                    )
-                                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                                    Text("Refresh")
-                                }
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.RefreshCw,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                                        )
+                                    },
+                                )
 
                             }
                         }
@@ -209,7 +203,7 @@ fun DeviceSelectionScreen(
                     }
                 }
 
-                OutlinedCard(
+                AlohomoraOutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(
@@ -252,11 +246,12 @@ fun DeviceSelectionScreen(
                                 modifier = Modifier.width(120.dp),
                             )
                             Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.md))
-                            Button(
+                            AlohomoraFilledButton(
+                                text = if (isConnecting) "Connecting" else "Connect",
                                 onClick = {
                                     if (selectedDevice == null) {
                                         actionError = "Select a device first"
-                                        return@Button
+                                        return@AlohomoraFilledButton
                                     }
                                     val hostPort = if (isLocalHost) {
                                         portRegistry.setPort(selectedDevice.id, deviceServerPort)
@@ -316,24 +311,16 @@ fun DeviceSelectionScreen(
                                     }
                                 },
                                 enabled = canConnect && !isConnecting,
-                                shape = MaterialTheme.shapes.small,
-                                contentPadding = PaddingValues(
-                                    horizontal = 20.dp,
-                                    vertical = 10.dp,
-                                ),
-                            ) {
-                                if (isConnecting) {
-                                    // Beside the label, not instead of it: swapping the text
-                                    // was the only feedback, and a static word does not read
-                                    // as progress.
-                                    AlohomoraCircularProgressIndicator(
-                                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
-                                        strokeWidth = MaterialTheme.dimens.stroke.medium,
-                                    )
-                                    Spacer(Modifier.width(MaterialTheme.dimens.margin.sm))
-                                }
-                                Text(if (isConnecting) "Connecting" else "Connect")
-                            }
+                                uppercase = false,
+                                leadingIcon = if (isConnecting) {
+                                    {
+                                        AlohomoraCircularProgressIndicator(
+                                            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                                            strokeWidth = MaterialTheme.dimens.stroke.medium,
+                                        )
+                                    }
+                                } else null,
+                            )
                         }
                         val errorMessage =
                             actionError ?: error ?: when (val connection =

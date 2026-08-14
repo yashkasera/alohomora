@@ -21,7 +21,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -42,8 +41,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DatabaseInfo
 import io.github.yashkasera.alohomora.common.TableData
 import io.github.yashkasera.alohomora.common.TableSchema
-import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTable
@@ -278,7 +278,7 @@ private fun TabsWithContent(
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
-        HorizontalDivider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
+        AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
@@ -502,7 +502,7 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
                         )
                     }
                     if (index < tableSchema.columns.size - 1) {
-                        HorizontalDivider(
+                        AlohomoraHorizontalDivider(
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
                         )
                     }
@@ -618,7 +618,7 @@ private fun DatabaseSelectorBottomSheet(
                 }
 
                 if (database != databases.last()) {
-                    HorizontalDivider(
+                    AlohomoraHorizontalDivider(
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
                     )
                 }

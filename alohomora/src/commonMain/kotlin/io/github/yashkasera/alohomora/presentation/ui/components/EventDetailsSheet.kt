@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -24,6 +22,8 @@ import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.prettyProperties
 import io.github.yashkasera.alohomora.ui.components.AlohomoraBottomSheetModal
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -97,7 +97,7 @@ internal fun EventsDetailsSheet(
                         )
                     }
 
-                    IconButton(
+                    AlohomoraIconButton(
                         onClick = {
                             clipboardCopy.copy(shareText)
                         },
@@ -109,7 +109,7 @@ internal fun EventsDetailsSheet(
                     }
 
                     if (isSlackConfigured) {
-                        IconButton(
+                        AlohomoraIconButton(
                             onClick = { onShareToSlack("") },
                         ) {
                             Icon(
@@ -121,7 +121,7 @@ internal fun EventsDetailsSheet(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                HorizontalDivider()
+                AlohomoraHorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(

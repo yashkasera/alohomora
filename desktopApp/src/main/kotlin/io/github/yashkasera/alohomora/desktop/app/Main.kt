@@ -12,10 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +21,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LinearWavyProgressIndicator
@@ -541,7 +538,8 @@ private fun LauncherScreen(
                             modifier = Modifier.width(160.dp),
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Button(
+                            AlohomoraFilledButton(
+                                text = "Confirm",
                                 onClick = {
                                     pendingSession?.composition?.devToolsViewModel?.submitOtp(
                                         otpInput,
@@ -549,7 +547,8 @@ private fun LauncherScreen(
                                     otpInput = ""
                                 },
                                 enabled = otpInput.length == 4,
-                            ) { Text("Confirm") }
+                                uppercase = false,
+                            )
                             AlohomoraOutlinedButton(
                                 text = "Cancel",
                                 size = AlohomoraButtonSize.SMALL,

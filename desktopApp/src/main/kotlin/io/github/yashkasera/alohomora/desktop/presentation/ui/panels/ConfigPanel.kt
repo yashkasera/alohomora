@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +25,7 @@ import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedCard
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -117,7 +117,7 @@ private fun ConfigCard(title: String, content: @Composable () -> Unit) {
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.secondary,
         )
-        OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+        AlohomoraOutlinedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(
                     horizontal = MaterialTheme.dimens.margin.lg,

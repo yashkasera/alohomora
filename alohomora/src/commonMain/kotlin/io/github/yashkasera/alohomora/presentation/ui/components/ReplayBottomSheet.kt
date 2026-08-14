@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.replay.ReplayHeaderText
 import io.github.yashkasera.alohomora.replay.ReplayRequest
 import io.github.yashkasera.alohomora.ui.components.AlohomoraBottomSheetModal
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.jsoneditor.JsonEditor
@@ -214,7 +214,7 @@ internal fun ReplayBottomSheet(
                     null
                 } else {
                     {
-                        CircularProgressIndicator(
+                        AlohomoraCircularProgressIndicator(
                             modifier = Modifier.width(16.dp),
                             strokeWidth = 2.dp,
                         )

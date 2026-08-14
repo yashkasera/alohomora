@@ -20,7 +20,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,6 +42,7 @@ import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
@@ -237,14 +237,8 @@ private fun RequestTab(trace: TrafficEntry, onCopy: (String) -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SectionHeader(title = "REQUEST HEADERS")
                 Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                Badge {
-                    Text(
-                        text = headerCount.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
+                AlohomoraChip(label = headerCount.toString())
                 }
-            }
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
@@ -282,7 +276,11 @@ private fun RequestTab(trace: TrafficEntry, onCopy: (String) -> Unit) {
                 // Omitted for a wildcard content type; "*" told the user nothing.
                 if (subtype != "*") {
                     Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                    FormatBadge(format = subtype)
+                    AlohomoraChip(
+                        label = subtype,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    )
                 }
             }
 
@@ -353,13 +351,7 @@ private fun ResponseTab(
                     modifier = Modifier.weight(1f),
                     title = "RESPONSE HEADERS",
                 )
-                Badge {
-                    Text(
-                        text = headerCount.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
-                }
+                AlohomoraChip(label = headerCount.toString())
                 Icon(
                     imageVector = Icons.ChevronDown,
                     contentDescription = "Expand",
@@ -552,22 +544,6 @@ private fun SectionHeader(
         text = title,
         style = MaterialTheme.typography.labelMedium,
     )
-}
-
-@Composable
-private fun FormatBadge(format: String) {
-    Box(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
-            .background(color = MaterialTheme.colorScheme.primary)
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-    ) {
-        Text(
-            text = format,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onPrimary,
-        )
-    }
 }
 
 @Composable

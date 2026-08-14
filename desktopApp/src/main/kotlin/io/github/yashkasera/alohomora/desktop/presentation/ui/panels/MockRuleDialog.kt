@@ -21,9 +21,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCheckbox
 import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenu
 import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.HorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -97,10 +95,9 @@ fun MockRulesSideSheet(
         onDismiss = onDismiss,
         widthFraction = 0.5f,
         floatingActionButton = {
-            FloatingActionButton(
+            AlohomoraFloatingActionButton(
                 onClick = { editingRule = BLANK_RULE },
                 containerColor = MaterialTheme.colorScheme.inverseSurface,
-                elevation = FloatingActionButtonDefaults.elevation(0.dp),
             ) {
                 Icon(
                     Icons.Plus,
@@ -229,7 +226,7 @@ fun MockRulesSideSheet(
                             )
                         }
                         if (currentSession != null) {
-                            HorizontalDivider()
+                            AlohomoraHorizontalDivider()
                             AlohomoraDropdownMenuItem(
                                 text = { Text("Detach session") },
                                 onClick = {
