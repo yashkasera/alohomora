@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Copy: ImageVector
     get() {
         if (_copy != null) return _copy!!
@@ -27,13 +28,33 @@ val Icons.Copy: ImageVector
             ) {
                 moveTo(8f, 4f)
                 horizontalLineToRelative(8f)
-                arcToRelative(2f, 2f, 0f, false, true, 2f, 2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = 2f,
+                    dy1 = 2f
+                )
                 verticalLineToRelative(12f)
-                arcToRelative(2f, 2f, 0f, false, true, -2f, 2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = -2f,
+                    dy1 = 2f
+                )
                 horizontalLineToRelative(-8f)
-                arcToRelative(2f, 2f, 0f, false, true, -2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = -2f,
+                    dy1 = -2f
+                )
                 verticalLineToRelative(-12f)
-                arcToRelative(2f, 2f, 0f, false, true, 2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = 2f,
+                    dy1 = -2f
+                )
                 close()
             }
             path(
@@ -44,9 +65,19 @@ val Icons.Copy: ImageVector
             ) {
                 moveTo(16f, 20f)
                 horizontalLineToRelative(2f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 2f,
+                    dy1 = -2f
+                )
                 verticalLineToRelative(-12f)
-                arcToRelative(2f, 2f, 0f, false, false, -2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -2f,
+                    dy1 = -2f
+                )
                 horizontalLineToRelative(-2f)
             }
         }.build()
@@ -54,4 +85,5 @@ val Icons.Copy: ImageVector
         return _copy!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _copy: ImageVector? = null

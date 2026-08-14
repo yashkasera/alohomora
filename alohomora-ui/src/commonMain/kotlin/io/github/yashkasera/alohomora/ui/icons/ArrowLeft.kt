@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.ArrowLeft: ImageVector
     get() {
         if (_arrowLeft != null) return _arrowLeft!!
@@ -43,5 +44,6 @@ val Icons.ArrowLeft: ImageVector
         return _arrowLeft!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _arrowLeft: ImageVector? = null
 

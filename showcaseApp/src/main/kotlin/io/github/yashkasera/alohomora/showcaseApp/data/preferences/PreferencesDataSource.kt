@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.showcaseApp.data.preferences
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 
 class PreferencesDataSource(
     context: Context,
@@ -17,15 +18,15 @@ class PreferencesDataSource(
         prefs.getLong(KEY_LAST_REFRESH_EPOCH_MILLIS, 0L)
 
     fun writeUsername(value: String) {
-        prefs.edit().putString(KEY_USERNAME, value).apply()
+        prefs.edit { putString(KEY_USERNAME, value) }
     }
 
     fun writeAutoRefresh(value: Boolean) {
-        prefs.edit().putBoolean(KEY_AUTO_REFRESH, value).apply()
+        prefs.edit { putBoolean(KEY_AUTO_REFRESH, value)}
     }
 
     fun writeLastRefreshEpochMillis(value: Long) {
-        prefs.edit().putLong(KEY_LAST_REFRESH_EPOCH_MILLIS, value).apply()
+        prefs.edit { putLong(KEY_LAST_REFRESH_EPOCH_MILLIS, value)}
     }
 
     companion object {

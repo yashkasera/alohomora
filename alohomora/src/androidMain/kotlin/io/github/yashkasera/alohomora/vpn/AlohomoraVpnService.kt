@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.vpn
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
@@ -12,6 +13,7 @@ import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
 import kotlinx.serialization.json.Json
 
+@SuppressLint("VpnServicePolicy")
 class AlohomoraVpnService : VpnService() {
 
     private var tunInterface: ParcelFileDescriptor? = null

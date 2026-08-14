@@ -5,6 +5,7 @@ import io.github.yashkasera.alohomora.common.TrafficEntry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /**
@@ -66,7 +67,7 @@ class MarkViewedTest {
         store.markViewed("a")
 
         // Same instance: no pointless state emission, so no recomposition of the whole list.
-        assertTrue(before === store.logs.value)
+        assertSame(before, store.logs.value)
     }
 
     @Test

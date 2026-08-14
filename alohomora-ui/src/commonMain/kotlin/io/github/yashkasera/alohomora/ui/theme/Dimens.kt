@@ -52,6 +52,7 @@ data class AlohomoraDimens(
 
 val LocalAlohomoraDimens = staticCompositionLocalOf { AlohomoraDimens() }
 
+@Suppress("UnusedReceiverParameter")
 val MaterialTheme.dimens: AlohomoraDimens
     @Composable
     @ReadOnlyComposable

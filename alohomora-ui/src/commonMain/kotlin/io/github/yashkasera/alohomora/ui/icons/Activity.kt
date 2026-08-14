@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Activity: ImageVector
     get() {
         if (_activity != null) return _activity!!
@@ -27,13 +28,32 @@ val Icons.Activity: ImageVector
             ) {
                 moveTo(22f, 12f)
                 horizontalLineToRelative(-2.48f)
-                arcToRelative(2f, 2f, 0f, false, false, -1.93f, 1.46f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -1.93f,
+                    dy1 = 1.46f
+                )
                 lineToRelative(-2.35f, 8.36f)
-                arcToRelative(0.25f, 0.25f, 0f, false, true, -0.48f, 0f)
+                arcToRelative(0.25f, 0.25f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = -0.48f,
+                    dy1 = 0f
+                )
                 lineTo(9.24f, 2.18f)
-                arcToRelative(0.25f, 0.25f, 0f, false, false, -0.48f, 0f)
+                arcToRelative(0.25f, 0.25f, 0f, isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -0.48f,
+                    dy1 = 0f
+                )
                 lineToRelative(-2.35f, 8.36f)
-                arcTo(2f, 2f, 0f, false, true, 4.49f, 12f)
+                arcTo(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    x1 = 4.49f,
+                    y1 = 12f
+                )
                 horizontalLineTo(2f)
             }
         }.build()
@@ -41,4 +61,5 @@ val Icons.Activity: ImageVector
         return _activity!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _activity: ImageVector? = null

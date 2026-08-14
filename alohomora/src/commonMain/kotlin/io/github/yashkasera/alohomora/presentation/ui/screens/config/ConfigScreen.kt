@@ -75,7 +75,7 @@ internal fun ConfigScreen(
                             if (it.flavorName.isNullOrBlank().not()) {
                                 append("${it.flavorName?.lowercase()}")
                                 append(
-                                    it.variantName.lowercase().replaceFirstChar { it.uppercase() },
+                                    it.variantName.lowercase().replaceFirstChar { variant -> variant.uppercase() },
                                 )
                             } else {
                                 append(it.variantName)

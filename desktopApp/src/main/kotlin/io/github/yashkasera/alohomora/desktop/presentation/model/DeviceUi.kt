@@ -12,6 +12,4 @@ data class DeviceUi(
     val capabilities: Set<DeviceCapability> = DeviceCapability.forPlatform(platform),
     /** usbmuxd's numeric handle; required to open a tunnel to a physical iOS device. */
     val usbmuxDeviceId: Int? = null,
-) {
-    fun supports(capability: DeviceCapability): Boolean = capability in capabilities
-}
+)

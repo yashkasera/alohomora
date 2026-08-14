@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Database: ImageVector
     get() {
         if (_database != null) return _database!!
@@ -26,9 +27,9 @@ val Icons.Database: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(21f, 5f)
-                arcTo(9f, 3f, 0f, false, true, 12f, 8f)
-                arcTo(9f, 3f, 0f, false, true, 3f, 5f)
-                arcTo(9f, 3f, 0f, false, true, 21f, 5f)
+                arcTo(9f, 3f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 12f, y1 = 8f)
+                arcTo(9f, 3f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 3f, y1 = 5f)
+                arcTo(9f, 3f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 21f, y1 = 5f)
                 close()
             }
             path(
@@ -39,7 +40,7 @@ val Icons.Database: ImageVector
             ) {
                 moveTo(3f, 5f)
                 verticalLineTo(19f)
-                arcTo(9f, 3f, 0f, false, false, 21f, 19f)
+                arcTo(9f, 3f, 0f, isMoreThanHalf = false, isPositiveArc = false, x1 = 21f, y1 = 19f)
                 verticalLineTo(5f)
             }
             path(
@@ -49,12 +50,13 @@ val Icons.Database: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(3f, 12f)
-                arcTo(9f, 3f, 0f, false, false, 21f, 12f)
+                arcTo(9f, 3f, 0f, isMoreThanHalf = false, isPositiveArc = false, x1 = 21f, y1 = 12f)
             }
         }.build()
 
         return _database!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _database: ImageVector? = null
 

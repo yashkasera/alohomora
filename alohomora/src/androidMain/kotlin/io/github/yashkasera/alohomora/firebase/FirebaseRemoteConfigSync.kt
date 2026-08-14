@@ -22,6 +22,7 @@ private const val SOURCE = "Firebase Remote Config"
  * @param remoteConfig the app's `FirebaseRemoteConfig` instance
  * @param type optional type label for all synced flags (default: `"remote_config"`)
  */
+@Suppress("unused")
 fun syncFirebaseRemoteConfig(
     remoteConfig: FirebaseRemoteConfig,
     type: String = "remote_config",

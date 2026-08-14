@@ -16,8 +16,6 @@ internal class SlackShareService(
         Alohomora.config?.slackWebhookUrl
     }
 
-    private fun isConfigured(): Boolean = webhookUrl.isNullOrBlank().not()
-
     suspend fun shareCurl(
         trace: TrafficEntry,
         recipientEmail: String,
@@ -44,19 +42,6 @@ internal class SlackShareService(
         return postToWebhook(message)
     }
 
-    suspend fun shareContent(
-        title: String,
-        content: String,
-        recipientEmail: String,
-    ): Result<Unit> {
-        val message = buildGenericMessage(
-            title = title,
-            content = content,
-            recipientEmail = recipientEmail,
-        )
-        return postToWebhook(message)
-    }
-
     private fun buildSlackMessage(
         trace: TrafficEntry,
         recipientEmail: String,
@@ -69,23 +54,6 @@ internal class SlackShareService(
             appendLine("• Status: ${trace.status ?: "N/A"} ${trace.statusMessage()}")
             appendLine("• Duration: ${trace.duration ?: 0}ms")
             appendLine("• Time: ${trace.time ?: "N/A"}")
-            appendLine()
-            appendLine(content)
-        }
-        return SlackMessage(
-            content = summary,
-            recipientEmail = recipientEmail,
-            buildIdentifier = Alohomora.identifier,
-        )
-    }
-
-    private fun buildGenericMessage(
-        title: String,
-        content: String,
-        recipientEmail: String,
-    ): SlackMessage {
-        val summary = buildString {
-            appendLine(title)
             appendLine()
             appendLine(content)
         }

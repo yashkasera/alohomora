@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -118,7 +119,7 @@ fun DevToolsDesktopApp(
     screenshotShowToast: Boolean = true,
 ) {
     var activeSection by remember { mutableStateOf(DesktopSection.Traffic) }
-    var searchFocusTrigger by remember { mutableStateOf(0L) }
+    var searchFocusTrigger by remember { mutableLongStateOf(0L) }
 
     val devices by devicesViewModel.devices.collectAsState()
     val adbCommandHistory by devicesViewModel.adbCommandHistory.collectAsState()
@@ -135,7 +136,6 @@ fun DevToolsDesktopApp(
             null,
         )
     }
-    val showMockSheet = showMockRules
     val selectedTraceId by tracesViewModel.selectedTraceId.collectAsState()
     val selectedEventId by eventsViewModel.selectedEventId.collectAsState()
     var selectedDeviceId by remember(initialDeviceId) { mutableStateOf(initialDeviceId) }
@@ -146,7 +146,7 @@ fun DevToolsDesktopApp(
         selectedErrorForSheet != null ||
         selectedTraceId != null ||
         selectedEventId != null ||
-        showMockSheet ||
+        showMockRules ||
         showDeepLinkBuilder ||
         showCommandPalette ||
         showHelp
@@ -206,7 +206,6 @@ fun DevToolsDesktopApp(
 
     val commandActions = buildCommandActions(
         visibleSections = visibleSections,
-        activeSection = activeSection,
         onSectionChange = { activeSection = it },
         isConnected = isConnected,
         packageName = buildInfo?.packageName,
@@ -483,7 +482,6 @@ fun DevToolsDesktopApp(
                                     }
                                 },
                                 onTrafficItemClick = { selectedTrafficForSheet = it },
-                                onErrorClick = { selectedErrorForSheet = it },
                                 onEventViewClick = {},
                                 onTrafficClick = { activeSection = DesktopSection.Traffic },
                                 onEventsClick = { activeSection = DesktopSection.Events },
@@ -601,7 +599,7 @@ fun DevToolsDesktopApp(
             val mockCurrentSession by networkRulesViewModel.currentSession.collectAsState()
             val mockSessions by networkRulesViewModel.sessions.collectAsState()
             MockRulesSideSheet(
-                visible = showMockSheet,
+                visible = showMockRules,
                 rules = mockRules,
                 currentSession = mockCurrentSession,
                 sessions = mockSessions,

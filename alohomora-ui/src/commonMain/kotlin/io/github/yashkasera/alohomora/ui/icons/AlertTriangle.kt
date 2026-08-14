@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.AlertTriangle: ImageVector
     get() {
         if (_alertTriangle != null) return _alertTriangle!!
@@ -27,11 +28,26 @@ val Icons.AlertTriangle: ImageVector
             ) {
                 moveTo(10.29f, 3.86f)
                 lineTo(1.82f, 18f)
-                arcToRelative(2f, 2f, 0f, false, false, 1.71f, 3f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 1.71f,
+                    dy1 = 3f
+                )
                 horizontalLineToRelative(16.94f)
-                arcToRelative(2f, 2f, 0f, false, false, 1.71f, -3f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 1.71f,
+                    dy1 = -3f
+                )
                 lineTo(13.71f, 3.86f)
-                arcToRelative(2f, 2f, 0f, false, false, -3.42f, 0f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -3.42f,
+                    dy1 = 0f
+                )
                 close()
             }
             path(
@@ -57,4 +73,5 @@ val Icons.AlertTriangle: ImageVector
         return _alertTriangle!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _alertTriangle: ImageVector? = null

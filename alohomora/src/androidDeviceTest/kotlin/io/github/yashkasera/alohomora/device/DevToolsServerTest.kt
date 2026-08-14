@@ -17,6 +17,7 @@ import java.net.SocketTimeoutException
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -114,7 +115,7 @@ class DevToolsServerTest {
         runBlocking {
             val socket = connectClient(PORT_HANDSHAKE)
             try {
-                withTimeout(READ_TIMEOUT_MILLIS) {
+                withTimeout(READ_TIMEOUT_MILLIS.milliseconds) {
                     assertNotNull(
                         socket.readUntil { it is AuthChallengeMessage },
                         "the device never sent AUTH_CHALLENGE",
@@ -166,7 +167,7 @@ class DevToolsServerTest {
                 // Reading the challenge is what proves the first client is *attached*, not merely
                 // accepted. `attachClient` rejects on `activeConnection != null`, so without this
                 // the second connect could win the race and the test would assert nothing.
-                withTimeout(READ_TIMEOUT_MILLIS) {
+                withTimeout(READ_TIMEOUT_MILLIS.milliseconds) {
                     assertNotNull(
                         incumbent.readUntil { it is AuthChallengeMessage },
                         "the device never sent AUTH_CHALLENGE to the first client",
@@ -210,7 +211,7 @@ class DevToolsServerTest {
                 return client.connect(LOOPBACK, port, CONNECT_TIMEOUT_MILLIS)
             } catch (e: Exception) {
                 if (System.currentTimeMillis() >= deadline) throw e
-                delay(RETRY_INTERVAL_MILLIS)
+                delay(RETRY_INTERVAL_MILLIS.milliseconds)
             }
         }
     }

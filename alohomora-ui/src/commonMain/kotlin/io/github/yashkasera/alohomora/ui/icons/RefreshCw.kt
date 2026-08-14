@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.RefreshCw: ImageVector
     get() {
         if (_refreshCw != null) return _refreshCw!!
@@ -26,8 +27,17 @@ val Icons.RefreshCw: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(3f, 12f)
-                arcToRelative(9f, 9f, 0f, false, true, 9f, -9f)
-                arcToRelative(9.75f, 9.75f, 0f, false, true, 6.74f, 2.74f)
+                arcToRelative(9f, 9f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = 9f,
+                    dy1 = -9f
+                )
+                arcToRelative(9.75f, 9.75f, 0f, isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = 6.74f,
+                    dy1 = 2.74f
+                )
                 lineTo(21f, 8f)
             }
             path(
@@ -47,8 +57,17 @@ val Icons.RefreshCw: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(21f, 12f)
-                arcToRelative(9f, 9f, 0f, false, true, -9f, 9f)
-                arcToRelative(9.75f, 9.75f, 0f, false, true, -6.74f, -2.74f)
+                arcToRelative(9f, 9f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = -9f,
+                    dy1 = 9f
+                )
+                arcToRelative(9.75f, 9.75f, 0f, isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = -6.74f,
+                    dy1 = -2.74f
+                )
                 lineTo(3f, 16f)
             }
             path(
@@ -66,5 +85,6 @@ val Icons.RefreshCw: ImageVector
         return _refreshCw!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _refreshCw: ImageVector? = null
 

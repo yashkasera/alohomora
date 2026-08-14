@@ -7,6 +7,7 @@ internal interface DevToolsAppDatabaseProvider {
     fun resolvePath(name: String): String?
 }
 
+@Suppress("unused")
 internal object EmptyAppDatabaseProvider : DevToolsAppDatabaseProvider {
     override fun listDatabases(): List<AppDatabaseInfo> = emptyList()
 

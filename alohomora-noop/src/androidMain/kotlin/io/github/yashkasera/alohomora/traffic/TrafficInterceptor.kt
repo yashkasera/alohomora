@@ -9,6 +9,7 @@ import okhttp3.Response
  * Passes the chain straight through without touching the request or response body, so a
  * release build pays one virtual call per request and captures nothing.
  */
+@Suppress("unused")
 class TrafficInterceptor(
     @Suppress("UNUSED_PARAMETER") collector: TrafficCollector = TrafficCollector(),
 ) : Interceptor {
@@ -19,6 +20,7 @@ class TrafficInterceptor(
  * No-op mirror of `:alohomora`'s `TrafficCollector`, present only so the [TrafficInterceptor]
  * constructor signature matches across the two artifacts.
  */
+@Suppress("unused")
 class TrafficCollector(
     @Suppress("UNUSED_PARAMETER") showNotification: Boolean = true,
 ) {

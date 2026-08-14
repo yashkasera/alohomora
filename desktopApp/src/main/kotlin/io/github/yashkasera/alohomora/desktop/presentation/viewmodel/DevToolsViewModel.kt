@@ -51,7 +51,7 @@ class DevToolsViewModel(
         DevToolsUiState(connection, deviceId, switching)
     }.stateIn(
         scope,
-        kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+        SharingStarted.WhileSubscribed(5000),
         DevToolsUiState(
             connection = repository.connectionState.value,
             currentDeviceId = repository.currentDeviceId.value,
@@ -72,33 +72,11 @@ class DevToolsViewModel(
         switchDeviceUseCase(target, deviceId)
     }
 
-    fun switchDevice(host: String, port: Int, deviceId: String? = null) {
-        switchDeviceUseCase(host, port, deviceId)
-    }
-
-    fun requestInitialState() = requestInitialStateUseCase()
-
     fun submitOtp(otp: String) = repository.submitOtp(otp)
-
-    fun markTrafficViewed(id: String) = repository.markTrafficViewed(id)
-
-    fun markEventViewed(id: Long) = repository.markEventViewed(id)
 
     fun markErrorViewed(id: Long) = repository.markErrorViewed(id)
 
-    fun clearTraffic() = repository.clearCaptured(traces = true)
-
-    fun clearEvents() = repository.clearCaptured(events = true)
-
     fun clearErrors() = repository.clearCaptured(errors = true)
-
-    fun requestDatabaseSchema(databaseName: String) = requestDatabaseSchemaUseCase(databaseName)
-
-    fun requestDatabaseTable(databaseName: String, tableName: String, limit: Int = 200) {
-        requestDatabaseTableUseCase(databaseName, tableName, limit)
-    }
-
-    fun requestCacheValue(key: String) = requestCacheValueUseCase(key)
 
     /**
      * Sends [request] to the device to be re-issued through the app's own HTTP client.
@@ -113,9 +91,6 @@ class DevToolsViewModel(
 
     private val _slackShareError = MutableStateFlow<String?>(null)
     val slackShareError: StateFlow<String?> = _slackShareError.asStateFlow()
-
-    fun isSlackConfigured(): Boolean =
-        repository.buildInfo.value?.slackWebhookUrl.isNullOrBlank().not()
 
     fun shareCurlToSlack(trace: TrafficEntry, email: String, onSuccess: () -> Unit = {}) {
         scope.launch {
@@ -201,8 +176,6 @@ class DevToolsViewModel(
     }
 
     val traffic = repository.traffic
-    val databaseSnapshot = repository.databaseSnapshot
-    val cacheState = repository.cacheState
     val buildInfo = repository.buildInfo
     val gitHistory = repository.gitHistory
     val replayState = repository.replayState

@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.mcp
 
 import io.github.yashkasera.alohomora.desktop.mcp.McpConfirmationBroker.Companion.TIMEOUT_MILLIS
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,7 +46,7 @@ class McpConfirmationBroker {
         // cannot both observe null and overwrite each other. The loser is denied rather than queued.
         if (!_pending.compareAndSet(null, request)) return false
         return try {
-            withTimeoutOrNull(TIMEOUT_MILLIS) { deferred.await() } ?: false
+            withTimeoutOrNull(TIMEOUT_MILLIS.milliseconds) { deferred.await() } ?: false
         } finally {
             _pending.value = null
         }

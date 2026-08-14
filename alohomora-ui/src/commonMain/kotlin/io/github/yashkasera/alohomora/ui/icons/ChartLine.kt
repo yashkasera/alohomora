@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.ChartLine: ImageVector
     get() {
         if (_chartLine != null) return _chartLine!!
@@ -27,7 +28,12 @@ val Icons.ChartLine: ImageVector
             ) {
                 moveTo(3f, 3f)
                 verticalLineToRelative(16f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, 2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 2f,
+                    dy1 = 2f
+                )
                 horizontalLineToRelative(16f)
             }
             path(
@@ -46,5 +52,6 @@ val Icons.ChartLine: ImageVector
         return _chartLine!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _chartLine: ImageVector? = null
 

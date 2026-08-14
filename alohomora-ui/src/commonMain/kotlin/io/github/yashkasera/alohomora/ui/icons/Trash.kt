@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Trash: ImageVector
     get() {
         if (_trash != null) return _trash!!
@@ -27,9 +28,19 @@ val Icons.Trash: ImageVector
             ) {
                 moveTo(19f, 6f)
                 verticalLineToRelative(14f)
-                arcToRelative(2f, 2f, 0f, false, true, -2f, 2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = -2f,
+                    dy1 = 2f
+                )
                 horizontalLineTo(7f)
-                arcToRelative(2f, 2f, 0f, false, true, -2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = -2f,
+                    dy1 = -2f
+                )
                 verticalLineTo(6f)
             }
             path(
@@ -49,9 +60,19 @@ val Icons.Trash: ImageVector
             ) {
                 moveTo(8f, 6f)
                 verticalLineTo(4f)
-                arcToRelative(2f, 2f, 0f, false, true, 2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = 2f,
+                    dy1 = -2f
+                )
                 horizontalLineToRelative(4f)
-                arcToRelative(2f, 2f, 0f, false, true, 2f, 2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = 2f,
+                    dy1 = 2f
+                )
                 verticalLineToRelative(2f)
             }
         }.build()
@@ -59,5 +80,6 @@ val Icons.Trash: ImageVector
         return _trash!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _trash: ImageVector? = null
 

@@ -8,6 +8,7 @@ package io.github.yashkasera.alohomora.replay
  * consumer compiling one call site against both artifacts is the fully qualified name and shape,
  * and those are identical. **Keep in lockstep with the real declarations.**
  */
+@Suppress("unused")
 data class ReplayRequest(
     val sourceTraceId: String,
     val method: String,
@@ -18,6 +19,7 @@ data class ReplayRequest(
 )
 
 /** No-op mirror of `:alohomora`'s `ReplayOutcome`. */
+@Suppress("unused")
 sealed interface ReplayOutcome {
     data class Sent(val traceId: String? = null) : ReplayOutcome
     data class Failed(val reason: String) : ReplayOutcome
@@ -29,6 +31,7 @@ sealed interface ReplayOutcome {
  * A release build registers one and it is never invoked, so the app's client is never reached from
  * here. R8 removes both the registration call and the lambda.
  */
+@Suppress("unused")
 fun interface TrafficReplayHandler {
     suspend fun replay(request: ReplayRequest): ReplayOutcome
 }

@@ -10,6 +10,7 @@ import platform.UIKit.UIViewController
  * defaults: expressing it as `onClose: (() -> Unit)? = null` would have broken every existing
  * `MainKt.MainViewController()` call site in Swift.
  */
+@Suppress("unused")
 fun MainViewController(): UIViewController = ComposeUIViewController {
     AlohomoraApp()
 }

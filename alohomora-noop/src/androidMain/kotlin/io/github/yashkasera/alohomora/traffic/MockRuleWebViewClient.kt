@@ -11,6 +11,7 @@ import android.webkit.WebViewClient
  * Delegates everything to the wrapped client (or default behavior). Present so consumers
  * can reference the class unconditionally across debug and release variants.
  */
+@Suppress("unused")
 class MockRuleWebViewClient(
     private val delegate: WebViewClient? = null,
 ) : WebViewClient() {

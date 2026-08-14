@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /** No-op mirror of `:alohomora`'s `CustomScreenPlugin`. Must match the debug version exactly. */
+@Suppress("unused")
 interface CustomScreenPlugin {
     val id: String
     val title: String

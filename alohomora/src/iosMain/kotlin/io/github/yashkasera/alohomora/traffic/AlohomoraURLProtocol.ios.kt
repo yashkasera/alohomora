@@ -76,7 +76,8 @@ private const val HANDLED_KEY = "AlohomoraHandled"
  *
  * Limitations: does not intercept URLSession background upload/download tasks or WebSocket frames.
  */
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+@Suppress("unused")
 class AlohomoraURLProtocol :
     NSURLProtocol,
     NSURLSessionDataDelegateProtocol {
@@ -238,7 +239,7 @@ class AlohomoraURLProtocol :
         val response = NSHTTPURLResponse(
             url, mockRule.statusCode.toLong(), "HTTP/1.1",
             mapOf("Content-Type" to mockRule.contentType),
-        ) ?: return
+        )
 
         client?.URLProtocol(
             this,
@@ -356,7 +357,7 @@ class AlohomoraURLProtocol :
  * silently return false and capture nothing, with no compile error. It also resolved to null
  * outside the framework (e.g. in unit tests), making the behaviour untestable.
  */
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 private val alohomoraProtocolClass: ObjCClass get() = AlohomoraURLProtocol
 
 // Swift-facing API on the Alohomora singleton, since companion methods on a class
@@ -371,6 +372,7 @@ private val alohomoraProtocolClass: ObjCClass get() = AlohomoraURLProtocol
  * [alohomoraURLSessionConfiguration] or [installURLProtocol] as well.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+@Suppress("UnusedReceiverParameter", "unused")
 fun Alohomora.registerURLProtocol(): Boolean =
     NSURLProtocol.registerClass(alohomoraProtocolClass)
 
@@ -384,6 +386,7 @@ fun Alohomora.registerURLProtocol(): Boolean =
  * @return true if the class was found and installed.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+@Suppress("UnusedReceiverParameter")
 fun Alohomora.installURLProtocol(configuration: NSURLSessionConfiguration): Boolean {
     val cls = alohomoraProtocolClass
     val existing = configuration.protocolClasses.orEmpty()
@@ -433,6 +436,7 @@ fun Alohomora.alohomoraURLSessionConfiguration(
 
 /** Unregister the global [AlohomoraURLProtocol] interceptor. */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+@Suppress("UnusedReceiverParameter", "unused")
 fun Alohomora.unregisterURLProtocol() {
     NSURLProtocol.unregisterClass(alohomoraProtocolClass)
 }

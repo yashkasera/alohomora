@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.ScrollText: ImageVector
     get() {
         if (_scrollText != null) return _scrollText!!
@@ -45,7 +46,12 @@ val Icons.ScrollText: ImageVector
             ) {
                 moveTo(19f, 17f)
                 verticalLineTo(5f)
-                arcToRelative(2f, 2f, 0f, false, false, -2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -2f,
+                    dy1 = -2f
+                )
                 horizontalLineTo(4f)
             }
             path(
@@ -56,15 +62,40 @@ val Icons.ScrollText: ImageVector
             ) {
                 moveTo(8f, 21f)
                 horizontalLineToRelative(12f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 2f,
+                    dy1 = -2f
+                )
                 verticalLineToRelative(-1f)
-                arcToRelative(1f, 1f, 0f, false, false, -1f, -1f)
+                arcToRelative(1f, 1f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -1f,
+                    dy1 = -1f
+                )
                 horizontalLineTo(11f)
-                arcToRelative(1f, 1f, 0f, false, false, -1f, 1f)
+                arcToRelative(1f, 1f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -1f,
+                    dy1 = 1f
+                )
                 verticalLineToRelative(1f)
-                arcToRelative(2f, 2f, 0f, true, true, -4f, 0f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = true,
+                    dx1 = -4f,
+                    dy1 = 0f
+                )
                 verticalLineTo(5f)
-                arcToRelative(2f, 2f, 0f, true, false, -4f, 0f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = -4f,
+                    dy1 = 0f
+                )
                 verticalLineToRelative(2f)
             }
         }.build()
@@ -72,4 +103,5 @@ val Icons.ScrollText: ImageVector
         return _scrollText!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _scrollText: ImageVector? = null

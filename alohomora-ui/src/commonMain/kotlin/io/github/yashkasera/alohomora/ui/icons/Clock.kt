@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Clock: ImageVector
     get() {
         if (_clock != null) return _clock!!
@@ -36,9 +37,19 @@ val Icons.Clock: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(22f, 12f)
-                arcTo(10f, 10f, 0f, false, true, 12f, 22f)
-                arcTo(10f, 10f, 0f, false, true, 2f, 12f)
-                arcTo(10f, 10f, 0f, false, true, 22f, 12f)
+                arcTo(10f, 10f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    x1 = 12f,
+                    y1 = 22f
+                )
+                arcTo(10f, 10f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 2f, y1 = 12f)
+                arcTo(10f, 10f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    x1 = 22f,
+                    y1 = 12f
+                )
                 close()
             }
         }.build()
@@ -46,5 +57,6 @@ val Icons.Clock: ImageVector
         return _clock!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _clock: ImageVector? = null
 

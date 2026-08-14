@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
  * with [GitGraph] (Git History) the same way, and `ChartGantt` names the *view* rather than the
  * domain.
  */
+@Suppress("UnusedReceiverParameter")
 val Icons.Waypoints: ImageVector
     get() {
         if (_waypoints != null) return _waypoints!!
@@ -73,9 +74,15 @@ private fun ImageVector.Builder.spanNode(cx: Float, cy: Float, r: Float = 2f) {
         strokeLineJoin = StrokeJoin.Round,
     ) {
         moveTo(cx - r, cy)
-        arcToRelative(r, r, 0f, true, false, 2 * r, 0f)
-        arcToRelative(r, r, 0f, true, false, -2 * r, 0f)
+        arcToRelative(r, r, 0f, isMoreThanHalf = true, isPositiveArc = false, dx1 = 2 * r, dy1 = 0f)
+        arcToRelative(r, r, 0f,
+            isMoreThanHalf = true,
+            isPositiveArc = false,
+            dx1 = -2 * r,
+            dy1 = 0f
+        )
     }
 }
 
+@Suppress("ObjectPropertyName")
 private var _waypoints: ImageVector? = null

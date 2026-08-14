@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.HardDrive: ImageVector
     get() {
         if (_hardDrive != null) return _hardDrive!!
@@ -37,14 +38,34 @@ val Icons.HardDrive: ImageVector
                 moveTo(5.45f, 5.11f)
                 lineTo(2f, 12f)
                 verticalLineToRelative(6f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, 2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 2f,
+                    dy1 = 2f
+                )
                 horizontalLineToRelative(16f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 2f,
+                    dy1 = -2f
+                )
                 verticalLineToRelative(-6f)
                 lineToRelative(-3.45f, -6.89f)
-                arcTo(2f, 2f, 0f, false, false, 16.76f, 4f)
+                arcTo(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    x1 = 16.76f,
+                    y1 = 4f
+                )
                 horizontalLineTo(7.24f)
-                arcToRelative(2f, 2f, 0f, false, false, -1.79f, 1.11f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -1.79f,
+                    dy1 = 1.11f
+                )
                 close()
             }
             path(
@@ -70,5 +91,6 @@ val Icons.HardDrive: ImageVector
         return _hardDrive!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _hardDrive: ImageVector? = null
 

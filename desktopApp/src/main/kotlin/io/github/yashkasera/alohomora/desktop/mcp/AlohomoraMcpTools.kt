@@ -454,11 +454,13 @@ internal object AlohomoraMcpToolData {
     ): JsonElement {
         val entries = repo.traffic.value
             .asReversed()
+            .asSequence()
             .filter { status == null || it.status == status }
             .filter { method == null || it.method.equals(method, ignoreCase = true) }
             .filter { host == null || it.host?.contains(host, ignoreCase = true) == true }
             .filter { !failedOnly || !it.isSuccessful() }
             .take(limit.coerceAtLeast(0))
+            .toList()
         return buildJsonArray { entries.forEach { add(it.toSummaryJson()) } }
     }
 

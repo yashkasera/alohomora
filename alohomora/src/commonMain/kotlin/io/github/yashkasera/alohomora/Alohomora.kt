@@ -74,6 +74,7 @@ import org.koin.dsl.KoinAppDeclaration
  * Alohomora.trackEvent("user_login", mapOf("user_id" to "123"))
  * ```
  */
+@Suppress("unused")
 object Alohomora {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val initLock = ReentrantLock()

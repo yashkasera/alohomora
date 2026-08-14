@@ -98,10 +98,6 @@ internal class CacheViewModel(
         searchQuery.value = query
     }
 
-    fun clearSearch() {
-        searchQuery.value = ""
-    }
-
     fun getTotalSize(): String {
         return getPreferencesUseCase.getTotalSize(entries.value)
     }

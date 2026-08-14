@@ -6,6 +6,7 @@ import io.github.yashkasera.alohomora.IntentSnapshot
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.DateUtils.Format
 import io.github.yashkasera.alohomora.presentation.ui.screens.navigation.NavigationTimelineMapper.activeSession
+import java.util.Locale
 
 /**
  * One screen the user visited, ready to render as a timeline row.
@@ -208,9 +209,9 @@ internal object NavigationTimelineMapper {
         val hours = ms / (1000 * 60 * 60)
 
         return if (hours > 0) {
-            String.format("%02d:%02d.%02d", hours, minutes, seconds)
+            String.format(Locale.getDefault(), "%02d:%02d.%02d", hours, minutes, seconds)
         } else {
-            String.format("%02d:%02d.%02d", minutes, seconds, (ms % 1000) / 10)
+            String.format(Locale.getDefault(), "%02d:%02d.%02d", minutes, seconds, (ms % 1000) / 10)
         }
     }
 }

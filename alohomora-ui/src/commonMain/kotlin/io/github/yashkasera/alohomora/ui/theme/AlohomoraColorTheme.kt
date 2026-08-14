@@ -26,6 +26,7 @@ val LocalAlohomoraColors = staticCompositionLocalOf<AlohomoraColorTheme> {
     error("No AlohomoraColorTheme provided")
 }
 
+@Suppress("UnusedReceiverParameter")
 val MaterialTheme.alohomoraColors: AlohomoraColorTheme
     @Composable
     @ReadOnlyComposable

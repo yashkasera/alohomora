@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Terminal: ImageVector
     get() {
         if (_terminal != null) return _terminal!!
@@ -43,4 +44,5 @@ val Icons.Terminal: ImageVector
         return _terminal!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _terminal: ImageVector? = null

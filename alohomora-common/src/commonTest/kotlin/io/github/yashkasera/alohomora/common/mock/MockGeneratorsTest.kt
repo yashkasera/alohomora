@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.common.mock
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class MockGeneratorsTest {
@@ -47,8 +48,8 @@ class MockGeneratorsTest {
     fun amountHasTwoDecimalPlaces() {
         val result = MockGenerators.amount(10.0, 100.0)
         val parts = result.split(".")
-        assertTrue(parts.size == 2, "Expected decimal in amount: $result")
-        assertTrue(parts[1].length == 2, "Expected 2 decimal places: $result")
+        assertEquals(parts.size, 2, "Expected decimal in amount: $result")
+        assertEquals(parts[1].length, 2, "Expected 2 decimal places: $result")
     }
 
     @Test

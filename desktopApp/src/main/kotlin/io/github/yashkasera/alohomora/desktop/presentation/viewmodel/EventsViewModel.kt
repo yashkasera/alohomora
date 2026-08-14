@@ -11,6 +11,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.model.EventsTimeWindo
 import io.github.yashkasera.alohomora.desktop.presentation.model.EventsUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.IndexedEvent
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -94,7 +95,7 @@ class EventsViewModel(
                 flow {
                     while (true) {
                         emit(window.floorAt(Clock.System.now().toEpochMilliseconds()))
-                        delay(TICK_MILLIS)
+                        delay(TICK_MILLIS.milliseconds)
                     }
                 }
             }

@@ -17,6 +17,7 @@ import io.github.yashkasera.alohomora.desktop.data.local.toSession
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
 import java.io.File
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
@@ -29,7 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -53,7 +54,7 @@ class NetworkRulesViewModel(
         }
         scope.launch {
             repository.connectionState
-                .filter { it is DevToolsConnection.Connected }
+                .filterIsInstance<DevToolsConnection.Connected>()
                 .collect {
                     sendRules()
                     repository.setThrottleProfile(_throttleProfile.value)
@@ -142,15 +143,6 @@ class NetworkRulesViewModel(
         sendRules()
     }
 
-    fun clearAll() {
-        _throttleProfile.value = ThrottleProfiles.NONE
-        _mockRules.value = emptyList()
-        _currentSession.value = null
-        repository.setThrottleProfile(ThrottleProfiles.NONE)
-        repository.setMockRules(emptyList())
-        scope.launch { sessionStore.setLastActive(null) }
-    }
-
     fun loadSession(id: String) {
         scope.launch {
             val session = sessionStore.loadSession(id) ?: return@launch
@@ -164,15 +156,12 @@ class NetworkRulesViewModel(
     fun saveCurrentSession(name: String) {
         scope.launch {
             val existing = _currentSession.value
-            val session = if (existing != null) {
-                existing.copy(
-                    name = name,
-                    rules = _mockRules.value,
-                    updatedAt = System.currentTimeMillis(),
-                )
-            } else {
-                sessionStore.newSession(name, _mockRules.value)
-            }
+            val session = existing?.copy(
+                name = name,
+                rules = _mockRules.value,
+                updatedAt = System.currentTimeMillis(),
+            )
+                ?: sessionStore.newSession(name, _mockRules.value)
             sessionStore.saveSession(session)
             sessionStore.setLastActive(session.id)
             _currentSession.value = session
@@ -264,7 +253,7 @@ class NetworkRulesViewModel(
         val session = _currentSession.value ?: return
         autoSaveJob?.cancel()
         autoSaveJob = scope.launch {
-            delay(500)
+            delay(500.milliseconds)
             val updated = session.copy(
                 rules = _mockRules.value,
                 updatedAt = System.currentTimeMillis(),

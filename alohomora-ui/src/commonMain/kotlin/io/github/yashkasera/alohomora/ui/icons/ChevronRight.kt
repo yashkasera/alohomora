@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.ChevronRight: ImageVector
     get() {
         if (_chevronRight != null) return _chevronRight!!
@@ -34,4 +35,5 @@ val Icons.ChevronRight: ImageVector
         return _chevronRight!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _chevronRight: ImageVector? = null

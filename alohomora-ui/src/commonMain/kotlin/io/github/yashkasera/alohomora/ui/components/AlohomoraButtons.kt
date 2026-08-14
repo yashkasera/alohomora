@@ -47,7 +47,7 @@ enum class AlohomoraIconButtonStyle {
 
 object AlohomoraButtonDefaults {
     val shape @Composable get() = MaterialTheme.shapes.small
-    val uppercase: Boolean = true
+    const val uppercase: Boolean = true
     val iconSpacing: Dp = 8.dp
 
     fun contentPadding(size: AlohomoraButtonSize): PaddingValues = when (size) {

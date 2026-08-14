@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Search: ImageVector
     get() {
         if (_search != null) return _search!!
@@ -35,9 +36,9 @@ val Icons.Search: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(19f, 11f)
-                arcTo(8f, 8f, 0f, false, true, 11f, 19f)
-                arcTo(8f, 8f, 0f, false, true, 3f, 11f)
-                arcTo(8f, 8f, 0f, false, true, 19f, 11f)
+                arcTo(8f, 8f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 11f, y1 = 19f)
+                arcTo(8f, 8f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 3f, y1 = 11f)
+                arcTo(8f, 8f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 19f, y1 = 11f)
                 close()
             }
         }.build()
@@ -45,5 +46,6 @@ val Icons.Search: ImageVector
         return _search!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _search: ImageVector? = null
 

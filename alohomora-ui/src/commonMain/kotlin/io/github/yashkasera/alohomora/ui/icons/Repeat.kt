@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Repeat: ImageVector
     get() {
         if (_repeat != null) return _repeat!!
@@ -37,7 +38,12 @@ val Icons.Repeat: ImageVector
             ) {
                 moveTo(3f, 11f)
                 verticalLineToRelative(-1f)
-                arcToRelative(4f, 4f, 0f, false, true, 4f, -4f)
+                arcToRelative(4f, 4f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = 4f,
+                    dy1 = -4f
+                )
                 horizontalLineToRelative(14f)
             }
             path(
@@ -58,7 +64,12 @@ val Icons.Repeat: ImageVector
             ) {
                 moveTo(21f, 13f)
                 verticalLineToRelative(1f)
-                arcToRelative(4f, 4f, 0f, false, true, -4f, 4f)
+                arcToRelative(4f, 4f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = -4f,
+                    dy1 = 4f
+                )
                 horizontalLineTo(3f)
             }
         }.build()
@@ -66,4 +77,5 @@ val Icons.Repeat: ImageVector
         return _repeat!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _repeat: ImageVector? = null

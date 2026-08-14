@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Route: ImageVector
     get() {
         if (_route != null) return _route!!
@@ -26,8 +27,18 @@ val Icons.Route: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(3f, 19f)
-                arcToRelative(3f, 3f, 0f, true, false, 6f, 0f)
-                arcToRelative(3f, 3f, 0f, true, false, -6f, 0f)
+                arcToRelative(3f, 3f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 6f,
+                    dy1 = 0f
+                )
+                arcToRelative(3f, 3f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = -6f,
+                    dy1 = 0f
+                )
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -37,9 +48,19 @@ val Icons.Route: ImageVector
             ) {
                 moveTo(9f, 19f)
                 horizontalLineToRelative(8.5f)
-                arcToRelative(3.5f, 3.5f, 0f, false, false, 0f, -7f)
+                arcToRelative(3.5f, 3.5f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 0f,
+                    dy1 = -7f
+                )
                 horizontalLineToRelative(-11f)
-                arcToRelative(3.5f, 3.5f, 0f, false, true, 0f, -7f)
+                arcToRelative(3.5f, 3.5f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = 0f,
+                    dy1 = -7f
+                )
                 horizontalLineTo(15f)
             }
             path(
@@ -49,12 +70,23 @@ val Icons.Route: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(15f, 5f)
-                arcToRelative(3f, 3f, 0f, true, false, 6f, 0f)
-                arcToRelative(3f, 3f, 0f, true, false, -6f, 0f)
+                arcToRelative(3f, 3f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 6f,
+                    dy1 = 0f
+                )
+                arcToRelative(3f, 3f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = -6f,
+                    dy1 = 0f
+                )
             }
         }.build()
 
         return _route!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _route: ImageVector? = null

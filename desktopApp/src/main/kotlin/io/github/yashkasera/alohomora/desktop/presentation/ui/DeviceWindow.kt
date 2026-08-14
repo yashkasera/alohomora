@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -57,7 +58,7 @@ fun DeviceWindow(
     var showCommandPalette by remember { mutableStateOf(false) }
     var showDeepLinkBuilder by remember { mutableStateOf(false) }
     var showMockRules by remember { mutableStateOf(false) }
-    var zoomScale by remember { mutableStateOf(1.0f) }
+    var zoomScale by remember { mutableFloatStateOf(1.0f) }
 
     val zoomIn = { zoomScale = (zoomScale + 0.1f).coerceAtMost(2.0f) }
     val zoomOut = { zoomScale = (zoomScale - 0.1f).coerceAtLeast(0.5f) }
@@ -235,10 +236,9 @@ fun DeviceWindow(
 
             CompositionLocalProvider(LocalDensity provides scaledDensity) {
                 Column {
-                    val pending = updateInfo
-                    if (pending != null && !updateDismissed) {
+                    if (updateInfo != null && !updateDismissed) {
                         UpdateBanner(
-                            updateInfo = pending,
+                            updateInfo = updateInfo,
                             onDismiss = onDismissUpdate,
                         )
                     }

@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.vpn
 
 import android.content.Intent
 import android.net.VpnService
+import android.os.Build
 import io.github.yashkasera.alohomora.ActivityTracker
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.VpnThrottleState
@@ -122,7 +123,9 @@ internal object VpnThrottleController {
             action = AlohomoraVpnService.ACTION_START
             putExtra(AlohomoraVpnService.EXTRA_PROFILE, Json.encodeToString(profile))
         }
-        context.startForegroundService(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        }
     }
 
     fun disable() {

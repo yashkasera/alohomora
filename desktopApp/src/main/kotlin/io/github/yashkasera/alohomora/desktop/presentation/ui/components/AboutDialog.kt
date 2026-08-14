@@ -73,15 +73,13 @@ fun AboutDialog(
                     .focusable()
                     .onPreviewKeyEvent { event ->
                         if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                        when {
-                            event.key == Key.Escape -> {
+                        when (event.key) {
+                            Key.Escape -> {
                                 onDismiss(); true
                             }
-
-                            event.key == Key.W && event.isShortcutModifier() -> {
+                            Key.W if event.isShortcutModifier() -> {
                                 onDismiss(); true
                             }
-
                             else -> false
                         }
                     },

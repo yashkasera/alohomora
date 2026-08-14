@@ -282,8 +282,8 @@ internal fun OverviewScreen(
                 Column {
                     DevToolsStatusCard(
                         state = state,
-                        onToggle = { viewModel.onEvent(OverviewEvent.ToggleServer(it)) },
-                        onPortChange = { viewModel.onEvent(OverviewEvent.PortChanged(it)) },
+                        onToggle = { isEnabled -> viewModel.onEvent(OverviewEvent.ToggleServer(isEnabled)) },
+                        onPortChange = { port -> viewModel.onEvent(OverviewEvent.PortChanged(port)) },
                     )
                 }
             }
@@ -326,9 +326,9 @@ internal fun OverviewScreen(
             }
             items(
                 items = defaultModules,
-                key = { it.gridKey },
-                span = {
-                    if (it.isInverse) GridItemSpan(2)
+                key = { module -> module.gridKey },
+                span = { module ->
+                    if (module.isInverse) GridItemSpan(2)
                     else GridItemSpan(1)
                 },
             ) { modules ->
@@ -352,7 +352,7 @@ internal fun OverviewScreen(
                         )
                     }
                 }
-                items(plugins, key = { it.gridKey }) { module ->
+                items(plugins, key = { plugin -> plugin.gridKey }) { module ->
                     ModuleCard(
                         module,
                         onNavigate = onNavigate,

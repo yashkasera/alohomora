@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Key: ImageVector
     get() {
         if (_key != null) return _key!!
@@ -27,9 +28,19 @@ val Icons.Key: ImageVector
             ) {
                 moveToRelative(15.5f, 7.5f)
                 lineToRelative(2.3f, 2.3f)
-                arcToRelative(1f, 1f, 0f, false, false, 1.4f, 0f)
+                arcToRelative(1f, 1f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 1.4f,
+                    dy1 = 0f
+                )
                 lineToRelative(2.1f, -2.1f)
-                arcToRelative(1f, 1f, 0f, false, false, 0f, -1.4f)
+                arcToRelative(1f, 1f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 0f,
+                    dy1 = -1.4f
+                )
                 lineTo(19f, 4f)
             }
             path(
@@ -48,12 +59,23 @@ val Icons.Key: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(2.0f, 15.5f)
-                arcToRelative(5.5f, 5.5f, 0f, true, false, 11.0f, 0f)
-                arcToRelative(5.5f, 5.5f, 0f, true, false, -11.0f, 0f)
+                arcToRelative(5.5f, 5.5f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 11.0f,
+                    dy1 = 0f
+                )
+                arcToRelative(5.5f, 5.5f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = -11.0f,
+                    dy1 = 0f
+                )
             }
         }.build()
 
         return _key!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _key: ImageVector? = null

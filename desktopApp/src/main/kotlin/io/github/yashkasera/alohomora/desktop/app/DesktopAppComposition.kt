@@ -67,8 +67,6 @@ class DesktopAppComposition(
     val networkRulesViewModel: NetworkRulesViewModel
 
     /** Everything [close] has to release. Held so per-window teardown is complete. */
-    private val devToolsRepositoryRef: DevToolsRepositoryImpl
-
     /**
      * This window's captured data, exposed read-only for the app-scoped MCP server.
      *
@@ -78,7 +76,7 @@ class DesktopAppComposition(
      * state through it.
      */
     val devToolsRepository: io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
-        get() = devToolsRepositoryRef
+        field: DevToolsRepositoryImpl
 
     private val slackHttpClientRef: HttpClient
 
@@ -111,7 +109,7 @@ class DesktopAppComposition(
             replayStore = replayStore,
         )
 
-        devToolsRepositoryRef = devToolsRepository
+        this.devToolsRepository = devToolsRepository
 
         // Built only when this composition actually owns the DevicesViewModel. Previously
         // AdbRepositoryImpl (and its CoroutineScope) plus six use cases were constructed
@@ -243,7 +241,7 @@ class DesktopAppComposition(
         eventsViewModel.close()
         trafficViewModel.close()
         networkRulesViewModel.close()
-        devToolsRepositoryRef.close()
+        devToolsRepository.close()
         // Only if we built it — a shared view model outlives this window.
         if (ownsDevicesViewModel) devicesViewModel.close()
         slackHttpClientRef.close()

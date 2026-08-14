@@ -62,6 +62,7 @@ import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import java.awt.Dimension
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -123,10 +124,9 @@ fun LauncherWindow(
                     .padding(top = if (isMacOs) MacTitleBarHeight else 0.dp),
             ) {
                 Column {
-                    val pending = updateInfo
-                    if (pending != null && !updateDismissed) {
+                    if (updateInfo != null && !updateDismissed) {
                         UpdateBanner(
-                            updateInfo = pending,
+                            updateInfo = updateInfo,
                             onDismiss = onDismissUpdate,
                         )
                     }
@@ -168,7 +168,7 @@ private fun LauncherContent(
     LaunchedEffect(Unit) {
         while (true) {
             devicesViewModel.refreshDevices()
-            delay(3000)
+            delay(3000.milliseconds)
         }
     }
 

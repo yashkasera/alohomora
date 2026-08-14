@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 
 class LogcatViewModel(
     private val repository: LogcatRepository,
-    private val observeLogcatUseCase: ObserveLogcatUseCase,
+    observeLogcatUseCase: ObserveLogcatUseCase,
     private val startLogcatUseCase: StartLogcatUseCase,
     private val stopLogcatUseCase: StopLogcatUseCase,
     private val clearLogcatUseCase: ClearLogcatUseCase,

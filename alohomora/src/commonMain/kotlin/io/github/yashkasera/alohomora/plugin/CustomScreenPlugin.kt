@@ -26,6 +26,7 @@ import kotlinx.atomicfu.locks.withLock
  * Alohomora.registerPlugin(MyFeatureFlagsScreen())
  * ```
  */
+@Suppress("unused")
 interface CustomScreenPlugin {
     /**
      * Unique identifier for this screen.
@@ -108,6 +109,7 @@ internal interface InternalPlugin
 /**
  * Registry for managing custom screen plugins.
  */
+@Suppress("unused")
 internal object PluginRegistry {
     private val lock = ReentrantLock()
 

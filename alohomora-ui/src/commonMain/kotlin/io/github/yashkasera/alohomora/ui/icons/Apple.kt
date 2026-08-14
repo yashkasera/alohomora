@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Apple: ImageVector
     get() {
         if (_apple != null) return _apple!!
@@ -29,7 +30,11 @@ val Icons.Apple: ImageVector
                 curveToRelative(-0.048f, -0.096f, -2.325f, -1.234f, -2.113f, -3.422f)
                 reflectiveCurveToRelative(1.675f, -2.789f, 1.698f, -2.854f)
                 reflectiveCurveToRelative(-0.597f, -0.79f, -1.254f, -1.157f)
-                arcToRelative(3.7f, 3.7f, 0f, false, false, -1.563f, -0.434f)
+                arcToRelative(3.7f, 3.7f, 0f, isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -1.563f,
+                    dy1 = -0.434f
+                )
                 curveToRelative(-0.108f, -0.003f, -0.483f, -0.095f, -1.254f, 0.116f)
                 curveToRelative(-0.508f, 0.139f, -1.653f, 0.589f, -1.968f, 0.607f)
                 curveToRelative(-0.316f, 0.018f, -1.256f, -0.522f, -2.267f, -0.665f)
@@ -57,7 +62,11 @@ val Icons.Apple: ImageVector
                 curveToRelative(-0.048f, -0.096f, -2.325f, -1.234f, -2.113f, -3.422f)
                 reflectiveCurveToRelative(1.675f, -2.789f, 1.698f, -2.854f)
                 reflectiveCurveToRelative(-0.597f, -0.79f, -1.254f, -1.157f)
-                arcToRelative(3.7f, 3.7f, 0f, false, false, -1.563f, -0.434f)
+                arcToRelative(3.7f, 3.7f, 0f, isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -1.563f,
+                    dy1 = -0.434f
+                )
                 curveToRelative(-0.108f, -0.003f, -0.483f, -0.095f, -1.254f, 0.116f)
                 curveToRelative(-0.508f, 0.139f, -1.653f, 0.589f, -1.968f, 0.607f)
                 curveToRelative(-0.316f, 0.018f, -1.256f, -0.522f, -2.267f, -0.665f)
@@ -78,5 +87,6 @@ val Icons.Apple: ImageVector
         return _apple!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _apple: ImageVector? = null
 

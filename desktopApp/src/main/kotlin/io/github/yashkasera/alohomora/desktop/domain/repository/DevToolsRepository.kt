@@ -59,9 +59,6 @@ interface DevToolsRepository {
     /** Convenience for TCP targets (adb forward, or the iOS Simulator's shared loopback). */
     fun connect(host: String, port: Int) = connect(DevToolsTarget.Tcp(host, port))
 
-    fun switchDevice(host: String, port: Int, deviceId: String? = null) =
-        switchDevice(DevToolsTarget.Tcp(host, port), deviceId)
-
     fun disconnect()
     fun submitOtp(otp: String)
 

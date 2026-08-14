@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Camera: ImageVector
     get() {
         if (_camera != null) return _camera!!
@@ -29,13 +30,33 @@ val Icons.Camera: ImageVector
                 horizontalLineToRelative(-5f)
                 lineTo(7f, 7f)
                 horizontalLineTo(4f)
-                arcToRelative(2f, 2f, 0f, false, false, -2f, 2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -2f,
+                    dy1 = 2f
+                )
                 verticalLineToRelative(9f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, 2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 2f,
+                    dy1 = 2f
+                )
                 horizontalLineToRelative(16f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 2f,
+                    dy1 = -2f
+                )
                 verticalLineTo(9f)
-                arcToRelative(2f, 2f, 0f, false, false, -2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -2f,
+                    dy1 = -2f
+                )
                 horizontalLineToRelative(-3f)
                 lineToRelative(-2.5f, -3f)
                 close()
@@ -47,12 +68,23 @@ val Icons.Camera: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(9f, 13f)
-                arcToRelative(3f, 3f, 0f, true, false, 6f, 0f)
-                arcToRelative(3f, 3f, 0f, true, false, -6f, 0f)
+                arcToRelative(3f, 3f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 6f,
+                    dy1 = 0f
+                )
+                arcToRelative(3f, 3f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = -6f,
+                    dy1 = 0f
+                )
             }
         }.build()
 
         return _camera!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _camera: ImageVector? = null

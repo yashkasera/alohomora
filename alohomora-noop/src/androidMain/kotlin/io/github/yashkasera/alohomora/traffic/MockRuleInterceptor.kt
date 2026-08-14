@@ -9,6 +9,7 @@ import okhttp3.Response
  * Passes the chain straight through. Present so consumers can reference the class
  * unconditionally across debug and release variants.
  */
+@Suppress("unused")
 class MockRuleInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response = chain.proceed(chain.request())
 }

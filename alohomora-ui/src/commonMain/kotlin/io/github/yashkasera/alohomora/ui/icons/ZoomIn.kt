@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.ZoomIn: ImageVector
     get() {
         if (_zoomIn != null) return _zoomIn!!
@@ -25,8 +26,18 @@ val Icons.ZoomIn: ImageVector
                 // Circle
                 moveTo(11f, 11f)
                 moveToRelative(-8f, 0f)
-                arcToRelative(8f, 8f, 0f, true, true, 16f, 0f)
-                arcToRelative(8f, 8f, 0f, true, true, -16f, 0f)
+                arcToRelative(8f, 8f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = true,
+                    dx1 = 16f,
+                    dy1 = 0f
+                )
+                arcToRelative(8f, 8f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = true,
+                    dx1 = -16f,
+                    dy1 = 0f
+                )
                 // Search line
                 moveTo(21f, 21f)
                 lineToRelative(-4.35f, -4.35f)
@@ -41,4 +52,5 @@ val Icons.ZoomIn: ImageVector
         return _zoomIn!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _zoomIn: ImageVector? = null

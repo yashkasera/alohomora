@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Eye: ImageVector
     get() {
         if (_eye != null) return _eye!!
@@ -39,8 +40,8 @@ val Icons.Eye: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(12f, 9f)
-                arcTo(3f, 3f, 0f, true, true, 12f, 15f)
-                arcTo(3f, 3f, 0f, true, true, 12f, 9f)
+                arcTo(3f, 3f, 0f, isMoreThanHalf = true, isPositiveArc = true, x1 = 12f, y1 = 15f)
+                arcTo(3f, 3f, 0f, isMoreThanHalf = true, isPositiveArc = true, x1 = 12f, y1 = 9f)
                 close()
             }
         }.build()
@@ -48,4 +49,5 @@ val Icons.Eye: ImageVector
         return _eye!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _eye: ImageVector? = null

@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.ToggleRight: ImageVector
     get() {
         if (_toggleRight != null) return _toggleRight!!
@@ -27,11 +28,31 @@ val Icons.ToggleRight: ImageVector
             ) {
                 moveTo(8f, 5f)
                 horizontalLineTo(16f)
-                arcToRelative(7f, 7f, 0f, false, true, 7f, 7f)
-                arcToRelative(7f, 7f, 0f, false, true, -7f, 7f)
+                arcToRelative(7f, 7f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = 7f,
+                    dy1 = 7f
+                )
+                arcToRelative(7f, 7f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = -7f,
+                    dy1 = 7f
+                )
                 horizontalLineTo(8f)
-                arcToRelative(7f, 7f, 0f, false, true, -7f, -7f)
-                arcToRelative(7f, 7f, 0f, false, true, 7f, -7f)
+                arcToRelative(7f, 7f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = -7f,
+                    dy1 = -7f
+                )
+                arcToRelative(7f, 7f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = 7f,
+                    dy1 = -7f
+                )
                 close()
             }
             path(
@@ -41,12 +62,23 @@ val Icons.ToggleRight: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(16f, 9f)
-                arcToRelative(3f, 3f, 0f, true, false, 0f, 6f)
-                arcToRelative(3f, 3f, 0f, true, false, 0f, -6f)
+                arcToRelative(3f, 3f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 0f,
+                    dy1 = 6f
+                )
+                arcToRelative(3f, 3f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 0f,
+                    dy1 = -6f
+                )
             }
         }.build()
 
         return _toggleRight!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _toggleRight: ImageVector? = null

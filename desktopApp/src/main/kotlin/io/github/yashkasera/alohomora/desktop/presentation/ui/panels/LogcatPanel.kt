@@ -100,18 +100,18 @@ fun LogcatPanel(
             LogcatFilters(
                 filterState = uiState.filterState,
                 availableTags = uiState.availableTags,
-                onToggleLevel = { logcatViewModel.toggleLevel(it) },
-                onTagFilterChange = { logcatViewModel.updateTagFilter(it) },
-                onPackageChange = { logcatViewModel.updatePackageName(it) },
-                onSearch = { logcatViewModel.updateSearchQuery(it) },
-                onToggleRegex = { logcatViewModel.toggleRegex() },
+                onToggleLevel = logcatViewModel::toggleLevel,
+                onTagFilterChange = logcatViewModel::updateTagFilter,
+                onPackageChange = logcatViewModel::updatePackageName,
+                onSearch = logcatViewModel::updateSearchQuery,
+                onToggleRegex = logcatViewModel::toggleRegex,
                 searchFocusTrigger = searchFocusTrigger,
             )
 
             LogcatList(
                 entries = uiState.filteredEntries,
                 modifier = Modifier.weight(1f),
-                onTagClick = { tag -> logcatViewModel.updateTagFilter(tag) },
+                onTagClick = logcatViewModel::updateTagFilter,
             )
         }
     }

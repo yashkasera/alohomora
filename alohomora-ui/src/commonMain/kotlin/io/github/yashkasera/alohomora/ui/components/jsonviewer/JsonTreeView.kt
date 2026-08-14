@@ -93,7 +93,7 @@ fun JsonTreeView(
             backgroundColor = MaterialTheme.colorScheme.secondary,
         ),
     ) {
-        Box() {
+        Box {
             Column(
                 modifier = Modifier.fillMaxSize()
                     .clip(MaterialTheme.shapes.small)

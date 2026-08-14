@@ -6,8 +6,6 @@ import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.AuthSuccessMessage
 import io.github.yashkasera.alohomora.common.CacheSnapshotMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
-import io.github.yashkasera.alohomora.common.DevToolsHeartbeat
-import io.github.yashkasera.alohomora.common.DevToolsLiveness
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.DeviceErrorMessage
@@ -63,7 +61,6 @@ import io.github.yashkasera.alohomora.replay.ReplayRequest
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -286,39 +283,6 @@ class DevToolsRepositoryImpl(
                 _switching.value = false
                 // The result messages these were waiting on died with the socket.
                 replayStore.abandonInFlight()
-            }
-        }
-    }
-
-    /**
-     * Drops the session once the device has gone silent, so the retry loop can rebuild it.
-     *
-     * The mirror image of the device's own reaper, and the same argument applies in reverse: a
-     * device that stops servicing its socket without closing it — an iOS app the OS suspended, a
-     * transport that went away — leaves this side parked in a read that never returns, showing
-     * "Connected" with zero throughput and no way back but a manual reconnect.
-     *
-     * Armed by the first PING rather than on connect. A device that predates the heartbeat sends
-     * nothing at all while idle, and enforcing silence against it would tear down healthy sessions
-     * every [DevToolsHeartbeat.SILENCE_TIMEOUT_MILLIS] for as long as nobody used the app.
-     */
-    private suspend fun watchSessionForSilence(
-        liveness: DevToolsLiveness,
-        firstPing: Deferred<Unit>,
-        socket: DevToolsSocket,
-    ) {
-        firstPing.await()
-        while (true) {
-            delay(DevToolsHeartbeat.PING_INTERVAL_MILLIS.milliseconds)
-            if (liveness.isPeerSilent()) {
-                println(
-                    "[Alohomora] Device silent for ${liveness.silentForMillis()}ms; " +
-                        "dropping the session to reconnect.",
-                )
-                // Closing is what ends the session: it fails the parked read, which returns from
-                // processConnection and hands control back to the retry loop.
-                socket.close()
-                return
             }
         }
     }

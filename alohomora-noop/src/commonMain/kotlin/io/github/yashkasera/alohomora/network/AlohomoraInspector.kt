@@ -9,6 +9,7 @@ import io.ktor.client.plugins.api.createClientPlugin
  * empty plugin registration and captures nothing. Exists purely so consumer code that
  * installs the inspector compiles against both artifacts.
  */
+@Suppress("unused")
 val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
     /* no-op: no onRequest/onResponse hooks are registered */
 }

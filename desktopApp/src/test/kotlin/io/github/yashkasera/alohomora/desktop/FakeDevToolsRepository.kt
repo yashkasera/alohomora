@@ -110,7 +110,7 @@ class FakeDevToolsRepository(
 
     /** Answers a pending replay the way a `ReplayResultMessage(sent = true)` would. */
     fun deliverReplaySuccess(sourceTraceId: String, entry: TrafficEntry) {
-        traffic.value = traffic.value + entry
+        traffic.value += entry
         replayState.value =
             replayState.value.copy(inFlight = replayState.value.inFlight - sourceTraceId)
     }

@@ -5,7 +5,7 @@ import io.github.yashkasera.alohomora.desktop.domain.repository.CacheRepository
 import kotlinx.coroutines.flow.StateFlow
 
 class CacheRepositoryImpl(
-    private val store: CacheStore,
+    store: CacheStore,
 ) : CacheRepository {
     override val state: StateFlow<CacheState> = store.state
 }

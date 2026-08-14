@@ -2,25 +2,16 @@ package io.github.yashkasera.alohomora.ui.components
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 
-data class AlohomoraTabItem(
-    val id: String,
-    val label: String,
-    val icon: (@Composable (() -> Unit))? = null,
-)
-
 object AlohomoraTabDefaults {
-    val uppercase: Boolean = true
+    const val uppercase: Boolean = true
 }
 
 @Composable
@@ -34,27 +25,6 @@ fun AlohomoraPrimaryTabRow(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        tabs = tabs,
-    )
-}
-
-@Composable
-fun AlohomoraScrollableTabRow(
-    selectedTabIndex: Int,
-    modifier: Modifier = Modifier,
-    tabs: @Composable () -> Unit,
-) {
-    ScrollableTabRow(
-        selectedTabIndex = selectedTabIndex,
-        modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        indicator = { tabPositions ->
-            TabRowDefaults.SecondaryIndicator(
-                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                color = MaterialTheme.colorScheme.primary,
-            )
-        },
         tabs = tabs,
     )
 }

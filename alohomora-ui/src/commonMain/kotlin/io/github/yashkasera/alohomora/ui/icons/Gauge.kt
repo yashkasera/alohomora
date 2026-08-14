@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Gauge: ImageVector
     get() {
         if (_gauge != null) return _gauge!!
@@ -35,11 +36,17 @@ val Icons.Gauge: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(3.34f, 19f)
-                arcToRelative(10f, 10f, 0f, true, true, 17.32f, 0f)
+                arcToRelative(10f, 10f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = true,
+                    dx1 = 17.32f,
+                    dy1 = 0f
+                )
             }
         }.build()
 
         return _gauge!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _gauge: ImageVector? = null

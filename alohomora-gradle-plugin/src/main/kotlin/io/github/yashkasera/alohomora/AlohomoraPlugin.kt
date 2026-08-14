@@ -9,6 +9,7 @@ import java.io.File
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
+@Suppress("unused")
 class AlohomoraPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {

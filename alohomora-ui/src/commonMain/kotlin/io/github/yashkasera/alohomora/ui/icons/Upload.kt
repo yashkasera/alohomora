@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Upload: ImageVector
     get() {
         if (_upload != null) return _upload!!
@@ -46,9 +47,19 @@ val Icons.Upload: ImageVector
             ) {
                 moveTo(3f, 17f)
                 verticalLineToRelative(2f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, 2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 2f,
+                    dy1 = 2f
+                )
                 horizontalLineToRelative(14f)
-                arcToRelative(2f, 2f, 0f, false, false, 2f, -2f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 2f,
+                    dy1 = -2f
+                )
                 verticalLineToRelative(-2f)
             }
         }.build()
@@ -56,4 +67,5 @@ val Icons.Upload: ImageVector
         return _upload!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _upload: ImageVector? = null

@@ -14,6 +14,4 @@ data class Device(
     val usbmuxDeviceId: Int? = null,
 ) {
     val capabilities: Set<DeviceCapability> get() = DeviceCapability.forPlatform(platform)
-
-    fun supports(capability: DeviceCapability): Boolean = capability in capabilities
 }

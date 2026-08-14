@@ -137,7 +137,7 @@ class UsbmuxClient(
         val responseHeader = channel.readFully(HEADER_LENGTH) ?: return null
         responseHeader.order(ByteOrder.LITTLE_ENDIAN)
         val totalLength = responseHeader.getInt(0)
-        if (totalLength < HEADER_LENGTH || totalLength > MAX_REPLY_BYTES) return null
+        if (totalLength !in HEADER_LENGTH..MAX_REPLY_BYTES) return null
         val responseBody = channel.readFully(totalLength - HEADER_LENGTH) ?: return null
         return Plist.decode(responseBody.array()) as? Map<*, *>
     }

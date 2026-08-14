@@ -54,6 +54,7 @@ import io.github.yashkasera.alohomora.trace.SpanCaptureRegistry
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -112,7 +113,7 @@ internal class DevToolsRuntime(
     private val database: AlohomoraDb,
     private val cacheInspector: DevToolsCacheInspector,
     private val server: DevToolsTcpServer,
-    private val appDatabaseProvider: DevToolsAppDatabaseProvider,
+    appDatabaseProvider: DevToolsAppDatabaseProvider,
     private val trustStore: DevToolsTrustStore,
     private val featureFlagStore: FeatureFlagStore,
 ) {
@@ -211,7 +212,7 @@ internal class DevToolsRuntime(
         )
     }
 
-    private suspend fun attachClient(socket: DevToolsSocket) {
+    private fun attachClient(socket: DevToolsSocket) {
         // Reject rather than evict. The previous behaviour was last-writer-wins, which let
         // any unauthenticated peer repeatedly kick the developer's live session off (and
         // reset the displayed OTP each time) simply by reconnecting.
@@ -471,7 +472,7 @@ internal class DevToolsRuntime(
          * side. Reveal the OTP anyway after a short grace period.
          */
         private suspend fun revealOtpIfClientStaysSilent() {
-            delay(DevToolsDefaults.OTP_REVEAL_GRACE_MILLIS)
+            delay(DevToolsDefaults.OTP_REVEAL_GRACE_MILLIS.milliseconds)
             if (!isAuthenticated && !closed && _serverState.value.pendingOtp == null) {
                 _serverState.value = _serverState.value.copy(pendingOtp = otp)
                 send(AuthOtpRequiredMessage(nextSequence()))
@@ -537,7 +538,7 @@ internal class DevToolsRuntime(
          */
         private suspend fun heartbeatLoop() {
             while (true) {
-                delay(DevToolsHeartbeat.PING_INTERVAL_MILLIS)
+                delay(DevToolsHeartbeat.PING_INTERVAL_MILLIS.milliseconds)
                 // Checked before sending, so the ping about to go out is never counted as one the
                 // client failed to answer.
                 if (liveness.isPeerSilent()) {
@@ -632,9 +633,9 @@ internal class DevToolsRuntime(
             val events = database.eventDao()
                 .getLatest(DevToolsDefaults.EVENT_SNAPSHOT_LIMIT)
             val traffic = database.trafficDao()
-                .getLatest(DevToolsDefaults.TRAFFIC_SNAPSHOT_LIMIT)
+                .getLatest(TRAFFIC_SNAPSHOT_LIMIT)
             val errors = database.errorDao()
-                .getLatest(DevToolsDefaults.ERROR_SNAPSHOT_LIMIT)
+                .getLatest(ERROR_SNAPSHOT_LIMIT)
             val spans = database.spanDao()
                 .getLatest(DevToolsDefaults.SPAN_SNAPSHOT_LIMIT)
             val databases = databaseInspector.listDatabases()
@@ -691,7 +692,7 @@ internal class DevToolsRuntime(
          * and there is no follow-up request to fetch one.
          */
         private suspend fun streamErrors() {
-            database.errorDao().observeLatest(DevToolsDefaults.ERROR_SNAPSHOT_LIMIT)
+            database.errorDao().observeLatest(ERROR_SNAPSHOT_LIMIT)
                 .collect { errors ->
                     errorAdapter.filterNew(errors).forEach { item ->
                         sendStream(StreamErrorMessage(nextSequence(), item))
@@ -714,7 +715,7 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun streamTraffic() {
-            database.trafficDao().observeLatest(DevToolsDefaults.TRAFFIC_SNAPSHOT_LIMIT)
+            database.trafficDao().observeLatest(TRAFFIC_SNAPSHOT_LIMIT)
                 .collect { logs ->
                     val changedItems = changedTraffic(logs)
                     changedItems.forEach { item ->
@@ -807,7 +808,7 @@ internal class DevToolsRuntime(
             )
         }
 
-        private suspend fun handleDatabaseSchemaRequest(databaseName: String) {
+        private fun handleDatabaseSchemaRequest(databaseName: String) {
             defaultDatabaseName = databaseName
             val schema = databaseInspector.loadSchema(databaseName)
             send(
@@ -818,7 +819,7 @@ internal class DevToolsRuntime(
             )
         }
 
-        private suspend fun handleDatabaseUpdate(message: RequestDatabaseUpdateMessage) {
+        private fun handleDatabaseUpdate(message: RequestDatabaseUpdateMessage) {
             val dbName = message.databaseName
             val success = databaseInspector.updateCell(
                 databaseName = dbName,

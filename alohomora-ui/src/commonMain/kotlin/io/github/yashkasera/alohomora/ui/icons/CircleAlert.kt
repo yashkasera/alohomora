@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.CircleAlert: ImageVector
     get() {
         if (_circleAlert != null) return _circleAlert!!
@@ -26,8 +27,18 @@ val Icons.CircleAlert: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(2f, 12f)
-                arcToRelative(10f, 10f, 0f, true, false, 20f, 0f)
-                arcToRelative(10f, 10f, 0f, true, false, -20f, 0f)
+                arcToRelative(10f, 10f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 20f,
+                    dy1 = 0f
+                )
+                arcToRelative(10f, 10f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = -20f,
+                    dy1 = 0f
+                )
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -52,4 +63,5 @@ val Icons.CircleAlert: ImageVector
         return _circleAlert!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _circleAlert: ImageVector? = null

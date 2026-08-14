@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -84,7 +85,7 @@ fun main() {
         val mcpRegistry = remember { DeviceSessionRegistry() }
         val mcpConfirmation = remember { McpConfirmationBroker() }
         var mcpEnabled by remember { mutableStateOf(DesktopMcpPrefs.loadEnabled()) }
-        var mcpPort by remember { mutableStateOf(DesktopMcpPrefs.loadPort()) }
+        var mcpPort by remember { mutableIntStateOf(DesktopMcpPrefs.loadPort()) }
         var mcpWriteEnabled by remember { mutableStateOf(DesktopMcpPrefs.loadWriteEnabled()) }
         var screenshotDir by remember { mutableStateOf(DesktopScreenshotPrefs.loadDefaultDir()) }
         var screenshotShowToast by remember { mutableStateOf(DesktopScreenshotPrefs.loadShowToast()) }

@@ -31,17 +31,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
-import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.TrafficEntry
-import io.github.yashkasera.alohomora.common.mergeAttentionItems
 import io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo
 import io.github.yashkasera.alohomora.desktop.presentation.model.DashboardUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
@@ -89,7 +86,6 @@ fun DashboardContent(
     onTakeScreenshot: () -> Unit,
     onRecordScreen: () -> Unit,
     onTrafficItemClick: (TrafficEntry) -> Unit,
-    onErrorClick: (Error) -> Unit,
     onEventViewClick: (Event) -> Unit,
     onTrafficClick: () -> Unit,
     onEventsClick: () -> Unit,
@@ -97,13 +93,9 @@ fun DashboardContent(
 ) {
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()
     val events by devToolsViewModel.events.collectAsState()
-    val errors by devToolsViewModel.errors.collectAsState()
     val traffic by devToolsViewModel.traffic.collectAsState()
     val dashboard by devicesViewModel.dashboardState.collectAsState()
     val scrollState = rememberScrollState()
-    val attentionItems = remember(errors, traffic) {
-        mergeAttentionItems(errors, traffic)
-    }
 
     Scaffold(
         // Was the only panel without a top bar, which is most of why it read as a different

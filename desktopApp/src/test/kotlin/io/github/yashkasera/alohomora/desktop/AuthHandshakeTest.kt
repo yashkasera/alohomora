@@ -93,7 +93,7 @@ class AuthHandshakeTest {
         val decoded = decodePayload(legacy) as AuthSuccessMessage
 
         assertNull(decoded.token, "no token means fall back to prompting every time, not a crash")
-        assertTrue(decoded.sequence == 7L)
+        assertEquals(decoded.sequence, 7L)
     }
 
     @Test

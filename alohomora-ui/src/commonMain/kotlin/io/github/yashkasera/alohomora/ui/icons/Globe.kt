@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Globe: ImageVector
     get() {
         if (_globe != null) return _globe!!
@@ -26,8 +27,18 @@ val Icons.Globe: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(2f, 12f)
-                arcToRelative(10f, 10f, 0f, true, false, 20f, 0f)
-                arcToRelative(10f, 10f, 0f, true, false, -20f, 0f)
+                arcToRelative(10f, 10f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 20f,
+                    dy1 = 0f
+                )
+                arcToRelative(10f, 10f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = -20f,
+                    dy1 = 0f
+                )
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -36,8 +47,18 @@ val Icons.Globe: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(12f, 2f)
-                arcToRelative(14.5f, 14.5f, 0f, false, false, 0f, 20f)
-                arcToRelative(14.5f, 14.5f, 0f, false, false, 0f, -20f)
+                arcToRelative(14.5f, 14.5f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 0f,
+                    dy1 = 20f
+                )
+                arcToRelative(14.5f, 14.5f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 0f,
+                    dy1 = -20f
+                )
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -53,4 +74,5 @@ val Icons.Globe: ImageVector
         return _globe!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _globe: ImageVector? = null

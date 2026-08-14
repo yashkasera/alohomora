@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -73,7 +74,7 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
     }
 
     var expandedDb by remember { mutableStateOf<String?>(null) }
-    var sidebarFraction by remember { mutableStateOf(SIDEBAR_DEFAULT) }
+    var sidebarFraction by remember { mutableFloatStateOf(SIDEBAR_DEFAULT) }
 
     Scaffold(
         topBar = {

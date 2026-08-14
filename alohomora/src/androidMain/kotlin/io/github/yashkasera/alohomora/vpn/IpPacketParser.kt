@@ -29,8 +29,6 @@ internal data class TcpHeader(
     val isAck: Boolean get() = flags and FLAG_ACK != 0
     val isFin: Boolean get() = flags and FLAG_FIN != 0
     val isRst: Boolean get() = flags and FLAG_RST != 0
-    val isPsh: Boolean get() = flags and FLAG_PSH != 0
-    val isSynAck: Boolean get() = isSyn && isAck
 
     companion object {
         const val FLAG_FIN = 0x01

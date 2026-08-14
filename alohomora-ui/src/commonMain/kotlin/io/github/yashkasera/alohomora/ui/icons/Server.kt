@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Server: ImageVector
     get() {
         if (_server != null) return _server!!
@@ -27,13 +28,13 @@ val Icons.Server: ImageVector
             ) {
                 moveTo(4f, 2f)
                 horizontalLineTo(20f)
-                arcTo(2f, 2f, 0f, false, true, 22f, 4f)
+                arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 22f, y1 = 4f)
                 verticalLineTo(8f)
-                arcTo(2f, 2f, 0f, false, true, 20f, 10f)
+                arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 20f, y1 = 10f)
                 horizontalLineTo(4f)
-                arcTo(2f, 2f, 0f, false, true, 2f, 8f)
+                arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 2f, y1 = 8f)
                 verticalLineTo(4f)
-                arcTo(2f, 2f, 0f, false, true, 4f, 2f)
+                arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 4f, y1 = 2f)
                 close()
             }
             path(
@@ -44,13 +45,13 @@ val Icons.Server: ImageVector
             ) {
                 moveTo(4f, 14f)
                 horizontalLineTo(20f)
-                arcTo(2f, 2f, 0f, false, true, 22f, 16f)
+                arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 22f, y1 = 16f)
                 verticalLineTo(20f)
-                arcTo(2f, 2f, 0f, false, true, 20f, 22f)
+                arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 20f, y1 = 22f)
                 horizontalLineTo(4f)
-                arcTo(2f, 2f, 0f, false, true, 2f, 20f)
+                arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 2f, y1 = 20f)
                 verticalLineTo(16f)
-                arcTo(2f, 2f, 0f, false, true, 4f, 14f)
+                arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 4f, y1 = 14f)
                 close()
             }
             path(
@@ -76,5 +77,6 @@ val Icons.Server: ImageVector
         return _server!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _server: ImageVector? = null
 

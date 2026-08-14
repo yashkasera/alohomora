@@ -29,8 +29,6 @@ data class TraceWindow(
     fun fractionOf(nanos: Long): Float =
         ((nanos - startNanos).toDouble() / rangeNanos.toDouble()).toFloat().coerceIn(0f, 1f)
 
-    /** Offset of [nanos] from the window start, for an axis label. */
-    fun offsetOf(nanos: Long): Long = nanos - startNanos
 }
 
 /**

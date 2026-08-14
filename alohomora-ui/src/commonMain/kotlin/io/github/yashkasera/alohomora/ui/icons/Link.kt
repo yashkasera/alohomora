@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.Link: ImageVector
     get() {
         if (_link != null) return _link!!
@@ -26,9 +27,19 @@ val Icons.Link: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(10f, 13f)
-                arcToRelative(5f, 5f, 0f, false, false, 7.54f, 0.54f)
+                arcToRelative(5f, 5f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 7.54f,
+                    dy1 = 0.54f
+                )
                 lineToRelative(3f, -3f)
-                arcToRelative(5f, 5f, 0f, false, false, -7.07f, -7.07f)
+                arcToRelative(5f, 5f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -7.07f,
+                    dy1 = -7.07f
+                )
                 lineToRelative(-1.72f, 1.71f)
             }
             path(
@@ -38,9 +49,19 @@ val Icons.Link: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(14f, 11f)
-                arcToRelative(5f, 5f, 0f, false, false, -7.54f, -0.54f)
+                arcToRelative(5f, 5f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = -7.54f,
+                    dy1 = -0.54f
+                )
                 lineToRelative(-3f, 3f)
-                arcToRelative(5f, 5f, 0f, false, false, 7.07f, 7.07f)
+                arcToRelative(5f, 5f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = false,
+                    dx1 = 7.07f,
+                    dy1 = 7.07f
+                )
                 lineToRelative(1.71f, -1.71f)
             }
         }.build()
@@ -48,4 +69,5 @@ val Icons.Link: ImageVector
         return _link!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _link: ImageVector? = null

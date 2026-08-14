@@ -21,6 +21,7 @@ import io.github.yashkasera.alohomora.ui.components.waterfall.TraceWaterfall
 import io.github.yashkasera.alohomora.ui.components.waterfall.WaterfallBarTestTagPrefix
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
@@ -156,6 +157,6 @@ class TraceWaterfallTest {
         onNodeWithText("child-span").performClick()
         waitForIdle()
 
-        assertTrue(selected == "child", "expected 'child', got $selected")
+        assertEquals(selected, "child", "expected 'child', got $selected")
     }
 }

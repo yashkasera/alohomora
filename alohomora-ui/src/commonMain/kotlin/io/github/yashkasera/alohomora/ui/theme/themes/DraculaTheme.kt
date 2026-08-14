@@ -15,7 +15,6 @@ private val DraculaOrange = Color(0xFFFFB86C)
 private val DraculaPink = Color(0xFFFF79C6)
 private val DraculaPurple = Color(0xFFBD93F9)
 private val DraculaRed = Color(0xFFFF5555)
-private val DraculaYellow = Color(0xFFF1FA8C)
 
 val DraculaLightTheme = AlohomoraColorTheme(
     id = "dracula",

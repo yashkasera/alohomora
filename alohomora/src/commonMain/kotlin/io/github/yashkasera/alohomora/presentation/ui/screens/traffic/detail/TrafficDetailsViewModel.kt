@@ -146,10 +146,6 @@ internal class TrafficDetailsViewModel(
         }
     }
 
-    fun clearError() {
-        _state.value = _state.value.copy(shareError = null)
-    }
-
     // ── Replay ───────────────────────────────────────────────────────────────
 
     /**
@@ -194,7 +190,4 @@ internal class TrafficDetailsViewModel(
         }
     }
 
-    fun clearReplayError() {
-        _state.value = _state.value.copy(replayError = null)
-    }
 }

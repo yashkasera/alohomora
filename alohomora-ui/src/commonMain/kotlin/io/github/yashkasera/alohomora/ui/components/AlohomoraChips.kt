@@ -29,7 +29,7 @@ import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 
 object AlohomoraChipDefaults {
     val shape @Composable get() = MaterialTheme.shapes.extraSmall
-    val uppercase: Boolean = true
+    const val uppercase: Boolean = true
     val contentPadding: PaddingValues = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
 
     @Composable

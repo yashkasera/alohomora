@@ -11,6 +11,7 @@ import kotlin.jvm.JvmStatic
  * No-op mirror of `:alohomora`'s `Alohomora` object.
  * Every member must match exactly; `:consumerParity` enforces this.
  */
+@Suppress("unused")
 object Alohomora {
 
     fun init() {}

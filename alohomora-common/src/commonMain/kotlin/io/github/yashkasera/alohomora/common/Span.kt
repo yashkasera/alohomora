@@ -107,9 +107,6 @@ data class Span(
         const val STATUS_UNSET: String = "UNSET"
         const val STATUS_ERROR: String = "ERROR"
 
-        /** Hex length of a W3C Trace Context trace id. */
-        const val TRACE_ID_HEX_LENGTH: Int = 32
-
         /** Hex length of a W3C Trace Context span id. */
         const val SPAN_ID_HEX_LENGTH: Int = 16
     }

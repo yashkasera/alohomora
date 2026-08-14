@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.AlohomoraFull: ImageVector
     get() {
         if (_AlohomoraFull != null) return _AlohomoraFull!!
@@ -233,5 +234,6 @@ val Icons.AlohomoraFull: ImageVector
         return _AlohomoraFull!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _AlohomoraFull: ImageVector? = null
 

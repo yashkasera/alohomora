@@ -26,6 +26,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
  *
  * @param client the app's own client, complete with its interceptors
  */
+@Suppress("unused")
 fun okHttpReplayHandler(client: OkHttpClient): TrafficReplayHandler =
     TrafficReplayHandler { request ->
         withContext(Dispatchers.IO) {

@@ -32,7 +32,7 @@ object AlohomoraToggleDefaults {
             vertical = 10.dp,
         )
 
-    val uppercase: Boolean = true
+    const val uppercase: Boolean = true
 }
 
 @Composable

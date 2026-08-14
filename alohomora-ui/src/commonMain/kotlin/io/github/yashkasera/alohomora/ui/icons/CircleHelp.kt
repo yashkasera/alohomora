@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.CircleHelp: ImageVector
     get() {
         if (_circleHelp != null) return _circleHelp!!
@@ -26,8 +27,18 @@ val Icons.CircleHelp: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(2f, 12f)
-                arcToRelative(10f, 10f, 0f, true, false, 20f, 0f)
-                arcToRelative(10f, 10f, 0f, true, false, -20f, 0f)
+                arcToRelative(10f, 10f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 20f,
+                    dy1 = 0f
+                )
+                arcToRelative(10f, 10f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = -20f,
+                    dy1 = 0f
+                )
             }
             // Question mark curve: M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3
             path(
@@ -37,7 +48,12 @@ val Icons.CircleHelp: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(9.09f, 9f)
-                arcToRelative(3f, 3f, 0f, false, true, 5.83f, 1f)
+                arcToRelative(3f, 3f, 0f,
+                    isMoreThanHalf = false,
+                    isPositiveArc = true,
+                    dx1 = 5.83f,
+                    dy1 = 1f
+                )
                 curveToRelative(0f, 2f, -3f, 3f, -3f, 3f)
             }
             path(
@@ -54,4 +70,5 @@ val Icons.CircleHelp: ImageVector
         return _circleHelp!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _circleHelp: ImageVector? = null

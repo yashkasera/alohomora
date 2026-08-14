@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+@Suppress("UnusedReceiverParameter")
 val Icons.SlidersHorizontal: ImageVector
     get() {
         if (_slidersHorizontal != null) return _slidersHorizontal!!
@@ -80,8 +81,18 @@ val Icons.SlidersHorizontal: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(12f, 5f)
-                arcToRelative(2f, 2f, 0f, true, false, 4f, 0f)
-                arcToRelative(2f, 2f, 0f, true, false, -4f, 0f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 4f,
+                    dy1 = 0f
+                )
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = -4f,
+                    dy1 = 0f
+                )
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -90,8 +101,18 @@ val Icons.SlidersHorizontal: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(16f, 12f)
-                arcToRelative(2f, 2f, 0f, true, false, 4f, 0f)
-                arcToRelative(2f, 2f, 0f, true, false, -4f, 0f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 4f,
+                    dy1 = 0f
+                )
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = -4f,
+                    dy1 = 0f
+                )
             }
             path(
                 stroke = SolidColor(Color.Black),
@@ -100,12 +121,23 @@ val Icons.SlidersHorizontal: ImageVector
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 moveTo(14f, 19f)
-                arcToRelative(2f, 2f, 0f, true, false, 4f, 0f)
-                arcToRelative(2f, 2f, 0f, true, false, -4f, 0f)
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = 4f,
+                    dy1 = 0f
+                )
+                arcToRelative(2f, 2f, 0f,
+                    isMoreThanHalf = true,
+                    isPositiveArc = false,
+                    dx1 = -4f,
+                    dy1 = 0f
+                )
             }
         }.build()
 
         return _slidersHorizontal!!
     }
 
+@Suppress("ObjectPropertyName")
 private var _slidersHorizontal: ImageVector? = null
