@@ -64,6 +64,8 @@ fun AdbToolsPanel(
     selectedDeviceId: String?,
     adbCommandHistory: List<AdbCommandLogEntry>,
     buildInfo: BuildInfo?,
+    screenshotDir: String = "",
+    screenshotShowToast: Boolean = true,
 ) {
     val isDeviceSelected = !selectedDeviceId.isNullOrBlank()
     val wifiEnabled by devicesViewModel.wifiEnabled.collectAsState()
@@ -200,9 +202,14 @@ fun AdbToolsPanel(
                 ) {
                     AdbActionButton("Screenshot", isDeviceSelected) {
                         val ts = System.currentTimeMillis()
-                        val localPath = pickSavePath("alohomora_screenshot_$ts.png", "Save Screenshot", ".png")
-                            ?: return@AdbActionButton
-                        devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
+                        val defaultName = "alohomora_screenshot_$ts.png"
+                        val localPath = if (screenshotDir.isNotEmpty()) {
+                            "$screenshotDir/$defaultName"
+                        } else {
+                            pickSavePath(defaultName, "Save Screenshot", ".png")
+                                ?: return@AdbActionButton
+                        }
+                        devicesViewModel.takeScreenshot(selectedDeviceId, localPath, screenshotShowToast)
                     }
                     AlohomoraFilledButton(
                         text = if (isRecording) "Stop Recording" else "Record Screen",

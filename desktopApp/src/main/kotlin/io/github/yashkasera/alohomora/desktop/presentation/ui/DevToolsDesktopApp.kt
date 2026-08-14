@@ -113,6 +113,8 @@ fun DevToolsDesktopApp(
     isDark: Boolean = true,
     themeId: String = "default",
     onDisconnectWindow: () -> Unit,
+    screenshotDir: String = "",
+    screenshotShowToast: Boolean = true,
 ) {
     var activeSection by remember { mutableStateOf(DesktopSection.Traffic) }
     var searchFocusTrigger by remember { mutableStateOf(0L) }
@@ -244,9 +246,12 @@ fun DevToolsDesktopApp(
         onTakeScreenshot = {
             val timestamp = System.currentTimeMillis()
             val defaultName = "alohomora_screenshot_${timestamp}.png"
-            val localPath =
+            val localPath = if (screenshotDir.isNotEmpty()) {
+                "$screenshotDir/$defaultName"
+            } else {
                 pickSavePath(defaultName, "Save Screenshot", ".png") ?: return@buildCommandActions
-            devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
+            }
+            devicesViewModel.takeScreenshot(selectedDeviceId, localPath, screenshotShowToast)
         },
         onRebootDevice = {
             devicesViewModel.runCommand(selectedDeviceId, "reboot")
@@ -357,9 +362,13 @@ fun DevToolsDesktopApp(
                 if (event.isScreenshotShortcut() && isAndroid && !selectedDeviceId.isNullOrBlank()) {
                     val timestamp = System.currentTimeMillis()
                     val defaultName = "alohomora_screenshot_${timestamp}.png"
-                    val localPath = pickSavePath(defaultName, "Save Screenshot", ".png")
+                    val localPath = if (screenshotDir.isNotEmpty()) {
+                        "$screenshotDir/$defaultName"
+                    } else {
+                        pickSavePath(defaultName, "Save Screenshot", ".png")
+                    }
                     if (localPath != null) {
-                        devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
+                        devicesViewModel.takeScreenshot(selectedDeviceId, localPath, screenshotShowToast)
                     }
                     return@onPreviewKeyEvent true
                 }
@@ -430,10 +439,13 @@ fun DevToolsDesktopApp(
                                 onTakeScreenshot = screenshot@{
                                     val timestamp = System.currentTimeMillis()
                                     val defaultName = "alohomora_screenshot_${timestamp}.png"
-                                    val localPath =
+                                    val localPath = if (screenshotDir.isNotEmpty()) {
+                                        "$screenshotDir/$defaultName"
+                                    } else {
                                         pickSavePath(defaultName, "Save Screenshot", ".png")
                                             ?: return@screenshot
-                                    devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
+                                    }
+                                    devicesViewModel.takeScreenshot(selectedDeviceId, localPath, screenshotShowToast)
                                 },
                                 onRecordScreen = record@{
                                     if (!isRecording) {
@@ -482,6 +494,8 @@ fun DevToolsDesktopApp(
                                 selectedDeviceId = selectedDeviceId,
                                 adbCommandHistory = adbCommandHistory,
                                 buildInfo = buildInfo,
+                                screenshotDir = screenshotDir,
+                                screenshotShowToast = screenshotShowToast,
                             )
 
                             DesktopSection.Traffic -> TrafficPanel(

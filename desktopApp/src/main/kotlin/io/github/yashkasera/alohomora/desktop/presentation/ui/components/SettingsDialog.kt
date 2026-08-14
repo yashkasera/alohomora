@@ -52,6 +52,7 @@ import io.github.yashkasera.alohomora.desktop.app.ThemeMode
 import io.github.yashkasera.alohomora.desktop.app.applyMacTitleBar
 import io.github.yashkasera.alohomora.desktop.app.isMacOs
 import io.github.yashkasera.alohomora.desktop.app.isShortcutModifier
+import io.github.yashkasera.alohomora.desktop.util.pickDirectory
 import io.github.yashkasera.alohomora.desktop.mcp.AlohomoraMcpServer
 import io.github.yashkasera.alohomora.desktop.mcp.McpClient
 import io.github.yashkasera.alohomora.desktop.mcp.McpClientConfig
@@ -79,6 +80,10 @@ fun SettingsDialog(
     themeMode: ThemeMode,
     onThemeIdChange: (String) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
+    screenshotDir: String,
+    screenshotShowToast: Boolean,
+    onScreenshotDirChange: (String) -> Unit,
+    onScreenshotShowToastChange: (Boolean) -> Unit,
     onClearTrustTokens: () -> Unit,
     onClearMutedEvents: () -> Unit,
     onResetPreferences: () -> Unit,
@@ -165,6 +170,13 @@ fun SettingsDialog(
                                 themeMode = themeMode,
                                 onThemeIdChange = onThemeIdChange,
                                 onThemeModeChange = onThemeModeChange,
+                            )
+
+                            SettingsSection.GENERAL -> GeneralSection(
+                                screenshotDir = screenshotDir,
+                                screenshotShowToast = screenshotShowToast,
+                                onScreenshotDirChange = onScreenshotDirChange,
+                                onScreenshotShowToastChange = onScreenshotShowToastChange,
                             )
 
                             SettingsSection.MCP -> McpServerSection(
@@ -344,6 +356,7 @@ private fun LabeledCopyBlock(label: String, content: String) {
 
 private enum class SettingsSection(val label: String) {
     APPEARANCE("Appearance"),
+    GENERAL("General"),
     MCP("MCP server"),
     DATA("Data"),
 }
@@ -418,6 +431,70 @@ private fun AppearanceSection(
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
+    }
+}
+
+@Composable
+private fun GeneralSection(
+    screenshotDir: String,
+    screenshotShowToast: Boolean,
+    onScreenshotDirChange: (String) -> Unit,
+    onScreenshotShowToastChange: (Boolean) -> Unit,
+) {
+    Text(
+        text = "Screenshots",
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+
+    Text(
+        text = "Set a default save location to skip the file picker. Leave empty to always ask.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AlohomoraTextField(
+            value = screenshotDir,
+            onValueChange = onScreenshotDirChange,
+            placeholder = "No default directory (always ask)",
+            singleLine = true,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+        AlohomoraTextButton(
+            text = "Browse",
+            onClick = {
+                val dir = pickDirectory("Select screenshot directory", screenshotDir.ifBlank { null })
+                if (dir != null) onScreenshotDirChange(dir)
+            },
+        )
+        if (screenshotDir.isNotBlank()) {
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.xs))
+            AlohomoraTextButton(
+                text = "Clear",
+                onClick = { onScreenshotDirChange("") },
+                contentColor = MaterialTheme.colorScheme.error,
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(text = "Show notification on capture", style = MaterialTheme.typography.bodyMedium)
+        AlohomoraSwitch(checked = screenshotShowToast, onCheckedChange = onScreenshotShowToastChange)
     }
 }
 

@@ -391,7 +391,7 @@ class DevicesViewModel(
         }
     }
 
-    fun takeScreenshot(deviceId: String?, localPath: String) {
+    fun takeScreenshot(deviceId: String?, localPath: String, showToast: Boolean = true) {
         if (deviceId.isNullOrBlank()) {
             setActionError("Select a device first")
             return
@@ -405,7 +405,7 @@ class DevicesViewModel(
             runLoggedBlocking(deviceId, listOf("shell", "screencap", "-p", devicePath))
             runLoggedBlocking(deviceId, listOf("pull", devicePath, localPath))
             runLoggedBlocking(deviceId, listOf("shell", "rm", devicePath))
-            setActionMessage("Screenshot saved")
+            if (showToast) setActionMessage("Screenshot saved")
         }
     }
 

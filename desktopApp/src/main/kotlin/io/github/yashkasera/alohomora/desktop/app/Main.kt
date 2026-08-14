@@ -15,6 +15,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.application
 import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopEventPrefs
 import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopMcpPrefs
+import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopScreenshotPrefs
 import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopTrustPrefs
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateChecker
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
@@ -85,6 +86,8 @@ fun main() {
         var mcpEnabled by remember { mutableStateOf(DesktopMcpPrefs.loadEnabled()) }
         var mcpPort by remember { mutableStateOf(DesktopMcpPrefs.loadPort()) }
         var mcpWriteEnabled by remember { mutableStateOf(DesktopMcpPrefs.loadWriteEnabled()) }
+        var screenshotDir by remember { mutableStateOf(DesktopScreenshotPrefs.loadDefaultDir()) }
+        var screenshotShowToast by remember { mutableStateOf(DesktopScreenshotPrefs.loadShowToast()) }
         val mcpServer = remember {
             AlohomoraMcpServer(
                 registry = mcpRegistry,
@@ -145,6 +148,16 @@ fun main() {
                     themeMode = mode
                     DesktopThemePrefs.saveMode(mode)
                 },
+                screenshotDir = screenshotDir,
+                screenshotShowToast = screenshotShowToast,
+                onScreenshotDirChange = { dir ->
+                    screenshotDir = dir
+                    DesktopScreenshotPrefs.saveDefaultDir(dir)
+                },
+                onScreenshotShowToastChange = { show ->
+                    screenshotShowToast = show
+                    DesktopScreenshotPrefs.saveShowToast(show)
+                },
                 onClearTrustTokens = { DesktopTrustPrefs.clearAll() },
                 onClearMutedEvents = { DesktopEventPrefs.clearAll() },
                 onResetPreferences = {
@@ -152,11 +165,14 @@ fun main() {
                     DesktopTrustPrefs.clearAll()
                     DesktopEventPrefs.clearAll()
                     DesktopMcpPrefs.clear()
+                    DesktopScreenshotPrefs.clear()
                     themeMode = ThemeMode.SYSTEM
                     themeId = "default"
                     mcpEnabled = false
                     mcpPort = DesktopMcpPrefs.DEFAULT_PORT
                     mcpWriteEnabled = false
+                    screenshotDir = ""
+                    screenshotShowToast = true
                 },
                 mcpEnabled = mcpEnabled,
                 mcpPort = mcpPort,
@@ -235,6 +251,8 @@ fun main() {
                         sessions.removeAll { it.id == session.id }
                         if (sessions.isEmpty()) launcherVisible = true
                     },
+                    screenshotDir = screenshotDir,
+                    screenshotShowToast = screenshotShowToast,
                 )
             }
         }

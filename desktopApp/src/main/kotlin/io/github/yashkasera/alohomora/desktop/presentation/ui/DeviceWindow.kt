@@ -46,6 +46,8 @@ fun DeviceWindow(
     onOpenLauncher: () -> Unit,
     onExit: () -> Unit,
     onSessionClosed: () -> Unit,
+    screenshotDir: String = "",
+    screenshotShowToast: Boolean = true,
 ) {
     val state = rememberWindowState(
         placement = WindowPlacement.Maximized,
@@ -171,12 +173,17 @@ fun DeviceWindow(
                         onClick = {
                             val timestamp = System.currentTimeMillis()
                             val defaultName = "alohomora_screenshot_${timestamp}.png"
-                            val localPath = pickSavePath(
-                                defaultName, "Save Screenshot", ".png",
-                            ) ?: return@Item
+                            val localPath = if (screenshotDir.isNotEmpty()) {
+                                "$screenshotDir/$defaultName"
+                            } else {
+                                pickSavePath(
+                                    defaultName, "Save Screenshot", ".png",
+                                ) ?: return@Item
+                            }
                             session.composition.devicesViewModel.takeScreenshot(
                                 session.deviceId,
                                 localPath,
+                                screenshotShowToast,
                             )
                         },
                     )
@@ -267,6 +274,8 @@ fun DeviceWindow(
                         isDark = isDark,
                         themeId = themeId,
                         onDisconnectWindow = closeWindow,
+                        screenshotDir = screenshotDir,
+                        screenshotShowToast = screenshotShowToast,
                     )
                 }
             }
