@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.exceptionTypeName
@@ -192,7 +193,6 @@ private fun ErrorRow(
                 Text(
                     text = error.exceptionTypeName(),
                     style = MaterialTheme.typography.titleSmall,
-                    // Unread is carried by contrast rather than weight — see WaterfallRow.
                     color = if (error.isViewed) {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     } else {
@@ -218,6 +218,8 @@ private fun ErrorRow(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 

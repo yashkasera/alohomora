@@ -57,7 +57,6 @@ fun EmptyState(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
-                .fillMaxWidth(0.7f)
                 .padding(horizontal = MaterialTheme.dimens.margin.xxxl),
         ) {
             Box(
@@ -101,6 +100,7 @@ fun EmptyState(
             if (setup != null) {
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
                 AlohomoraCodeBlock(
+                    modifier = Modifier.fillMaxWidth(0.6f),
                     content = setup,
                     isScrollable = false,
                 )

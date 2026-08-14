@@ -56,6 +56,7 @@ internal class TrafficNotificationHelper(
             .setContentText(summaries.firstOrNull() ?: "No recent traces")
             .setStyle(style)
             .setContentIntent(createContentIntent())
+            .addAction(0, "Clear", createClearIntent())
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setOnlyAlertOnce(true)
             .setAutoCancel(false)
@@ -79,6 +80,17 @@ internal class TrafficNotificationHelper(
         manager.createNotificationChannel(channel)
     }
 
+    private fun createClearIntent(): PendingIntent {
+        val intent = Intent(ClearTrafficReceiver.ACTION)
+            .setClass(context, ClearTrafficReceiver::class.java)
+        return PendingIntent.getBroadcast(
+            context,
+            CLEAR_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
     private fun createContentIntent(): PendingIntent {
         val intent = Intent(context, DevToolsActivity::class.java)
             .putExtra(EXTRA_START_DESTINATION, DESTINATION_TRACE)
@@ -94,9 +106,10 @@ internal class TrafficNotificationHelper(
 
     companion object {
         const val CHANNEL_ID = "alohomora_traces"
-        private const val NOTIFICATION_ID = 41024
+        const val NOTIFICATION_ID = 41024
         private const val MAX_LINES = 5
         private const val REQUEST_CODE = 41025
+        private const val CLEAR_REQUEST_CODE = 41026
 
         const val EXTRA_START_DESTINATION = "alohomora_start_destination"
         const val DESTINATION_TRACE = "traffic"

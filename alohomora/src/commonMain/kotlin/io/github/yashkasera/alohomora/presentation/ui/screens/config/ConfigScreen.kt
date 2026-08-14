@@ -75,7 +75,8 @@ internal fun ConfigScreen(
                             if (it.flavorName.isNullOrBlank().not()) {
                                 append("${it.flavorName?.lowercase()}")
                                 append(
-                                    it.variantName.lowercase().replaceFirstChar { variant -> variant.uppercase() },
+                                    it.variantName.lowercase()
+                                        .replaceFirstChar { variant -> variant.uppercase() },
                                 )
                             } else {
                                 append(it.variantName)
@@ -120,22 +121,15 @@ private fun BuildInfoGrid(buildConfig: BuildMetadata?) {
             .testTag(AlohomoraTestTags.Config.BUILD_INFO),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            InfoItem(
-                label = "Branch",
-                value = buildConfig?.branch,
-                modifier = Modifier.weight(1f),
-            )
-            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
-            InfoItem(
-                label = "Build Variant",
-                value = buildConfig?.variantName,
-                modifier = Modifier.weight(1f),
-            )
-        }
+        InfoItem(
+            label = "Branch",
+            value = buildConfig?.branch,
+        )
+
+        InfoItem(
+            label = "Build Variant",
+            value = buildConfig?.variantName,
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),

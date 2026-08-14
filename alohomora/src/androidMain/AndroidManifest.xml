@@ -48,7 +48,11 @@
 
     <receiver
       android:exported="false"
-      android:name=".trace.ClearTracesReceiver" />
+      android:name=".traffic.ClearTrafficReceiver">
+      <intent-filter>
+        <action android:name="io.github.yashkasera.alohomora.CLEAR_TRAFFIC" />
+      </intent-filter>
+    </receiver>
 
     <provider
       android:authorities="${applicationId}.alohomora.fileprovider"

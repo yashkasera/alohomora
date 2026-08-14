@@ -96,7 +96,6 @@ internal fun ErrorScreen(
                     modifier = Modifier.fillMaxWidth()
                         .padding(horizontal = MaterialTheme.dimens.margin.md)
                         .testTag(AlohomoraTestTags.Chrome.SEARCH),
-                    placeholder = "Search exceptions or packages...",
                 )
 
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
