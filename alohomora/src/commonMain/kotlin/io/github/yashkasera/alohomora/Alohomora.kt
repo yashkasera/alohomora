@@ -14,6 +14,7 @@ import io.github.yashkasera.alohomora.common.SpanEvent
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.common.normalizeSpanId
 import io.github.yashkasera.alohomora.common.spanAttributesToJson
+import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
 import io.github.yashkasera.alohomora.data.model.discoverPlatformBuildConfig
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
@@ -32,6 +33,7 @@ import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.replay.TrafficReplayHandler
 import io.github.yashkasera.alohomora.replay.TrafficReplayRegistry
 import io.github.yashkasera.alohomora.trace.SpanCaptureRegistry
+import io.github.yashkasera.alohomora.traffic.TrafficNotificationCallback
 import kotlin.concurrent.Volatile
 import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
@@ -221,6 +223,11 @@ object Alohomora {
             val repo = koin?.get<TrafficRepository>() ?: return@launch
             try {
                 repo.save(entry)
+                koin?.getOrNull<TrafficNotificationCallback>()?.let { callback ->
+                    val dao = koin?.get<TrafficDao>() ?: return@let
+                    val latest = dao.getLatest(5)
+                    if (latest.isNotEmpty()) callback.onTrafficUpdated(latest)
+                }
             } catch (e: Exception) {
                 Logger.d { "[Alohomora] Failed to log API request: ${e.message}" }
             }

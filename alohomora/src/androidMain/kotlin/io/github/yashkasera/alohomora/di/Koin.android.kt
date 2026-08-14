@@ -21,6 +21,8 @@ import io.github.yashkasera.alohomora.devtools.RepositoryCacheInspector
 import io.github.yashkasera.alohomora.domain.repository.CacheRepository
 import io.github.yashkasera.alohomora.domain.repository.DatabaseRepository
 import io.github.yashkasera.alohomora.presentation.ui.screens.navigation.NavigationHistoryViewModel
+import io.github.yashkasera.alohomora.traffic.TrafficNotificationCallback
+import io.github.yashkasera.alohomora.traffic.TrafficNotificationHelper
 import io.github.yashkasera.alohomora.utils.share.ShareManager
 import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.koin.androidContext
@@ -38,6 +40,10 @@ internal actual val platformModule = module {
     single { DevToolsTcpServer() }
     single<DevToolsTrustStore> { AndroidTrustStore(androidContext()) }
     single { ShareManager(androidContext()) }
+    single { TrafficNotificationHelper(androidContext()) }
+    single<TrafficNotificationCallback> {
+        TrafficNotificationCallback { latest -> get<TrafficNotificationHelper>().showLatest(latest) }
+    }
     single<DatabaseRepository> {
         val accessor = PlatformDatabaseAccessor()
         accessor.setContext(androidContext())
