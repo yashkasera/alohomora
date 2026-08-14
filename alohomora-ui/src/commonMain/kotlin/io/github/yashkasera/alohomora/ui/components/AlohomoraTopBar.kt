@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -19,8 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
+import androidx.compose.ui.tooling.preview.Preview
 
 enum class TopBarLayout {
     CENTER_ALIGNED,
@@ -109,6 +114,25 @@ fun AlohomoraTopBar(
             )
             if (showDivider) {
                 AlohomoraHorizontalDivider()
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun AlohomoraTopBarPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                AlohomoraTopBar(title = "Traffic", subtitle = "42 REQUESTS")
+                Spacer(Modifier.height(8.dp))
+                AlohomoraTopBar(
+                    title = "Traces",
+                    subtitle = "grouped by trace id",
+                    layout = TopBarLayout.START_ALIGNED,
+                    showDivider = true,
+                )
             }
         }
     }

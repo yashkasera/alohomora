@@ -1,18 +1,26 @@
 package io.github.yashkasera.alohomora.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
+import androidx.compose.ui.tooling.preview.Preview
 
 object AlohomoraCardDefaults {
     val shape @Composable get() = MaterialTheme.shapes.small
@@ -82,4 +90,27 @@ fun AlohomoraOutlinedCard(
         border = border,
         content = content,
     )
+}
+
+@Preview
+@Composable
+private fun AlohomoraCardsPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                AlohomoraCard {
+                    Text("Filled card", modifier = Modifier.padding(16.dp))
+                }
+                AlohomoraCard(onClick = {}) {
+                    Text("Clickable card", modifier = Modifier.padding(16.dp))
+                }
+                AlohomoraOutlinedCard {
+                    Text("Outlined card", modifier = Modifier.padding(16.dp))
+                }
+            }
+        }
+    }
 }

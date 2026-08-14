@@ -7,18 +7,25 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
+import androidx.compose.ui.tooling.preview.Preview
 
 enum class ConnectionDotState {
     Connected,
@@ -85,5 +92,23 @@ fun ConnectionStatusDot(
                 .size(size)
                 .background(color, CircleShape),
         )
+    }
+}
+
+@Preview
+@Composable
+private fun ConnectionStatusDotPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Row(
+                modifier = Modifier.padding(24.dp),
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ConnectionStatusDot(state = ConnectionDotState.Connected)
+                ConnectionStatusDot(state = ConnectionDotState.Reconnecting)
+                ConnectionStatusDot(state = ConnectionDotState.Disconnected)
+            }
+        }
     }
 }

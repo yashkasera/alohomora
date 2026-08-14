@@ -220,17 +220,120 @@ public final class io/github/yashkasera/alohomora/ui/components/ComposableSingle
 	public final fun getLambda$1616092354$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 }
 
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraButtonsKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraButtonsKt;
+	public fun <init> ()V
+	public final fun getLambda$-425082522$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$373742649$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$983927499$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraCardsKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraCardsKt;
+	public fun <init> ()V
+	public final fun getLambda$-1338726007$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$1302105031$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$157435874$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1830434654$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$242702173$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraChipsKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraChipsKt;
+	public fun <init> ()V
+	public final fun getLambda$-2058172582$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-913503425$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraCodeBlockKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraCodeBlockKt;
+	public fun <init> ()V
+	public final fun getLambda$-511073432$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-704105907$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraDividersKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraDividersKt;
+	public fun <init> ()V
+	public final fun getLambda$-1676922111$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$287246460$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraFloatingActionButtonKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraFloatingActionButtonKt;
+	public fun <init> ()V
+	public final fun getLambda$-1080244600$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-631525735$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$455451370$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$49998765$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraMethodBadgeKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraMethodBadgeKt;
+	public fun <init> ()V
+	public final fun getLambda$-1408335975$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-206861922$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraProgressIndicatorsKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraProgressIndicatorsKt;
+	public fun <init> ()V
+	public final fun getLambda$-2035936717$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-572422792$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraSelectionControlsKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraSelectionControlsKt;
+	public fun <init> ()V
+	public final fun getLambda$-575251511$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1142961892$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraTabsKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraTabsKt;
+	public fun <init> ()V
+	public final fun getLambda$-1561578067$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-1785264722$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1503149192$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraTextFieldsKt {
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraTextFieldsKt;
 	public fun <init> ()V
+	public final fun getLambda$-1075678419$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-255063672$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$-696975101$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$221632499$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraToggleGroupsKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraToggleGroupsKt;
+	public fun <init> ()V
+	public final fun getLambda$-584852261$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1140155680$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraTopBarKt {
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraTopBarKt;
 	public fun <init> ()V
+	public final fun getLambda$-328163539$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-843595640$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$1239337770$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$ConnectionStatusDotKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$ConnectionStatusDotKt;
+	public fun <init> ()V
+	public final fun getLambda$1418985320$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$598370573$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$EmptyStateKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$EmptyStateKt;
+	public fun <init> ()V
+	public final fun getLambda$-1940687896$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-36803379$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-455365523$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$FabClearanceKt {

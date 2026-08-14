@@ -3,6 +3,8 @@ package io.github.yashkasera.alohomora.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AssistChip
@@ -11,6 +13,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
@@ -20,6 +23,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
+import androidx.compose.ui.tooling.preview.Preview
 
 object AlohomoraChipDefaults {
     val shape @Composable get() = MaterialTheme.shapes.extraSmall
@@ -117,4 +123,27 @@ fun AlohomoraChip(
             )
             .padding(AlohomoraChipDefaults.contentPadding),
     )
+}
+
+@Preview
+@Composable
+private fun AlohomoraChipsPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                AlohomoraChip(label = "GET")
+                AlohomoraChip(
+                    label = "200 OK",
+                    containerColor = MaterialTheme.alohomoraColors.successContainer,
+                    contentColor = MaterialTheme.alohomoraColors.success,
+                )
+                AlohomoraFilterChip(label = "Errors", selected = true, onClick = {})
+                AlohomoraFilterChip(label = "Warnings", selected = false, onClick = {})
+                AlohomoraAssistChip(label = "Copy", onClick = {})
+            }
+        }
+    }
 }

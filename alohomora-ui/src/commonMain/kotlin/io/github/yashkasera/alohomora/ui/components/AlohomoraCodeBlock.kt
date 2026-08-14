@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -20,7 +21,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
+import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
@@ -173,4 +176,19 @@ private fun manualPrettifyJson(json: String): String {
     }
 
     return result.toString()
+}
+
+@Preview
+@Composable
+private fun AlohomoraCodeBlockPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            AlohomoraCodeBlock(
+                content = """{"id":42,"status":"ok"}""",
+                modifier = Modifier.padding(16.dp),
+                isScrollable = false,
+                jsonPrettify = true,
+            )
+        }
+    }
 }

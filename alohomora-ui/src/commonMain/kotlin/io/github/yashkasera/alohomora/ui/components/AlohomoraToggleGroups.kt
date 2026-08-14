@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import androidx.compose.ui.tooling.preview.Preview
 
 data class AlohomoraToggleItem(
     val id: String,
@@ -86,6 +88,25 @@ private fun AlohomoraToggleItem(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun AlohomoraSingleChoiceToggleGroupPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            AlohomoraSingleChoiceToggleGroup(
+                items = listOf(
+                    AlohomoraToggleItem("all", "All"),
+                    AlohomoraToggleItem("errors", "Errors"),
+                    AlohomoraToggleItem("warnings", "Warnings"),
+                ),
+                selectedId = "all",
+                onSelectedIdChange = {},
+                modifier = Modifier.padding(16.dp),
             )
         }
     }

@@ -292,12 +292,30 @@ Both mobile and desktop use Compose for the DevTools UI. **The mobile console ru
 
 ### Design tokens
 
-All spacing, colors, and typography come from `alohomora-ui/.../theme/`:
-- **Dimens:** `margin` (xs/sm/md/lg/xl/xxl), `corner` (small/medium), `icon` (xs/sm/md/lg), `stroke` (thin/small/medium)
-- **Typography:** Material Design 3 styles (displayMedium, headlineSmall, titleMedium, bodyMedium, labelSmall, etc.)
-- **Colors:** Material scheme (primary, secondary, tertiary, error, surface, background, etc.)
+All spacing, radius, colors, and typography come from `alohomora-ui/.../theme/`. **Full reference:
+[`alohomora-ui/DESIGN_SYSTEM.md`](alohomora-ui/DESIGN_SYSTEM.md)** (token tables, component catalog,
+do/don't, contribution guide).
 
-Use tokens everywhere. Hardcoded `dp` values are a refactoring smell.
+- **Dimens** (`MaterialTheme.dimens`, `Dimens.kt`): `margin` (xs 4 / sm 8 / md 12 / lg 16 / xl 20 /
+  xxl 24 / xxxl 32 / huge 48 / fab 88), `icon` (xs 12 / sm 14 / md 16 / lg 20 / standard 24 / xl 36 /
+  illustration 80), `stroke` (thin 0.5 / small 1 / medium 2). **There is no `corner` token** — corners
+  are `Shape`s, not `Dp`s (see below).
+- **Shapes** (`MaterialTheme.shapes`, `Shape.kt`): `extraSmall` 4 / `small` 8 / `medium` 12 /
+  `large` 16 / `extraLarge` 28, plus `AlohomoraBottomSheetShape` (top corners only). This is the
+  single corner scale; a former parallel `AlohomoraDimens.Corner` was deleted.
+- **Typography** (`MaterialTheme.typography`, `Type.kt`): **not** stock M3 fonts. Three bundled
+  families, one `Regular` face each — Instrument Serif (`display*`/`headline*`), Newsreader
+  (`title*`), JetBrains Mono (`body*`/`label*`). Weight is pinned to `Normal` everywhere; **emphasis
+  is carried by size and colour, never `FontWeight`** (a fake weight has no bundled face and Skia
+  synthesises it differently per platform).
+- **Colors:** Material roles via `MaterialTheme.colorScheme` (primary, surface, onSurface,
+  onSurfaceVariant, outline, scrim, surfaceContainer*, …), plus semantic status tokens via
+  `MaterialTheme.alohomoraColors` (`accent`, `success`, `successContainer`, `warning`, `info`,
+  `fatal`). Five themes (`material`, `monochrome`, `dracula`, `nord`, `solarized`) × light/dark,
+  selected through `AppTheme(themeId, isDark)`.
+
+Use tokens everywhere. A hardcoded `dp` or `Color(0xFF…)` is a refactoring smell. Prefer the
+`Alohomora*` component wrappers over raw `androidx.compose.material3.*`.
 
 ### Icons (Lucide)
 

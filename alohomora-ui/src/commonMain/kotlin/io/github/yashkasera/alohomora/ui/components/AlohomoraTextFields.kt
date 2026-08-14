@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -19,6 +20,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,7 +42,9 @@ import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.X
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun AlohomoraTextField(
@@ -240,3 +244,30 @@ private fun TextRange.coerceAtMostLength(length: Int): TextRange =
     } else {
         TextRange(start.coerceAtMost(length), end.coerceAtMost(length))
     }
+
+@Preview
+@Composable
+private fun AlohomoraTextFieldsPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                AlohomoraTextField(
+                    value = "https://api.example.com",
+                    onValueChange = {},
+                    label = "URL",
+                )
+                AlohomoraTextField(
+                    value = "abc",
+                    onValueChange = {},
+                    label = "Port",
+                    isError = true,
+                    supportingText = "Must be a number",
+                )
+                AlohomoraSearchTextField(query = "traffic", onQueryChange = {})
+            }
+        }
+    }
+}

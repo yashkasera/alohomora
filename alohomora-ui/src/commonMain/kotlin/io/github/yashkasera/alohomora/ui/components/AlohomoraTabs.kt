@@ -3,12 +3,15 @@ package io.github.yashkasera.alohomora.ui.components
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import androidx.compose.ui.tooling.preview.Preview
 
 data class AlohomoraTabItem(
     val id: String,
@@ -83,4 +86,17 @@ fun AlohomoraTab(
         },
         icon = icon,
     )
+}
+
+@Preview
+@Composable
+private fun AlohomoraTabsPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            AlohomoraPrimaryTabRow(selectedTabIndex = 0) {
+                AlohomoraTab(selected = true, onClick = {}, text = "Builder")
+                AlohomoraTab(selected = false, onClick = {}, text = "History")
+            }
+        }
+    }
 }

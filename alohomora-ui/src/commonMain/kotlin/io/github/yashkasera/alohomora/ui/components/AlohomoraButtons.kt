@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
@@ -9,11 +11,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -23,6 +27,10 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Plus
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import androidx.compose.ui.tooling.preview.Preview
 
 enum class AlohomoraButtonSize {
     SMALL,
@@ -352,4 +360,25 @@ private fun AlohomoraButtonBase(
         }
     }
     button(contentPadding, baseContent)
+}
+
+@Preview
+@Composable
+private fun AlohomoraButtonsPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                AlohomoraFilledButton(text = "Filled", onClick = {})
+                AlohomoraOutlinedButton(text = "Outlined", onClick = {})
+                AlohomoraTextButton(text = "Text", onClick = {})
+                AlohomoraFilledButton(text = "Disabled", onClick = {}, enabled = false)
+                AlohomoraIconButton(onClick = {}) {
+                    Icon(Icons.Plus, contentDescription = null)
+                }
+            }
+        }
+    }
 }
