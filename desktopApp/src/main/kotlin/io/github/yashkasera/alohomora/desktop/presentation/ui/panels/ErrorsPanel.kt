@@ -77,6 +77,7 @@ fun ErrorsPanel(
                     title = "No errors yet",
                     subtitle = "Uncaught exceptions appear here automatically. " +
                         "Caught ones show up when the app calls Alohomora.recordError.",
+                    setup = "try {\n    // ...\n} catch (e: Exception) {\n    Alohomora.recordError(e)\n}",
                 )
             } else {
                 LazyColumn(

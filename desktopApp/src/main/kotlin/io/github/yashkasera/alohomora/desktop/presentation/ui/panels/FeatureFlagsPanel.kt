@@ -306,6 +306,11 @@ private fun FeatureFlagsEmptyState(uiState: FeatureFlagUiState, onClearQuery: ()
             icon = Icons.ToggleLeft,
             title = "No feature flags",
             subtitle = "Flags appear here once the connected app calls Alohomora.recordFeatureFlag().",
+            setup = "Alohomora.recordFeatureFlag(\n" +
+                "    key = \"dark_mode\",\n" +
+                "    value = \"true\",\n" +
+                "    source = \"remote_config\",\n" +
+                ")",
         )
     } else {
         EmptyState(

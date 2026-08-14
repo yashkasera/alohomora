@@ -4,39 +4,18 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -46,8 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
@@ -55,20 +32,15 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.app.isClearShortcut
-import io.github.yashkasera.alohomora.desktop.app.isMacOs
 import io.github.yashkasera.alohomora.desktop.app.isModifierKeyOnly
 import io.github.yashkasera.alohomora.desktop.app.isScreenshotShortcut
 import io.github.yashkasera.alohomora.desktop.app.matchesNavigation
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
-import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.CommandPalette
-import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.HelpDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.OtpPromptDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.buildCommandActions
@@ -102,19 +74,6 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewM
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
-import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
-import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
-import io.github.yashkasera.alohomora.ui.icons.Alohomora
-import io.github.yashkasera.alohomora.ui.icons.AlohomoraFull
-import io.github.yashkasera.alohomora.ui.icons.Android
-import io.github.yashkasera.alohomora.ui.icons.Apple
-import io.github.yashkasera.alohomora.ui.icons.HardDrive
-import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.Search
-import io.github.yashkasera.alohomora.ui.icons.Settings
-import io.github.yashkasera.alohomora.ui.icons.X
-import io.github.yashkasera.alohomora.ui.theme.dimens
 import java.io.File
 import kotlinx.coroutines.delay
 
@@ -164,11 +123,7 @@ fun DevToolsDesktopApp(
     }
     var showMockSheet by remember { mutableStateOf(false) }
     var showDeepLinkBuilder by remember { mutableStateOf(false) }
-    // Read from the view model rather than held here: the sheet's whole state (selection, collapse,
-    // split) lives there, so a second copy of "which trace is open" could only ever disagree.
     val selectedTraceId by tracesViewModel.selectedTraceId.collectAsState()
-    // An id, not the Event, for the same reason as the trace above — and because markEventViewed
-    // replaces the instance in the store, so a captured copy would render a stale isViewed.
     val selectedEventId by eventsViewModel.selectedEventId.collectAsState()
     var selectedDeviceId by remember(initialDeviceId) { mutableStateOf(initialDeviceId) }
     var isModifierHeld by remember { mutableStateOf(false) }
@@ -605,338 +560,5 @@ fun DevToolsDesktopApp(
             themeId = themeId,
             onDismiss = onDismissHelp,
         )
-    }
-}
-
-@Composable
-private fun NoDevicePanel(
-    onRefresh: () -> Unit,
-) {
-    EmptyState(
-        icon = Icons.HardDrive,
-        title = "No device connected",
-        subtitle = "Connect an Android device over USB or adb tcpip, or an iPhone over USB, then refresh.",
-        action = {
-            AlohomoraOutlinedButton(text = "Refresh devices", onClick = onRefresh)
-        },
-    )
-}
-
-// Top padding for the sidebar logo on macOS: enough to clear the ~28px native traffic lights that
-// now overlay the top-left corner, plus a little breathing room.
-private val SidebarTopInsetMac = 40.dp
-
-/**
- * A non-editable "search" affordance that opens the command palette. Lives at the top of the sidebar
- * so the palette has a discoverable home on every platform; the ⌘K / Ctrl K hint mirrors the actual
- * shortcut. Replaces the old empty macOS title-bar strip.
- */
-@Composable
-private fun CommandPaletteSearchPill(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable(onClick = onClick)
-            .padding(
-                horizontal = MaterialTheme.dimens.margin.md,
-                vertical = MaterialTheme.dimens.margin.sm,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = Icons.Search,
-            contentDescription = null,
-            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-        Text(
-            text = "Search",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            text = if (isMacOs) "⌘K" else "Ctrl K",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
-fun ColumnScope.Sidebar(
-    activeSection: DesktopSection,
-    onDisconnect: () -> Unit,
-    onSectionClick: (DesktopSection) -> Unit,
-    connection: DevToolsConnection,
-    devices: List<DeviceUi>,
-    selectedDeviceId: String?,
-    appName: String? = null,
-    onOpenCommandPalette: () -> Unit = {},
-    isModifierHeld: Boolean = false,
-    visibleSections: List<DesktopSection> = emptyList(),
-) {
-    Icon(
-        imageVector = Icons.AlohomoraFull,
-        contentDescription = null,
-        modifier = Modifier
-            // Extra top room on macOS so the logo clears the native traffic lights, which overlay
-            // the top-left of the window now that the title bar is transparent.
-            .padding(top = if (isMacOs) SidebarTopInsetMac else MaterialTheme.dimens.margin.xxl)
-            .padding(horizontal = MaterialTheme.dimens.margin.xxl)
-            .width(148.dp),
-    )
-
-    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
-
-    CommandPaletteSearchPill(
-        onClick = onOpenCommandPalette,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = MaterialTheme.dimens.margin.lg),
-    )
-
-    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
-
-    SidebarConnectionCard(
-        connection = connection,
-        devices = devices,
-        selectedDeviceId = selectedDeviceId,
-        appName = appName,
-        onDisconnect = onDisconnect,
-    )
-    LazyColumn(
-        modifier = Modifier
-            .weight(1f),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-        contentPadding = PaddingValues(MaterialTheme.dimens.margin.lg),
-    ) {
-        itemsIndexed(visibleSections, key = { _, section -> section.title }) { index, section ->
-            NavigationDrawerItem(
-                label = {
-                    Text(
-                        text = section.title,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f),
-                    )
-                },
-                selected = activeSection == section,
-                icon = {
-                    Icon(
-                        section.icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
-                    )
-                },
-                badge = {
-                    if (isModifierHeld && index < 9) {
-                        Text(
-                            text = "${index + 1}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier
-                                .background(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.shapes.extraSmall,
-                                )
-                                .padding(horizontal = 6.dp, vertical = 1.dp),
-                        )
-                    }
-                },
-                onClick = { onSectionClick(section) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun SidebarConnectionCard(
-    connection: DevToolsConnection,
-    devices: List<DeviceUi>,
-    selectedDeviceId: String?,
-    appName: String? = null,
-    onDisconnect: () -> Unit,
-) {
-    val selectedOnlineDevice =
-        devices.firstOrNull { it.id == selectedDeviceId && it.state == DeviceState.DEVICE }
-
-    Column(
-        modifier = Modifier
-            .padding(horizontal = MaterialTheme.dimens.margin.lg)
-            .border(
-                MaterialTheme.dimens.stroke.small,
-                MaterialTheme.colorScheme.outline,
-                MaterialTheme.shapes.small,
-            )
-            .background(MaterialTheme.colorScheme.surfaceContainer, MaterialTheme.shapes.small)
-            .fillMaxWidth()
-            .padding(MaterialTheme.dimens.margin.md),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        if (selectedOnlineDevice == null) {
-            Text(
-                text = "No online devices found",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.secondary,
-            )
-        } else {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val dotState = when (connection) {
-                    DevToolsConnection.Disconnected -> ConnectionDotState.Disconnected
-                    is DevToolsConnection.Connecting -> ConnectionDotState.Reconnecting
-                    is DevToolsConnection.AwaitingAuth -> ConnectionDotState.Reconnecting
-                    is DevToolsConnection.Connected -> ConnectionDotState.Connected
-                    is DevToolsConnection.Reconnecting -> ConnectionDotState.Reconnecting
-                    is DevToolsConnection.Failed -> ConnectionDotState.Disconnected
-                }
-                ConnectionStatusDot(state = dotState)
-                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                val connectionText = when (connection) {
-                    DevToolsConnection.Disconnected -> "Disconnected"
-                    is DevToolsConnection.Connecting -> "Connecting ${connection.host}:${connection.port}"
-                    is DevToolsConnection.AwaitingAuth -> "Waiting for OTP"
-                    is DevToolsConnection.Connected -> "Connected"
-                    is DevToolsConnection.Reconnecting -> "Reconnecting (${connection.attempt})"
-
-                    is DevToolsConnection.Failed -> "Failed: ${connection.reason}"
-                }
-                Text(
-                    text = connectionText,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
-            }
-            if (!appName.isNullOrBlank()) {
-                Text(
-                    text = appName,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(horizontal = 10.dp, vertical = MaterialTheme.dimens.margin.sm),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector =
-                        if (selectedOnlineDevice.platform.isIos)
-                            Icons.Apple
-                        else Icons.Android,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(MaterialTheme.dimens.margin.sm)
-                        .size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = selectedOnlineDevice.model ?: selectedOnlineDevice.id,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = selectedOnlineDevice.id,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                if (connection is DevToolsConnection.Connected || connection is DevToolsConnection.Reconnecting) {
-                    AlohomoraIconButton(onClick = onDisconnect) {
-                        Icon(Icons.X, contentDescription = "Disconnect")
-                    }
-                }
-            }
-        }
-
-    }
-}
-
-/**
- * Advisory banner for a command the device could not serve.
- *
- * Deliberately dismissible and non-blocking: the session is still live and every other panel keeps
- * working, so this must not become a modal that hides the console. It exists because the failure it
- * reports used to be completely silent on this side.
- */
-@Composable
-private fun DeviceErrorBanner(
-    message: String,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier
-            .padding(MaterialTheme.dimens.margin.md)
-            .widthIn(max = 720.dp),
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.errorContainer,
-        contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        tonalElevation = MaterialTheme.dimens.margin.xs,
-    ) {
-        Row(
-            modifier = Modifier.padding(
-                horizontal = MaterialTheme.dimens.margin.md,
-                vertical = MaterialTheme.dimens.margin.sm,
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-        ) {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f, fill = false),
-            )
-            AlohomoraTextButton(
-                text = "Dismiss",
-                onClick = onDismiss,
-                uppercase = false,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ReconnectingBanner(
-    attempt: Int,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier
-            .padding(MaterialTheme.dimens.margin.md)
-            .widthIn(max = 480.dp),
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.tertiaryContainer,
-        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-        tonalElevation = MaterialTheme.dimens.margin.xs,
-    ) {
-        Row(
-            modifier = Modifier.padding(
-                horizontal = MaterialTheme.dimens.margin.md,
-                vertical = MaterialTheme.dimens.margin.sm,
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-        ) {
-            ConnectionStatusDot(state = ConnectionDotState.Reconnecting)
-            Text(
-                text = "Reconnecting (attempt $attempt)...",
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
     }
 }

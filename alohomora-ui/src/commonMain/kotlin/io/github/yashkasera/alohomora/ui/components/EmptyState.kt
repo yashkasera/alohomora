@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -34,6 +35,8 @@ import androidx.compose.ui.tooling.preview.Preview
 /**
  * Explains why a surface has nothing on it.
  *
+ * @param setup optional code snippet shown below the subtitle in a monospace block, so the
+ *   reader knows which API call to wire up.
  * @param action optional control rendered below the text — a retry or refresh, for the cases
  *   where the user can do something about the emptiness.
  */
@@ -43,6 +46,7 @@ fun EmptyState(
     title: String,
     subtitle: String? = null,
     modifier: Modifier = Modifier,
+    setup: String? = null,
     action: (@Composable () -> Unit)? = null,
 ) {
     // Tagged here rather than at each of the ten call sites: "did this screen fall back to its
@@ -54,7 +58,9 @@ fun EmptyState(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.xxxl),
+            modifier = Modifier
+                .fillMaxWidth(0.7f)
+                .padding(horizontal = MaterialTheme.dimens.margin.xxxl),
         ) {
             Box(
                 modifier = Modifier
@@ -78,9 +84,7 @@ fun EmptyState(
 
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontStyle = FontStyle.Italic,
-                ),
+                style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.testTag(AlohomoraTestTags.Chrome.EMPTY_STATE_TITLE),
@@ -90,11 +94,17 @@ fun EmptyState(
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        letterSpacing = 0.5.sp,
-                    ),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
+                )
+            }
+
+            if (setup != null) {
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+                AlohomoraCodeBlock(
+                    content = setup,
+                    isScrollable = false,
                 )
             }
 

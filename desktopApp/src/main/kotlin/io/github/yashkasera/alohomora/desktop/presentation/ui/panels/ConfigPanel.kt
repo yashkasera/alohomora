@@ -57,10 +57,9 @@ fun ConfigPanel(devToolsViewModel: DevToolsViewModel) {
                 EmptyState(
                     icon = Icons.Settings,
                     title = "No build metadata",
-                    // The two real causes, in the order they are worth checking. Both are
-                    // build-time wiring, so neither is fixable from this window.
                     subtitle = "Apply the Alohomora Gradle plugin on Android, or add the " +
                         "build-info script phase on iOS, then rebuild the app.",
+                    setup = "plugins {\n    id(\"io.github.yashkasera.alohomora\")\n}",
                 )
             } else {
                 Column(

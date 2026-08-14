@@ -172,6 +172,7 @@ internal fun EventsEmptyState(
             icon = Icons.ChartLine,
             title = "No events yet",
             subtitle = "Events appear here as the connected app records them.",
+            setup = "Alohomora.recordEvent(\n    \"screen_view\",\n    mapOf(\"screen\" to \"home\"),\n)",
         )
 
         !state.filters.hasTransientFilter -> EmptyState(

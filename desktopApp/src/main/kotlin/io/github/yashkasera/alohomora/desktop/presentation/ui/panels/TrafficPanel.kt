@@ -251,6 +251,7 @@ private fun TrafficEmptyState(state: TrafficUiState, onClearFilters: () -> Unit)
             icon = Icons.Server,
             title = "No traffic yet",
             subtitle = "Requests appear here as the connected app makes them.",
+            setup = "OkHttpClient.Builder()\n    .addInterceptor(TrafficInterceptor())\n    .build()",
         )
     } else {
         EmptyState(

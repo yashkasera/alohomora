@@ -162,12 +162,20 @@ private fun TracesEmptyState(captureSupported: Boolean, isFiltered: Boolean, has
             title = "No tracer connected",
             subtitle = "This app has not recorded a span yet. Bridge your tracer to " +
                 "Alohomora.recordSpan(...) — the README has adapters for OpenTelemetry and Sentry.",
+            setup = "Alohomora.recordSpan(\n" +
+                "    traceId = span.traceId,\n" +
+                "    spanId = span.spanId,\n" +
+                "    name = span.name,\n" +
+                "    startEpochNanos = span.startEpochNanos,\n" +
+                "    endEpochNanos = span.endEpochNanos,\n" +
+                ")",
         )
 
         else -> EmptyState(
             icon = Icons.Waypoints,
             title = "No traces yet",
             subtitle = "Traces appear here as the connected app records spans.",
+            setup = "Alohomora.recordSpan(\"my-operation\", durationNanos = 150_000_000)",
         )
     }
 }
