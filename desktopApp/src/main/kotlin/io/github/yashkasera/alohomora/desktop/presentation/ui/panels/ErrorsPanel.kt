@@ -17,12 +17,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.exceptionTypeName
@@ -34,7 +38,9 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsVie
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
+import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
@@ -48,16 +54,29 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 fun ErrorsPanel(
     devToolsViewModel: DevToolsViewModel,
     onErrorClick: (Error) -> Unit,
+    searchFocusTrigger: Long = 0L,
 ) {
-    val errors by devToolsViewModel.errors.collectAsState()
+    val errors by devToolsViewModel.filteredErrors.collectAsState()
+    val totalCount by devToolsViewModel.errors.collectAsState()
+    val query by devToolsViewModel.errorQuery.collectAsState()
     val lazyListState = rememberLazyListState()
     var showClearConfirmation by remember { mutableStateOf(false) }
+    val searchFocus = remember { FocusRequester() }
+
+    LaunchedEffect(searchFocusTrigger) {
+        if (searchFocusTrigger > 0) searchFocus.requestFocus()
+    }
+
     Scaffold(
         topBar = {
             AlohomoraTopBar(
                 title = "Errors",
                 layout = TopBarLayout.START_ALIGNED,
-                subtitle = "Crashes and reported failures from connected app",
+                subtitle = if (query.isBlank()) {
+                    "${totalCount.size} errors"
+                } else {
+                    "${errors.size} of ${totalCount.size} errors"
+                },
                 actions = {
                     AlohomoraIconButton(onClick = { showClearConfirmation = true }) {
                         Icon(
@@ -69,37 +88,64 @@ fun ErrorsPanel(
             )
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-    ) {
-        Box(modifier = Modifier.padding(it).fillMaxSize()) {
-            if (errors.isEmpty()) {
-                EmptyState(
-                    icon = Icons.AlertTriangle,
-                    title = "No errors yet",
-                    subtitle = "Uncaught exceptions appear here automatically. " +
-                        "Caught ones show up when the app calls Alohomora.recordError.",
-                    setup = "try {\n    // ...\n} catch (e: Exception) {\n    Alohomora.recordError(e)\n}",
-                )
-            } else {
-                LazyColumn(
-                    state = lazyListState,
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-                    contentPadding = PaddingValues(
-                        MaterialTheme.dimens.margin.md,
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = MaterialTheme.dimens.margin.xxl,
+                        vertical = MaterialTheme.dimens.margin.sm,
                     ),
-                ) {
-                    items(errors, key = { error -> error.id }) { error ->
-                        ErrorRow(
-                            error = error,
-                            onClick = {
-                                devToolsViewModel.markErrorViewed(error.id)
-                                onErrorClick(error)
-                            },
-                        )
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AlohomoraSearchTextField(
+                    query = query,
+                    onQueryChange = devToolsViewModel::onErrorQueryChange,
+                    placeholder = "Filter by exception type, message or location",
+                    onClear = { devToolsViewModel.onErrorQueryChange("") },
+                    modifier = Modifier.weight(1f).focusRequester(searchFocus),
+                )
+            }
+            AlohomoraHorizontalDivider()
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (totalCount.isEmpty()) {
+                    EmptyState(
+                        icon = Icons.AlertTriangle,
+                        title = "No errors yet",
+                        subtitle = "Uncaught exceptions appear here automatically. " +
+                            "Caught ones show up when the app calls Alohomora.recordError.",
+                        setup = "try {\n    // ...\n} catch (e: Exception) {\n    Alohomora.recordError(e)\n}",
+                    )
+                } else if (errors.isEmpty()) {
+                    EmptyState(
+                        icon = Icons.AlertTriangle,
+                        title = "No matching errors",
+                        subtitle = "No errors match the current filter.",
+                    )
+                } else {
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                        contentPadding = PaddingValues(
+                            MaterialTheme.dimens.margin.md,
+                        ),
+                    ) {
+                        items(errors, key = { error -> error.id }) { error ->
+                            ErrorRow(
+                                error = error,
+                                onClick = {
+                                    devToolsViewModel.markErrorViewed(error.id)
+                                    onErrorClick(error)
+                                },
+                            )
+                        }
+                        fabClearanceItem()
                     }
-                    fabClearanceItem()
+                    ScrollToTopButton(lazyListState)
                 }
-                ScrollToTopButton(lazyListState)
             }
         }
         FollowNewest(lazyListState, errors.size)

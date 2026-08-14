@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -63,8 +66,15 @@ import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
-fun FeatureFlagsPanel(featureFlagsViewModel: FeatureFlagViewModel) {
+fun FeatureFlagsPanel(
+    featureFlagsViewModel: FeatureFlagViewModel,
+    searchFocusTrigger: Long = 0L,
+) {
     val uiState by featureFlagsViewModel.uiState.collectAsState()
+    val searchFocus = remember { FocusRequester() }
+    LaunchedEffect(searchFocusTrigger) {
+        if (searchFocusTrigger > 0) searchFocus.requestFocus()
+    }
     val lazyListState = rememberLazyListState()
     var expandedKey by remember { mutableStateOf<String?>(null) }
 
@@ -94,7 +104,7 @@ fun FeatureFlagsPanel(featureFlagsViewModel: FeatureFlagViewModel) {
                     onQueryChange = featureFlagsViewModel::onQueryChange,
                     placeholder = "Filter by key, value, source, or type",
                     onClear = { featureFlagsViewModel.onQueryChange("") },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).focusRequester(searchFocus),
                 )
             }
 

@@ -48,7 +48,10 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsPanel(eventsViewModel: EventsViewModel) {
+fun EventsPanel(
+    eventsViewModel: EventsViewModel,
+    searchFocusTrigger: Long = 0L,
+) {
     val state by eventsViewModel.uiState.collectAsState()
     val showProperties by eventsViewModel.showProperties.collectAsState()
     val lazyListState = rememberLazyListState()
@@ -102,6 +105,7 @@ fun EventsPanel(eventsViewModel: EventsViewModel) {
                 onToggleMute = eventsViewModel::toggleMute,
                 onUnmuteAll = eventsViewModel::unmuteAll,
                 onClearFilters = eventsViewModel::clearFilters,
+                searchFocusTrigger = searchFocusTrigger,
             )
             AlohomoraHorizontalDivider()
 

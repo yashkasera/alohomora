@@ -121,6 +121,13 @@ fun DeviceWindow(
                     )
                     Item("Exit", onClick = onExit)
                 }
+                Menu("Edit") {
+                    Item(
+                        "Find",
+                        shortcut = KeyShortcut(Key.F, meta = isMacOs, ctrl = !isMacOs),
+                        onClick = {},
+                    )
+                }
                 Menu("View") {
                     Item(
                         "Zoom In",
@@ -170,6 +177,22 @@ fun DeviceWindow(
                                 localPath,
                             )
                         },
+                    )
+                    Separator()
+                    Item(
+                        "Deep Link Builder",
+                        shortcut = KeyShortcut(Key.L, meta = isMacOs, ctrl = !isMacOs),
+                        onClick = {},
+                    )
+                    Item(
+                        "Mock Rules",
+                        shortcut = KeyShortcut(
+                            Key.M,
+                            shift = true,
+                            meta = isMacOs,
+                            ctrl = !isMacOs,
+                        ),
+                        onClick = {},
                     )
                 }
                 Menu("Help") {

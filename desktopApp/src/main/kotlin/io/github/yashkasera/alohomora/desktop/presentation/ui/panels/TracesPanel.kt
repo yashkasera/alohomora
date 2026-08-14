@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
@@ -46,8 +49,13 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 fun TracesPanel(
     tracesViewModel: TracesViewModel,
     onTraceClick: (String) -> Unit,
+    searchFocusTrigger: Long = 0L,
 ) {
     val traces by tracesViewModel.traces.collectAsState()
+    val searchFocus = remember { FocusRequester() }
+    LaunchedEffect(searchFocusTrigger) {
+        if (searchFocusTrigger > 0) searchFocus.requestFocus()
+    }
     val query by tracesViewModel.query.collectAsState()
     val errorsOnly by tracesViewModel.errorsOnly.collectAsState()
     val captureSupported by tracesViewModel.captureSupported.collectAsState()
@@ -91,7 +99,7 @@ fun TracesPanel(
                     onQueryChange = tracesViewModel::onQueryChange,
                     placeholder = "Filter by span name, scope or trace id",
                     onClear = { tracesViewModel.onQueryChange("") },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).focusRequester(searchFocus),
                 )
                 AlohomoraFilterChip(
                     label = "Errors",

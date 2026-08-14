@@ -26,6 +26,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,6 +85,7 @@ fun TrafficPanel(
     networkRulesViewModel: NetworkRulesViewModel,
     onLogClick: (TrafficEntry) -> Unit,
     onOpenMockRules: () -> Unit = {},
+    searchFocusTrigger: Long = 0L,
 ) {
     val uiState by trafficViewModel.uiState.collectAsState()
     val query by trafficViewModel.query.collectAsState()
@@ -119,6 +122,7 @@ fun TrafficPanel(
                 onMethodToggle = trafficViewModel::onMethodToggle,
                 onErrorsOnlyChange = trafficViewModel::onErrorsOnlyChange,
                 onClearFilters = trafficViewModel::clearFilters,
+                searchFocusTrigger = searchFocusTrigger,
             )
             AlohomoraHorizontalDivider()
 
@@ -176,7 +180,12 @@ private fun TrafficFilters(
     onMethodToggle: (String) -> Unit,
     onErrorsOnlyChange: (Boolean) -> Unit,
     onClearFilters: () -> Unit,
+    searchFocusTrigger: Long = 0L,
 ) {
+    val searchFocus = remember { FocusRequester() }
+    LaunchedEffect(searchFocusTrigger) {
+        if (searchFocusTrigger > 0) searchFocus.requestFocus()
+    }
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -191,10 +200,9 @@ private fun TrafficFilters(
             AlohomoraSearchTextField(
                 query = query,
                 onQueryChange = onQueryChange,
-                // Names the three things matched. Bodies are not searched — see TrafficEntry.searchHaystack.
                 placeholder = "Filter by URL, method or status",
                 onClear = { onQueryChange("") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).focusRequester(searchFocus),
             )
             // Counted in the label so the chip reports whether pressing it will show anything, rather than
             // making the user press it to find out.

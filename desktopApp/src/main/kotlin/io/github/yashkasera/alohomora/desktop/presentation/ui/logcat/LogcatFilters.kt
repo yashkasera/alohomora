@@ -8,8 +8,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.LogLevel
 import io.github.yashkasera.alohomora.desktop.presentation.model.LogcatFilterState
@@ -24,7 +28,12 @@ fun LogcatFilters(
     onSelectTag: (String?) -> Unit,
     onPackageChange: (String) -> Unit,
     onSearch: (String) -> Unit,
+    searchFocusTrigger: Long = 0L,
 ) {
+    val searchFocus = remember { FocusRequester() }
+    LaunchedEffect(searchFocusTrigger) {
+        if (searchFocusTrigger > 0) searchFocus.requestFocus()
+    }
     Column {
         Row {
             LogLevel.entries.forEach { level ->
@@ -74,7 +83,7 @@ fun LogcatFilters(
             onValueChange = onSearch,
             placeholder = "Search",
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().focusRequester(searchFocus),
         )
     }
 }

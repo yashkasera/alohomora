@@ -27,6 +27,7 @@ fun LogcatPanel(
     logcatViewModel: LogcatViewModel,
     selectedDeviceId: String?,
     modifier: Modifier = Modifier,
+    searchFocusTrigger: Long = 0L,
 ) {
     val error by devicesViewModel.error.collectAsState()
     val uiState by logcatViewModel.uiState.collectAsState()
@@ -82,6 +83,7 @@ fun LogcatPanel(
                 onSelectTag = { logcatViewModel.updateSelectedTag(it) },
                 onPackageChange = { logcatViewModel.updatePackageName(it) },
                 onSearch = { logcatViewModel.updateSearchQuery(it) },
+                searchFocusTrigger = searchFocusTrigger,
             )
 
             LogcatList(

@@ -162,6 +162,8 @@ private fun ShortcutsTab(actions: List<CommandAction>) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.xs),
         )
+        ShortcutRow(label = "Focus search", shortcut = "$mod+F")
+        ShortcutRow(label = "Toggle event properties", shortcut = "$mod+E")
         ShortcutRow(label = "Clear active panel", shortcut = "$mod+Shift+Del")
         ShortcutRow(label = "Close drawer / dialog", shortcut = "Esc")
         ShortcutRow(label = "Command Palette", shortcut = "$mod+K")

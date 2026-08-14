@@ -60,6 +60,22 @@ fun KeyEvent.isScreenshotShortcut(): Boolean =
     isShortcutModifier() && isShiftPressed && key == Key.S
 
 @OptIn(ExperimentalComposeUiApi::class)
+fun KeyEvent.isFocusSearchShortcut(): Boolean =
+    isShortcutModifier() && key == Key.F
+
+@OptIn(ExperimentalComposeUiApi::class)
+fun KeyEvent.isDeepLinkShortcut(): Boolean =
+    isShortcutModifier() && key == Key.L
+
+@OptIn(ExperimentalComposeUiApi::class)
+fun KeyEvent.isMockRulesShortcut(): Boolean =
+    isShortcutModifier() && isShiftPressed && key == Key.M
+
+@OptIn(ExperimentalComposeUiApi::class)
+fun KeyEvent.isTogglePropertiesShortcut(): Boolean =
+    isShortcutModifier() && key == Key.E
+
+@OptIn(ExperimentalComposeUiApi::class)
 fun KeyEvent.isZoomInShortcut(): Boolean =
     isShortcutModifier() && key == Key.Equals
 

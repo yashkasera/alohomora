@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.exceptionTypeName
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
@@ -22,6 +23,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -177,6 +179,25 @@ class DevToolsViewModel(
 
     val events = repository.events
     val errors = repository.errors
+
+    private val _errorQuery = MutableStateFlow("")
+    val errorQuery: StateFlow<String> = _errorQuery.asStateFlow()
+
+    val filteredErrors: StateFlow<List<Error>> = combine(errors, _errorQuery) { list, q ->
+        if (q.isBlank()) list
+        else {
+            val lower = q.lowercase()
+            list.filter { error ->
+                error.exceptionTypeName().lowercase().contains(lower) ||
+                    error.reason?.lowercase()?.contains(lower) == true ||
+                    error.place?.lowercase()?.contains(lower) == true
+            }
+        }
+    }.stateIn(scope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun onErrorQueryChange(query: String) {
+        _errorQuery.value = query
+    }
     val traffic = repository.traffic
     val databaseSnapshot = repository.databaseSnapshot
     val cacheState = repository.cacheState

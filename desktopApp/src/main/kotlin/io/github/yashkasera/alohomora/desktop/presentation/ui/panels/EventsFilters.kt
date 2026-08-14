@@ -11,8 +11,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.desktop.presentation.model.EventsTimeWindow
 import io.github.yashkasera.alohomora.desktop.presentation.model.EventsUiState
@@ -46,8 +50,13 @@ fun EventsFilters(
     onUnmuteAll: () -> Unit,
     onClearFilters: () -> Unit,
     modifier: Modifier = Modifier,
+    searchFocusTrigger: Long = 0L,
 ) {
     val filters = state.filters
+    val searchFocus = remember { FocusRequester() }
+    LaunchedEffect(searchFocusTrigger) {
+        if (searchFocusTrigger > 0) searchFocus.requestFocus()
+    }
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -62,11 +71,9 @@ fun EventsFilters(
             AlohomoraSearchTextField(
                 query = filters.query,
                 onQueryChange = onQueryChange,
-                // Names the payload explicitly: searching inside properties is the non-obvious half,
-                // and an event's name alone is often the least distinguishing thing about it.
                 placeholder = "Filter by event name or property",
                 onClear = { onQueryChange("") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).focusRequester(searchFocus),
             )
 
             AlohomoraFilterChip(

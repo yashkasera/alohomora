@@ -53,6 +53,8 @@ import io.github.yashkasera.alohomora.ui.icons.Link
 import io.github.yashkasera.alohomora.ui.icons.Settings
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
+import io.github.yashkasera.alohomora.ui.icons.Search
+import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.icons.ZoomIn
@@ -333,6 +335,9 @@ fun buildCommandActions(
     onToggleMobileData: () -> Unit,
     onClearLogcat: () -> Unit,
     onOpenDeepLinkBuilder: () -> Unit,
+    onFocusSearch: () -> Unit,
+    onOpenMockRules: () -> Unit,
+    onClearErrors: () -> Unit,
 ): List<CommandAction> {
     val mod = displayModifier()
     val actions = mutableListOf<CommandAction>()
@@ -388,6 +393,14 @@ fun buildCommandActions(
         icon = Icons.ZoomIn,
         shortcutDisplay = "$mod+0",
         action = onResetZoom,
+    )
+    actions += CommandAction(
+        id = "general_focus_search",
+        label = "Focus Search",
+        category = ActionCategory.GENERAL,
+        icon = Icons.Search,
+        shortcutDisplay = "$mod+F",
+        action = onFocusSearch,
     )
 
     if (isAndroid) {
@@ -464,10 +477,21 @@ fun buildCommandActions(
             label = "Deep Link Builder",
             category = ActionCategory.DEVICE,
             icon = Icons.Link,
+            shortcutDisplay = "$mod+L",
             enabled = deviceReady,
             action = onOpenDeepLinkBuilder,
         )
     }
+
+    actions += CommandAction(
+        id = "data_mock_rules",
+        label = "Mock Rules",
+        category = ActionCategory.DATA,
+        icon = Icons.Server,
+        shortcutDisplay = "$mod+Shift+M",
+        enabled = isConnected,
+        action = onOpenMockRules,
+    )
 
     actions += CommandAction(
         id = "data_clear_traffic",
@@ -493,6 +517,13 @@ fun buildCommandActions(
         enabled = isConnected,
         action = onClearEvents,
     )
-
+    actions += CommandAction(
+        id = "data_clear_errors",
+        label = "Clear Errors",
+        category = ActionCategory.DATA,
+        icon = Icons.Trash,
+        enabled = isConnected,
+        action = onClearErrors,
+    )
     return actions
 }

@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +29,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -66,8 +69,15 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
  * fetched up front by `CacheViewModel`, which is what makes a single list possible.
  */
 @Composable
-fun CachePanel(cacheViewModel: CacheViewModel) {
+fun CachePanel(
+    cacheViewModel: CacheViewModel,
+    searchFocusTrigger: Long = 0L,
+) {
     val uiState by cacheViewModel.uiState.collectAsState()
+    val searchFocus = remember { FocusRequester() }
+    LaunchedEffect(searchFocusTrigger) {
+        if (searchFocusTrigger > 0) searchFocus.requestFocus()
+    }
     val lazyListState = rememberLazyListState()
     // Ephemeral view state, so it stays local like ErrorsPanel's expandedId. One row at a time: these
     // are single values, not documents, and keeping several open turns the list back into a wall.
@@ -96,12 +106,9 @@ fun CachePanel(cacheViewModel: CacheViewModel) {
                 AlohomoraSearchTextField(
                     query = uiState.query,
                     onQueryChange = cacheViewModel::onQueryChange,
-                    // Says "value" explicitly, because matching inside values is the half a reader would
-                    // not assume — and the subtitle's "loading" count is what admits the gap while
-                    // values are still arriving.
                     placeholder = "Filter by key or value",
                     onClear = { cacheViewModel.onQueryChange("") },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).focusRequester(searchFocus),
                 )
             }
 

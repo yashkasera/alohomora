@@ -34,8 +34,12 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.app.isClearShortcut
+import io.github.yashkasera.alohomora.desktop.app.isDeepLinkShortcut
+import io.github.yashkasera.alohomora.desktop.app.isFocusSearchShortcut
+import io.github.yashkasera.alohomora.desktop.app.isMockRulesShortcut
 import io.github.yashkasera.alohomora.desktop.app.isModifierKeyOnly
 import io.github.yashkasera.alohomora.desktop.app.isScreenshotShortcut
+import io.github.yashkasera.alohomora.desktop.app.isTogglePropertiesShortcut
 import io.github.yashkasera.alohomora.desktop.app.matchesNavigation
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
@@ -105,6 +109,7 @@ fun DevToolsDesktopApp(
     onDisconnectWindow: () -> Unit,
 ) {
     var activeSection by remember { mutableStateOf(DesktopSection.Traffic) }
+    var searchFocusTrigger by remember { mutableStateOf(0L) }
 
     val devices by devicesViewModel.devices.collectAsState()
     val adbCommandHistory by devicesViewModel.adbCommandHistory.collectAsState()
@@ -235,6 +240,15 @@ fun DevToolsDesktopApp(
             onDismissCommandPalette()
             showDeepLinkBuilder = true
         },
+        onFocusSearch = {
+            onDismissCommandPalette()
+            searchFocusTrigger = System.nanoTime()
+        },
+        onOpenMockRules = {
+            onDismissCommandPalette()
+            showMockSheet = true
+        },
+        onClearErrors = { devToolsViewModel.clearErrors() },
     )
 
     val rootFocus = remember { FocusRequester() }
@@ -292,6 +306,12 @@ fun DevToolsDesktopApp(
                 val navIndex = event.matchesNavigation()
                 if (navIndex >= 0 && navIndex < visibleSections.size) {
                     activeSection = visibleSections[navIndex]
+                    searchFocusTrigger = System.nanoTime()
+                    return@onPreviewKeyEvent true
+                }
+
+                if (event.isFocusSearchShortcut()) {
+                    searchFocusTrigger = System.nanoTime()
                     return@onPreviewKeyEvent true
                 }
 
@@ -300,6 +320,8 @@ fun DevToolsDesktopApp(
                         DesktopSection.Traffic -> trafficViewModel.clearTraffic()
                         DesktopSection.Traces -> tracesViewModel.clearTraces()
                         DesktopSection.Events -> eventsViewModel.clearEvents()
+                        DesktopSection.Errors -> devToolsViewModel.clearErrors()
+                        DesktopSection.Logcat -> logcatViewModel.clear()
                         else -> {}
                     }
                     return@onPreviewKeyEvent true
@@ -312,6 +334,21 @@ fun DevToolsDesktopApp(
                     if (localPath != null) {
                         devicesViewModel.takeScreenshot(selectedDeviceId, localPath)
                     }
+                    return@onPreviewKeyEvent true
+                }
+
+                if (event.isDeepLinkShortcut() && isAndroid && !selectedDeviceId.isNullOrBlank()) {
+                    showDeepLinkBuilder = true
+                    return@onPreviewKeyEvent true
+                }
+
+                if (event.isMockRulesShortcut() && isConnected) {
+                    showMockSheet = true
+                    return@onPreviewKeyEvent true
+                }
+
+                if (event.isTogglePropertiesShortcut() && activeSection == DesktopSection.Events) {
+                    eventsViewModel.toggleShowProperties()
                     return@onPreviewKeyEvent true
                 }
 
@@ -337,7 +374,10 @@ fun DevToolsDesktopApp(
                             selectedDeviceId = selectedDeviceId,
                             appName = buildInfo?.projectName,
                             onDisconnect = onDisconnectWindow,
-                            onSectionClick = { activeSection = it },
+                            onSectionClick = {
+                                activeSection = it
+                                searchFocusTrigger = System.nanoTime()
+                            },
                             onOpenCommandPalette = onOpenCommandPalette,
                             isModifierHeld = isModifierHeld,
                             visibleSections = visibleSections,
@@ -406,6 +446,7 @@ fun DevToolsDesktopApp(
                                 devicesViewModel = devicesViewModel,
                                 logcatViewModel = logcatViewModel,
                                 selectedDeviceId = selectedDeviceId,
+                                searchFocusTrigger = searchFocusTrigger,
                             )
 
                             DesktopSection.Adb -> AdbToolsPanel(
@@ -420,19 +461,34 @@ fun DevToolsDesktopApp(
                                 networkRulesViewModel = networkRulesViewModel,
                                 onLogClick = { selectedTrafficForSheet = it },
                                 onOpenMockRules = { showMockSheet = true },
+                                searchFocusTrigger = searchFocusTrigger,
                             )
 
                             DesktopSection.Traces -> TracesPanel(
                                 tracesViewModel = tracesViewModel,
                                 onTraceClick = tracesViewModel::openTrace,
+                                searchFocusTrigger = searchFocusTrigger,
                             )
 
-                            DesktopSection.Events -> EventsPanel(eventsViewModel = eventsViewModel)
-                            DesktopSection.Cache -> CachePanel(cacheViewModel = cacheViewModel)
-                            DesktopSection.FeatureFlags -> FeatureFlagsPanel(featureFlagsViewModel = featureFlagsViewModel)
+                            DesktopSection.Events -> EventsPanel(
+                                eventsViewModel = eventsViewModel,
+                                searchFocusTrigger = searchFocusTrigger,
+                            )
+
+                            DesktopSection.Cache -> CachePanel(
+                                cacheViewModel = cacheViewModel,
+                                searchFocusTrigger = searchFocusTrigger,
+                            )
+
+                            DesktopSection.FeatureFlags -> FeatureFlagsPanel(
+                                featureFlagsViewModel = featureFlagsViewModel,
+                                searchFocusTrigger = searchFocusTrigger,
+                            )
+
                             DesktopSection.Errors -> ErrorsPanel(
                                 devToolsViewModel = devToolsViewModel,
                                 onErrorClick = { selectedErrorForSheet = it },
+                                searchFocusTrigger = searchFocusTrigger,
                             )
 
                             DesktopSection.Config -> ConfigPanel(devToolsViewModel = devToolsViewModel)
