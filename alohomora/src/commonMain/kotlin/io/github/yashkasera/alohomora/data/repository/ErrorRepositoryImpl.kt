@@ -13,10 +13,8 @@ internal class ErrorRepositoryImpl(private val db: AlohomoraDb) : ErrorRepositor
     override fun getById(id: Long): Flow<Error?> =
         db.errorDao().getById(id)
 
-    override suspend fun save(item: Error): Long {
+    override suspend fun save(item: Error): Long =
         db.errorDao().insert(item)
-        return item.id
-    }
 
     override suspend fun delete(error: Error) =
         db.errorDao().delete(error)

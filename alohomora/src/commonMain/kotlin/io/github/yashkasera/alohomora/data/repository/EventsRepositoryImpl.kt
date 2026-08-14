@@ -16,10 +16,8 @@ internal class EventsRepositoryImpl(private val db: AlohomoraDb) : EventsReposit
 
     override fun getById(id: Long): Flow<Event?> = flowOf(null)
 
-    override suspend fun save(item: Event): Long {
+    override suspend fun save(item: Event): Long =
         db.eventDao().insert(item)
-        return item.id
-    }
 
     override suspend fun clearAll() = db.eventDao().clearAll()
 
