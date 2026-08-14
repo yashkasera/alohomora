@@ -35,7 +35,7 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Publish to Maven Central
-        run: ./gradlew publishMavenCentral -Palohomora.version=${{ steps.version.outputs.value }}
+        run: ./gradlew publishMavenCentral --no-configuration-cache -Palohomora.version=${{ steps.version.outputs.value }}
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
