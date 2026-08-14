@@ -69,12 +69,41 @@ jobs:
           name: Alohomora-${{ steps.version.outputs.value }}.dmg
           path: desktopApp/build/compose/binaries/main/dmg/*.dmg
 
+  build-xcframework:
+    name: Build XCFramework for SPM
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release XCFramework
+        run: ./gradlew :alohomora:assembleAlohomoraKitReleaseXCFramework
+
+      - name: Zip XCFramework
+        run: |
+          cd alohomora/build/XCFrameworks/release
+          zip -r "$GITHUB_WORKSPACE/AlohomoraKit.xcframework.zip" AlohomoraKit.xcframework
+
+      - name: Upload XCFramework artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlohomoraKit.xcframework.zip
+          path: AlohomoraKit.xcframework.zip
+
   create-release:
     name: Create GitHub Release
-    needs: [ publish-library, package-dmg ]
+    needs: [ publish-library, package-dmg, build-xcframework ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract version from tag
         id: version
@@ -86,9 +115,32 @@ jobs:
           name: Alohomora-${{ steps.version.outputs.value }}.dmg
           path: dmg
 
+      - name: Download XCFramework artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: AlohomoraKit.xcframework.zip
+          path: xcframework
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           name: v${{ steps.version.outputs.value }}
           generate_release_notes: true
-          files: dmg/*.dmg
+          files: |
+            dmg/*.dmg
+            xcframework/AlohomoraKit.xcframework.zip
+
+      - name: Update Package.swift with checksum
+        run: |
+          CHECKSUM=$(sha256sum xcframework/AlohomoraKit.xcframework.zip | awk '{print $1}')
+          VERSION=${{ steps.version.outputs.value }}
+          sed -i "s|url: \".*AlohomoraKit.xcframework.zip\"|url: \"https://github.com/yashkasera/Alohomora/releases/download/v${VERSION}/AlohomoraKit.xcframework.zip\"|" Package.swift
+          sed -i "s|checksum: \"[a-f0-9]*\"|checksum: \"${CHECKSUM}\"|" Package.swift
+
+      - name: Push updated Package.swift
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Package.swift
+          git commit -m "chore: update Package.swift for v${{ steps.version.outputs.value }}"
+          git push origin HEAD:main
