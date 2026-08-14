@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Guide - Alohomora</title>
+    <meta name="description" content="Step-by-step guide to integrate Alohomora into your Android or iOS app. Add the dependency, capture traffic, connect the desktop companion.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+    <div class="nav-inner">
+        <a href="index.html" class="nav-logo">
+            <svg viewBox="0 0 787 107" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M776.875 96.4497H786.775V105.15H776.875V96.4497Z" fill="currentColor"/>
+                <path d="M706.512 100.65H755.412L724.662 28.1999L691.962 105.15H687.162L724.662 16.6499L762.162 105.15H706.512V100.65Z" fill="currentColor"/>
+                <path d="M657.818 61.4999L678.218 105.15H673.268L652.268 60.1499C652.468 60.0499 653.318 59.6499 654.818 58.9499C656.418 58.1499 657.518 57.5999 658.118 57.2999C658.718 56.8999 659.718 56.2499 661.118 55.3499C662.518 54.4499 663.568 53.5999 664.268 52.7999C664.968 51.8999 665.718 50.8999 666.518 49.7999C667.418 48.5999 668.068 47.2999 668.468 45.8999C668.868 44.3999 669.068 42.7999 669.068 41.0999C669.068 34.7999 666.068 30.1499 660.068 27.1499C654.068 24.1499 646.618 22.6499 637.718 22.6499H625.718V105.15H621.218V18.1499H637.718C649.518 18.1499 658.418 20.1999 664.418 24.2999C670.518 28.3999 673.568 33.9999 673.568 41.0999C673.568 45.6999 672.018 49.7999 668.918 53.3999C665.818 56.8999 662.118 59.5999 657.818 61.4999Z" fill="currentColor"/>
+                <path d="M574.051 22.7999C570.651 21.6999 566.451 21.1499 561.451 21.1499C556.451 21.1499 552.251 21.6999 548.851 22.7999C545.451 23.7999 542.301 25.7499 539.401 28.6499C536.601 31.4499 534.501 35.5999 533.101 41.0999C531.701 46.4999 531.001 53.3499 531.001 61.6499C531.001 69.9499 531.701 76.8499 533.101 82.3499C534.501 87.7499 536.601 91.8999 539.401 94.7999C542.301 97.5999 545.451 99.5499 548.851 100.65C552.251 101.65 556.451 102.15 561.451 102.15C566.451 102.15 570.651 101.65 574.051 100.65C577.451 99.5499 580.551 97.5999 583.351 94.7999C586.251 91.8999 588.401 87.7499 589.801 82.3499C591.201 76.8499 591.901 69.9499 591.901 61.6499C591.901 53.3499 591.201 46.4999 589.801 41.0999C588.401 35.5999 586.251 31.4499 583.351 28.6499C580.551 25.7499 577.451 23.7999 574.051 22.7999ZM588.301 95.9999C582.901 103.1 573.951 106.65 561.451 106.65C548.951 106.65 540.001 103.1 534.601 95.9999C529.201 88.8999 526.501 77.4499 526.501 61.6499C526.501 45.8499 529.201 34.3999 534.601 27.2999C540.001 20.1999 548.951 16.6499 561.451 16.6499C573.951 16.6499 582.901 20.1999 588.301 27.2999C593.701 34.3999 596.401 45.8499 596.401 61.6499C596.401 77.4499 593.701 88.8999 588.301 95.9999Z" fill="currentColor"/>
+                <path d="M439.322 100.65H497.222V24.4499L463.472 58.1999L429.722 24.4499V105.15L425.222 105V18.1499H429.722L463.472 51.8999L497.222 18.1499H501.722V105.15L439.322 105V100.65Z" fill="currentColor"/>
+                <path d="M378.055 22.7999C374.655 21.6999 370.455 21.1499 365.455 21.1499C360.455 21.1499 356.255 21.6999 352.855 22.7999C349.455 23.7999 346.305 25.7499 343.405 28.6499C340.605 31.4499 338.505 35.5999 337.105 41.0999C335.705 46.4999 335.005 53.3499 335.005 61.6499C335.005 69.9499 335.705 76.8499 337.105 82.3499C338.505 87.7499 340.605 91.8999 343.405 94.7999C346.305 97.5999 349.455 99.5499 352.855 100.65C356.255 101.65 360.455 102.15 365.455 102.15C370.455 102.15 374.655 101.65 378.055 100.65C381.455 99.5499 384.555 97.5999 387.355 94.7999C390.255 91.8999 392.405 87.7499 393.805 82.3499C395.205 76.8499 395.905 69.9499 395.905 61.6499C395.905 53.3499 395.205 46.4999 393.805 41.0999C392.405 35.5999 390.255 31.4499 387.355 28.6499C384.555 25.7499 381.455 23.7999 378.055 22.7999ZM392.305 95.9999C386.905 103.1 377.955 106.65 365.455 106.65C352.955 106.65 344.005 103.1 338.605 95.9999C333.205 88.8999 330.505 77.4499 330.505 61.6499C330.505 45.8499 333.205 34.3999 338.605 27.2999C344.005 20.1999 352.955 16.6499 365.455 16.6499C377.955 16.6499 386.905 20.1999 392.305 27.2999C397.705 34.3999 400.405 45.8499 400.405 61.6499C400.405 77.4499 397.705 88.8999 392.305 95.9999Z" fill="currentColor"/>
+                <path d="M305.784 105.15H301.284V61.6499H256.284V105.15H251.784V18.1499H256.284V57.1499H301.284V18.1499H305.784V105.15Z" fill="currentColor"/>
+                <path d="M204.617 22.7999C201.217 21.6999 197.017 21.1499 192.017 21.1499C187.017 21.1499 182.817 21.6999 179.417 22.7999C176.017 23.7999 172.867 25.7499 169.967 28.6499C167.167 31.4499 165.067 35.5999 163.667 41.0999C162.267 46.4999 161.567 53.3499 161.567 61.6499C161.567 69.9499 162.267 76.8499 163.667 82.3499C165.067 87.7499 167.167 91.8999 169.967 94.7999C172.867 97.5999 176.017 99.5499 179.417 100.65C182.817 101.65 187.017 102.15 192.017 102.15C197.017 102.15 201.217 101.65 204.617 100.65C208.017 99.5499 211.117 97.5999 213.917 94.7999C216.817 91.8999 218.967 87.7499 220.367 82.3499C221.767 76.8499 222.467 69.9499 222.467 61.6499C222.467 53.3499 221.767 46.4999 220.367 41.0999C218.967 35.5999 216.817 31.4499 213.917 28.6499C211.117 25.7499 208.017 23.7999 204.617 22.7999ZM218.867 95.9999C213.467 103.1 204.517 106.65 192.017 106.65C179.517 106.65 170.567 103.1 165.167 95.9999C159.767 88.8999 157.067 77.4499 157.067 61.6499C157.067 45.8499 159.767 34.3999 165.167 27.2999C170.567 20.1999 179.517 16.6499 192.017 16.6499C204.517 16.6499 213.467 20.1999 218.867 27.2999C224.267 34.3999 226.967 45.8499 226.967 61.6499C226.967 77.4499 224.267 88.8999 218.867 95.9999Z" fill="currentColor"/>
+                <path d="M143.535 100.65V105.15H93.4346V18.1499H97.9346V100.65H143.535Z" fill="currentColor"/>
+                <path d="M14.85 100.65H70.05L38.25 13.2L4.8 105.15H0L38.25 0L76.5 105.15H14.85V100.65Z" fill="currentColor"/>
+            </svg>
+        </a>
+        <div class="nav-links">
+            <a href="features.html">Features</a>
+            <a href="traces.html">Traces</a>
+            <a href="mcp.html">MCP</a>
+            <a href="setup.html" class="active">Setup</a>
+            <a href="api.html">API</a>
+            <a href="https://github.com/yashkasera/alohomora" class="nav-gh">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                GitHub
+            </a>
+        </div>
+        <button class="hamburger" onclick="document.getElementById('navbar').classList.toggle('open')" aria-label="Toggle navigation">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        </button>
+    </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<section class="page-header">
+    <div class="container">
+        <h1>Setup Guide</h1>
+        <p>Add the dependency, capture traffic, connect the desktop companion. Android auto-initializes; iOS needs a few more steps.</p>
+    </div>
+</section>
+
+<!-- DOC CONTENT -->
+<section class="doc-content">
+    <div class="container">
+        <div class="doc-layout">
+            <div>
+
+                <!-- Maven Central -->
+                <h2 id="maven-central" class="reveal">Maven Central</h2>
+
+                <p class="reveal">Alohomora is published to Maven Central. Most projects already include <code>mavenCentral()</code> in their repository list. If yours doesn't:</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">settings.gradle.kts</div>
+                    <pre><span class="kw">dependencyResolutionManagement</span> {
+    <span class="kw">repositories</span> {
+        <span class="fn">mavenCentral</span>()
+    }
+}</pre>
+                </div>
+
+                <p class="reveal">No authentication or tokens required.</p>
+
+
+                <!-- Android Quick Start -->
+                <h2 id="android" class="reveal">Android Quick Start</h2>
+
+                <p class="reveal">Add the debug library and the release no-op stub. The no-op module mirrors every public method but compiles to nothing after R8.</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">build.gradle.kts</div>
+                    <pre><span class="kw">dependencies</span> {
+    <span class="fn">debugImplementation</span>(<span class="str">"io.github.yashkasera:alohomora:1.0.0"</span>)
+    <span class="fn">releaseImplementation</span>(<span class="str">"io.github.yashkasera:alohomora-noop:1.0.0"</span>)
+}</pre>
+                </div>
+
+                <div class="note reveal">
+                    <strong>Zero setup required.</strong> Alohomora auto-initializes via AndroidX Startup. Shake the device to open the in-app console. No <code>init()</code> call needed.
+                </div>
+
+
+                <!-- Gradle Plugin -->
+                <h2 id="gradle-plugin" class="reveal">Gradle Plugin</h2>
+
+                <p class="reveal">Optional. The Gradle plugin injects build metadata (Git branch, commit SHA, dirty flag, recent commits) into your debug build at compile time. This data appears in the Config and Git History tabs of the console.</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">build.gradle.kts</div>
+                    <pre><span class="kw">plugins</span> {
+    <span class="fn">id</span>(<span class="str">"io.github.yashkasera.alohomora"</span>) <span class="kw">version</span> <span class="str">"1.0.0"</span>
+}
+
+<span class="fn">alohomora</span> {
+    enabledVariants = <span class="fn">setOf</span>(<span class="str">"debug"</span>)
+    maxCommits = <span class="num">50</span>
+    versionName = project.version.<span class="fn">toString</span>()
+    versionCode = <span class="num">1</span>
+    slackWebhookUrl = <span class="str">"https://hooks.slack.com/services/..."</span>
+}</pre>
+                </div>
+
+                <ul class="reveal">
+                    <li><code>versionName</code> is required when the plugin is applied.</li>
+                    <li><code>slackWebhookUrl</code> is automatically dropped for non-debuggable variants to prevent the webhook from shipping in a release APK.</li>
+                    <li><code>enabledVariants</code> controls which build variants get the generated config. Defaults to <code>debug</code> only.</li>
+                </ul>
+
+
+                <!-- Capture Network Traffic -->
+                <h2 id="traffic-capture" class="reveal">Capture Network Traffic</h2>
+
+                <p class="reveal">Wire up your HTTP client so Alohomora can capture requests and responses. Both OkHttp and Ktor are supported out of the box.</p>
+
+                <div class="code-grid reveal">
+                    <div class="code-block">
+                        <div class="code-header">OkHttp</div>
+                        <pre><span class="kw">val</span> client = <span class="type">OkHttpClient</span>.<span class="type">Builder</span>()
+    .<span class="fn">addInterceptor</span>(<span class="type">TrafficInterceptor</span>())
+    .<span class="fn">build</span>()</pre>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">Ktor</div>
+                        <pre><span class="kw">val</span> client = <span class="type">HttpClient</span> {
+    <span class="fn">install</span>(<span class="type">AlohomoraInspector</span>)
+}</pre>
+                    </div>
+                </div>
+
+                <p class="reveal">For HTTP clients not covered by the interceptors above, use the manual recording API:</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">Manual capture</div>
+                    <pre><span class="type">Alohomora</span>.<span class="fn">recordTraffic</span>(
+    url = <span class="str">"https://api.example.com/users"</span>,
+    method = <span class="str">"GET"</span>,
+    requestHeaders = headers,
+    responseCode = <span class="num">200</span>,
+    responseBody = body
+)</pre>
+                </div>
+
+
+                <!-- Enable Traffic Replay -->
+                <h2 id="replay" class="reveal">Enable Traffic Replay</h2>
+
+                <p class="reveal">Optional. Register a replay handler so captured traffic can be edited and re-sent from the console or the desktop companion. The request goes back through your app's own client, so interceptors regenerate auth headers and signatures.</p>
+
+                <div class="code-grid reveal">
+                    <div class="code-block">
+                        <div class="code-header">OkHttp</div>
+                        <pre><span class="type">Alohomora</span>.<span class="fn">registerReplayHandler</span>(
+    <span class="fn">okHttpReplayHandler</span>(client)
+)</pre>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">Ktor</div>
+                        <pre><span class="type">Alohomora</span>.<span class="fn">registerReplayHandler</span>(
+    <span class="fn">ktorReplayHandler</span>(client)
+)</pre>
+                    </div>
+                </div>
+
+                <p class="reveal">For custom signing or clients that need extra handling, use the lambda form:</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">Custom handler</div>
+                    <pre><span class="type">Alohomora</span>.<span class="fn">registerReplayHandler</span> { request ->
+    <span class="cmt">// Sign the request, send it through your client, return the response</span>
+    myClient.<span class="fn">execute</span>(request.<span class="fn">sign</span>())
+}</pre>
+                </div>
+
+                <div class="note reveal">
+                    <strong>Retrofit users:</strong> pass the <code>OkHttpClient</code> you give to <code>Retrofit.Builder().client(...)</code> into <code>okHttpReplayHandler()</code>. Retrofit delegates to OkHttp for actual HTTP calls, so this covers it. There is no separate Retrofit handler.
+                </div>
+
+
+                <!-- Desktop Companion -->
+                <h2 id="desktop" class="reveal">Desktop Companion</h2>
+
+                <p class="reveal">The desktop app connects to your device via ADB port forwarding and renders all captured data in a standalone window. Build it from source or download a pre-built package.</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">Terminal</div>
+                    <pre><span class="cmt"># Run directly</span>
+./gradlew :desktopApp:run
+
+<span class="cmt"># Package for distribution</span>
+./gradlew :desktopApp:packageDmg   <span class="cmt"># macOS .dmg</span>
+./gradlew :desktopApp:packageMsi   <span class="cmt"># Windows .msi</span>
+./gradlew :desktopApp:packageDeb   <span class="cmt"># Linux .deb</span></pre>
+                </div>
+
+                <p class="reveal">The desktop app discovers connected devices over ADB and sets up TCP port forwarding automatically. Select a device from the launcher, and a per-device window opens with live data streaming.</p>
+
+
+                <!-- iOS Setup -->
+                <h2 id="ios" class="reveal">iOS Setup</h2>
+
+                <p class="reveal">The library ships as a static framework named <strong>AlohomoraKit</strong>.</p>
+
+                <h3 class="reveal">1. Add the dependency</h3>
+
+                <p class="reveal"><strong>Swift Package Manager (recommended):</strong> In Xcode, go to File &rarr; Add Package Dependencies and enter the repository URL:</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">SPM Repository URL</div>
+                    <pre>https://github.com/yashkasera/Alohomora</pre>
+                </div>
+
+                <p class="reveal">Select the <strong>AlohomoraKit</strong> library product. SPM downloads the prebuilt XCFramework from the matching GitHub Release automatically. No manual framework embedding or build settings required.</p>
+
+                <p class="reveal"><strong>Manual (from Gradle output):</strong> If your iOS app lives in the same repo, you can link the framework directly. Add a Run Script build phase before "Compile Sources":</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">Run Script Phase</div>
+                    <pre>cd "$SRCROOT/.."
+./gradlew :alohomora:embedAndSignAppleFrameworkForXcode</pre>
+                </div>
+
+                <p class="reveal">Then add the output directory to your target's Framework Search Paths:</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">Build Settings</div>
+                    <pre>FRAMEWORK_SEARCH_PATHS = $(SRCROOT)/../alohomora/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)</pre>
+                </div>
+
+                <h3 class="reveal">2. Initialize</h3>
+
+                <p class="reveal">Unlike Android, iOS requires an explicit init call. Note that Kotlin's <code>init()</code> is exported to Swift as <code>doInit()</code> to avoid collision with Swift's initializer syntax.</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">AppDelegate.swift</div>
+                    <pre><span class="kw">import</span> <span class="type">AlohomoraKit</span>
+
+<span class="kw">func</span> <span class="fn">application</span>(_ application: <span class="type">UIApplication</span>,
+    didFinishLaunchingWithOptions launchOptions: [<span class="type">UIApplication</span>.<span class="type">LaunchOptionsKey</span>: <span class="type">Any</span>]?) -> <span class="type">Bool</span> {
+
+    <span class="type">Alohomora</span>.shared.<span class="fn">doInit</span>()
+    <span class="type">Alohomora</span>.shared.<span class="fn">startDevToolsServer</span>(port: <span class="num">53999</span>)
+
+    <span class="kw">return</span> <span class="kw">true</span>
+}</pre>
+                </div>
+
+                <h3 class="reveal">3. Capture traffic</h3>
+
+                <p class="reveal"><code>URLSession.shared</code> cannot be intercepted. Use the provided configuration factory or wrap your existing configuration:</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">Swift</div>
+                    <pre><span class="cmt">// Option A: use the provided configuration</span>
+<span class="kw">let</span> session = <span class="type">URLSession</span>(configuration: <span class="type">Alohomora</span>.shared.<span class="fn">alohomoraURLSessionConfiguration</span>())
+
+<span class="cmt">// Option B: wrap your existing configuration</span>
+<span class="kw">let</span> config = <span class="type">URLSessionConfiguration</span>.default
+<span class="cmt">// ... your customization ...</span>
+<span class="kw">let</span> session = <span class="type">URLSession</span>(configuration: <span class="type">Alohomora</span>.shared.<span class="fn">wrapConfiguration</span>(config))</pre>
+                </div>
+
+                <h3 class="reveal">4. Open the console</h3>
+
+                <p class="reveal">Shake-to-open is built in. To present the console programmatically, use <code>MainKt.MainViewController()</code> and present it as a sheet:</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">Swift</div>
+                    <pre><span class="kw">let</span> vc = <span class="type">MainKt</span>.<span class="fn">MainViewController</span>()
+
+<span class="cmt">// Present as a sheet with drag indicator</span>
+vc.sheetPresentationController?.detents = [.large()]
+vc.sheetPresentationController?.prefersGrabberVisible = <span class="kw">true</span>
+<span class="fn">present</span>(vc, animated: <span class="kw">true</span>)</pre>
+                </div>
+
+                <div class="note reveal">
+                    <strong>Why <code>.prefersGrabberVisible</code>?</strong> The Compose-based console has no native iOS navigation chrome. The drag indicator gives users a visible affordance to dismiss the sheet.
+                </div>
+
+
+                <!-- iOS Build Metadata -->
+                <h2 id="ios-build-metadata" class="reveal">iOS Build Metadata</h2>
+
+                <p class="reveal">The Gradle plugin has no iOS counterpart. Instead, a shell script runs from an Xcode build phase and writes Git metadata into the app bundle as a JSON file that the library reads at init.</p>
+
+                <h3 class="reveal">Add the Run Script phase</h3>
+
+                <p class="reveal">In Xcode, add a new Run Script phase <strong>after</strong> "Copy Bundle Resources":</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">Run Script Phase</div>
+                    <pre>"$SRCROOT/../scripts/alohomora-build-info.sh"</pre>
+                </div>
+
+                <ul class="reveal">
+                    <li>Untick <strong>"Based on dependency analysis"</strong> so the script runs on every build.</li>
+                    <li>Set <strong>ENABLE_USER_SCRIPT_SANDBOXING = NO</strong> in Build Settings. The script needs to run <code>git</code>, which the sandbox blocks.</li>
+                </ul>
+
+                <h3 class="reveal">Environment variables</h3>
+
+                <table class="reveal">
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Default</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>ALOHOMORA_MAX_COMMITS</code></td>
+                            <td>50</td>
+                            <td>Number of recent commits to embed in the bundle.</td>
+                        </tr>
+                        <tr>
+                            <td><code>ALOHOMORA_SLACK_WEBHOOK_URL</code></td>
+                            <td><em>none</em></td>
+                            <td>Slack webhook for sharing from the console. Only included when <code>CONFIGURATION</code> is <code>Debug</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="note reveal">
+                    <strong>versionName and versionCode</strong> are read from <code>Bundle.main</code> at runtime (CFBundleShortVersionString and CFBundleVersion), so there is no second source of truth to keep in sync.
+                </div>
+
+            </div>
+
+            <!-- TOC sidebar -->
+            <aside class="doc-toc">
+                <h4>On this page</h4>
+                <a href="#maven-central">Maven Central</a>
+                <a href="#android">Android Quick Start</a>
+                <a href="#gradle-plugin">Gradle Plugin</a>
+                <a href="#traffic-capture">Capture Traffic</a>
+                <a href="#replay">Traffic Replay</a>
+                <a href="#desktop">Desktop Companion</a>
+                <a href="#ios">iOS Setup</a>
+                <a href="#ios-build-metadata">iOS Build Metadata</a>
+            </aside>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="container">
+        <div class="footer-inner">
+            <div class="footer-left">
+                <div class="nav-logo" style="font-size:16px">alohomora<span class="dot">.</span></div>
+                <p>Apache 2.0 License &middot; Kotlin Multiplatform</p>
+            </div>
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="features.html">Features</a>
+                <a href="setup.html">Setup</a>
+                <a href="api.html">API</a>
+                <a href="https://github.com/yashkasera/alohomora">GitHub</a>
+                <a href="https://github.com/yashkasera/alohomora/issues">Issues</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script>
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', () => document.getElementById('navbar').classList.remove('open'));
+    });
+
+    // TOC active state on scroll
+    const tocLinks = document.querySelectorAll('.doc-toc a');
+    const sections = Array.from(tocLinks).map(a => document.querySelector(a.getAttribute('href')));
+    function updateToc() {
+        let current = '';
+        sections.forEach(s => {
+            if (s && s.getBoundingClientRect().top <= 120) current = s.id;
+        });
+        tocLinks.forEach(a => {
+            a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+        });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    updateToc();
+</script>
+
+</body>
+</html>

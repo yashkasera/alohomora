@@ -1,0 +1,13 @@
+<svg viewBox="0 0 526 526" xmlns="http://www.w3.org/2000/svg">
+<style>
+  .bg{fill:#191919}
+  .fg{fill:#fff}
+  @media(prefers-color-scheme:light){
+    .bg{fill:#f0f0f0}
+    .fg{fill:#191919}
+  }
+</style>
+<rect class="bg" width="526" height="526" rx="120"/>
+<path class="fg" d="M333.636 339.013H350.779V354.078H333.636V339.013Z"/>
+<path class="fg" d="M201.714 346.286H297.299L242.234 194.857L184.312 354.078H176L242.234 172L308.468 354.078H201.714V346.286Z"/>
+</svg>
