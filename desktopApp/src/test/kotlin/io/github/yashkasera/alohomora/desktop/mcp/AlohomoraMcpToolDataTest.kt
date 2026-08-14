@@ -1,12 +1,15 @@
 package io.github.yashkasera.alohomora.desktop.mcp
 
 import io.github.yashkasera.alohomora.common.Error
+import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.NANOS_PER_MILLI
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.FakeDevToolsRepository
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.int
+import kotlinx.serialization.json.long
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -157,13 +160,134 @@ class AlohomoraMcpToolDataTest {
         assertNull(AlohomoraMcpToolData.getCacheValue(repo, "never"))
     }
 
-    private fun entry(id: String, status: Int, method: String, host: String) = TrafficEntry(
+    @Test
+    fun `search_traffic matches URL and response body`() {
+        val repo = FakeDevToolsRepository().apply {
+            traffic.value = listOf(
+                entry("1", status = 200, method = "GET", host = "api.example.com").apply {
+                    url = "https://api.example.com/users"
+                    responseBody = """{"name": "Alice"}"""
+                },
+                entry("2", status = 200, method = "GET", host = "api.example.com").apply {
+                    url = "https://api.example.com/orders"
+                    responseBody = """{"total": 42}"""
+                },
+                entry("3", status = 500, method = "POST", host = "cdn.example.com").apply {
+                    url = "https://cdn.example.com/upload"
+                    responseBody = """{"error": "Alice not found"}"""
+                },
+            )
+        }
+
+        val byUrl = AlohomoraMcpToolData.searchTraffic(repo, "users", 100)
+        assertEquals(1, byUrl.jsonArray.size)
+        assertEquals("1", byUrl.jsonArray[0].jsonObject["id"]!!.jsonPrimitive.content)
+
+        val byBody = AlohomoraMcpToolData.searchTraffic(repo, "Alice", 100)
+        assertEquals(2, byBody.jsonArray.size)
+    }
+
+    @Test
+    fun `search_traffic matches headers`() {
+        val repo = FakeDevToolsRepository().apply {
+            traffic.value = listOf(
+                entry("1", status = 200, method = "GET", host = "api.example.com").apply {
+                    requestHeaders = mapOf("Authorization" to listOf("Bearer secret-token"))
+                },
+                entry("2", status = 200, method = "GET", host = "api.example.com"),
+            )
+        }
+
+        val result = AlohomoraMcpToolData.searchTraffic(repo, "secret-token", 100)
+        assertEquals(1, result.jsonArray.size)
+        assertEquals("1", result.jsonArray[0].jsonObject["id"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `search_traffic is case-insensitive and respects limit`() {
+        val repo = FakeDevToolsRepository().apply {
+            traffic.value = listOf(
+                entry("1", status = 200, method = "GET", host = "API.EXAMPLE.COM"),
+                entry("2", status = 200, method = "GET", host = "api.example.com"),
+            )
+        }
+
+        val all = AlohomoraMcpToolData.searchTraffic(repo, "api.example", 100)
+        assertEquals(2, all.jsonArray.size)
+
+        val limited = AlohomoraMcpToolData.searchTraffic(repo, "api.example", 1)
+        assertEquals(1, limited.jsonArray.size)
+    }
+
+    @Test
+    fun `get_timeline interleaves and sorts by time descending`() {
+        val repo = FakeDevToolsRepository(
+            events = listOf(Event(id = 1, name = "screen_view", properties = null, time = 1500L)),
+        ).apply {
+            traffic.value = listOf(
+                entry("1", status = 200, method = "GET", host = "api.example.com", time = 1000L),
+            )
+            errors.value = listOf(Error(id = 1, place = "main", reason = "NullPointerException: oops", time = 2000L))
+            spans.value = listOf(
+                Span(
+                    traceId = "t1", spanId = "s1", name = "http.request",
+                    startEpochNanos = 500L * NANOS_PER_MILLI, endEpochNanos = 600L * NANOS_PER_MILLI,
+                ),
+            )
+        }
+
+        val timeline = AlohomoraMcpToolData.getTimeline(repo, since = null, until = null, kinds = null, limit = 100)
+        val items = timeline.jsonArray
+        assertEquals(4, items.size)
+
+        val kinds = items.map { it.jsonObject["kind"]!!.jsonPrimitive.content }
+        val times = items.map { it.jsonObject["time"]!!.jsonPrimitive.long }
+
+        assertEquals(listOf("error", "event", "traffic", "span"), kinds)
+        assertEquals(times, times.sortedDescending())
+    }
+
+    @Test
+    fun `get_timeline filters by time window`() {
+        val repo = FakeDevToolsRepository().apply {
+            traffic.value = listOf(
+                entry("1", status = 200, method = "GET", host = "a.com", time = 1000L),
+                entry("2", status = 200, method = "GET", host = "b.com", time = 2000L),
+                entry("3", status = 200, method = "GET", host = "c.com", time = 3000L),
+            )
+        }
+
+        val windowed = AlohomoraMcpToolData.getTimeline(repo, since = 1500L, until = 2500L, kinds = null, limit = 100)
+        assertEquals(1, windowed.jsonArray.size)
+        assertEquals(2000L, windowed.jsonArray[0].jsonObject["time"]!!.jsonPrimitive.long)
+    }
+
+    @Test
+    fun `get_timeline filters by kinds`() {
+        val repo = FakeDevToolsRepository(
+            events = listOf(Event(id = 1, name = "tap", properties = null, time = 1500L)),
+        ).apply {
+            traffic.value = listOf(
+                entry("1", status = 200, method = "GET", host = "a.com", time = 1000L),
+            )
+            errors.value = listOf(Error(id = 1, place = "x", reason = "Err: y", time = 2000L))
+        }
+
+        val eventsOnly = AlohomoraMcpToolData.getTimeline(repo, since = null, until = null, kinds = "event", limit = 100)
+        assertEquals(1, eventsOnly.jsonArray.size)
+        assertEquals("event", eventsOnly.jsonArray[0].jsonObject["kind"]!!.jsonPrimitive.content)
+
+        val mixed = AlohomoraMcpToolData.getTimeline(repo, since = null, until = null, kinds = "traffic,error", limit = 100)
+        assertEquals(2, mixed.jsonArray.size)
+    }
+
+    private fun entry(id: String, status: Int, method: String, host: String, time: Long = id.toLong()) = TrafficEntry(
         id = id,
         status = status,
         method = method,
         host = host,
         path = "/things",
-        time = id.toLong(),
+        time = time,
     )
 
     private fun span(id: String, parent: String?, name: String, start: Long, end: Long) = Span(

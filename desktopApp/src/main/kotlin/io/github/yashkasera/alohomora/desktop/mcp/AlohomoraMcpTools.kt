@@ -8,6 +8,7 @@ import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.common.durationNanos
 import io.github.yashkasera.alohomora.common.exceptionTypeName
 import io.github.yashkasera.alohomora.common.mergeAttentionItems
+import io.github.yashkasera.alohomora.common.startEpochMillis
 import io.github.yashkasera.alohomora.common.trace.TraceRow
 import io.github.yashkasera.alohomora.common.trace.TraceSummary
 import io.github.yashkasera.alohomora.common.trace.toTraceRows
@@ -298,6 +299,56 @@ fun registerAlohomoraTools(
             result(AlohomoraMcpToolData.gitHistory(repo, request.int("limit") ?: DEFAULT_LIST_LIMIT))
         }
     }
+
+    server.addTool(
+        "search_traffic",
+        "Full-text search across captured traffic: URLs, headers, request and response bodies. " +
+            "Returns the same compact summaries as list_traffic. Use this instead of iterating " +
+            "list_traffic + get_traffic when looking for a specific payload, error message, or header value.",
+        buildSchema {
+            put("deviceId", stringProp("Target device; optional when only one is connected."))
+            put("query", stringProp("The search string (case-insensitive). Matched against URL, host, path, query, method, request/response bodies, and header names and values."))
+            put("limit", intProp("Max entries to return (default $DEFAULT_LIST_LIMIT)."))
+        },
+    ) { request ->
+        withRepo(registry, request) { repo ->
+            val query = request.str("query")
+                ?: return@withRepo errorResult("Missing required argument: query")
+            result(
+                AlohomoraMcpToolData.searchTraffic(
+                    repo = repo,
+                    query = query,
+                    limit = request.int("limit") ?: DEFAULT_LIST_LIMIT,
+                ),
+            )
+        }
+    }
+
+    server.addTool(
+        "get_timeline",
+        "Interleaved chronological view of traffic, events, errors, and trace spans within an " +
+            "optional time window. Each entry is tagged with its kind. The best tool for correlating " +
+            "what happened around a specific moment — replaces manual stitching across list_* tools.",
+        buildSchema {
+            put("deviceId", stringProp("Target device; optional when only one is connected."))
+            put("since", longProp("Only entries at or after this epoch-millis timestamp."))
+            put("until", longProp("Only entries at or before this epoch-millis timestamp."))
+            put("kinds", stringProp("Comma-separated subset of: traffic, event, error, span. Default: all four."))
+            put("limit", intProp("Max entries to return (default $DEFAULT_LIST_LIMIT)."))
+        },
+    ) { request ->
+        withRepo(registry, request) { repo ->
+            result(
+                AlohomoraMcpToolData.getTimeline(
+                    repo = repo,
+                    since = request.long("since"),
+                    until = request.long("until"),
+                    kinds = request.str("kinds"),
+                    limit = request.int("limit") ?: DEFAULT_LIST_LIMIT,
+                ),
+            )
+        }
+    }
 }
 
 /**
@@ -505,6 +556,122 @@ internal object AlohomoraMcpToolData {
             }
         }
     }
+
+    fun searchTraffic(
+        repo: DevToolsRepository,
+        query: String,
+        limit: Int,
+    ): JsonElement {
+        val q = query.lowercase()
+        val entries = repo.traffic.value
+            .asReversed()
+            .filter { it.matchesQuery(q) }
+            .take(limit.coerceAtLeast(0))
+        return buildJsonArray { entries.forEach { add(it.toSummaryJson()) } }
+    }
+
+    fun getTimeline(
+        repo: DevToolsRepository,
+        since: Long?,
+        until: Long?,
+        kinds: String?,
+        limit: Int,
+    ): JsonElement {
+        val allowed = kinds?.lowercase()?.split(",")?.map { it.trim() }?.toSet()
+            ?: setOf("traffic", "event", "error", "span")
+
+        val items = mutableListOf<TimelineItem>()
+
+        if ("traffic" in allowed) {
+            repo.traffic.value.mapTo(items) { entry ->
+                TimelineItem(
+                    kind = "traffic",
+                    time = entry.time ?: 0L,
+                    json = entry.toSummaryJson(),
+                )
+            }
+        }
+        if ("event" in allowed) {
+            repo.events.value.mapTo(items) { event ->
+                TimelineItem(
+                    kind = "event",
+                    time = event.time,
+                    json = event.toJson(),
+                )
+            }
+        }
+        if ("error" in allowed) {
+            repo.errors.value.mapTo(items) { error ->
+                TimelineItem(
+                    kind = "error",
+                    time = error.time,
+                    json = buildJsonObject {
+                        put("id", error.id)
+                        put("title", error.exceptionTypeName())
+                        put("place", error.place)
+                        put("time", error.time)
+                    },
+                )
+            }
+        }
+        if ("span" in allowed) {
+            repo.spans.value.mapTo(items) { span ->
+                TimelineItem(
+                    kind = "span",
+                    time = span.startEpochMillis(),
+                    json = buildJsonObject {
+                        put("traceId", span.traceId)
+                        put("spanId", span.spanId)
+                        put("name", span.name)
+                        put("kind", span.kind)
+                        put("statusCode", span.statusCode)
+                        put("startEpochNanos", span.startEpochNanos)
+                        put("durationNanos", span.durationNanos())
+                    },
+                )
+            }
+        }
+
+        items.sortByDescending { it.time }
+
+        val filtered = items
+            .filter { since == null || it.time >= since }
+            .filter { until == null || it.time <= until }
+            .take(limit.coerceAtLeast(0))
+
+        return buildJsonArray {
+            filtered.forEach { item ->
+                add(buildJsonObject {
+                    put("kind", item.kind)
+                    put("time", item.time)
+                    put("data", item.json)
+                })
+            }
+        }
+    }
+}
+
+private class TimelineItem(val kind: String, val time: Long, val json: JsonObject)
+
+private fun TrafficEntry.matchesQuery(q: String): Boolean {
+    if (url?.contains(q, ignoreCase = true) == true) return true
+    if (host?.contains(q, ignoreCase = true) == true) return true
+    if (path?.contains(q, ignoreCase = true) == true) return true
+    if (query?.contains(q, ignoreCase = true) == true) return true
+    if (method?.contains(q, ignoreCase = true) == true) return true
+    if (message?.contains(q, ignoreCase = true) == true) return true
+    if (requestBody?.contains(q, ignoreCase = true) == true) return true
+    if (responseBody?.contains(q, ignoreCase = true) == true) return true
+    if (headersContain(requestHeaders, q)) return true
+    if (headersContain(responseHeaders, q)) return true
+    return false
+}
+
+private fun headersContain(headers: Map<String, List<String>>?, q: String): Boolean {
+    if (headers == null) return false
+    return headers.any { (name, values) ->
+        name.contains(q, ignoreCase = true) || values.any { it.contains(q, ignoreCase = true) }
+    }
 }
 
 // --- device resolution -------------------------------------------------------------------------
@@ -551,6 +718,11 @@ internal fun stringProp(description: String): JsonObject = buildJsonObject {
 }
 
 internal fun intProp(description: String): JsonObject = buildJsonObject {
+    put("type", "integer")
+    put("description", description)
+}
+
+internal fun longProp(description: String): JsonObject = buildJsonObject {
     put("type", "integer")
     put("description", description)
 }
