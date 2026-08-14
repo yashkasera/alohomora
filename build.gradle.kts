@@ -157,14 +157,14 @@ tasks.named("check") {
 val publishedProjects =
     listOf(":alohomora", ":alohomora-noop", ":alohomora-common", ":alohomora-ui")
 
-tasks.register("publishGithubPackages") {
+tasks.register("publishMavenCentral") {
     group = "publishing"
-    description = "Publishes all Alohomora artifacts to GitHub Packages"
-    dependsOn(publishedProjects.map { "$it:publishAllPublicationsToGitHubPackagesRepository" })
+    description = "Publishes all Alohomora artifacts to Maven Central"
+    dependsOn(publishedProjects.map { "$it:publishAllPublicationsToMavenCentralRepository" })
 }
 
-tasks.register("verifyPublishingSetup") {
-    group = "verification"
-    description = "Verifies maven-publish wiring by publishing artifacts to Maven local"
+tasks.register("publishToMavenLocal") {
+    group = "publishing"
+    description = "Publishes all Alohomora artifacts to Maven Local for verification"
     dependsOn(publishedProjects.map { "$it:publishToMavenLocal" })
 }

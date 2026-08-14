@@ -29,16 +29,16 @@ Desktop app via a custom binary TCP protocol over ADB port forwarding.
 ./gradlew :showcaseApp:installDebug
 
 # Publishing
-./gradlew publishGithubPackages       # Publish alohomora + alohomora-noop to GitHub Packages
-./gradlew verifyPublishingSetup       # Publish to Maven Local for verification
+./gradlew publishMavenCentral         # Publish all artifacts to Maven Central
+./gradlew publishToMavenLocal         # Publish to Maven Local for verification
 
 # API compatibility (run before any public API change)
 ./gradlew apiCheck                    # Verify binary API compatibility
 ./gradlew apiDump                     # Update .api golden files
 ```
 
-**Env vars required for publishing:** `gpr.user`/`GITHUB_ACTOR` and `gpr.key`/`GH_PACKAGES_TOKEN`/
-`GITHUB_TOKEN`.
+**Env vars required for publishing:** `mavenCentralUsername`/`mavenCentralPassword` (Sonatype
+Central Portal) and `signing.keyId`/`signing.password`/`signing.secretKeyRingFile` (GPG).
 
 ## Module Structure
 
