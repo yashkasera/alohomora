@@ -4,46 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alohomora - Debug Observability for Android & iOS</title>
-    <meta name="description" content="A Kotlin Multiplatform debugging toolkit that captures traffic, traces, events, database state, cache, and errors from your running app in real time.">
+    <meta name="description"
+          content="Real-time observability for your debug builds. Capture traffic, traces, events, database state, and errors from your running Android & iOS app.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <style>
-        /* ── Palette from alohomora-ui Color.kt / Theme.kt ── */
         :root {
-            --bg: #0E0E0E;
-            --surface-lowest: #0E0E0E;
-            --surface-low: #1B1B1B;
-            --surface: #1F1F1F;
-            --surface-high: #2A2A2A;
-            --surface-highest: #353535;
-            --on-surface: #E2E2E2;
-            --on-surface-variant: #CFC4C5;
-            --outline: #888888;
-            --outline-variant: #4C4546;
-            --brand: #A5B4FC;          /* CanvasBrandIndigoDark */
-            --brand-base: #6366F1;     /* CanvasBrandIndigoLight */
-            --success: #059669;
-            --warning: #FFC857;        /* CanvasWarningDark */
-            --error: #FFB4AB;          /* errorDark */
-            --error-base: #E53935;
-            --muted: #B0B0B0;
-            --muted-container: #2D2D2D;
-            --panel-border: #3A332B;
+            --bg: #09090B;
+            --surface-lowest: #09090B;
+            --surface-low: #111113;
+            --surface: #18181B;
+            --surface-high: #27272A;
+            --surface-highest: #3F3F46;
+            --on-surface: #FAFAFA;
+            --on-surface-variant: #D4D4D8;
+            --outline: #71717A;
+            --outline-variant: #27272A;
+            --brand: #A5B4FC;
+            --brand-base: #6366F1;
+            --brand-dim: #4F46E5;
+            --brand-glow: rgba(99, 102, 241, 0.15);
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --muted: #A1A1AA;
+            --log-debug: #60A5FA;
+            --log-info: #34D399;
+            --log-warn: #FBBF24;
+            --log-error: #F87171;
             --span-internal: #818CF8;
             --span-server: #22D3EE;
             --span-client: #A78BFA;
             --span-producer: #34D399;
             --span-consumer: #FBBF24;
-            --log-debug: #64B5F6;
-            --log-info: #81C784;
-            --log-warn: #FFB74D;
-            --log-error: #EF5350;
-            --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
             --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-            --max-w: 1120px;
-            --r: 8px;
-            --r-lg: 12px;
+            --max-w: 1100px;
+            --r: 10px;
+            --r-lg: 16px;
+            --r-xl: 20px;
         }
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -54,150 +56,260 @@
             color: var(--on-surface);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden;
         }
         a { color: var(--brand); text-decoration: none; }
         a:hover { text-decoration: underline; }
-        code { font-family: var(--font-mono); font-size: 0.875em; background: var(--surface-high); padding: 2px 6px; border-radius: 4px; }
+        code {
+            font-family: var(--font-mono); font-size: 0.85em;
+            background: var(--surface-high); padding: 2px 7px; border-radius: 5px;
+        }
         img { max-width: 100%; height: auto; display: block; }
+        .container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
 
-        .container { max-width: var(--max-w); margin: 0 auto; padding: 0 20px; }
+        /* ── REVEAL ON SCROLL ── */
+        .reveal {
+            opacity: 0; transform: translateY(32px);
+            transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible { opacity: 1; transform: none; }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
 
         /* ── NAV ── */
         nav {
             position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            background: rgba(14, 14, 14, 0.88);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--outline-variant);
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
         .nav-inner {
-            max-width: var(--max-w); margin: 0 auto; padding: 0 20px;
-            height: 56px; display: flex; align-items: center; justify-content: space-between;
+            max-width: var(--max-w); margin: 0 auto; padding: 0 24px;
+            height: 60px; display: flex; align-items: center; justify-content: space-between;
         }
         .nav-logo {
-            font-family: var(--font-mono); font-weight: 700; font-size: 18px;
-            color: var(--on-surface); letter-spacing: -0.5px;
+            display: flex; align-items: center; text-decoration: none;
         }
-        .nav-logo .dot { color: var(--brand); }
-        .nav-links { display: flex; gap: 28px; align-items: center; }
-        .nav-links a { color: var(--muted); font-size: 13px; font-weight: 500; text-decoration: none; }
-        .nav-links a:hover { color: var(--on-surface); }
+        .nav-logo svg { height: 20px; width: auto; }
+        .nav-links { display: flex; gap: 32px; align-items: center; }
+        .nav-links a {
+            color: var(--muted); font-size: 13px; font-weight: 500;
+            text-decoration: none; transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--on-surface); text-decoration: none; }
         .nav-gh {
             display: inline-flex; align-items: center; gap: 6px;
-            background: var(--surface-high); color: var(--on-surface);
-            padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;
+            background: var(--surface); color: var(--on-surface);
+            padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
             border: 1px solid var(--outline-variant); text-decoration: none;
+            transition: background 0.2s, border-color 0.2s;
         }
-        .nav-gh:hover { background: var(--surface-highest); text-decoration: none; }
-
-        .hamburger {
-            display: none; background: none; border: none; cursor: pointer; padding: 6px;
-        }
+        .nav-gh:hover { background: var(--surface-high); border-color: var(--outline); text-decoration: none; }
+        .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 6px; }
         .hamburger svg { stroke: var(--muted); }
 
         /* ── HERO ── */
-        .hero { padding: 140px 0 80px; position: relative; }
-        .hero-inner { max-width: 720px; }
+        .hero {
+            padding: 160px 0 100px; position: relative; overflow: clip;
+        }
+        .hero::before {
+            content: '';
+            position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+            width: 900px; height: 600px;
+            background: radial-gradient(ellipse at center, var(--brand-glow) 0%, transparent 70%);
+            pointer-events: none;
+            filter: blur(60px);
+        }
+        .hero::after {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(129, 140, 248, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .hero-inner { max-width: 720px; position: relative; z-index: 1; }
         .hero-badge {
             display: inline-flex; align-items: center; gap: 8px;
-            background: var(--surface); border: 1px solid var(--outline-variant);
-            border-radius: 100px; padding: 5px 14px;
-            font-family: var(--font-mono); font-size: 12px; color: var(--muted);
-            margin-bottom: 28px;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 100px; padding: 6px 16px;
+            font-family: var(--font-mono); font-size: 12px; color: var(--brand);
+            margin-bottom: 32px;
         }
-        .hero-badge-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
+        .hero-badge-dot {
+            width: 6px; height: 6px; background: var(--success); border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
         .hero h1 {
-            font-size: clamp(36px, 5.5vw, 56px); font-weight: 700;
-            line-height: 1.12; letter-spacing: -1.5px; margin-bottom: 20px;
+            font-size: clamp(40px, 6vw, 64px); font-weight: 800;
+            line-height: 1.08; letter-spacing: -2px; margin-bottom: 24px;
         }
         .hero h1 .accent {
-            background: linear-gradient(135deg, var(--brand-base), var(--brand));
+            background: linear-gradient(135deg, var(--brand-base) 0%, var(--brand) 50%, #c4b5fd 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-clip: text;
         }
         .hero-sub {
-            font-size: clamp(15px, 1.8vw, 18px); color: var(--muted);
-            max-width: 560px; line-height: 1.7; margin-bottom: 36px;
+            font-size: clamp(16px, 2vw, 19px); color: var(--muted);
+            max-width: 540px; line-height: 1.7; margin-bottom: 40px;
+            font-weight: 400;
         }
-        .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; }
-
+        .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 36px; }
         .btn-primary {
             display: inline-flex; align-items: center; gap: 8px;
             background: var(--brand-base); color: #fff;
-            padding: 12px 24px; border-radius: var(--r); font-weight: 600; font-size: 14px;
+            padding: 12px 28px; border-radius: var(--r); font-weight: 600; font-size: 14px;
             border: none; cursor: pointer; text-decoration: none;
-            transition: background 0.15s;
+            transition: all 0.2s; position: relative;
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
         }
-        .btn-primary:hover { background: #5558e6; text-decoration: none; }
-
+        .btn-primary:hover {
+            background: var(--brand-dim); text-decoration: none;
+            box-shadow: 0 4px 24px rgba(99, 102, 241, 0.3);
+            transform: translateY(-1px);
+        }
         .btn-secondary {
             display: inline-flex; align-items: center; gap: 8px;
             background: transparent; color: var(--on-surface);
-            padding: 12px 24px; border-radius: var(--r); font-weight: 600; font-size: 14px;
+            padding: 12px 28px; border-radius: var(--r); font-weight: 600; font-size: 14px;
             border: 1px solid var(--outline-variant); cursor: pointer; text-decoration: none;
-            transition: border-color 0.15s;
+            transition: all 0.2s;
         }
-        .btn-secondary:hover { border-color: var(--outline); text-decoration: none; }
-
+        .btn-secondary:hover {
+            border-color: var(--outline); text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+        }
         .hero-install {
             display: inline-flex; align-items: center; gap: 10px;
-            background: var(--surface-low); border: 1px solid var(--outline-variant);
-            border-radius: var(--r); padding: 10px 16px;
+            background: var(--surface); border: 1px solid var(--outline-variant);
+            border-radius: var(--r); padding: 12px 18px;
             font-family: var(--font-mono); font-size: 13px; color: var(--muted);
+            max-width: 100%; overflow-x: auto;
         }
         .hero-install code { color: var(--brand); background: none; padding: 0; }
         .copy-btn {
             background: none; border: none; color: var(--outline);
-            cursor: pointer; padding: 2px; font-size: 16px;
+            cursor: pointer; padding: 2px; font-size: 16px; transition: color 0.15s;
         }
         .copy-btn:hover { color: var(--on-surface); }
-
         .hero-platforms {
-            margin-top: 28px; display: flex; gap: 20px;
-            color: var(--outline); font-size: 12px; font-weight: 500;
-            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-top: 32px; display: flex; gap: 24px;
+            color: var(--outline); font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1.5px;
         }
-        .hero-platforms span { display: flex; align-items: center; gap: 5px; }
 
         /* ── SHOWCASE ── */
-        .showcase {
-            padding: 40px 0 100px; position: relative;
-        }
+        .showcase { padding: 0 0 120px; position: relative; }
         .showcase-frame {
             background: var(--surface-low);
             border: 1px solid var(--outline-variant);
-            border-radius: var(--r-lg);
-            overflow: hidden;
-            aspect-ratio: 16/9;
+            border-radius: var(--r-xl);
+            overflow: hidden; aspect-ratio: 16/9;
             display: flex; align-items: center; justify-content: center;
             position: relative;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5),
+                        0 0 0 1px rgba(255, 255, 255, 0.03) inset;
         }
         .showcase-frame img {
             width: 100%; height: 100%; object-fit: contain;
-            background: var(--bg);
-            transition: opacity 0.2s ease;
+            background: var(--bg); transition: opacity 0.3s ease;
         }
-        .showcase-frame img.loading { opacity: 0.4; }
+        .showcase-frame img.loading { opacity: 0.3; }
         .showcase-placeholder {
             color: var(--outline); font-family: var(--font-mono); font-size: 13px;
             text-align: center; padding: 40px;
         }
-        .showcase-placeholder span { display: block; color: var(--muted); margin-top: 8px; font-family: var(--font-sans); font-size: 12px; }
-        .showcase-tabs {
-            display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap;
+        .showcase-placeholder span {
+            display: block; color: var(--muted); margin-top: 8px;
+            font-family: var(--font-sans); font-size: 12px;
         }
+        .showcase-tabs { display: flex; gap: 6px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
         .showcase-tab {
             background: var(--surface); border: 1px solid var(--outline-variant);
-            border-radius: 6px; padding: 8px 16px;
-            font-size: 12px; font-weight: 500; color: var(--muted);
+            border-radius: 8px; padding: 8px 18px;
+            font-size: 13px; font-weight: 500; color: var(--muted);
             cursor: pointer; font-family: var(--font-sans);
-            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            transition: all 0.2s;
         }
-        .showcase-tab:hover { color: var(--on-surface); border-color: var(--outline); }
-        .showcase-tab.active { background: var(--brand-base); color: #fff; border-color: var(--brand-base); }
+        .showcase-tab:hover { color: var(--on-surface); border-color: var(--outline); background: var(--surface-high); }
+        .showcase-tab.active {
+            background: var(--brand-base); color: #fff; border-color: var(--brand-base);
+            box-shadow: 0 2px 12px rgba(99, 102, 241, 0.3);
+        }
 
-        /* ── FEATURE DEMOS (inline GIFs) ── */
+        /* ── SOCIAL PROOF ── */
+        .proof {
+            padding: 0 0 100px;
+        }
+        .proof-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+            background: var(--outline-variant); border: 1px solid var(--outline-variant);
+            border-radius: var(--r-lg); overflow: hidden;
+        }
+        .proof-item {
+            background: var(--surface-low); padding: 32px; text-align: center;
+        }
+        .proof-item .num {
+            font-size: 32px; font-weight: 800; letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--on-surface), var(--muted));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .proof-item .label {
+            font-size: 12px; color: var(--outline); margin-top: 4px;
+            text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+        }
+
+        /* ── SECTIONS ── */
+        section { padding: 100px 0; }
+        .section-label {
+            font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+            color: var(--brand); text-transform: uppercase; letter-spacing: 2px;
+            margin-bottom: 14px;
+        }
+        .section-title {
+            font-size: clamp(28px, 4vw, 42px); font-weight: 800;
+            letter-spacing: -1.2px; margin-bottom: 14px; line-height: 1.15;
+        }
+        .section-desc {
+            font-size: 16px; color: var(--muted); max-width: 540px; line-height: 1.7;
+        }
+        .section-divider {
+            height: 1px; border: none; margin: 0;
+            background: linear-gradient(90deg, transparent, var(--outline-variant) 20%, var(--outline-variant) 80%, transparent);
+        }
+
+        /* ── PHILOSOPHY ── */
+        .philosophy-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 20px; margin-top: 48px;
+        }
+        .philosophy-card {
+            padding: 28px;
+            background: var(--surface-low);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--r-lg);
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .philosophy-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+        .philosophy-card h4 {
+            font-size: 15px; font-weight: 700; margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        .philosophy-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+        /* ── FEATURE DEMOS ── */
         .demos-grid {
             display: grid; grid-template-columns: repeat(2, 1fr);
             gap: 20px; margin-top: 48px;
@@ -205,125 +317,120 @@
         .demo-card {
             background: var(--surface-low); border: 1px solid var(--outline-variant);
             border-radius: var(--r-lg); overflow: hidden;
+            transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+        .demo-card:hover {
+            border-color: var(--outline);
+            transform: translateY(-3px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
         }
         .demo-media {
             aspect-ratio: 16/10; background: var(--bg);
             display: flex; align-items: center; justify-content: center;
             overflow: hidden; position: relative;
         }
-        .demo-media img {
-            width: 100%; height: 100%; object-fit: contain;
-        }
+        .demo-media img { width: 100%; height: 100%; object-fit: contain; }
         .demo-media-placeholder {
-            color: var(--outline); font-family: var(--font-mono); font-size: 11px;
-            text-align: center;
+            color: var(--outline); font-family: var(--font-mono); font-size: 11px; text-align: center;
         }
-        .demo-info { padding: 16px; }
-        .demo-info h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-        .demo-info p { font-size: 12px; color: var(--muted); line-height: 1.5; }
-
-        /* ── SECTIONS ── */
-        section { padding: 80px 0; }
-
-        .section-label {
-            font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-            color: var(--brand); text-transform: uppercase; letter-spacing: 1.5px;
-            margin-bottom: 12px;
-        }
-        .section-title {
-            font-size: clamp(24px, 3.5vw, 36px); font-weight: 700;
-            letter-spacing: -0.8px; margin-bottom: 12px; line-height: 1.2;
-        }
-        .section-desc {
-            font-size: 15px; color: var(--muted); max-width: 540px; line-height: 1.7;
-        }
-
-        .section-alt {
-            background: var(--surface-low);
-            border-top: 1px solid var(--outline-variant);
-            border-bottom: 1px solid var(--outline-variant);
-        }
+        .demo-info { padding: 20px; }
+        .demo-info h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+        .demo-info p { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
         /* ── FEATURES ── */
         .features-grid {
             display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 1px; margin-top: 48px;
-            background: var(--outline-variant); border: 1px solid var(--outline-variant);
-            border-radius: var(--r-lg); overflow: hidden;
+            gap: 16px; margin-top: 48px;
         }
         .feature-card {
-            background: var(--surface-low); padding: 28px;
+            background: var(--surface-low);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--r-lg);
+            padding: 28px;
+            transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+        .feature-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
         .feature-icon {
-            width: 36px; height: 36px; border-radius: 8px;
+            width: 40px; height: 40px; border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
         }
-        .feature-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-        .feature-card p { font-size: 13px; color: var(--muted); line-height: 1.55; }
+        .feature-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+        .feature-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
         .feature-card .tag {
             display: inline-block; font-family: var(--font-mono); font-size: 10px;
-            padding: 2px 6px; border-radius: 3px; margin-top: 10px;
-            background: var(--muted-container); color: var(--outline);
+            padding: 3px 8px; border-radius: 4px; margin-top: 12px;
+            background: rgba(99, 102, 241, 0.08); color: var(--brand);
+            border: 1px solid rgba(99, 102, 241, 0.15);
         }
-
-        .ic-blue { background: rgba(100, 181, 246, 0.12); color: var(--log-debug); }
-        .ic-purple { background: rgba(167, 139, 250, 0.12); color: var(--span-client); }
-        .ic-green { background: rgba(5, 150, 105, 0.12); color: var(--success); }
-        .ic-amber { background: rgba(251, 191, 36, 0.12); color: var(--span-consumer); }
-        .ic-red { background: rgba(239, 83, 80, 0.12); color: var(--log-error); }
-        .ic-cyan { background: rgba(34, 211, 238, 0.12); color: var(--span-server); }
-        .ic-indigo { background: rgba(129, 140, 248, 0.12); color: var(--span-internal); }
+        .ic-blue { background: rgba(96, 165, 250, 0.1); color: var(--log-debug); }
+        .ic-purple { background: rgba(167, 139, 250, 0.1); color: var(--span-client); }
+        .ic-green { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .ic-amber { background: rgba(251, 191, 36, 0.1); color: var(--span-consumer); }
+        .ic-red { background: rgba(248, 113, 113, 0.1); color: var(--log-error); }
+        .ic-cyan { background: rgba(34, 211, 238, 0.1); color: var(--span-server); }
+        .ic-indigo { background: rgba(129, 140, 248, 0.1); color: var(--span-internal); }
 
         /* ── ARCHITECTURE ── */
+        .arch-section { background: var(--surface-low); overflow: clip; }
         .arch-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
-            align-items: start; margin-top: 48px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 56px;
+            align-items: center; margin-top: 48px;
         }
         .arch-diagram {
             background: var(--bg); border: 1px solid var(--outline-variant);
-            border-radius: var(--r-lg); padding: 28px;
+            border-radius: var(--r-lg); padding: 32px;
         }
         .arch-flow {
             display: flex; flex-direction: column; gap: 12px;
             font-family: var(--font-mono); font-size: 12px;
         }
         .arch-box {
-            padding: 12px 16px; border-radius: 6px;
+            padding: 14px 16px; border-radius: 8px;
             border: 1px solid var(--outline-variant); text-align: center;
+            transition: border-color 0.2s;
         }
-        .arch-box small { display: block; opacity: 0.7; margin-top: 2px; }
-        .arch-box.debug { background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.3); color: var(--brand); }
-        .arch-box.noop { background: rgba(239, 83, 80, 0.06); border-color: rgba(239, 83, 80, 0.2); color: var(--log-error); }
-        .arch-box.shared { background: rgba(34, 211, 238, 0.06); border-color: rgba(34, 211, 238, 0.2); color: var(--span-server); }
-        .arch-box.desktop { background: rgba(167, 139, 250, 0.06); border-color: rgba(167, 139, 250, 0.2); color: var(--span-client); }
+        .arch-box small { display: block; opacity: 0.6; margin-top: 3px; font-size: 10px; }
+        .arch-box.debug { background: rgba(99, 102, 241, 0.06); border-color: rgba(99, 102, 241, 0.25); color: var(--brand); }
+        .arch-box.noop { background: rgba(248, 113, 113, 0.05); border-color: rgba(248, 113, 113, 0.2); color: var(--log-error); }
+        .arch-box.shared { background: rgba(34, 211, 238, 0.05); border-color: rgba(34, 211, 238, 0.2); color: var(--span-server); }
+        .arch-box.desktop { background: rgba(167, 139, 250, 0.05); border-color: rgba(167, 139, 250, 0.2); color: var(--span-client); }
+        .arch-split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .arch-arrow { text-align: center; color: var(--outline); font-size: 14px; line-height: 1; }
-
-        .arch-text h3 { font-size: 20px; font-weight: 600; margin-bottom: 14px; }
+        .arch-text { min-width: 0; }
+        .arch-text h3 { font-size: 22px; font-weight: 700; margin-bottom: 16px; }
         .arch-points { list-style: none; }
         .arch-points li {
-            padding: 8px 0; border-bottom: 1px solid var(--outline-variant);
-            font-size: 14px; color: var(--muted); display: flex; gap: 10px;
+            padding: 10px 0; border-bottom: 1px solid var(--outline-variant);
+            font-size: 14px; color: var(--muted); display: flex; gap: 12px;
+            line-height: 1.6;
         }
         .arch-points li:last-child { border-bottom: none; }
-        .arch-points .bullet { color: var(--brand); font-weight: 700; flex-shrink: 0; }
+        .arch-points .bullet { color: var(--brand); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
 
         /* ── SETUP ── */
-        .setup-steps { margin-top: 48px; }
+        .setup-steps { margin-top: 56px; }
         .setup-step {
-            display: grid; grid-template-columns: 44px 1fr; gap: 20px;
-            padding-bottom: 36px; margin-bottom: 36px;
+            display: grid; grid-template-columns: 48px 1fr; gap: 24px;
+            padding-bottom: 40px; margin-bottom: 40px;
             border-bottom: 1px solid var(--outline-variant);
         }
         .setup-step:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .step-num {
-            width: 36px; height: 36px; border-radius: 8px;
-            background: var(--surface-high); color: var(--brand);
+            width: 40px; height: 40px; border-radius: 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: var(--brand);
             display: flex; align-items: center; justify-content: center;
             font-family: var(--font-mono); font-weight: 700; font-size: 14px;
         }
-        .step-content h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
-        .step-content p { font-size: 14px; color: var(--muted); margin-bottom: 14px; line-height: 1.6; }
+        .step-content { min-width: 0; }
+        .step-content h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+        .step-content p { font-size: 14px; color: var(--muted); margin-bottom: 16px; line-height: 1.7; }
 
         /* ── CODE BLOCKS ── */
         .code-block {
@@ -332,14 +439,14 @@
         }
         .code-header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 8px 14px; background: var(--surface);
+            padding: 10px 16px; background: var(--surface);
             border-bottom: 1px solid var(--outline-variant);
             font-family: var(--font-mono); font-size: 11px; color: var(--outline);
         }
         pre {
-            padding: 16px; overflow-x: auto;
+            padding: 18px; overflow-x: auto;
             font-family: var(--font-mono); font-size: 12.5px;
-            line-height: 1.7; color: var(--muted);
+            line-height: 1.8; color: var(--muted);
         }
         pre .kw { color: var(--span-client); }
         pre .fn { color: var(--log-debug); }
@@ -350,51 +457,97 @@
 
         /* ── API ── */
         .tabs {
-            display: flex; gap: 0; border-bottom: 1px solid var(--outline-variant);
+            display: flex; gap: 0;
+            border-bottom: 1px solid var(--outline-variant);
             overflow-x: auto; -webkit-overflow-scrolling: touch;
         }
         .tab-btn {
-            background: none; border: none; padding: 10px 20px;
-            font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+            background: none; border: none; padding: 12px 22px;
+            font-family: var(--font-sans); font-size: 13px; font-weight: 600;
             color: var(--outline); cursor: pointer; white-space: nowrap;
-            border-bottom: 2px solid transparent; transition: color 0.15s;
+            border-bottom: 2px solid transparent; transition: color 0.2s;
         }
         .tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
         .tab-btn:hover { color: var(--on-surface); }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
-
+        .api-section { background: var(--surface-low); }
         .api-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 12px; margin-top: 20px;
+            gap: 12px; margin-top: 24px;
         }
         .api-card {
-            background: var(--surface); border: 1px solid var(--outline-variant);
-            border-radius: var(--r); padding: 16px;
+            background: var(--bg); border: 1px solid var(--outline-variant);
+            border-radius: var(--r); padding: 18px;
+            transition: border-color 0.2s;
         }
+        .api-card:hover { border-color: var(--outline); }
         .api-card h4 {
             font-family: var(--font-mono); font-size: 13px; font-weight: 600;
-            margin-bottom: 4px; color: var(--brand);
+            margin-bottom: 6px; color: var(--brand);
         }
-        .api-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+        .api-card p { font-size: 12px; color: var(--muted); line-height: 1.6; }
 
-        /* ── COMPARISON TABLE ── */
+        /* ── MOCK RULES FEATURE ── */
+        .mock-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+            margin-top: 40px; align-items: start;
+        }
+
+        /* ── COMPARISON ── */
+        .comparison-section { background: var(--surface-low); }
         .comparison-table {
-            width: 100%; border-collapse: collapse; margin-top: 32px; font-size: 13px;
+            width: 100%; border-collapse: collapse; margin-top: 36px; font-size: 13px;
+            border: 1px solid var(--outline-variant); border-radius: var(--r-lg); overflow: hidden;
         }
         .comparison-table th {
-            text-align: left; padding: 10px 16px;
+            text-align: left; padding: 12px 18px;
             background: var(--surface); border-bottom: 1px solid var(--outline-variant);
-            font-weight: 600; font-size: 11px; text-transform: uppercase;
-            letter-spacing: 0.8px; color: var(--outline);
+            font-weight: 700; font-size: 11px; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--outline);
         }
         .comparison-table td {
-            padding: 10px 16px; border-bottom: 1px solid var(--outline-variant);
+            padding: 11px 18px; border-bottom: 1px solid var(--outline-variant);
             color: var(--muted);
         }
-        .comparison-table tr:hover td { background: var(--surface); }
+        .comparison-table tr:last-child td { border-bottom: none; }
+        .comparison-table tr:hover td { background: rgba(99, 102, 241, 0.03); }
         .check { color: var(--success); font-weight: 700; }
         .cross { color: var(--outline); }
+
+        /* ── DESKTOP COMPANION ── */
+        .desktop-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px; margin-top: 40px;
+        }
+        .desktop-card {
+            background: var(--surface-low); border: 1px solid var(--outline-variant);
+            border-radius: var(--r-lg); padding: 24px;
+            transition: border-color 0.3s, transform 0.2s;
+        }
+        .desktop-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+        .desktop-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+        .desktop-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+        /* ── CTA ── */
+        .cta {
+            padding: 120px 0; text-align: center; position: relative; overflow: clip;
+        }
+        .cta::before {
+            content: '';
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 800px; height: 400px;
+            background: radial-gradient(ellipse at center, var(--brand-glow) 0%, transparent 70%);
+            pointer-events: none; filter: blur(80px);
+        }
+        .cta .section-title { position: relative; z-index: 1; }
+        .cta .section-desc {
+            margin: 14px auto 40px; max-width: 480px;
+            position: relative; z-index: 1;
+        }
 
         /* ── FOOTER ── */
         footer {
@@ -405,61 +558,55 @@
             flex-wrap: wrap; gap: 20px;
         }
         .footer-left p { font-size: 12px; color: var(--outline); margin-top: 6px; }
-        .footer-links { display: flex; gap: 24px; }
-        .footer-links a { font-size: 13px; color: var(--muted); text-decoration: none; }
+        .footer-links { display: flex; gap: 28px; }
+        .footer-links a {
+            font-size: 13px; color: var(--muted); text-decoration: none;
+            transition: color 0.2s;
+        }
         .footer-links a:hover { color: var(--on-surface); }
-
-        /* ── PHILOSOPHY ── */
-        .philosophy-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr);
-            gap: 1px; margin-top: 40px;
-            background: var(--outline-variant); border: 1px solid var(--outline-variant);
-            border-radius: var(--r-lg); overflow: hidden;
-        }
-        .philosophy-card {
-            background: var(--surface-low); padding: 24px;
-        }
-        .philosophy-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
-        .philosophy-card p { font-size: 13px; color: var(--muted); line-height: 1.55; }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 900px) {
             .features-grid { grid-template-columns: repeat(2, 1fr); }
             .arch-grid { grid-template-columns: 1fr; gap: 32px; }
             .demos-grid { grid-template-columns: 1fr; }
+            .philosophy-grid { grid-template-columns: repeat(2, 1fr); }
+            .proof-grid { grid-template-columns: repeat(2, 1fr); }
+            .mock-grid { grid-template-columns: 1fr; }
         }
-
         @media (max-width: 640px) {
             .nav-links { display: none; }
             .hamburger { display: block; }
             nav.open .nav-links {
                 display: flex; flex-direction: column;
-                position: absolute; top: 56px; left: 0; right: 0;
+                position: absolute; top: 60px; left: 0; right: 0;
                 background: var(--bg); border-bottom: 1px solid var(--outline-variant);
-                padding: 16px 20px; gap: 14px;
+                padding: 16px 24px; gap: 14px;
             }
-            .hero { padding: 110px 0 60px; }
-            .hero h1 { font-size: 32px; letter-spacing: -1px; }
-            .hero-sub { font-size: 15px; }
+            .hero { padding: 120px 0 70px; }
+            .hero h1 { font-size: 36px; letter-spacing: -1px; }
             .hero-install { display: flex; font-size: 11px; overflow-x: auto; }
-            .hero-platforms { flex-wrap: wrap; gap: 12px; }
-            section { padding: 60px 0; }
+            section { padding: 72px 0; }
             .features-grid { grid-template-columns: 1fr; }
             .philosophy-grid { grid-template-columns: 1fr; }
+            .proof-grid { grid-template-columns: repeat(2, 1fr); }
             .api-grid { grid-template-columns: 1fr; }
-            .setup-step { grid-template-columns: 36px 1fr; gap: 14px; }
+            .setup-step { grid-template-columns: 40px 1fr; gap: 16px; }
+            .arch-diagram { padding: 16px; }
+            .arch-split { grid-template-columns: 1fr; }
+            .arch-box { padding: 10px 12px; font-size: 11px; }
             .hero-actions { flex-direction: column; }
             .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
             .comparison-table { font-size: 11px; }
-            .comparison-table th, .comparison-table td { padding: 8px 10px; }
+            .comparison-table th, .comparison-table td { padding: 8px 12px; }
             .footer-inner { flex-direction: column; text-align: center; }
-            .showcase-tabs { justify-content: center; }
             .showcase-frame { aspect-ratio: 4/3; }
+            .desktop-grid { grid-template-columns: repeat(2, 1fr); }
         }
-
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { transition: none !important; animation: none !important; }
             html { scroll-behavior: auto; }
+            .reveal { opacity: 1; transform: none; }
         }
     </style>
 </head>
@@ -467,19 +614,42 @@
 
 <nav id="navbar">
     <div class="nav-inner">
-        <a href="#" class="nav-logo" style="text-decoration:none">alohomora<span class="dot">.</span></a>
+        <a href="#" class="nav-logo">
+            <svg viewBox="0 0 787 107" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M776.875 96.4497H786.775V105.15H776.875V96.4497Z" fill="currentColor"/>
+                <path d="M706.512 100.65H755.412L724.662 28.1999L691.962 105.15H687.162L724.662 16.6499L762.162 105.15H706.512V100.65Z" fill="currentColor"/>
+                <path d="M657.818 61.4999L678.218 105.15H673.268L652.268 60.1499C652.468 60.0499 653.318 59.6499 654.818 58.9499C656.418 58.1499 657.518 57.5999 658.118 57.2999C658.718 56.8999 659.718 56.2499 661.118 55.3499C662.518 54.4499 663.568 53.5999 664.268 52.7999C664.968 51.8999 665.718 50.8999 666.518 49.7999C667.418 48.5999 668.068 47.2999 668.468 45.8999C668.868 44.3999 669.068 42.7999 669.068 41.0999C669.068 34.7999 666.068 30.1499 660.068 27.1499C654.068 24.1499 646.618 22.6499 637.718 22.6499H625.718V105.15H621.218V18.1499H637.718C649.518 18.1499 658.418 20.1999 664.418 24.2999C670.518 28.3999 673.568 33.9999 673.568 41.0999C673.568 45.6999 672.018 49.7999 668.918 53.3999C665.818 56.8999 662.118 59.5999 657.818 61.4999Z" fill="currentColor"/>
+                <path d="M574.051 22.7999C570.651 21.6999 566.451 21.1499 561.451 21.1499C556.451 21.1499 552.251 21.6999 548.851 22.7999C545.451 23.7999 542.301 25.7499 539.401 28.6499C536.601 31.4499 534.501 35.5999 533.101 41.0999C531.701 46.4999 531.001 53.3499 531.001 61.6499C531.001 69.9499 531.701 76.8499 533.101 82.3499C534.501 87.7499 536.601 91.8999 539.401 94.7999C542.301 97.5999 545.451 99.5499 548.851 100.65C552.251 101.65 556.451 102.15 561.451 102.15C566.451 102.15 570.651 101.65 574.051 100.65C577.451 99.5499 580.551 97.5999 583.351 94.7999C586.251 91.8999 588.401 87.7499 589.801 82.3499C591.201 76.8499 591.901 69.9499 591.901 61.6499C591.901 53.3499 591.201 46.4999 589.801 41.0999C588.401 35.5999 586.251 31.4499 583.351 28.6499C580.551 25.7499 577.451 23.7999 574.051 22.7999ZM588.301 95.9999C582.901 103.1 573.951 106.65 561.451 106.65C548.951 106.65 540.001 103.1 534.601 95.9999C529.201 88.8999 526.501 77.4499 526.501 61.6499C526.501 45.8499 529.201 34.3999 534.601 27.2999C540.001 20.1999 548.951 16.6499 561.451 16.6499C573.951 16.6499 582.901 20.1999 588.301 27.2999C593.701 34.3999 596.401 45.8499 596.401 61.6499C596.401 77.4499 593.701 88.8999 588.301 95.9999Z" fill="currentColor"/>
+                <path d="M439.322 100.65H497.222V24.4499L463.472 58.1999L429.722 24.4499V105.15L425.222 105V18.1499H429.722L463.472 51.8999L497.222 18.1499H501.722V105.15L439.322 105V100.65Z" fill="currentColor"/>
+                <path d="M378.055 22.7999C374.655 21.6999 370.455 21.1499 365.455 21.1499C360.455 21.1499 356.255 21.6999 352.855 22.7999C349.455 23.7999 346.305 25.7499 343.405 28.6499C340.605 31.4499 338.505 35.5999 337.105 41.0999C335.705 46.4999 335.005 53.3499 335.005 61.6499C335.005 69.9499 335.705 76.8499 337.105 82.3499C338.505 87.7499 340.605 91.8999 343.405 94.7999C346.305 97.5999 349.455 99.5499 352.855 100.65C356.255 101.65 360.455 102.15 365.455 102.15C370.455 102.15 374.655 101.65 378.055 100.65C381.455 99.5499 384.555 97.5999 387.355 94.7999C390.255 91.8999 392.405 87.7499 393.805 82.3499C395.205 76.8499 395.905 69.9499 395.905 61.6499C395.905 53.3499 395.205 46.4999 393.805 41.0999C392.405 35.5999 390.255 31.4499 387.355 28.6499C384.555 25.7499 381.455 23.7999 378.055 22.7999ZM392.305 95.9999C386.905 103.1 377.955 106.65 365.455 106.65C352.955 106.65 344.005 103.1 338.605 95.9999C333.205 88.8999 330.505 77.4499 330.505 61.6499C330.505 45.8499 333.205 34.3999 338.605 27.2999C344.005 20.1999 352.955 16.6499 365.455 16.6499C377.955 16.6499 386.905 20.1999 392.305 27.2999C397.705 34.3999 400.405 45.8499 400.405 61.6499C400.405 77.4499 397.705 88.8999 392.305 95.9999Z" fill="currentColor"/>
+                <path d="M305.784 105.15H301.284V61.6499H256.284V105.15H251.784V18.1499H256.284V57.1499H301.284V18.1499H305.784V105.15Z" fill="currentColor"/>
+                <path d="M204.617 22.7999C201.217 21.6999 197.017 21.1499 192.017 21.1499C187.017 21.1499 182.817 21.6999 179.417 22.7999C176.017 23.7999 172.867 25.7499 169.967 28.6499C167.167 31.4499 165.067 35.5999 163.667 41.0999C162.267 46.4999 161.567 53.3499 161.567 61.6499C161.567 69.9499 162.267 76.8499 163.667 82.3499C165.067 87.7499 167.167 91.8999 169.967 94.7999C172.867 97.5999 176.017 99.5499 179.417 100.65C182.817 101.65 187.017 102.15 192.017 102.15C197.017 102.15 201.217 101.65 204.617 100.65C208.017 99.5499 211.117 97.5999 213.917 94.7999C216.817 91.8999 218.967 87.7499 220.367 82.3499C221.767 76.8499 222.467 69.9499 222.467 61.6499C222.467 53.3499 221.767 46.4999 220.367 41.0999C218.967 35.5999 216.817 31.4499 213.917 28.6499C211.117 25.7499 208.017 23.7999 204.617 22.7999ZM218.867 95.9999C213.467 103.1 204.517 106.65 192.017 106.65C179.517 106.65 170.567 103.1 165.167 95.9999C159.767 88.8999 157.067 77.4499 157.067 61.6499C157.067 45.8499 159.767 34.3999 165.167 27.2999C170.567 20.1999 179.517 16.6499 192.017 16.6499C204.517 16.6499 213.467 20.1999 218.867 27.2999C224.267 34.3999 226.967 45.8499 226.967 61.6499C226.967 77.4499 224.267 88.8999 218.867 95.9999Z" fill="currentColor"/>
+                <path d="M143.535 100.65V105.15H93.4346V18.1499H97.9346V100.65H143.535Z" fill="currentColor"/>
+                <path d="M14.85 100.65H70.05L38.25 13.2L4.8 105.15H0L38.25 0L76.5 105.15H14.85V100.65Z" fill="currentColor"/>
+            </svg>
+        </a>
         <div class="nav-links">
             <a href="#features">Features</a>
-            <a href="#architecture">Architecture</a>
+            <a href="#architecture">How it works</a>
             <a href="#setup">Setup</a>
             <a href="#api">API</a>
             <a href="https://github.com/yashkasera/alohomora" class="nav-gh">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-                Source
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                    <path
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+                GitHub
             </a>
         </div>
-        <button class="hamburger" onclick="document.getElementById('navbar').classList.toggle('open')" aria-label="Toggle navigation">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <button class="hamburger"
+                onclick="document.getElementById('navbar').classList.toggle('open')"
+                aria-label="Toggle navigation">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
         </button>
     </div>
 </nav>
@@ -490,22 +660,30 @@
         <div class="hero-inner">
             <div class="hero-badge">
                 <span class="hero-badge-dot"></span>
-                Kotlin Multiplatform &middot; v1.0.0
+                v1.0.0 &middot; Kotlin Multiplatform
             </div>
-            <h1>See what your app<br><span class="accent">is doing</span></h1>
+            <h1>See what your app<br>is <span class="accent">really doing</span></h1>
             <p class="hero-sub">
-                Developer observability toolkit that captures traffic, traces, events, database state, cache, and errors from your running Android & iOS app &mdash; in real time.
+                Real-time observability for your debug builds. Traffic, traces, events, database
+                state, errors &mdash; captured, streamed, and now accessible to your AI coding
+                assistant via MCP.
             </p>
             <div class="hero-actions">
                 <a href="#setup" class="btn-primary">Get Started</a>
                 <a href="https://github.com/yashkasera/alohomora" class="btn-secondary">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-                    View Source
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                    Star on GitHub
                 </a>
             </div>
             <div class="hero-install">
                 <code>debugImplementation("io.github.yashkasera:alohomora:1.0.0")</code>
-                <button class="copy-btn" onclick="navigator.clipboard.writeText('debugImplementation(&quot;io.github.yashkasera:alohomora:1.0.0&quot;)');this.textContent='Copied!';setTimeout(()=>{this.textContent='⎘'},1500)" aria-label="Copy">&#x2398;</button>
+                <button class="copy-btn"
+                        onclick="navigator.clipboard.writeText('debugImplementation(&quot;io.github.yashkasera:alohomora:1.0.0&quot;)');this.textContent='Copied!';setTimeout(()=>{this.textContent='&#x2398;'},1500)"
+                        aria-label="Copy">&#x2398;
+                </button>
             </div>
             <div class="hero-platforms">
                 <span>Android</span>
@@ -516,263 +694,539 @@
     </div>
 </section>
 
-<!-- HERO DEMO -->
+<!-- SHOWCASE -->
 <section class="showcase" id="screenshots">
     <div class="container">
-        <div class="showcase-frame" id="showcase-img">
-            <!--
-                Drop GIFs into docs/screenshots/ and uncomment the img below.
-                Recommended: record each feature tab as a short GIF (5-10s loop).
-                Files: desktop-traffic.gif, desktop-traces.gif, desktop-database.gif, mobile-events.gif, mobile-errors.gif
-                For static fallback use .png with the same base name.
-            -->
-            <div class="showcase-placeholder" id="showcase-placeholder">
-                Place GIFs in <code>docs/screenshots/</code>
-                <span>desktop-traffic.gif &middot; desktop-traces.gif &middot; desktop-database.gif &middot; mobile-events.gif &middot; mobile-errors.gif</span>
-            </div>
+        <div class="showcase-frame reveal" id="showcase-img">
+            <img src="screenshots/desktop-dashboard.png"
+                 alt="Dashboard showing device metrics, build info, recent events and traffic at a glance">
         </div>
-        <div class="showcase-tabs">
-            <button class="showcase-tab active" data-img="screenshots/desktop-traffic.gif" data-alt="Traffic inspection showing requests with method, URL, status, latency and response bodies">Traffic</button>
-            <button class="showcase-tab" data-img="screenshots/desktop-traces.gif" data-alt="Trace waterfall view showing spans grouped by trace ID with timing bars">Traces</button>
-            <button class="showcase-tab" data-img="screenshots/desktop-database.gif" data-alt="Database inspector browsing tables, rows and schema">Database</button>
-            <button class="showcase-tab" data-img="screenshots/mobile-events.gif" data-alt="Events timeline showing named events with timestamps and properties">Events</button>
-            <button class="showcase-tab" data-img="screenshots/mobile-errors.gif" data-alt="Errors panel showing captured exceptions with stack traces">Errors</button>
+        <div class="showcase-tabs reveal reveal-delay-1">
+            <button class="showcase-tab active" data-img="screenshots/desktop-dashboard.png"
+                    data-alt="Dashboard showing device metrics, build info, recent events and traffic at a glance">
+                Dashboard
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-traffic.png"
+                    data-alt="Traffic inspection showing requests with method, URL, status, latency and response bodies">
+                Traffic
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-traces.png"
+                    data-alt="Trace waterfall view showing spans grouped by trace ID with timing bars">
+                Traces
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-events.png"
+                    data-alt="Events timeline showing named events with timestamps and properties">
+                Events
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-database.png"
+                    data-alt="Database inspector browsing tables, rows and schema">
+                Database
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-errors.png"
+                    data-alt="Errors panel showing captured exceptions with full stack traces">
+                Errors
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-mock-rules.png"
+                    data-alt="Mock rules editor with session management and JSON response body editor">
+                Mock Rules
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-feature-flags.png"
+                    data-alt="Feature flags panel showing flags from Firebase Remote Config and LaunchDarkly">
+                Feature Flags
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-cache.png"
+                    data-alt="Cache inspector showing SharedPreferences keys and values">
+                Cache
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-git-history.png"
+                    data-alt="Git history showing the last 50 commits with SHA, message, date, and author">
+                Git History
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-config.png"
+                    data-alt="Build metadata showing application info, source branch, commit, and variant">
+                Config
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-adb.png"
+                    data-alt="ADB shortcuts panel with app controls, APK install, capture tools, and connectivity toggles">
+                ADB
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-deep-links.png"
+                    data-alt="Deep link builder with scheme, host, path, query params and history">
+                Deep Links
+            </button>
+            <button class="showcase-tab" data-img="screenshots/desktop-mcp-server.png"
+                    data-alt="MCP server settings with endpoint, write tools toggle, and agent connection snippets">
+                MCP Server
+            </button>
         </div>
     </div>
 </section>
 
-<!-- FEATURE DEMOS -->
-<section id="demos">
+<!-- PROOF POINTS -->
+<section class="proof">
     <div class="container">
-        <div class="section-label">See it in action</div>
-        <div class="section-title">Real-time debugging, not log archaeology</div>
-        <p class="section-desc">Short recordings of actual features running in the desktop companion and in-app console.</p>
-        <div class="demos-grid">
-            <!--
-                Add GIFs to docs/screenshots/ and replace each placeholder div with:
-                <img src="screenshots/demo-traffic-capture.gif" alt="...">
-            -->
-            <div class="demo-card">
-                <div class="demo-media">
-                    <div class="demo-media-placeholder">demo-traffic-capture.gif</div>
-                </div>
-                <div class="demo-info">
-                    <h4>Traffic capture</h4>
-                    <p>Requests stream in as they happen. Expand any row for full headers, body, and timing breakdown.</p>
-                </div>
+        <div class="proof-grid reveal">
+            <div class="proof-item">
+                <div class="num">15</div>
+                <div class="label">Inspection Panels</div>
             </div>
-            <div class="demo-card">
-                <div class="demo-media">
-                    <div class="demo-media-placeholder">demo-trace-waterfall.gif</div>
-                </div>
-                <div class="demo-info">
-                    <h4>Trace waterfall</h4>
-                    <p>Spans render as a nested waterfall. Click any bar for attributes, events, and self-time.</p>
-                </div>
+            <div class="proof-item">
+                <div class="num">&lt;10 KB</div>
+                <div class="label">Release Overhead</div>
             </div>
-            <div class="demo-card">
-                <div class="demo-media">
-                    <div class="demo-media-placeholder">demo-traffic-replay.gif</div>
-                </div>
-                <div class="demo-info">
-                    <h4>Traffic replay</h4>
-                    <p>Edit a captured request and re-fire it through your own HTTP client. The response appears as a new entry.</p>
-                </div>
+            <div class="proof-item">
+                <div class="num">2</div>
+                <div class="label">Lines to Set Up</div>
             </div>
-            <div class="demo-card">
-                <div class="demo-media">
-                    <div class="demo-media-placeholder">demo-database-inspect.gif</div>
-                </div>
-                <div class="demo-info">
-                    <h4>Database inspection</h4>
-                    <p>Browse tables, page through rows, run queries. Schema view shows columns, types, and indexes.</p>
-                </div>
-            </div>
-            <div class="demo-card">
-                <div class="demo-media">
-                    <div class="demo-media-placeholder">demo-mock-rules.gif</div>
-                </div>
-                <div class="demo-info">
-                    <h4>Mock rules</h4>
-                    <p>Create a mock from captured traffic, add template generators, see the mocked response in the next request.</p>
-                </div>
-            </div>
-            <div class="demo-card">
-                <div class="demo-media">
-                    <div class="demo-media-placeholder">demo-deep-link.gif</div>
-                </div>
-                <div class="demo-info">
-                    <h4>Deep link builder</h4>
-                    <p>Compose a URL with scheme, host, path, query params. Fire it on the device. History saves across sessions.</p>
-                </div>
+            <div class="proof-item">
+                <div class="num">0</div>
+                <div class="label">Init Code Needed</div>
             </div>
         </div>
     </div>
 </section>
+
+<hr class="section-divider">
 
 <!-- PHILOSOPHY -->
 <section>
     <div class="container">
-        <div class="section-label">Philosophy</div>
-        <div class="section-title">Observability should be interactive, not forensic</div>
+        <div class="section-label reveal">Principles</div>
+        <div class="section-title reveal">Built for the way debugging actually works</div>
         <div class="philosophy-grid">
-            <div class="philosophy-card">
-                <h4>Nothing important should be invisible</h4>
-                <p>Every network request, database write, event, and exception is captured and surfaced in real time.</p>
+            <div class="philosophy-card reveal">
+                <h4>Nothing should be invisible</h4>
+                <p>Every request, database write, event, and exception is captured and surfaced the
+                    moment it happens.</p>
             </div>
-            <div class="philosophy-card">
+            <div class="philosophy-card reveal reveal-delay-1">
                 <h4>Seconds, not hours</h4>
-                <p>Answer "what just happened?" immediately. No digging through logs, no rebuilding mental models.</p>
+                <p>Answer "what just happened?" immediately. No log archaeology. No rebuilding
+                    mental models.</p>
             </div>
-            <div class="philosophy-card">
-                <h4>Zero overhead in production</h4>
-                <p>The noop artifact mirrors the full API with empty bodies. R8 optimises it away completely.</p>
+            <div class="philosophy-card reveal reveal-delay-2">
+                <h4>Zero production cost</h4>
+                <p>The noop artifact mirrors every method with empty bodies. R8 optimises it away
+                    completely.</p>
             </div>
-            <div class="philosophy-card">
+            <div class="philosophy-card reveal reveal-delay-3">
                 <h4>No vendor lock-in</h4>
-                <p>Depends on no tracing SDK. A ~15-line adapter bridges whatever tracer you already run.</p>
+                <p>Depends on no tracing SDK. A ~15-line adapter bridges whatever tracer you already
+                    run.</p>
             </div>
         </div>
     </div>
 </section>
+
+<hr class="section-divider">
+
+<!-- DEMOS -->
+<section id="demos">
+    <div class="container">
+        <div class="section-label reveal">See it in action</div>
+        <div class="section-title reveal">Real-time debugging, not log archaeology</div>
+        <p class="section-desc reveal">The desktop companion and in-app console, running against a live showcase app.</p>
+        <div class="demos-grid">
+            <div class="demo-card reveal">
+                <div class="demo-media">
+                    <img src="screenshots/desktop-traffic.png" alt="Traffic capture" loading="lazy">
+                </div>
+                <div class="demo-info">
+                    <h4>Traffic capture</h4>
+                    <p>Requests stream in as they happen. Expand any row for headers, body, and
+                        timing breakdown.</p>
+                </div>
+            </div>
+            <div class="demo-card reveal reveal-delay-1">
+                <div class="demo-media">
+                    <img src="screenshots/desktop-traces.png" alt="Trace waterfall" loading="lazy">
+                </div>
+                <div class="demo-info">
+                    <h4>Trace waterfall</h4>
+                    <p>Spans render as a nested waterfall. Click any bar for attributes, events, and
+                        self-time.</p>
+                </div>
+            </div>
+            <div class="demo-card reveal">
+                <div class="demo-media">
+                    <img src="screenshots/desktop-errors.png" alt="Error tracking" loading="lazy">
+                </div>
+                <div class="demo-info">
+                    <h4>Error tracking</h4>
+                    <p>Caught and uncaught exceptions with full stack traces, timestamps, and
+                        the screen where they occurred.</p>
+                </div>
+            </div>
+            <div class="demo-card reveal reveal-delay-1">
+                <div class="demo-media">
+                    <img src="screenshots/desktop-database.png" alt="Database inspection" loading="lazy">
+                </div>
+                <div class="demo-info">
+                    <h4>Database inspection &amp; editing</h4>
+                    <p>Browse tables, page through rows, view schema. Double-click any cell to edit
+                        values live on the device.</p>
+                </div>
+            </div>
+            <div class="demo-card reveal">
+                <div class="demo-media">
+                    <img src="screenshots/desktop-mock-rules.png" alt="Mock rules" loading="lazy">
+                </div>
+                <div class="demo-info">
+                    <h4>Mock rules</h4>
+                    <p>Create a mock from captured traffic, add template generators, see mocked
+                        responses on the next request.</p>
+                </div>
+            </div>
+            <div class="demo-card reveal reveal-delay-1">
+                <div class="demo-media">
+                    <img src="screenshots/desktop-feature-flags.png" alt="Feature flags" loading="lazy">
+                </div>
+                <div class="demo-info">
+                    <h4>Feature flags</h4>
+                    <p>View flags from Firebase Remote Config, LaunchDarkly, or any source.
+                        Expand to see metadata and raw values.</p>
+                </div>
+            </div>
+            <div class="demo-card reveal">
+                <div class="demo-media">
+                    <img src="screenshots/desktop-mcp-server.png" alt="MCP server settings" loading="lazy">
+                </div>
+                <div class="demo-info">
+                    <h4>MCP server for AI agents</h4>
+                    <p>AI coding assistants query your app's live data through read-only MCP tools.
+                        Debug with natural language.</p>
+                </div>
+            </div>
+            <div class="demo-card reveal reveal-delay-1">
+                <div class="demo-media">
+                    <img src="screenshots/desktop-adb.png" alt="ADB shortcuts" loading="lazy">
+                </div>
+                <div class="demo-info">
+                    <h4>ADB shortcuts</h4>
+                    <p>Launch, force stop, clear data, install APKs, toggle connectivity, and
+                        capture screenshots or screen recordings.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="section-divider">
 
 <!-- FEATURES -->
 <section id="features">
     <div class="container">
-        <div class="section-label">Features</div>
-        <div class="section-title">Everything your debug build should show you</div>
-        <p class="section-desc">Unified inspection of every dimension of your running app, streamed to an in-app console and a desktop companion.</p>
+        <div class="section-label reveal">Capabilities</div>
+        <div class="section-title reveal">Everything your debug build should show you</div>
+        <p class="section-desc reveal">Unified inspection across every dimension of your running
+            app, streamed to an in-app console and a desktop companion.</p>
         <div class="features-grid">
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-blue">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
                 </div>
                 <h3>Traffic</h3>
-                <p>Every outbound request captured with method, URL, status, latency, headers (redacted), and bodies. Auto-capture for OkHttp and Ktor.</p>
+                <p>Every outbound request captured with method, URL, status, latency, headers, and
+                    bodies. Auto-capture for OkHttp and Ktor.</p>
                 <span class="tag">OkHttp &middot; Ktor &middot; Manual</span>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-indigo">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"/>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    </svg>
                 </div>
                 <h3>Traffic Replay</h3>
-                <p>Edit a captured request and re-send it through your own HTTP client. Signatures are regenerated by your interceptors.</p>
-                <span class="tag">Edit & Re-send</span>
+                <p>Edit a captured request and re-send it through your own HTTP client. Signatures
+                    regenerated by your interceptors.</p>
+                <span class="tag">Edit &amp; Re-send</span>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-purple">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="12" x2="22" y2="12"/><line x1="6" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="14" y2="17"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <line x1="6" y1="7" x2="20" y2="7"/>
+                        <line x1="4" y1="17" x2="14" y2="17"/>
+                    </svg>
                 </div>
                 <h3>Traces</h3>
-                <p>Waterfall view of spans grouped by trace ID, nested by parent. Adapters for OpenTelemetry, Sentry, and more.</p>
+                <p>Waterfall view of spans grouped by trace ID, nested by parent. Adapters for
+                    OpenTelemetry and Sentry.</p>
                 <span class="tag">OpenTelemetry &middot; Sentry</span>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-green">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
                 </div>
                 <h3>Events</h3>
-                <p>Searchable timeline of named events with timestamps and optional properties. What happened, in order.</p>
+                <p>Searchable timeline of named events with timestamps and optional properties. What
+                    happened, in order.</p>
                 <span class="tag">Timeline &middot; Properties</span>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-amber">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                    </svg>
                 </div>
                 <h3>Database</h3>
-                <p>Live inspection of your app's databases. Browse tables, page through rows, view schema with columns and indexes.</p>
-                <span class="tag">Room &middot; SQLite</span>
+                <p>Browse tables, page through rows, view schema. Double-click any cell to edit
+                    values live on the device. Android and iOS.</p>
+                <span class="tag">Room &middot; SQLite &middot; Inline Editing</span>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-red">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
                 </div>
                 <h3>Errors</h3>
-                <p>Uncaught exceptions captured automatically. Caught exceptions via <code>recordError()</code>. Chains to your crash handler.</p>
+                <p>Uncaught exceptions captured automatically. Caught exceptions via <code>recordError()</code>.
+                    Chains to your crash handler.</p>
                 <span class="tag">Crash Handler &middot; Stack Traces</span>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-cyan">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
                 </div>
                 <h3>Cache</h3>
-                <p>Inspect SharedPreferences (Android) and NSUserDefaults (iOS). Encrypted entries flagged. Read-only.</p>
+                <p>Inspect SharedPreferences and NSUserDefaults. Encrypted entries flagged.
+                    Read-only view.</p>
                 <span class="tag">SharedPrefs &middot; UserDefaults</span>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-purple">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                        <line x1="4" y1="22" x2="4" y2="15"/>
+                    </svg>
                 </div>
                 <h3>Feature Flags</h3>
-                <p>Record and inspect feature flag state with source, type, and metadata. Batch import from any provider.</p>
+                <p>Record and inspect feature flag state with source, type, and metadata. Batch
+                    import from any provider.</p>
                 <span class="tag">Remote Config &middot; Custom</span>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-amber">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <circle cx="18" cy="18" r="3"/>
+                        <circle cx="6" cy="6" r="3"/>
+                        <path d="M13 6h3a2 2 0 0 1 2 2v7"/>
+                        <line x1="6" y1="9" x2="6" y2="21"/>
+                    </svg>
                 </div>
-                <h3>Config & Git History</h3>
-                <p>Branch, commit SHA, dirty flag, version, build timestamp. Last N commits. Auto-injected at build time.</p>
+                <h3>Config &amp; Git History</h3>
+                <p>Branch, commit SHA, dirty flag, version, build timestamp. Last N commits injected
+                    at build time.</p>
                 <span class="tag">Gradle Plugin &middot; Xcode</span>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-red">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="2" width="20" height="8" rx="2"/>
+                        <rect x="2" y="14" width="20" height="8" rx="2"/>
+                        <line x1="6" y1="6" x2="6.01" y2="6"/>
+                        <line x1="6" y1="18" x2="6.01" y2="18"/>
+                    </svg>
                 </div>
                 <h3>Mock Rules</h3>
-                <p>Intercept requests and return custom responses. Template engine with generators (<code>{{uuid}}</code>, <code>{{email}}</code>, <code>{{int(1,100)}}</code>). Import from HAR files.</p>
+                <p>Intercept requests and return custom responses. Template engine with generators.
+                    Import from HAR files.</p>
                 <span class="tag">Templates &middot; HAR Import &middot; Sessions</span>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-cyan">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                    </svg>
                 </div>
                 <h3>Deep Link Builder</h3>
-                <p>Compose deep links with scheme, host, path, and query params. Fire them on-device. History persisted across sessions.</p>
+                <p>Compose deep links with scheme, host, path, and query params. Fire on-device.
+                    History persisted.</p>
                 <span class="tag">Builder &middot; History &middot; ADB</span>
             </div>
-            <div class="feature-card">
+            <div class="feature-card reveal">
                 <div class="feature-icon ic-indigo">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        <line x1="11" y1="8" x2="11" y2="14"/>
+                        <line x1="8" y1="11" x2="14" y2="11"/>
+                    </svg>
                 </div>
                 <h3>Command Palette</h3>
-                <p>Cmd/Ctrl+K to search and trigger any action. Navigate sections, toggle theme, fire ADB commands, clear data.</p>
+                <p>Cmd/Ctrl+K to search and trigger any action. Navigate sections, toggle theme,
+                    fire ADB commands.</p>
                 <span class="tag">Keyboard-first &middot; Desktop</span>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon ic-green">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                </div>
+                <h3>MCP Server</h3>
+                <p>Expose captured data to AI coding assistants (Claude Code, Cursor) as read-only
+                    MCP tools over Streamable HTTP.</p>
+                <span class="tag">AI Agents &middot; Desktop</span>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon ic-amber">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </div>
+                <h3>Shake to Open</h3>
+                <p>Shake the device to instantly open the debug console. Configurable sensitivity
+                    threshold.</p>
+                <span class="tag">Android &middot; iOS</span>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon ic-red">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    </svg>
+                </div>
+                <h3>Network Throttling</h3>
+                <p>Simulate slow networks at interceptor level or device-wide via a local VPN. Edge,
+                    3G, and Wi-Fi presets.</p>
+                <span class="tag">VPN &middot; Interceptor &middot; Presets</span>
+            </div>
+
+
+        </div>
+    </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- MOCK RULES DEEP DIVE -->
+<section>
+    <div class="container">
+        <div class="section-label reveal">Network Control</div>
+        <div class="section-title reveal">Mock, throttle, and intercept without a proxy</div>
+        <p class="section-desc reveal">Define mock rules on the desktop, push them to the device.
+            Simulate slow networks device-wide via a local VPN. WebView traffic included.</p>
+        <div class="mock-grid">
+            <div class="reveal">
+                <div class="code-block">
+                    <div class="code-header">Mock response with template generators</div>
+                    <pre>{
+  <span class="str">"id"</span>: <span class="str">"<span class="kw">{{uuid}}</span>"</span>,
+  <span class="str">"name"</span>: <span class="str">"<span class="kw">{{name}}</span>"</span>,
+  <span class="str">"email"</span>: <span class="str">"<span class="kw">{{email}}</span>"</span>,
+  <span class="str">"age"</span>: <span class="kw">{{int(18,65)}}</span>,
+  <span class="str">"score"</span>: <span class="kw">{{float(0,100)}}</span>,
+  <span class="str">"created"</span>: <span class="str">"<span class="kw">{{iso8601}}</span>"</span>,
+  <span class="str">"active"</span>: <span class="kw">{{bool}}</span>
+}</pre>
+                </div>
+                <p style="margin-top:14px;font-size:12px;color:var(--outline);line-height:1.7;">
+                    Generators resolve fresh values per-request. <code>{{uuid}}</code>, <code>{{name}}</code>,
+                    <code>{{email}}</code>, <code>{{int(min,max)}}</code>,
+                    <code>{{float(min,max)}}</code>, <code>{{iso8601}}</code>, <code>{{bool}}</code>,
+                    <code>{{timestamp}}</code>. Unknown placeholders pass through.
+                </p>
+            </div>
+            <div class="reveal reveal-delay-1">
+                <ul class="arch-points">
+                    <li><span class="bullet">&rsaquo;</span><span><strong>Pattern matching</strong> &mdash; plain substring or regex against URL + method</span>
+                    </li>
+                    <li><span class="bullet">&rsaquo;</span><span><strong>Sessions</strong> &mdash; group rules into named sessions, auto-saved to <code>~/.alohomora/</code></span>
+                    </li>
+                    <li><span
+                        class="bullet">&rsaquo;</span><span><strong>One-click from traffic</strong> &mdash; right-click a captured request to create a mock with its response pre-filled</span>
+                    </li>
+                    <li><span class="bullet">&rsaquo;</span><span><strong>HAR import</strong> &mdash; import HAR 1.2 files from browser DevTools or Charles/Proxyman</span>
+                    </li>
+                    <li><span
+                        class="bullet">&rsaquo;</span><span><strong>Export &amp; share</strong> &mdash; export as <code>.alohomora-mocks.json</code> and share with your team</span>
+                    </li>
+                    <li><span class="bullet">&rsaquo;</span><span><strong>Throttle presets</strong> &mdash; Edge, Slow 3G, Fast 3G, Slow Wi-Fi. Interceptor-level or device-wide via local VPN</span>
+                    </li>
+                    <li><span class="bullet">&rsaquo;</span><span><strong>WebView support</strong> &mdash; VPN-based throttling covers all device traffic, not just your HTTP client</span>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
 </section>
 
+<hr class="section-divider">
+
 <!-- ARCHITECTURE -->
-<section id="architecture" class="section-alt">
+<section id="architecture" class="arch-section">
     <div class="container">
-        <div class="section-label">Architecture</div>
-        <div class="section-title">Debug everything, ship nothing</div>
-        <p class="section-desc">Two artifacts, same API. Your debug build gets full observability. Your release build gets empty method bodies that R8 optimises away.</p>
+        <div class="section-label reveal">How it works</div>
+        <div class="section-title reveal">Debug everything, ship nothing</div>
+        <p class="section-desc reveal">Two artifacts, same API. Your debug build gets full
+            observability. Your release build gets empty method bodies that R8 optimises away.</p>
         <div class="arch-grid">
-            <div class="arch-diagram">
+            <div class="arch-diagram reveal">
                 <div class="arch-flow">
-                    <div class="arch-box shared">alohomora-common<small>Shared models, protocol, entities</small></div>
+                    <div class="arch-box shared">alohomora-common<small>Shared models, protocol,
+                        entities</small></div>
                     <div class="arch-arrow">&darr;</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                        <div class="arch-box debug">alohomora<small>debugImplementation</small></div>
-                        <div class="arch-box noop">alohomora-noop<small>releaseImplementation</small></div>
+                    <div class="arch-split">
+                        <div class="arch-box debug">alohomora<small>debugImplementation</small>
+                        </div>
+                        <div class="arch-box noop">
+                            alohomora-noop<small>releaseImplementation</small></div>
                     </div>
                     <div class="arch-arrow">&darr;</div>
                     <div class="arch-box" style="grid-column: span 2;">Your App</div>
                     <div class="arch-arrow">TCP via ADB &darr;</div>
-                    <div class="arch-box desktop">Desktop Companion<small>macOS &middot; Windows &middot; Linux</small></div>
+                    <div class="arch-box desktop">Desktop Companion<small>macOS &middot; Windows
+                        &middot; Linux</small></div>
                 </div>
             </div>
-            <div class="arch-text">
+            <div class="arch-text reveal reveal-delay-1">
                 <h3>Module structure</h3>
                 <ul class="arch-points">
-                    <li><span class="bullet">&rsaquo;</span><span><strong>alohomora</strong> &mdash; Full debug-time library: Room DB, TCP server, Koin DI, Compose UI</span></li>
-                    <li><span class="bullet">&rsaquo;</span><span><strong>alohomora-noop</strong> &mdash; Production no-op mirror. Same API, zero overhead. R8-optimised away.</span></li>
-                    <li><span class="bullet">&rsaquo;</span><span><strong>alohomora-common</strong> &mdash; Shared data models, Room entities, binary protocol types</span></li>
-                    <li><span class="bullet">&rsaquo;</span><span><strong>alohomora-ui</strong> &mdash; Shared Compose UI components including the trace waterfall</span></li>
-                    <li><span class="bullet">&rsaquo;</span><span><strong>Gradle plugin</strong> &mdash; Code-generates build metadata from Git at build time</span></li>
-                    <li><span class="bullet">&rsaquo;</span><span><strong>Desktop app</strong> &mdash; Standalone Compose Desktop. Connects via ADB.</span></li>
+                    <li><span class="bullet">&rsaquo;</span><span><strong>alohomora</strong> &mdash; Full debug-time library: Room DB, TCP server, Koin DI, Compose UI</span>
+                    </li>
+                    <li><span class="bullet">&rsaquo;</span><span><strong>alohomora-noop</strong> &mdash; Production no-op mirror. Same API, zero overhead. R8-optimised away.</span>
+                    </li>
+                    <li><span class="bullet">&rsaquo;</span><span><strong>alohomora-common</strong> &mdash; Shared data models, Room entities, binary protocol types</span>
+                    </li>
+                    <li><span class="bullet">&rsaquo;</span><span><strong>alohomora-ui</strong> &mdash; Shared Compose UI components including the trace waterfall</span>
+                    </li>
+                    <li><span class="bullet">&rsaquo;</span><span><strong>Gradle plugin</strong> &mdash; Code-generates build metadata from Git at build time</span>
+                    </li>
+                    <li><span class="bullet">&rsaquo;</span><span><strong>Desktop app</strong> &mdash; Standalone Compose Desktop companion. Connects via ADB.</span>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -782,32 +1236,36 @@
 <!-- SETUP -->
 <section id="setup">
     <div class="container">
-        <div class="section-label">Setup</div>
-        <div class="section-title">Up and running in 5 minutes</div>
-        <p class="section-desc">Add the dependency, optionally apply the Gradle plugin for build metadata, and start capturing.</p>
+        <div class="section-label reveal">Get started</div>
+        <div class="section-title reveal">Up and running in 5 minutes</div>
+        <p class="section-desc reveal">Add the dependency, optionally apply the Gradle plugin for
+            build metadata, and start capturing.</p>
         <div class="setup-steps">
-            <div class="setup-step">
+            <div class="setup-step reveal">
                 <div class="step-num">1</div>
                 <div class="step-content">
                     <h3>Add the dependency</h3>
-                    <p>Use <code>debugImplementation</code> for the full library and <code>releaseImplementation</code> for the zero-overhead noop.</p>
+                    <p>Use <code>debugImplementation</code> for the full library and <code>releaseImplementation</code>
+                        for the zero-overhead noop.</p>
                     <div class="code-block">
                         <div class="code-header">build.gradle.kts</div>
-<pre><span class="kw">dependencies</span> {
+                        <pre><span class="kw">dependencies</span> {
     <span class="fn">debugImplementation</span>(<span class="str">"io.github.yashkasera:alohomora:1.0.0"</span>)
     <span class="fn">releaseImplementation</span>(<span class="str">"io.github.yashkasera:alohomora-noop:1.0.0"</span>)
 }</pre>
                     </div>
                 </div>
             </div>
-            <div class="setup-step">
+            <div class="setup-step reveal">
                 <div class="step-num">2</div>
                 <div class="step-content">
-                    <h3>Apply the Gradle plugin <span style="color:var(--outline);font-weight:400">(optional)</span></h3>
-                    <p>Injects build metadata (branch, commit, version, git history) at build time.</p>
+                    <h3>Apply the Gradle plugin <span style="color:var(--outline);font-weight:400">(optional)</span>
+                    </h3>
+                    <p>Injects build metadata &mdash; branch, commit, version, git history &mdash;
+                        at build time.</p>
                     <div class="code-block">
                         <div class="code-header">build.gradle.kts</div>
-<pre><span class="kw">plugins</span> {
+                        <pre><span class="kw">plugins</span> {
     <span class="fn">id</span>(<span class="str">"io.github.yashkasera.alohomora"</span>)
 }
 
@@ -820,45 +1278,51 @@
                     </div>
                 </div>
             </div>
-            <div class="setup-step">
+            <div class="setup-step reveal">
                 <div class="step-num">3</div>
                 <div class="step-content">
                     <h3>Capture network traffic</h3>
-                    <p>Add the interceptor to your HTTP client. OkHttp and Ktor are supported out of the box.</p>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <p>Add the interceptor to your HTTP client. OkHttp and Ktor are supported out of
+                        the box.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                         <div class="code-block">
                             <div class="code-header">OkHttp</div>
-<pre><span class="kw">val</span> client = <span class="type">OkHttpClient</span>.<span class="type">Builder</span>()
+                            <pre><span class="kw">val</span> client = <span class="type">OkHttpClient</span>.<span
+                                class="type">Builder</span>()
     .<span class="fn">addInterceptor</span>(<span class="type">TrafficInterceptor</span>())
     .<span class="fn">build</span>()</pre>
                         </div>
                         <div class="code-block">
                             <div class="code-header">Ktor</div>
-<pre><span class="kw">val</span> client = <span class="type">HttpClient</span> {
+                            <pre><span class="kw">val</span> client = <span
+                                class="type">HttpClient</span> {
     <span class="fn">install</span>(<span class="type">AlohomoraInspector</span>)
 }</pre>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="setup-step">
+            <div class="setup-step reveal">
                 <div class="step-num">4</div>
                 <div class="step-content">
-                    <h3>Enable traffic replay <span style="color:var(--outline);font-weight:400">(optional)</span></h3>
+                    <h3>Enable traffic replay <span style="color:var(--outline);font-weight:400">(optional)</span>
+                    </h3>
                     <div class="code-block">
                         <div class="code-header">Kotlin</div>
-<pre><span class="type">Alohomora</span>.<span class="fn">registerReplayHandler</span>(<span class="fn">okHttpReplayHandler</span>(client))  <span class="cmt">// OkHttp / Retrofit</span>
-<span class="type">Alohomora</span>.<span class="fn">registerReplayHandler</span>(<span class="fn">ktorReplayHandler</span>(client))   <span class="cmt">// Ktor</span></pre>
+                        <pre><span class="type">Alohomora</span>.<span class="fn">registerReplayHandler</span>(<span
+                            class="fn">okHttpReplayHandler</span>(client))  <span class="cmt">// OkHttp / Retrofit</span>
+<span class="type">Alohomora</span>.<span class="fn">registerReplayHandler</span>(<span class="fn">ktorReplayHandler</span>(client))   <span
+                                class="cmt">// Ktor</span></pre>
                     </div>
                 </div>
             </div>
-            <div class="setup-step">
+            <div class="setup-step reveal">
                 <div class="step-num">5</div>
                 <div class="step-content">
                     <h3>Connect the desktop companion</h3>
                     <div class="code-block">
                         <div class="code-header">Terminal</div>
-<pre>./gradlew :desktopApp:run              <span class="cmt"># Run from source</span>
+                        <pre>./gradlew :desktopApp:run              <span class="cmt"># Run from source</span>
 ./gradlew :desktopApp:packageDmg       <span class="cmt"># macOS</span>
 ./gradlew :desktopApp:packageMsi       <span class="cmt"># Windows</span>
 ./gradlew :desktopApp:packageDeb       <span class="cmt"># Linux</span></pre>
@@ -869,40 +1333,65 @@
     </div>
 </section>
 
+<hr class="section-divider">
+
 <!-- API -->
-<section id="api" class="section-alt">
+<section id="api" class="api-section">
     <div class="container">
-        <div class="section-label">API</div>
-        <div class="section-title">One object, every capability</div>
-        <p class="section-desc">The entire public API lives on the <code>Alohomora</code> singleton. Every method is mirrored as a no-op in the release artifact.</p>
-        <div class="tabs" style="margin-top:32px;">
+        <div class="section-label reveal">API</div>
+        <div class="section-title reveal">One object, every capability</div>
+        <p class="section-desc reveal">The entire public API lives on the <code>Alohomora</code>
+            singleton. Every method is mirrored as a no-op in the release artifact.</p>
+        <div class="tabs reveal" style="margin-top:36px;">
             <button class="tab-btn active" onclick="showTab(event,'tab-rec')">Recording</button>
             <button class="tab-btn" onclick="showTab(event,'tab-infra')">Infrastructure</button>
             <button class="tab-btn" onclick="showTab(event,'tab-plug')">Plugins</button>
         </div>
         <div id="tab-rec" class="tab-panel active">
             <div class="api-grid">
-                <div class="api-card"><h4>recordEvent(name, properties?)</h4><p>Record a named event with optional key-value properties.</p></div>
-                <div class="api-card"><h4>recordError(throwable, place?)</h4><p>Record a caught exception. Also: <code>recordError(reason, stackTrace?, place?)</code> for Swift.</p></div>
-                <div class="api-card"><h4>recordTraffic(...)</h4><p>Manually record a network request with status, URL, method, headers, body, timing.</p></div>
-                <div class="api-card"><h4>recordSpan(traceId, spanId, ...)</h4><p>Record a distributed trace span. Short form: <code>recordSpan(name, durationNanos)</code></p></div>
-                <div class="api-card"><h4>recordFeatureFlag(key, value, ...)</h4><p>Record a feature flag. Batch: <code>setFeatureFlags(flags, source?)</code></p></div>
-                <div class="api-card"><h4>registerAppDatabase(name, path?)</h4><p>Register an app database for live inspection.</p></div>
+                <div class="api-card"><h4>recordEvent(name, properties?)</h4>
+                    <p>Record a named event with optional key-value properties.</p></div>
+                <div class="api-card"><h4>recordError(throwable, place?)</h4>
+                    <p>Record a caught exception. Also: <code>recordError(reason, stackTrace?,
+                        place?)</code> for Swift.</p></div>
+                <div class="api-card"><h4>recordTraffic(...)</h4>
+                    <p>Manually record a network request with status, URL, method, headers, body,
+                        timing.</p></div>
+                <div class="api-card"><h4>recordSpan(traceId, spanId, ...)</h4>
+                    <p>Record a distributed trace span. Short form: <code>recordSpan(name,
+                        durationNanos)</code></p></div>
+                <div class="api-card"><h4>recordFeatureFlag(key, value, ...)</h4>
+                    <p>Record a feature flag. Batch: <code>setFeatureFlags(flags, source?)</code>
+                    </p></div>
+                <div class="api-card"><h4>registerAppDatabase(name, path?)</h4>
+                    <p>Register an app database for live inspection.</p></div>
+                <div class="api-card"><h4>setShakeToOpenEnabled(enabled)</h4>
+                    <p>Toggle shake-to-open for the debug console. Default sensitivity
+                        configurable.</p></div>
             </div>
         </div>
         <div id="tab-infra" class="tab-panel">
             <div class="api-grid">
-                <div class="api-card"><h4>init()</h4><p>Initialize Alohomora. Android auto-initialises via AndroidX Startup.</p></div>
-                <div class="api-card"><h4>startDevToolsServer(port?)</h4><p>Start the TCP server for the desktop companion. Default: 53999.</p></div>
-                <div class="api-card"><h4>registerReplayHandler(handler)</h4><p>Register a handler for traffic replay.</p></div>
-                <div class="api-card"><h4>isReplaySupported</h4><p><code>true</code> if a replay handler is registered. Always <code>false</code> in noop.</p></div>
+                <div class="api-card"><h4>init()</h4>
+                    <p>Initialize Alohomora. Android auto-initialises via AndroidX Startup.</p>
+                </div>
+                <div class="api-card"><h4>startDevToolsServer(port?)</h4>
+                    <p>Start the TCP server for the desktop companion. Default: 53999.</p></div>
+                <div class="api-card"><h4>registerReplayHandler(handler)</h4>
+                    <p>Register a handler for traffic replay.</p></div>
+                <div class="api-card"><h4>isReplaySupported</h4>
+                    <p><code>true</code> if a replay handler is registered. Always
+                        <code>false</code> in noop.</p></div>
             </div>
         </div>
         <div id="tab-plug" class="tab-panel">
             <div class="api-grid">
-                <div class="api-card"><h4>registerPlugin(plugin)</h4><p>Embed custom Compose screens into Alohomora's navigation.</p></div>
-                <div class="api-card"><h4>unregisterPlugin(pluginId)</h4><p>Remove a previously registered plugin by ID.</p></div>
-                <div class="api-card"><h4>getPlugins()</h4><p>Returns currently registered plugins.</p></div>
+                <div class="api-card"><h4>registerPlugin(plugin)</h4>
+                    <p>Embed custom Compose screens into Alohomora's navigation.</p></div>
+                <div class="api-card"><h4>unregisterPlugin(pluginId)</h4>
+                    <p>Remove a previously registered plugin by ID.</p></div>
+                <div class="api-card"><h4>getPlugins()</h4>
+                    <p>Returns currently registered plugins.</p></div>
             </div>
         </div>
     </div>
@@ -911,13 +1400,17 @@
 <!-- ADAPTERS -->
 <section>
     <div class="container">
-        <div class="section-label">Adapters</div>
-        <div class="section-title">Bring your own tracer</div>
-        <p class="section-desc">Alohomora depends on no tracing SDK. Write a ~15-line adapter from whatever you already run.</p>
-        <div class="code-block" style="margin-top:32px;">
+        <div class="section-label reveal">Adapters</div>
+        <div class="section-title reveal">Bring your own tracer</div>
+        <p class="section-desc reveal">Alohomora depends on no tracing SDK. Write a ~15-line adapter
+            from whatever you already run.</p>
+        <div class="code-block reveal" style="margin-top:36px;">
             <div class="code-header">OpenTelemetry SpanExporter</div>
-<pre><span class="kw">class</span> <span class="type">AlohomoraSpanExporter</span> : <span class="type">SpanExporter</span> {
-    <span class="kw">override fun</span> <span class="fn">export</span>(spans: <span class="type">Collection</span>&lt;<span class="type">SpanData</span>&gt;): <span class="type">CompletableResultCode</span> {
+            <pre><span class="kw">class</span> <span
+                class="type">AlohomoraSpanExporter</span> : <span class="type">SpanExporter</span> {
+    <span class="kw">override fun</span> <span class="fn">export</span>(spans: <span class="type">Collection</span>&lt;<span
+                    class="type">SpanData</span>&gt;): <span
+                    class="type">CompletableResultCode</span> {
         spans.<span class="fn">forEach</span> { span <span class="kw">-></span>
             <span class="type">Alohomora</span>.<span class="fn">recordSpan</span>(
                 traceId = span.traceId,
@@ -929,79 +1422,110 @@
                 kind = span.kind.name,
                 statusCode = span.status.statusCode.name,
                 attributes = span.attributes.<span class="fn">toStringMap</span>(),
-                events = span.events.<span class="fn">map</span> { <span class="cmt">/* convert */</span> },
+                events = span.events.<span class="fn">map</span> { <span
+                    class="cmt">/* convert */</span> },
             )
         }
-        <span class="kw">return</span> <span class="type">CompletableResultCode</span>.<span class="fn">ofSuccess</span>()
+        <span class="kw">return</span> <span class="type">CompletableResultCode</span>.<span
+                    class="fn">ofSuccess</span>()
     }
 }</pre>
         </div>
-        <p style="margin-top:14px;font-size:13px;color:var(--muted);">
-            The adapter lives in <code>src/main</code>, compiles everywhere. In release builds, the noop <code>recordSpan</code> discards every span silently.
-        </p>
     </div>
 </section>
 
-<!-- MOCK RULES -->
-<section>
-    <div class="container">
-        <div class="section-label">Mock Rules</div>
-        <div class="section-title">Intercept and mock without a proxy</div>
-        <p class="section-desc">Define mock rules on the desktop, push them to the device. Requests matching a URL pattern return your response instead of hitting the network.</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:32px;">
-            <div>
-                <div class="code-block">
-                    <div class="code-header">Mock response body with generators</div>
-<pre>{
-  <span class="str">"id"</span>: <span class="str">"<span class="kw">{{uuid}}</span>"</span>,
-  <span class="str">"name"</span>: <span class="str">"<span class="kw">{{name}}</span>"</span>,
-  <span class="str">"email"</span>: <span class="str">"<span class="kw">{{email}}</span>"</span>,
-  <span class="str">"age"</span>: <span class="kw">{{int(18,65)}}</span>,
-  <span class="str">"score"</span>: <span class="kw">{{float(0,100)}}</span>,
-  <span class="str">"created"</span>: <span class="str">"<span class="kw">{{iso8601}}</span>"</span>,
-  <span class="str">"active"</span>: <span class="kw">{{bool}}</span>
-}</pre>
-                </div>
-                <p style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6;">
-                    Generators resolve per-request. <code>{{uuid}}</code>, <code>{{name}}</code>, <code>{{email}}</code>, <code>{{int(min,max)}}</code>, <code>{{float(min,max)}}</code>, <code>{{iso8601}}</code>, <code>{{bool}}</code>, <code>{{timestamp}}</code>. Unknown placeholders pass through.
-                </p>
-            </div>
-            <div>
-                <ul class="arch-points">
-                    <li><span class="bullet">&rsaquo;</span><span><strong>Pattern matching</strong> &mdash; plain substring or regex against URL + method</span></li>
-                    <li><span class="bullet">&rsaquo;</span><span><strong>Sessions</strong> &mdash; group rules into named sessions. Auto-saved to <code>~/.alohomora/mock-sessions/</code></span></li>
-                    <li><span class="bullet">&rsaquo;</span><span><strong>One-click from traffic</strong> &mdash; right-click a captured request to create a mock with its response pre-filled</span></li>
-                    <li><span class="bullet">&rsaquo;</span><span><strong>HAR import</strong> &mdash; import HAR 1.2 files from browser DevTools or Charles/Proxyman</span></li>
-                    <li><span class="bullet">&rsaquo;</span><span><strong>Export/share</strong> &mdash; export as <code>.alohomora-mocks.json</code> and share with your team</span></li>
-                    <li><span class="bullet">&rsaquo;</span><span><strong>Throttle presets</strong> &mdash; simulate Edge, Slow 3G, Fast 3G, or Slow Wi-Fi</span></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</section>
+<hr class="section-divider">
 
 <!-- COMPARISON -->
-<section class="section-alt">
+<section class="comparison-section">
     <div class="container">
-        <div class="section-label">Comparison</div>
-        <div class="section-title">Debug vs Release artifacts</div>
-        <div style="overflow-x:auto;">
+        <div class="section-label reveal">Debug vs Release</div>
+        <div class="section-title reveal">Full observability or zero overhead</div>
+        <div class="reveal" style="overflow-x:auto;">
             <table class="comparison-table">
-                <thead><tr><th>Capability</th><th>alohomora (debug)</th><th>alohomora-noop (release)</th></tr></thead>
+                <thead>
+                <tr>
+                    <th>Capability</th>
+                    <th>alohomora (debug)</th>
+                    <th>alohomora-noop (release)</th>
+                </tr>
+                </thead>
                 <tbody>
-                    <tr><td>Network traffic capture</td><td class="check">&#10003;</td><td class="cross">No-op</td></tr>
-                    <tr><td>Distributed trace spans</td><td class="check">&#10003;</td><td class="cross">No-op</td></tr>
-                    <tr><td>Event recording</td><td class="check">&#10003;</td><td class="cross">No-op</td></tr>
-                    <tr><td>Error capture + crash handler</td><td class="check">&#10003;</td><td class="cross">No-op</td></tr>
-                    <tr><td>Database inspection</td><td class="check">&#10003;</td><td class="cross">No-op</td></tr>
-                    <tr><td>Cache / prefs viewer</td><td class="check">&#10003;</td><td class="cross">No-op</td></tr>
-                    <tr><td>Feature flags</td><td class="check">&#10003;</td><td class="cross">No-op</td></tr>
-                    <tr><td>Traffic replay</td><td class="check">&#10003;</td><td class="cross">No-op</td></tr>
-                    <tr><td>DevTools TCP server</td><td class="check">&#10003;</td><td class="cross">No-op</td></tr>
-                    <tr><td>Custom screen plugins</td><td class="check">&#10003;</td><td class="cross">No-op</td></tr>
-                    <tr><td>Mock rules + template engine</td><td class="check">&#10003;</td><td class="cross">No-op</td></tr>
-                    <tr><td>Runtime overhead</td><td>Debug only</td><td><strong>Zero</strong></td></tr>
-                    <tr><td>APK size impact</td><td>~2 MB</td><td><strong>&lt;10 KB</strong></td></tr>
+                <tr>
+                    <td>Network traffic capture</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>Distributed trace spans</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>Event recording</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>Error capture + crash handler</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>Database inspection</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>Cache / prefs viewer</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>Feature flags</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>Traffic replay</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>Mock rules + template engine</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>Network throttling (VPN)</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>Shake to open console</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>MCP server for AI agents</td>
+                    <td class="check">&#10003; (desktop)</td>
+                    <td class="cross">&mdash;</td>
+                </tr>
+                <tr>
+                    <td>DevTools TCP server</td>
+                    <td class="check">&#10003;</td>
+                    <td class="cross">No-op</td>
+                </tr>
+                <tr>
+                    <td>Runtime overhead</td>
+                    <td>Debug only</td>
+                    <td><strong>Zero</strong></td>
+                </tr>
+                <tr>
+                    <td>APK size impact</td>
+                    <td>~2 MB</td>
+                    <td><strong>&lt;10 KB</strong></td>
+                </tr>
                 </tbody>
             </table>
         </div>
@@ -1011,58 +1535,86 @@
 <!-- iOS -->
 <section>
     <div class="container">
-        <div class="section-label">iOS</div>
-        <div class="section-title">First-class iOS support</div>
-        <p class="section-desc">Kotlin Multiplatform means the same library runs natively on iOS with platform-specific adapters.</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:32px;">
+        <div class="section-label reveal">iOS</div>
+        <div class="section-title reveal">First-class iOS support</div>
+        <p class="section-desc reveal">Kotlin Multiplatform means the same library runs natively on
+            iOS with platform-specific adapters.</p>
+        <div
+            style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:36px;"
+            class="reveal">
             <div class="code-block">
                 <div class="code-header">Ktor (iOS)</div>
-<pre><span class="kw">let</span> client = <span class="type">HttpClient</span> {
+                <pre><span class="kw">let</span> client = <span class="type">HttpClient</span> {
     <span class="fn">install</span>(<span class="type">AlohomoraInspector</span>)
 }</pre>
             </div>
             <div class="code-block">
                 <div class="code-header">URLSession (iOS)</div>
-<pre><span class="kw">let</span> config = <span class="fn">alohomoraURLSessionConfiguration</span>()
-<span class="kw">let</span> session = <span class="type">URLSession</span>(configuration: config)</pre>
+                <pre><span class="kw">let</span> config = <span class="fn">alohomoraURLSessionConfiguration</span>()
+<span class="kw">let</span> session = <span
+                        class="type">URLSession</span>(configuration: config)</pre>
             </div>
         </div>
-        <p style="margin-top:14px;font-size:13px;color:var(--muted);">
-            Swift errors use the <code>recordError(reason:stackTrace:place:)</code> overload since a Swift <code>Error</code> is not a <code>KotlinThrowable</code>.
+        <p style="margin-top:14px;font-size:13px;color:var(--outline);" class="reveal">
+            Swift errors use the <code>recordError(reason:stackTrace:place:)</code> overload since a
+            Swift <code>Error</code> is not a <code>KotlinThrowable</code>.
         </p>
     </div>
 </section>
 
-<!-- DESKTOP -->
-<section class="section-alt">
+<hr class="section-divider">
+
+<!-- DESKTOP COMPANION -->
+<section>
     <div class="container">
-        <div class="section-label">Desktop Companion</div>
-        <div class="section-title">Full-screen debugging on your workstation</div>
-        <p class="section-desc">Everything the in-app console shows, plus device-only panels.</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;margin-top:32px;background:var(--outline-variant);border:1px solid var(--outline-variant);border-radius:var(--r-lg);overflow:hidden;">
-            <div class="feature-card"><h3>All captured data</h3><p>Streamed in real time over ADB.</p></div>
-            <div class="feature-card"><h3>Mock Rules</h3><p>Create, import, and manage mock sessions with template generators.</p></div>
-            <div class="feature-card"><h3>Deep Link Builder</h3><p>Compose and fire deep links on-device with persistent history.</p></div>
-            <div class="feature-card"><h3>Command Palette</h3><p>Cmd+K to search actions, navigate, and fire ADB commands.</p></div>
-            <div class="feature-card"><h3>JSON Editor</h3><p>Syntax-highlighted editor with bracket matching and validation.</p></div>
-            <div class="feature-card"><h3>Dashboard</h3><p>Live device metrics and quick actions.</p></div>
-            <div class="feature-card"><h3>Logcat</h3><p>Streamed device log with filtering.</p></div>
-            <div class="feature-card"><h3>Embedded Terminal</h3><p>Built-in ADB shell.</p></div>
-            <div class="feature-card"><h3>Multi-device</h3><p>One window per device.</p></div>
-            <div class="feature-card"><h3>TOFU Auth</h3><p>4-digit OTP, then silent reconnect.</p></div>
+        <div class="section-label reveal">Desktop Companion</div>
+        <div class="section-title reveal">Full-screen debugging on your workstation</div>
+        <p class="section-desc reveal">Everything the in-app console shows, plus desktop-only
+            panels.</p>
+        <div class="desktop-grid">
+            <div class="desktop-card reveal"><h3>All captured data</h3>
+                <p>Streamed in real time over ADB.</p></div>
+            <div class="desktop-card reveal"><h3>MCP Server</h3>
+                <p>Expose data to AI assistants via Streamable HTTP.</p></div>
+            <div class="desktop-card reveal"><h3>Mock Rules</h3>
+                <p>Create, import, and manage mock sessions with template generators.</p></div>
+            <div class="desktop-card reveal"><h3>Deep Link Builder</h3>
+                <p>Compose and fire deep links on-device with persistent history.</p></div>
+            <div class="desktop-card reveal"><h3>Command Palette</h3>
+                <p>Cmd+K to search actions, navigate, and fire ADB commands.</p></div>
+            <div class="desktop-card reveal"><h3>Inline DB Editing</h3>
+                <p>Double-click any cell to edit values live on the device.</p></div>
+            <div class="desktop-card reveal"><h3>Settings (Cmd+,)</h3>
+                <p>Theme picker, mode selector, and data clearing.</p></div>
+            <div class="desktop-card reveal"><h3>Dashboard</h3>
+                <p>Needs-attention view for unviewed errors and failed requests.</p></div>
+            <div class="desktop-card reveal"><h3>JSON Editor</h3>
+                <p>Syntax-highlighted editor with bracket matching and validation.</p></div>
+            <div class="desktop-card reveal"><h3>Logcat</h3>
+                <p>Streamed device log with filtering.</p></div>
+            <div class="desktop-card reveal"><h3>Embedded Terminal</h3>
+                <p>Built-in ADB shell.</p></div>
+            <div class="desktop-card reveal"><h3>Multi-device</h3>
+                <p>One window per device.</p></div>
+            <div class="desktop-card reveal"><h3>TOFU Auth</h3>
+                <p>4-digit OTP, then silent reconnect.</p></div>
         </div>
     </div>
 </section>
 
 <!-- CTA -->
-<section style="padding:100px 0;text-align:center;">
+<section class="cta">
     <div class="container">
-        <div class="section-title">Start seeing what your app is doing</div>
-        <p class="section-desc" style="margin:12px auto 32px;">Two lines of Gradle. Zero lines of init code on Android. Full observability in debug, nothing in release.</p>
-        <div class="hero-actions" style="justify-content:center;">
+        <div class="section-title reveal">Start seeing what your app is doing</div>
+        <p class="section-desc reveal">Two lines of Gradle. Zero lines of init code on Android.<br>Full
+            observability in debug, nothing in release.</p>
+        <div class="hero-actions reveal" style="justify-content:center;">
             <a href="#setup" class="btn-primary">Get Started</a>
             <a href="https://github.com/yashkasera/alohomora" class="btn-secondary">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
                 Star on GitHub
             </a>
         </div>
@@ -1073,7 +1625,8 @@
     <div class="container">
         <div class="footer-inner">
             <div class="footer-left">
-                <div class="nav-logo" style="font-size:16px">alohomora<span class="dot">.</span></div>
+                <div class="nav-logo" style="font-size:16px">alohomora<span class="dot">.</span>
+                </div>
                 <p>Apache 2.0 License &middot; Kotlin Multiplatform</p>
             </div>
             <div class="footer-links">
@@ -1086,39 +1639,41 @@
 </footer>
 
 <script>
-function showTab(e, id) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    e.target.classList.add('active');
-    document.getElementById(id).classList.add('active');
-}
+    function showTab(e, id) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        e.target.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
 
-document.querySelectorAll('.showcase-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        document.querySelectorAll('.showcase-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        const frame = document.getElementById('showcase-img');
-        const placeholder = document.getElementById('showcase-placeholder');
-        let img = frame.querySelector('img');
-        if (!img) {
-            if (placeholder) placeholder.style.display = 'none';
-            img = document.createElement('img');
-            img.className = 'loading';
-            frame.appendChild(img);
-        } else {
+    document.querySelectorAll('.showcase-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.showcase-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const img = document.querySelector('#showcase-img img');
+            if (!img) return;
             img.classList.add('loading');
-        }
-        img.alt = tab.dataset.alt || '';
-        const newImg = new Image();
-        newImg.onload = () => { img.src = tab.dataset.img; img.classList.remove('loading'); };
-        newImg.onerror = () => { img.classList.remove('loading'); };
-        newImg.src = tab.dataset.img;
+            img.alt = tab.dataset.alt || '';
+            const preload = new Image();
+            preload.onload = () => { img.src = tab.dataset.img; img.classList.remove('loading'); };
+            preload.onerror = () => { img.classList.remove('loading'); };
+            preload.src = tab.dataset.img;
+        });
     });
-});
 
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', () => document.getElementById('navbar').classList.remove('open'));
-});
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', () => document.getElementById('navbar').classList.remove('open'));
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 </script>
 
 </body>
