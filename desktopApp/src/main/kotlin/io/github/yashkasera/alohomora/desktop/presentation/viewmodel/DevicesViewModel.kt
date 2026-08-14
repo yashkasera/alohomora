@@ -20,6 +20,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.model.DeveloperOption
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import java.io.File
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -212,7 +213,7 @@ class DevicesViewModel(
                     jankFrames = jankyFrames,
                     loadingMetrics = false,
                 )
-                delay(3000)
+                delay(3000.milliseconds)
             }
         }
     }
@@ -285,7 +286,7 @@ class DevicesViewModel(
 
                 else -> setActionError("Unable to determine Wi-Fi state")
             }
-            delay(500)
+            delay(500.milliseconds)
             refreshConnectivityState(deviceId)
         }
     }
@@ -315,7 +316,7 @@ class DevicesViewModel(
                 runLoggedBlocking(deviceId, listOf("shell", "svc", "data", "enable"))
                 setActionMessage("Mobile data enabled")
             }
-            delay(500)
+            delay(500.milliseconds)
             refreshConnectivityState(deviceId)
         }
     }
@@ -386,7 +387,7 @@ class DevicesViewModel(
             }
             runLoggedBlocking(deviceId, listOf("shell", "kill", "-2", pid))
             waitForScreenrecordExit(deviceId)
-            delay(500)
+            delay(500.milliseconds)
             runLoggedBlocking(deviceId, listOf("pull", devicePath, localPath))
             runLoggedBlocking(deviceId, listOf("shell", "rm", devicePath))
             setActionMessage("Screen recording saved")
@@ -687,7 +688,7 @@ class DevicesViewModel(
         repeat(10) {
             val pidResult = runLoggedBlocking(deviceId, listOf("shell", "pidof", "screenrecord"))
             if (pidResult.stdout.isBlank()) return
-            delay(200)
+            delay(200.milliseconds)
         }
     }
 

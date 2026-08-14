@@ -8,9 +8,6 @@ import androidx.room.Query
 import io.github.yashkasera.alohomora.common.Screen
 import kotlinx.coroutines.flow.Flow
 
-/**
- * DAO for [Screen] entities (screen view tracking).
- */
 @Dao
 internal interface ScreenDao {
 

@@ -8,9 +8,6 @@ import androidx.room.Query
 import io.github.yashkasera.alohomora.common.Event
 import kotlinx.coroutines.flow.Flow
 
-/**
- * DAO for [Event] entities (analytics events).
- */
 @Dao
 internal interface EventDao {
 

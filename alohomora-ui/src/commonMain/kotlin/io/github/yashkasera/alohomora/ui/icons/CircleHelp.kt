@@ -40,7 +40,6 @@ val Icons.CircleHelp: ImageVector
                 arcToRelative(3f, 3f, 0f, false, true, 5.83f, 1f)
                 curveToRelative(0f, 2f, -3f, 3f, -3f, 3f)
             }
-            // Dot at bottom
             path(
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,

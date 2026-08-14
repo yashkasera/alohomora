@@ -100,7 +100,6 @@ internal fun TrafficScreen(
             }
         }
 
-        // Clear all confirmation bottom sheet
         if (state.showClearConfirmation) {
             ConfirmationBottomSheet(
                 config = ConfirmationConfig(

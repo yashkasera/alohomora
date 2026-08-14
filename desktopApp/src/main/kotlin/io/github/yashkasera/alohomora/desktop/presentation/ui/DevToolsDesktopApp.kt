@@ -79,6 +79,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficView
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
 import java.io.File
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 
 @Composable
@@ -152,7 +153,7 @@ fun DevToolsDesktopApp(
 
     LaunchedEffect(isModifierPhysicallyDown, anySideSheetOpen) {
         if (isModifierPhysicallyDown && !anySideSheetOpen) {
-            delay(250)
+            delay(250.milliseconds)
             showModifierBadges = true
         } else {
             showModifierBadges = false
@@ -165,7 +166,7 @@ fun DevToolsDesktopApp(
     LaunchedEffect(Unit) {
         while (true) {
             devicesViewModel.refreshDevices()
-            delay(3000)
+            delay(3000.milliseconds)
         }
     }
 

@@ -60,6 +60,7 @@ import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
 import io.github.yashkasera.alohomora.devtools.DevToolsSocket
 import io.github.yashkasera.alohomora.replay.ReplayRequest
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -179,7 +180,7 @@ class DevToolsRepositoryImpl(
                         // Capped backoff. The common case is a foregrounded app coming straight
                         // back, so the first retries are quick; the cap keeps a genuinely dead
                         // device from being hammered.
-                        delay(reconnectDelayMillis(attempt))
+                        delay(reconnectDelayMillis(attempt).milliseconds)
                     }
                 }
             }
@@ -308,7 +309,7 @@ class DevToolsRepositoryImpl(
     ) {
         firstPing.await()
         while (true) {
-            delay(DevToolsHeartbeat.PING_INTERVAL_MILLIS)
+            delay(DevToolsHeartbeat.PING_INTERVAL_MILLIS.milliseconds)
             if (liveness.isPeerSilent()) {
                 println(
                     "[Alohomora] Device silent for ${liveness.silentForMillis()}ms; " +

@@ -79,7 +79,6 @@ internal actual suspend fun PlatformDatabaseAccessor.getTableData(
         ?: return TableData(emptyList(), emptyList())
 
     return try {
-        // Get column info from schema first
         val columnTypes = mutableMapOf<String, String>()
         db.rawQuery("PRAGMA table_info(`$tableName`)", null).use { schemaCursor ->
             val nameIndex = schemaCursor.getColumnIndex("name")
@@ -146,7 +145,6 @@ internal actual suspend fun PlatformDatabaseAccessor.getTableSchema(
         )
 
     return try {
-        // Get columns info
         val columns = mutableListOf<TableColumn>()
         var primaryKey: String? = null
 
@@ -166,7 +164,6 @@ internal actual suspend fun PlatformDatabaseAccessor.getTableSchema(
             }
         }
 
-        // Get indexes
         val indexes = mutableListOf<String>()
         db.rawQuery("PRAGMA index_list(`$tableName`)", null).use { indexCursor ->
             val indexNameIndex = indexCursor.getColumnIndex("name")

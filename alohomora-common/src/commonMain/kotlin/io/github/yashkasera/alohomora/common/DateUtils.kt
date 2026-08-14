@@ -7,9 +7,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 /**
- * Utility for common date and time formatting operations.
- *
- * Usage:
  * ```kotlin
  * // Format as HH:mm:ss
  * DateUtils.format(timestamp, DateTimeFormat.HH_MM_SS)
@@ -23,9 +20,6 @@ import kotlinx.datetime.toLocalDateTime
  */
 object DateUtils {
 
-    /**
-     * Time unit for the input timestamp.
-     */
     enum class TimeUnit {
         MILLISECONDS,
         SECONDS,
@@ -39,9 +33,6 @@ object DateUtils {
         NANOSECONDS
     }
 
-    /**
-     * Predefined date and time formats.
-     */
     /**
      * Output shape only.
      *

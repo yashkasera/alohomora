@@ -13,6 +13,7 @@ import io.ktor.http.contentType
 import io.ktor.http.encodedPath
 import io.ktor.util.AttributeKey
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.delay
@@ -132,7 +133,7 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
             // handler uses dispatch_after.
             val throttle = NetworkRuleEngine.throttle
             if (throttle.latencyMs > 0) {
-                delay(throttle.latencyMs)
+                delay(throttle.latencyMs.milliseconds)
             }
         }
     }

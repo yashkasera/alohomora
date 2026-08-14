@@ -145,7 +145,6 @@ internal class DatabaseViewModel(
         queryStatus.value = null
         showDatabaseSelector.value = false
 
-        // Load tables for the selected database
         loadTables(database.path)
     }
 
@@ -176,7 +175,6 @@ internal class DatabaseViewModel(
         tableData.value = null
         tableSchema.value = null
 
-        // Load data and schema for the selected table
         selectedDatabase.value?.let { db ->
             loadTableData(db.path, table)
             loadTableSchema(db.path, table)

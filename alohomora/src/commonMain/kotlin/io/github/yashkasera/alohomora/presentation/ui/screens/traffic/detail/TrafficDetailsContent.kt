@@ -241,7 +241,6 @@ private fun RequestTab(trace: TrafficEntry, onCopy: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
-            // Display formatted headers
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -490,7 +489,6 @@ private fun InfoRowsSection(trace: TrafficEntry) {
             value = trace.scheme?.uppercase() ?: "HTTPS",
         )
 
-        // Additional TrafficEntry fields
         trace.query?.let { query ->
             if (query.isNotEmpty()) {
                 InfoRow(

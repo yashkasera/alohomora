@@ -17,14 +17,12 @@ internal actual class ShareManager(private val context: Context) {
     }
 
     actual fun shareFile(content: String, filename: String, mimeType: String) {
-        // Create temp file in cache directory
         val cacheDir = context.cacheDir
         val file = File(cacheDir, filename)
         FileWriter(file).use { writer ->
             writer.write(content)
         }
 
-        // Get content URI via FileProvider
         val authority = "${context.packageName}.alohomora.fileprovider"
         val contentUri = FileProvider.getUriForFile(context, authority, file)
 

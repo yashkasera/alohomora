@@ -141,7 +141,7 @@ fun AdbToolsPanel(
                         )
                         if (!buildInfo?.packageName.isNullOrBlank()) {
                             Text(
-                                "Detected: ${buildInfo?.packageName}",
+                                "Detected: ${buildInfo.packageName}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),

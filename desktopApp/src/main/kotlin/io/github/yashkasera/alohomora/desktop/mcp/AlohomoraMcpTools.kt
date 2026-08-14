@@ -22,6 +22,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeoutOrNull
@@ -535,7 +536,7 @@ internal object AlohomoraMcpToolData {
         tableName: String,
         limit: Int,
     ): JsonElement? {
-        val table = withTimeoutOrNull(ROUND_TRIP_TIMEOUT_MILLIS) {
+        val table = withTimeoutOrNull(ROUND_TRIP_TIMEOUT_MILLIS.milliseconds) {
             repo.requestDatabaseTable(databaseName, tableName, limit)
             repo.databaseSnapshot
                 .map { it.table }
@@ -553,7 +554,7 @@ internal object AlohomoraMcpToolData {
         buildJsonArray { repo.cacheState.value.keys.forEach { add(it) } }
 
     suspend fun getCacheValue(repo: DevToolsRepository, key: String): JsonElement? {
-        val values = withTimeoutOrNull(ROUND_TRIP_TIMEOUT_MILLIS) {
+        val values = withTimeoutOrNull(ROUND_TRIP_TIMEOUT_MILLIS.milliseconds) {
             repo.requestCacheValue(key)
             repo.cacheState.map { it.values }.first { it.containsKey(key) }
         } ?: return null

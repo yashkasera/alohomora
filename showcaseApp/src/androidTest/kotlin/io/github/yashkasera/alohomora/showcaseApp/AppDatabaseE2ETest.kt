@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.yashkasera.alohomora.showcaseApp.data.db.PostDao
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags.Database
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -115,7 +116,7 @@ class AppDatabaseE2ETest : ShowcaseE2ETest() {
     private fun awaitPostsWritten() {
         val dao = GlobalContext.get().get<PostDao>()
         runBlocking {
-            withTimeout(NETWORK_TIMEOUT_MILLIS) {
+            withTimeout(NETWORK_TIMEOUT_MILLIS.milliseconds) {
                 dao.observePosts().first { it.isNotEmpty() }
             }
         }

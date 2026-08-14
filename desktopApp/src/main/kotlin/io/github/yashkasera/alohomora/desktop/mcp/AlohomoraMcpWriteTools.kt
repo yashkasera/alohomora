@@ -13,6 +13,7 @@ import io.github.yashkasera.alohomora.replay.toReplayRequest
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
@@ -292,7 +293,7 @@ internal object AlohomoraMcpWriteData {
         repo.replayTraffic(request)
 
         // replayTraffic marks the source in-flight synchronously; wait for the device's result.
-        val settled = withTimeoutOrNull(REPLAY_AWAIT_TIMEOUT_MILLIS) {
+        val settled = withTimeoutOrNull(REPLAY_AWAIT_TIMEOUT_MILLIS.milliseconds) {
             repo.replayState.first { !it.isInFlight(id) }
         }
             ?: return WriteResult.Error("Replay sent, but the device did not report a result in time.")

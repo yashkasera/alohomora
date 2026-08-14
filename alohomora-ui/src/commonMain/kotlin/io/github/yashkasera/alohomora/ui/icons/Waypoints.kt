@@ -27,7 +27,6 @@ val Icons.Waypoints: ImageVector
             viewportWidth = 24f,
             viewportHeight = 24f,
         ).apply {
-            // The three connecting segments.
             path(
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,

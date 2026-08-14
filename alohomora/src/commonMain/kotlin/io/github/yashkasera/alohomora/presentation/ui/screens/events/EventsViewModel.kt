@@ -135,7 +135,6 @@ internal class EventsViewModel(
                 telemetryRepository.clearAll()
                 pager.refresh()
             } catch (_: Exception) {
-                // Error handling could be added here
             } finally {
                 isClearing.value = false
                 showClearConfirmation.value = false

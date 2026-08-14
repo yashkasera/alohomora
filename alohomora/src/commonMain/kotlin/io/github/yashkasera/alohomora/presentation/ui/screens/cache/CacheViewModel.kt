@@ -12,15 +12,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * State for the Cache/Preferences screen.
- *
- * @property entries All preference entries
- * @property searchQuery Current search filter
- * @property isLoading Whether data is being loaded
- * @property error Error message if loading failed
- * @property isLiveMonitoring Whether live monitoring is active
- */
 @Immutable
 internal data class CacheState(
     val entries: List<CacheEntry> = emptyList(),
@@ -28,9 +19,6 @@ internal data class CacheState(
     val isLoading: Boolean = false,
     val error: String? = null,
 ) {
-    /**
-     * Filtered entries based on search query (matches key or value).
-     */
     val filteredEntries: List<CacheEntry>
         get() = if (searchQuery.isBlank()) {
             entries
@@ -46,10 +34,6 @@ internal data class CacheState(
     val filteredCount: Int get() = filteredEntries.size
 }
 
-/**
- * ViewModel for the Cache/Preferences screen.
- * Manages loading preferences and search/filter functionality.
- */
 internal class CacheViewModel(
     private val getPreferencesUseCase: GetCacheUseCase,
 ) : ViewModel() {
@@ -59,9 +43,6 @@ internal class CacheViewModel(
     private val isLoading = MutableStateFlow(false)
     private val error = MutableStateFlow<String?>(null)
 
-    /**
-     * Combined state flow for the UI.
-     */
     val state: StateFlow<CacheState> = combine(
         entries,
         searchQuery,
@@ -85,9 +66,6 @@ internal class CacheViewModel(
         loadPreferences()
     }
 
-    /**
-     * Loads preferences from the repository.
-     */
     private fun loadPreferences() {
         viewModelScope.launch {
             isLoading.value = true
@@ -102,9 +80,6 @@ internal class CacheViewModel(
         }
     }
 
-    /**
-     * Refreshes the preferences list.
-     */
     fun refresh() {
         viewModelScope.launch {
             isLoading.value = true
@@ -119,23 +94,14 @@ internal class CacheViewModel(
         }
     }
 
-    /**
-     * Updates the search query for filtering.
-     */
     fun onSearchQueryChange(query: String) {
         searchQuery.value = query
     }
 
-    /**
-     * Clears the search query.
-     */
     fun clearSearch() {
         searchQuery.value = ""
     }
 
-    /**
-     * Calculates the total size of all entries.
-     */
     fun getTotalSize(): String {
         return getPreferencesUseCase.getTotalSize(entries.value)
     }
