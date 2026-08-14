@@ -2,10 +2,6 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraAlertDi
 	public static final fun AlohomoraAlertDialog (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Ljava/lang/String;Landroidx/compose/ui/graphics/Shape;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class io/github/yashkasera/alohomora/ui/components/AlohomoraAppBarsKt {
-	public static final fun AlohomoraLargeTopAppBar (Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/material3/TopAppBarScrollBehavior;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraBottomSheetDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/AlohomoraBottomSheetDefaults;
@@ -26,10 +22,10 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraBottomS
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraButtonDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/AlohomoraButtonDefaults;
+	public static final field uppercase Z
 	public final fun contentPadding (Lio/github/yashkasera/alohomora/ui/components/AlohomoraButtonSize;)Landroidx/compose/foundation/layout/PaddingValues;
 	public final fun getIconSpacing-D9Ej5fM ()F
 	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/shape/CornerBasedShape;
-	public final fun getUppercase ()Z
 	public final fun minHeight-u2uoSUM (Lio/github/yashkasera/alohomora/ui/components/AlohomoraButtonSize;)F
 	public final fun textStyle (Lio/github/yashkasera/alohomora/ui/components/AlohomoraButtonSize;Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
 }
@@ -70,10 +66,10 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraCardsKt
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraChipDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/AlohomoraChipDefaults;
+	public static final field uppercase Z
 	public final fun getContentColorFor-swEIR5s (JLandroidx/compose/runtime/Composer;I)J
 	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
 	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/shape/CornerBasedShape;
-	public final fun getUppercase ()Z
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraChipsKt {
@@ -88,7 +84,6 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraCodeBlo
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraConfirmationBottomSheetKt {
 	public static final fun ConfirmationBottomSheet (Lio/github/yashkasera/alohomora/ui/components/ConfirmationConfig;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V
-	public static final fun ConfirmationBottomSheet (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Ljava/lang/String;ZLandroidx/compose/runtime/Composer;II)V
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraDividersKt {
@@ -119,10 +114,6 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraMethodB
 	public static final fun MethodBadge (Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class io/github/yashkasera/alohomora/ui/components/AlohomoraOverlaysKt {
-	public static final fun AlohomoraOverlay-3IgeMak (Landroidx/compose/ui/Modifier;JLkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraProgressIndicatorsKt {
 	public static final fun AlohomoraCircularProgressIndicator-aM-cp0Q (Landroidx/compose/ui/Modifier;JFLandroidx/compose/runtime/Composer;II)V
 }
@@ -137,24 +128,7 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraSelecti
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraTabDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/AlohomoraTabDefaults;
-	public final fun getUppercase ()Z
-}
-
-public final class io/github/yashkasera/alohomora/ui/components/AlohomoraTabItem {
-	public static final field $stable I
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function2;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Lkotlin/jvm/functions/Function2;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function2;)Lio/github/yashkasera/alohomora/ui/components/AlohomoraTabItem;
-	public static synthetic fun copy$default (Lio/github/yashkasera/alohomora/ui/components/AlohomoraTabItem;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lio/github/yashkasera/alohomora/ui/components/AlohomoraTabItem;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getIcon ()Lkotlin/jvm/functions/Function2;
-	public final fun getId ()Ljava/lang/String;
-	public final fun getLabel ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
+	public static final field uppercase Z
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraTableKt {
@@ -163,7 +137,6 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraTableKt
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraTabsKt {
 	public static final fun AlohomoraPrimaryTabRow (ILandroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
-	public static final fun AlohomoraScrollableTabRow (ILandroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
 	public static final fun AlohomoraTab (ZLkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
 }
 
@@ -175,10 +148,10 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraTextFie
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraToggleDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/AlohomoraToggleDefaults;
+	public static final field uppercase Z
 	public final fun getBorderWidth-D9Ej5fM ()F
 	public final fun getItemPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
 	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/shape/CornerBasedShape;
-	public final fun getUppercase ()Z
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraToggleGroupsKt {
@@ -202,22 +175,8 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraToggleI
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class io/github/yashkasera/alohomora/ui/components/AlohomoraTopAppBarDefaults {
-	public static final field $stable I
-	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/AlohomoraTopAppBarDefaults;
-	public final fun enterAlwaysScrollBehavior (Landroidx/compose/material3/TopAppBarState;Landroidx/compose/runtime/Composer;I)Landroidx/compose/material3/TopAppBarScrollBehavior;
-	public final fun rememberTopAppBarState (Landroidx/compose/runtime/Composer;I)Landroidx/compose/material3/TopAppBarState;
-}
-
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraTopBarKt {
 	public static final fun AlohomoraTopBar (Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/lang/String;Lio/github/yashkasera/alohomora/ui/components/TopBarLayout;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
-}
-
-public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraAppBarsKt {
-	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraAppBarsKt;
-	public fun <init> ()V
-	public final fun getLambda$-792019424$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1616092354$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraButtonsKt {
@@ -301,9 +260,9 @@ public final class io/github/yashkasera/alohomora/ui/components/ComposableSingle
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraTextFieldsKt;
 	public fun <init> ()V
 	public final fun getLambda$-1075678419$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-138960741$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$-255063672$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$-696975101$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$221632499$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraToggleGroupsKt {
@@ -332,8 +291,8 @@ public final class io/github/yashkasera/alohomora/ui/components/ComposableSingle
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$EmptyStateKt;
 	public fun <init> ()V
 	public final fun getLambda$-1940687896$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-205264244$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$-36803379$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-455365523$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$FabClearanceKt {
@@ -403,7 +362,7 @@ public final class io/github/yashkasera/alohomora/ui/components/DragHandleConfig
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/EmptyStateKt {
-	public static final fun EmptyState (Landroidx/compose/ui/graphics/vector/ImageVector;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun EmptyState (Landroidx/compose/ui/graphics/vector/ImageVector;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/FabClearanceKt {
@@ -598,18 +557,6 @@ public final class io/github/yashkasera/alohomora/ui/icons/ArrowLeftRightKt {
 	public static final fun getArrowLeftRight (Lio/github/yashkasera/alohomora/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
-public final class io/github/yashkasera/alohomora/ui/icons/ArrowRightKt {
-	public static final fun getArrowRight (Lio/github/yashkasera/alohomora/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
-}
-
-public final class io/github/yashkasera/alohomora/ui/icons/ArrowUpKt {
-	public static final fun getArrowUp (Lio/github/yashkasera/alohomora/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
-}
-
-public final class io/github/yashkasera/alohomora/ui/icons/BracesKt {
-	public static final fun getBraces (Lio/github/yashkasera/alohomora/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
-}
-
 public final class io/github/yashkasera/alohomora/ui/icons/CameraKt {
 	public static final fun getCamera (Lio/github/yashkasera/alohomora/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
@@ -636,10 +583,6 @@ public final class io/github/yashkasera/alohomora/ui/icons/CircleAlertKt {
 
 public final class io/github/yashkasera/alohomora/ui/icons/CircleHelpKt {
 	public static final fun getCircleHelp (Lio/github/yashkasera/alohomora/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
-}
-
-public final class io/github/yashkasera/alohomora/ui/icons/ClipboardListKt {
-	public static final fun getClipboardList (Lio/github/yashkasera/alohomora/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
 public final class io/github/yashkasera/alohomora/ui/icons/ClockKt {
