@@ -81,10 +81,12 @@ class LogcatFilterTypingTest {
                 val uiState by vm.uiState.collectAsState()
                 LogcatFilters(
                     filterState = uiState.filterState,
+                    availableTags = uiState.availableTags,
                     onToggleLevel = vm::toggleLevel,
-                    onSelectTag = vm::updateSelectedTag,
+                    onTagFilterChange = vm::updateTagFilter,
                     onPackageChange = vm::updatePackageName,
                     onSearch = vm::updateSearchQuery,
+                    onToggleRegex = vm::toggleRegex,
                 )
             }
         }
@@ -102,7 +104,7 @@ class LogcatFilterTypingTest {
     fun `the tag field keeps typed order`() = runFilters { vm ->
         typeInto(index = TAG_FIELD, text = "OkHttp")
 
-        assertEquals("OkHttp", vm.uiState.value.filterState.selectedTag)
+        assertEquals("OkHttp", vm.uiState.value.filterState.tagFilter)
     }
 
     @Test
@@ -118,7 +120,7 @@ class LogcatFilterTypingTest {
         typeInto(index = SEARCH_FIELD, text = "xyz")
 
         // Each field remembers its own caret; a shared one would splice these together.
-        assertEquals("abc", vm.uiState.value.filterState.selectedTag)
+        assertEquals("abc", vm.uiState.value.filterState.tagFilter)
         assertEquals("xyz", vm.uiState.value.filterState.searchQuery)
         assertEquals("", vm.uiState.value.filterState.packageName)
     }

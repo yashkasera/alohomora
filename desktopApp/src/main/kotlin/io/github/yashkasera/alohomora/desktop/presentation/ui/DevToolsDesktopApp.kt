@@ -468,6 +468,7 @@ fun DevToolsDesktopApp(
                                 devicesViewModel = devicesViewModel,
                                 logcatViewModel = logcatViewModel,
                                 selectedDeviceId = selectedDeviceId,
+                                buildInfo = buildInfo,
                                 searchFocusTrigger = searchFocusTrigger,
                             )
 

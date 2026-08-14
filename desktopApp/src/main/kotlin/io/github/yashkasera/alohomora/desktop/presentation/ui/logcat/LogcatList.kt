@@ -22,11 +22,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.domain.model.LogEntry
+import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
 fun LogcatList(
     entries: List<LogEntry>,
     modifier: Modifier = Modifier,
+    onTagClick: (String) -> Unit = {},
 ) {
     val listState = rememberLazyListState()
     val atBottom by remember {
@@ -52,8 +54,12 @@ fun LogcatList(
             modifier = modifier
                 .fillMaxWidth()
                 .height(180.dp)
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
-                .padding(12.dp)
+                .border(
+                    MaterialTheme.dimens.stroke.small,
+                    MaterialTheme.colorScheme.outlineVariant,
+                    MaterialTheme.shapes.medium,
+                )
+                .padding(MaterialTheme.dimens.margin.md)
         ) {
             Text(text = "Logcat output will appear here.", style = MaterialTheme.typography.bodySmall)
         }
@@ -64,12 +70,16 @@ fun LogcatList(
         modifier = modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
-            .padding(8.dp)
+            .border(
+                MaterialTheme.dimens.stroke.small,
+                MaterialTheme.colorScheme.outlineVariant,
+                MaterialTheme.shapes.medium,
+            )
+            .padding(MaterialTheme.dimens.margin.sm)
     ) {
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
             items(entries) { entry ->
-                LogcatRow(entry)
+                LogcatRow(entry, onTagClick = onTagClick)
             }
             fabClearanceItem()
         }

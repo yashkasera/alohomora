@@ -5,9 +5,10 @@ import io.github.yashkasera.alohomora.desktop.domain.model.LogLevel
 
 data class LogcatFilterState(
     val enabledLevels: Set<LogLevel> = LogLevel.entries.toSet(),
-    val selectedTag: String? = null,
+    val tagFilter: String = "",
     val packageName: String = "",
     val searchQuery: String = "",
+    val isRegex: Boolean = false,
 )
 
 data class LogcatUiState(

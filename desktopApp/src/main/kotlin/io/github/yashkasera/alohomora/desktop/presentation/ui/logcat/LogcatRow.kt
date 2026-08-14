@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.logcat
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,8 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -18,7 +21,10 @@ import io.github.yashkasera.alohomora.desktop.domain.model.LogEntry
 import io.github.yashkasera.alohomora.desktop.domain.model.LogLevel
 
 @Composable
-fun LogcatRow(entry: LogEntry) {
+fun LogcatRow(
+    entry: LogEntry,
+    onTagClick: (String) -> Unit = {},
+) {
     val color = levelColor(entry.level)
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
@@ -46,7 +52,9 @@ fun LogcatRow(entry: LogEntry) {
             text = entry.tag,
             color = color,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.width(160.dp),
+            modifier = Modifier.width(160.dp)
+                .clickable { onTagClick(entry.tag) }
+                .pointerHoverIcon(PointerIcon.Hand),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

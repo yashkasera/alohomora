@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
+import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
 fun LogcatControls(
@@ -32,7 +32,7 @@ fun LogcatControls(
             size = AlohomoraButtonSize.SMALL,
         )
     }
-    Spacer(modifier = Modifier.width(8.dp))
+    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
     AlohomoraOutlinedButton(
         text = "Clear",
         size = AlohomoraButtonSize.SMALL,

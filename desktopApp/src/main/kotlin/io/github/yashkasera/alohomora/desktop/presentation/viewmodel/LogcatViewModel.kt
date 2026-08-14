@@ -77,8 +77,12 @@ class LogcatViewModel(
         _filterState.value = _filterState.value.copy(searchQuery = query)
     }
 
-    fun updateSelectedTag(tag: String?) {
-        _filterState.value = _filterState.value.copy(selectedTag = tag)
+    fun updateTagFilter(tag: String) {
+        _filterState.value = _filterState.value.copy(tagFilter = tag)
+    }
+
+    fun toggleRegex() {
+        _filterState.value = _filterState.value.copy(isRegex = !_filterState.value.isRegex)
     }
 
     fun updatePackageName(packageName: String) {
@@ -127,20 +131,51 @@ class LogcatViewModel(
 
     private fun applyFilters(entries: List<LogEntry>, filter: LogcatFilterState): List<LogEntry> {
         if (entries.isEmpty()) return emptyList()
-        val query = filter.searchQuery.trim().lowercase()
         val packageQuery = filter.packageName.trim().lowercase()
+
+        val tagTokens = filter.tagFilter.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+        val tagIncludes = tagTokens.filter { !it.startsWith("-") }.map { it.lowercase() }
+        val tagExcludes = tagTokens.filter { it.startsWith("-") }
+            .map { it.removePrefix("-").trim().lowercase() }
+            .filter { it.isNotEmpty() }
+
+        val searchRegex = if (filter.isRegex && filter.searchQuery.isNotBlank()) {
+            try { Regex(filter.searchQuery.trim(), RegexOption.IGNORE_CASE) } catch (_: Exception) { null }
+        } else null
+
+        val searchTokens = if (!filter.isRegex) {
+            filter.searchQuery.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+        } else emptyList()
+        val searchIncludes = searchTokens.filter { !it.startsWith("-") }.map { it.lowercase() }
+        val searchExcludes = searchTokens.filter { it.startsWith("-") }
+            .map { it.removePrefix("-").trim().lowercase() }
+            .filter { it.isNotEmpty() }
+
         return entries.asSequence()
             .filter { filter.enabledLevels.contains(it.level) }
-            .filter { filter.selectedTag == null || it.tag == filter.selectedTag }
+            .filter { entry ->
+                val tag = entry.tag.lowercase()
+                val includePass = tagIncludes.isEmpty() || tagIncludes.any { tag.contains(it) }
+                val excludePass = tagExcludes.none { tag.contains(it) }
+                includePass && excludePass
+            }
             .filter { entry ->
                 if (packageQuery.isEmpty()) return@filter true
                 val haystack = "${entry.tag} ${entry.message} ${entry.raw}".lowercase()
                 haystack.contains(packageQuery)
             }
             .filter { entry ->
-                if (query.isEmpty()) return@filter true
-                val haystack = "${entry.tag} ${entry.message} ${entry.pid} ${entry.tid}".lowercase()
-                haystack.contains(query)
+                if (filter.isRegex) {
+                    if (searchRegex == null) return@filter true
+                    val haystack = "${entry.tag} ${entry.message}"
+                    searchRegex.containsMatchIn(haystack)
+                } else {
+                    if (searchIncludes.isEmpty() && searchExcludes.isEmpty()) return@filter true
+                    val haystack = "${entry.tag} ${entry.message} ${entry.pid} ${entry.tid}".lowercase()
+                    val includePass = searchIncludes.isEmpty() || searchIncludes.any { haystack.contains(it) }
+                    val excludePass = searchExcludes.none { haystack.contains(it) }
+                    includePass && excludePass
+                }
             }
             .toList()
     }
