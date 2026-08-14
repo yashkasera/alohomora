@@ -13,7 +13,10 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.UninstallPackageUse
 import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkEntry
 import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkHistoryStore
 import io.github.yashkasera.alohomora.desktop.presentation.model.AdbCommandLogEntry
+import io.github.yashkasera.alohomora.desktop.presentation.model.CustomCommandResult
+import io.github.yashkasera.alohomora.desktop.presentation.model.DarkModeOption
 import io.github.yashkasera.alohomora.desktop.presentation.model.DashboardUiState
+import io.github.yashkasera.alohomora.desktop.presentation.model.DeveloperOptionsState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import java.io.File
 import kotlin.math.roundToInt
@@ -68,6 +71,12 @@ class DevicesViewModel(
 
     private val _dashboardState = MutableStateFlow(DashboardUiState())
     val dashboardState: StateFlow<DashboardUiState> = _dashboardState.asStateFlow()
+
+    private val _developerOptionsState = MutableStateFlow(DeveloperOptionsState())
+    val developerOptionsState: StateFlow<DeveloperOptionsState> = _developerOptionsState.asStateFlow()
+
+    private val _customCommandOutput = MutableStateFlow<CustomCommandResult?>(null)
+    val customCommandOutput: StateFlow<CustomCommandResult?> = _customCommandOutput.asStateFlow()
 
     private var dashboardPollingJob: Job? = null
 
@@ -460,11 +469,18 @@ class DevicesViewModel(
         usbmuxDeviceId = usbmuxDeviceId,
     )
 
-    private fun logAdbCommand(deviceId: String?, command: String) {
+    private fun logAdbCommand(
+        deviceId: String?,
+        command: String,
+        output: String? = null,
+        isError: Boolean = false,
+    ) {
         val entry = AdbCommandLogEntry(
             timestamp = System.currentTimeMillis(),
             deviceId = deviceId,
             command = command,
+            output = output,
+            isError = isError,
         )
         _adbCommandHistory.value = (_adbCommandHistory.value + entry).takeLast(100)
     }
@@ -487,8 +503,154 @@ class DevicesViewModel(
 
     private suspend fun runLoggedBlocking(deviceId: String?, args: List<String>): CommandResult {
         val commandText = formatCommand(deviceId, args.joinToString(" "))
-        logAdbCommand(deviceId, commandText)
-        return repository.runCommandBlocking(deviceId, args)
+        val result = repository.runCommandBlocking(deviceId, args)
+        val output = result.stdout.ifBlank { result.stderr }.takeIf { it.isNotBlank() }
+        logAdbCommand(
+            deviceId = deviceId,
+            command = commandText,
+            output = output,
+            isError = result.exitCode != 0,
+        )
+        return result
+    }
+
+    fun refreshDeveloperOptions(deviceId: String?) {
+        if (deviceId.isNullOrBlank()) {
+            _developerOptionsState.value = DeveloperOptionsState()
+            return
+        }
+        scope.launch {
+            _developerOptionsState.value = _developerOptionsState.value.copy(isLoading = true)
+
+            val showTaps = repository.runCommandBlocking(
+                deviceId, listOf("shell", "settings", "get", "system", "show_touches"),
+            ).stdout.trim() == "1"
+
+            val layoutBounds = repository.runCommandBlocking(
+                deviceId, listOf("shell", "getprop", "debug.layout"),
+            ).stdout.trim() == "true"
+
+            val windowScale = repository.runCommandBlocking(
+                deviceId, listOf("shell", "settings", "get", "global", "window_animation_scale"),
+            ).stdout.trim().toFloatOrNull() ?: 1.0f
+            val transitionScale = repository.runCommandBlocking(
+                deviceId, listOf("shell", "settings", "get", "global", "transition_animation_scale"),
+            ).stdout.trim().toFloatOrNull() ?: 1.0f
+            val animatorScale = repository.runCommandBlocking(
+                deviceId, listOf("shell", "settings", "get", "global", "animator_duration_scale"),
+            ).stdout.trim().toFloatOrNull() ?: 1.0f
+            val animationsDisabled = windowScale == 0f && transitionScale == 0f && animatorScale == 0f
+
+            val darkModeOutput = repository.runCommandBlocking(
+                deviceId, listOf("shell", "cmd", "uimode", "night"),
+            ).stdout.trim().lowercase()
+            val darkMode = when {
+                darkModeOutput.contains("yes") -> DarkModeOption.YES
+                darkModeOutput.contains("no") -> DarkModeOption.NO
+                else -> DarkModeOption.AUTO
+            }
+
+            val dontKeep = repository.runCommandBlocking(
+                deviceId, listOf("shell", "settings", "get", "global", "always_finish_activities"),
+            ).stdout.trim() == "1"
+
+            val fontScale = repository.runCommandBlocking(
+                deviceId, listOf("shell", "settings", "get", "system", "font_scale"),
+            ).stdout.trim().toFloatOrNull() ?: 1.0f
+
+            _developerOptionsState.value = DeveloperOptionsState(
+                showTaps = showTaps,
+                showLayoutBounds = layoutBounds,
+                animationsDisabled = animationsDisabled,
+                darkMode = darkMode,
+                dontKeepActivities = dontKeep,
+                fontScale = fontScale,
+                isLoading = false,
+            )
+        }
+    }
+
+    fun toggleShowTaps(deviceId: String?) {
+        if (deviceId.isNullOrBlank()) return
+        scope.launch {
+            val current = _developerOptionsState.value.showTaps == true
+            _developerOptionsState.value = _developerOptionsState.value.copy(showTaps = !current)
+            val newVal = if (current) "0" else "1"
+            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "system", "show_touches", newVal))
+        }
+    }
+
+    fun toggleLayoutBounds(deviceId: String?) {
+        if (deviceId.isNullOrBlank()) return
+        scope.launch {
+            val current = _developerOptionsState.value.showLayoutBounds == true
+            _developerOptionsState.value = _developerOptionsState.value.copy(showLayoutBounds = !current)
+            val newVal = if (current) "false" else "true"
+            runLoggedBlocking(deviceId, listOf("shell", "setprop", "debug.layout", newVal))
+            runLoggedBlocking(deviceId, listOf("shell", "service", "call", "activity", "1599295570"))
+        }
+    }
+
+    fun toggleAnimations(deviceId: String?) {
+        if (deviceId.isNullOrBlank()) return
+        scope.launch {
+            val current = _developerOptionsState.value.animationsDisabled == true
+            _developerOptionsState.value = _developerOptionsState.value.copy(animationsDisabled = !current)
+            val scale = if (current) "1.0" else "0.0"
+            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "global", "window_animation_scale", scale))
+            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "global", "transition_animation_scale", scale))
+            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "global", "animator_duration_scale", scale))
+        }
+    }
+
+    fun setDarkMode(deviceId: String?, mode: DarkModeOption) {
+        if (deviceId.isNullOrBlank()) return
+        scope.launch {
+            _developerOptionsState.value = _developerOptionsState.value.copy(darkMode = mode)
+            val arg = when (mode) {
+                DarkModeOption.YES -> "yes"
+                DarkModeOption.NO -> "no"
+                DarkModeOption.AUTO -> "auto"
+            }
+            runLoggedBlocking(deviceId, listOf("shell", "cmd", "uimode", "night", arg))
+        }
+    }
+
+    fun toggleDontKeepActivities(deviceId: String?) {
+        if (deviceId.isNullOrBlank()) return
+        scope.launch {
+            val current = _developerOptionsState.value.dontKeepActivities == true
+            _developerOptionsState.value = _developerOptionsState.value.copy(dontKeepActivities = !current)
+            val newVal = if (current) "0" else "1"
+            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "global", "always_finish_activities", newVal))
+        }
+    }
+
+    fun setFontScale(deviceId: String?, scale: Float) {
+        if (deviceId.isNullOrBlank()) return
+        scope.launch {
+            _developerOptionsState.value = _developerOptionsState.value.copy(fontScale = scale)
+            runLoggedBlocking(deviceId, listOf("shell", "settings", "put", "system", "font_scale", scale.toString()))
+        }
+    }
+
+    fun runCustomCommand(deviceId: String?, command: String) {
+        if (deviceId.isNullOrBlank() || command.isBlank()) return
+        scope.launch {
+            _customCommandOutput.value = CustomCommandResult(command = command, output = "", isError = false)
+            val args = listOf("shell") + command.trim().split(Regex("\\s+"))
+            val result = runLoggedBlocking(deviceId, args)
+            val output = result.stdout.ifBlank { result.stderr }
+            _customCommandOutput.value = CustomCommandResult(
+                command = command,
+                output = output.ifBlank { "(no output)" },
+                isError = result.exitCode != 0 || (result.stderr.isNotBlank() && result.stdout.isBlank()),
+            )
+        }
+    }
+
+    fun clearCustomCommandOutput() {
+        _customCommandOutput.value = null
     }
 
     private suspend fun waitForScreenrecordExit(deviceId: String?) {

@@ -4,4 +4,6 @@ data class AdbCommandLogEntry(
     val timestamp: Long,
     val deviceId: String?,
     val command: String,
+    val output: String? = null,
+    val isError: Boolean = false,
 )
