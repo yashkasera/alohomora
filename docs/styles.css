@@ -373,11 +373,6 @@ section { padding: 120px 0; }
 .philosophy-card p { font-size: 14px; color: var(--muted); line-height: 1.7; }
 
 
-/* ── HERO DESKTOP SCREENSHOT ── */
-.hero-screenshot {
-    margin-top: 64px;
-}
-.hero-screenshot img { display: block; width: 100%; height: auto; }
 
 /* ── FEATURES ── */
 .features-bento {
