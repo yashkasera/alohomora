@@ -99,7 +99,6 @@ fun FeatureFlagsPanel(
                 AlohomoraSearchTextField(
                     query = uiState.query,
                     onQueryChange = featureFlagsViewModel::onQueryChange,
-                    placeholder = "Filter by key, value, source, or type",
                     onClear = { featureFlagsViewModel.onQueryChange("") },
                     modifier = Modifier.weight(1f).focusRequester(searchFocus),
                 )

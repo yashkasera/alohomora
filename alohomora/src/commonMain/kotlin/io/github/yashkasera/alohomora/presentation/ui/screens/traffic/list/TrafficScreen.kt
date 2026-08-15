@@ -157,7 +157,6 @@ private fun TrafficTopBar(
                 modifier = Modifier.fillMaxWidth()
                     .padding(horizontal = MaterialTheme.dimens.margin.xl)
                     .testTag(AlohomoraTestTags.Chrome.SEARCH),
-                placeholder = "Search endpoints",
             )
             Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
             LazyRow(

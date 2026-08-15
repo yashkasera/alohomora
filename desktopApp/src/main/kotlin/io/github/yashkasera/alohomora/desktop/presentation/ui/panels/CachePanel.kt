@@ -102,7 +102,6 @@ fun CachePanel(
                 AlohomoraSearchTextField(
                     query = uiState.query,
                     onQueryChange = cacheViewModel::onQueryChange,
-                    placeholder = "Filter by key or value",
                     onClear = { cacheViewModel.onQueryChange("") },
                     modifier = Modifier.weight(1f).focusRequester(searchFocus),
                 )

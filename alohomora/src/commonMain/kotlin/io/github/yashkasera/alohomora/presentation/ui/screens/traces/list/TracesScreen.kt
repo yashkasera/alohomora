@@ -95,7 +95,6 @@ internal fun TracesScreen(
                 AlohomoraSearchTextField(
                     query = state.searchQuery,
                     onQueryChange = viewModel::onSearchQueryChange,
-                    placeholder = "Filter traces",
                     onClear = { viewModel.onSearchQueryChange("") },
                     modifier = Modifier
                         .weight(1f)

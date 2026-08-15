@@ -45,7 +45,7 @@ jobs:
 
   package-dmg:
     name: Build macOS DMG
-    runs-on: macos-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +71,7 @@ jobs:
 
   build-xcframework:
     name: Build XCFramework for SPM
-    runs-on: macos-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 

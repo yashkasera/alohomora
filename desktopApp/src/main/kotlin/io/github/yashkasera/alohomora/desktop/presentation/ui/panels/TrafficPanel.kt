@@ -199,7 +199,6 @@ private fun TrafficFilters(
             AlohomoraSearchTextField(
                 query = query,
                 onQueryChange = onQueryChange,
-                placeholder = "Filter by URL, method or status",
                 onClear = { onQueryChange("") },
                 modifier = Modifier.weight(1f).focusRequester(searchFocus),
             )

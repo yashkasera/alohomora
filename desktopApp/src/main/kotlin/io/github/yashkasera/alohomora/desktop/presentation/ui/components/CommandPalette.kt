@@ -167,7 +167,6 @@ fun CommandPalette(
                         query = it
                         selectedIndex = 0
                     },
-                    placeholder = "Search commands…",
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(MaterialTheme.dimens.margin.md)

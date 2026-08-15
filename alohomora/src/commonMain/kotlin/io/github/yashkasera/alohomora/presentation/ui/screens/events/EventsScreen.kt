@@ -151,7 +151,6 @@ private fun EventsSearchBar(
             .fillMaxWidth()
             .padding(MaterialTheme.dimens.margin.md)
             .testTag(AlohomoraTestTags.Chrome.SEARCH),
-        placeholder = "Search events by name",
     )
 }
 

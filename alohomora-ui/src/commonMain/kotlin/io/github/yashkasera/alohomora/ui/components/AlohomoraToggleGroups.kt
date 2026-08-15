@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
@@ -27,9 +28,9 @@ object AlohomoraToggleDefaults {
     val shape @Composable get() = MaterialTheme.shapes.extraSmall
     val borderWidth: Dp = 1.dp
     val itemPadding
-        @Composable get() = androidx.compose.foundation.layout.PaddingValues(
+        @Composable get() = PaddingValues(
             horizontal = 16.dp,
-            vertical = 10.dp,
+            vertical = 8.dp,
         )
 
     const val uppercase: Boolean = true

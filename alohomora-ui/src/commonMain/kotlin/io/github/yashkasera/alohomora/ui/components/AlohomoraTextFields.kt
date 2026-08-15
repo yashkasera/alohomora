@@ -191,7 +191,6 @@ fun AlohomoraSearchTextField(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search...",
     onSearch: (() -> Unit)? = null,
     onClear: (() -> Unit)? = null,
     enabled: Boolean = true,
@@ -200,7 +199,7 @@ fun AlohomoraSearchTextField(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier,
-        placeholder = placeholder,
+        placeholder = "Search…",
         enabled = enabled,
         leadingIcon = {
             Icon(

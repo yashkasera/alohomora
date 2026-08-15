@@ -93,7 +93,6 @@ internal fun FeatureFlagsScreen(
                 modifier = Modifier.fillMaxWidth()
                     .padding(horizontal = MaterialTheme.dimens.margin.md)
                     .testTag(AlohomoraTestTags.Chrome.SEARCH),
-                placeholder = "Filter flags...",
             )
 
             if (state.sources.size > 1) {

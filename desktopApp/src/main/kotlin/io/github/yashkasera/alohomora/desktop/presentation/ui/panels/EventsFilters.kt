@@ -21,9 +21,7 @@ import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.desktop.presentation.model.EventsTimeWindow
 import io.github.yashkasera.alohomora.desktop.presentation.model.EventsUiState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraAssistChip
-import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
-import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSingleChoiceToggleGroup
 import io.github.yashkasera.alohomora.ui.components.AlohomoraToggleItem
@@ -71,7 +69,6 @@ fun EventsFilters(
             AlohomoraSearchTextField(
                 query = filters.query,
                 onQueryChange = onQueryChange,
-                placeholder = "Filter by event name or property",
                 onClear = { onQueryChange("") },
                 modifier = Modifier.weight(1f).focusRequester(searchFocus),
             )
@@ -82,52 +79,6 @@ fun EventsFilters(
                 onClick = { onUnreadOnlyChange(!filters.unreadOnly) },
             )
 
-            // A toggle group rather than five more chips: exactly one window is always in force, and
-            // `selectableGroup` plus Role.RadioButton says so to the accessibility tree for free.
-            // Not uppercased — "30s" would render as "30S".
-            AlohomoraSingleChoiceToggleGroup(
-                items = EventsTimeWindow.entries.map { AlohomoraToggleItem(it.name, it.label) },
-                selectedId = filters.window.name,
-                onSelectedIdChange = { id -> onWindowChange(EventsTimeWindow.valueOf(id)) },
-                uppercase = false,
-            )
-
-            // Labelled "Hide older" rather than "Mark" because there is no tooltip anywhere in this app
-            // to explain a bare verb, and this control sits one row below a Trash that really does
-            // delete on the device. The two must not read alike. Backed by `markFloorMillis`.
-            if (filters.markFloorMillis == null) {
-                AlohomoraOutlinedButton(
-                    text = "Hide older",
-                    onClick = onMark,
-                    size = AlohomoraButtonSize.SMALL,
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Clock,
-                            contentDescription = null,
-                            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                        )
-                    },
-                )
-            } else {
-                AlohomoraFilterChip(
-                    label = "Since ${
-                        DateUtils.format(
-                            filters.markFloorMillis,
-                            DateUtils.Format.HH_MM_SS,
-                        )
-                    }",
-                    selected = true,
-                    uppercase = false,
-                    onClick = onClearMark,
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.X,
-                            contentDescription = "Show older events again",
-                            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                        )
-                    },
-                )
-            }
 
             // Only when something transient is narrowing the list. Mutes have their own control below,
             // because clearing them by accident would undo a deliberate, persisted choice.
@@ -138,6 +89,45 @@ fun EventsFilters(
                     onClick = onClearFilters,
                 )
             }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = MaterialTheme.dimens.margin.xxl),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AlohomoraSingleChoiceToggleGroup(
+                items = EventsTimeWindow.entries.map { AlohomoraToggleItem(it.name, it.label) },
+                selectedId = filters.window.name,
+                onSelectedIdChange = { id -> onWindowChange(EventsTimeWindow.valueOf(id)) },
+                uppercase = false,
+            )
+
+            val isSelected = filters.markFloorMillis != null
+            AlohomoraFilterChip(
+                label =
+                    if (filters.markFloorMillis == null)
+                        "Hide older"
+                    else
+                        "Since ${
+                            DateUtils.format(
+                                filters.markFloorMillis,
+                                DateUtils.Format.HH_MM_SS,
+                            )
+                        }",
+                selected = isSelected,
+                uppercase = false,
+                onClick = if (isSelected) onClearMark else onMark,
+                trailingIcon = {
+                    Icon(
+                        imageVector = if (isSelected) Icons.X else Icons.Clock,
+                        contentDescription = "Show older events again",
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.xs),
+                    )
+                },
+            )
         }
 
         if (state.names.isNotEmpty()) {

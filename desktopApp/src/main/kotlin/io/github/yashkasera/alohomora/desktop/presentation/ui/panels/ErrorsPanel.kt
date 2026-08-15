@@ -103,7 +103,6 @@ fun ErrorsPanel(
                 AlohomoraSearchTextField(
                     query = query,
                     onQueryChange = devToolsViewModel::onErrorQueryChange,
-                    placeholder = "Filter by exception type, message or location",
                     onClear = { devToolsViewModel.onErrorQueryChange("") },
                     modifier = Modifier.weight(1f).focusRequester(searchFocus),
                 )

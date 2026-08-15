@@ -96,7 +96,6 @@ fun TracesPanel(
                 AlohomoraSearchTextField(
                     query = query,
                     onQueryChange = tracesViewModel::onQueryChange,
-                    placeholder = "Filter by span name, scope or trace id",
                     onClear = { tracesViewModel.onQueryChange("") },
                     modifier = Modifier.weight(1f).focusRequester(searchFocus),
                 )
