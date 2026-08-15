@@ -594,6 +594,41 @@
         phone.addEventListener('click', () => updateFan(i));
     });
 
+    // Swipe / drag on fan
+    const fanEl = document.querySelector('.showcase-fan');
+    let swipeStartX = 0;
+    let swipeStartY = 0;
+    let isDragging = false;
+
+    function handleSwipeEnd(dx, dy) {
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+            updateFan(Math.max(0, Math.min(fanPhones.length - 1, fanActive + (dx < 0 ? 1 : -1))));
+        }
+    }
+
+    // Touch
+    fanEl.addEventListener('touchstart', e => {
+        swipeStartX = e.touches[0].clientX;
+        swipeStartY = e.touches[0].clientY;
+    }, { passive: true });
+    fanEl.addEventListener('touchend', e => {
+        handleSwipeEnd(e.changedTouches[0].clientX - swipeStartX, e.changedTouches[0].clientY - swipeStartY);
+    }, { passive: true });
+
+    // Mouse drag
+    fanEl.addEventListener('mousedown', e => {
+        isDragging = true;
+        swipeStartX = e.clientX;
+        swipeStartY = e.clientY;
+        e.preventDefault();
+    });
+    document.addEventListener('mouseup', e => {
+        if (!isDragging) return;
+        isDragging = false;
+        handleSwipeEnd(e.clientX - swipeStartX, e.clientY - swipeStartY);
+    });
+
+
     updateFan(fanActive);
 
     document.querySelectorAll('a[href^="#"]').forEach(a => {
