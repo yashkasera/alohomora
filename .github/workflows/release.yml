@@ -64,7 +64,7 @@ jobs:
         run: ./gradlew :desktopApp:packageDmg -Palohomora.desktop.version=${{ steps.version.outputs.value }}
 
       - name: Upload DMG artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Alohomora-${{ steps.version.outputs.value }}.dmg
           path: desktopApp/build/compose/binaries/main/dmg/*.dmg
@@ -91,7 +91,7 @@ jobs:
           zip -r "$GITHUB_WORKSPACE/AlohomoraKit.xcframework.zip" AlohomoraKit.xcframework
 
       - name: Upload XCFramework artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: AlohomoraKit.xcframework.zip
           path: AlohomoraKit.xcframework.zip
