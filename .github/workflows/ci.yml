@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Assemble
+        run: ./gradlew assemble --no-configuration-cache
+
+      - name: Unit tests (common)
+        run: ./gradlew :alohomora-common:jvmTest
+
+      - name: Unit tests (desktop)
+        run: ./gradlew :desktopApp:test
+
+      - name: API compatibility check
+        run: ./gradlew apiCheck
+
+      - name: Noop parity check
+        run: ./gradlew consumerParity
