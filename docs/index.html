@@ -99,70 +99,24 @@
     </div>
 </section>
 
-<!-- SHOWCASE -->
+<!-- MOBILE FAN -->
 <section class="showcase" id="screenshots">
+    <div class="showcase-fan reveal">
+        <div class="fan-phone" data-key="mobile-dashboard"><div class="phone-frame"><img src="screenshots/mobile-dashboard.png" alt="Dashboard" loading="lazy"></div></div>
+        <div class="fan-phone" data-key="mobile-traffic"><div class="phone-frame"><img src="screenshots/mobile-traffic.png" alt="Traffic" loading="lazy"></div></div>
+        <div class="fan-phone" data-key="mobile-traces"><div class="phone-frame"><img src="screenshots/mobile-traces.png" alt="Traces" loading="lazy"></div></div>
+        <div class="fan-phone" data-key="mobile-errors"><div class="phone-frame"><img src="screenshots/mobile-errors.png" alt="Errors" loading="lazy"></div></div>
+        <div class="fan-phone" data-key="mobile-database"><div class="phone-frame"><img src="screenshots/mobile-database.png" alt="Database" loading="lazy"></div></div>
+        <div class="fan-phone" data-key="mobile-traffic-detail"><div class="phone-frame"><img src="screenshots/mobile-traffic-detail.png" alt="Traffic Detail" loading="lazy"></div></div>
+        <div class="fan-phone" data-key="mobile-traffic-response"><div class="phone-frame"><img src="screenshots/mobile-traffic-response.png" alt="Response Body" loading="lazy"></div></div>
+        <div class="fan-phone" data-key="mobile-replay"><div class="phone-frame"><img src="screenshots/mobile-replay.png" alt="Replay" loading="lazy"></div></div>
+        <div class="fan-phone" data-key="mobile-navigation"><div class="phone-frame"><img src="screenshots/mobile-navigation.png" alt="Navigation" loading="lazy"></div></div>
+        <div class="fan-phone" data-key="mobile-git-history"><div class="phone-frame"><img src="screenshots/mobile-git-history.png" alt="Git History" loading="lazy"></div></div>
+    </div>
     <div class="container">
-        <div class="showcase-frame reveal" id="showcase-img">
+        <div class="hero-screenshot reveal">
             <img src="screenshots/desktop-dashboard.png"
-                 alt="Dashboard showing device metrics, build info, recent events and traffic at a glance">
-        </div>
-        <div class="showcase-tabs reveal reveal-delay-1">
-            <button class="showcase-tab active" data-img="screenshots/desktop-dashboard.png"
-                    data-alt="Dashboard showing device metrics, build info, recent events and traffic at a glance">
-                Dashboard
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-traffic.png"
-                    data-alt="Traffic inspection showing requests with method, URL, status, latency and response bodies">
-                Traffic
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-traces.png"
-                    data-alt="Trace waterfall view showing spans grouped by trace ID with timing bars">
-                Traces
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-events.png"
-                    data-alt="Events timeline showing named events with timestamps and properties">
-                Events
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-database.png"
-                    data-alt="Database inspector browsing tables, rows and schema">
-                Database
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-errors.png"
-                    data-alt="Errors panel showing captured exceptions with full stack traces">
-                Errors
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-mock-rules.png"
-                    data-alt="Mock rules editor with session management and JSON response body editor">
-                Mock Rules
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-feature-flags.png"
-                    data-alt="Feature flags panel showing flags from Firebase Remote Config and LaunchDarkly">
-                Feature Flags
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-cache.png"
-                    data-alt="Cache inspector showing SharedPreferences keys and values">
-                Cache
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-git-history.png"
-                    data-alt="Git history showing the last 50 commits with SHA, message, date, and author">
-                Git History
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-config.png"
-                    data-alt="Build metadata showing application info, source branch, commit, and variant">
-                Config
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-adb.png"
-                    data-alt="ADB shortcuts panel with app controls, APK install, capture tools, and connectivity toggles">
-                ADB
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-deep-links.png"
-                    data-alt="Deep link builder with scheme, host, path, query params and history">
-                Deep Links
-            </button>
-            <button class="showcase-tab" data-img="screenshots/desktop-mcp-server.png"
-                    data-alt="MCP server settings with endpoint, write tools toggle, and agent connection snippets">
-                MCP Server
-            </button>
+                 alt="Alohomora desktop companion showing dashboard with device metrics, events, and traffic">
         </div>
     </div>
 </section>
@@ -191,7 +145,6 @@
     </div>
 </section>
 
-<hr class="section-divider">
 
 <!-- PHILOSOPHY -->
 <section>
@@ -200,21 +153,25 @@
         <div class="section-title reveal">Built for the way debugging actually works</div>
         <div class="philosophy-grid">
             <div class="philosophy-card reveal">
+                <div class="philosophy-num">01</div>
                 <h4>Nothing should be invisible</h4>
                 <p>Every request, database write, event, and exception is captured and surfaced the
                     moment it happens.</p>
             </div>
             <div class="philosophy-card reveal reveal-delay-1">
+                <div class="philosophy-num">02</div>
                 <h4>Seconds, not hours</h4>
                 <p>Answer "what just happened?" immediately. No log archaeology. No rebuilding
                     mental models.</p>
             </div>
             <div class="philosophy-card reveal reveal-delay-2">
+                <div class="philosophy-num">03</div>
                 <h4>Zero production cost</h4>
                 <p>The noop artifact mirrors every method with empty bodies. R8 optimises it away
                     completely.</p>
             </div>
             <div class="philosophy-card reveal reveal-delay-3">
+                <div class="philosophy-num">04</div>
                 <h4>No vendor lock-in</h4>
                 <p>Depends on no tracing SDK. A ~15-line adapter bridges whatever tracer you already
                     run.</p>
@@ -223,100 +180,6 @@
     </div>
 </section>
 
-<hr class="section-divider">
-
-<!-- DEMOS -->
-<section id="demos">
-    <div class="container">
-        <div class="section-label reveal">See it in action</div>
-        <div class="section-title reveal">Real-time debugging, not log archaeology</div>
-        <p class="section-desc reveal">The desktop companion and in-app console, running against a live showcase app.</p>
-        <div class="demos-grid">
-            <div class="demo-card reveal">
-                <div class="demo-media">
-                    <img src="screenshots/desktop-traffic.png" alt="Traffic capture" loading="lazy">
-                </div>
-                <div class="demo-info">
-                    <h4>Traffic capture</h4>
-                    <p>Requests stream in as they happen. Expand any row for headers, body, and
-                        timing breakdown.</p>
-                </div>
-            </div>
-            <div class="demo-card reveal reveal-delay-1">
-                <div class="demo-media">
-                    <img src="screenshots/desktop-traces.png" alt="Trace waterfall" loading="lazy">
-                </div>
-                <div class="demo-info">
-                    <h4>Trace waterfall</h4>
-                    <p>Spans render as a nested waterfall. Click any bar for attributes, events, and
-                        self-time.</p>
-                </div>
-            </div>
-            <div class="demo-card reveal">
-                <div class="demo-media">
-                    <img src="screenshots/desktop-errors.png" alt="Error tracking" loading="lazy">
-                </div>
-                <div class="demo-info">
-                    <h4>Error tracking</h4>
-                    <p>Caught and uncaught exceptions with full stack traces, timestamps, and
-                        the screen where they occurred.</p>
-                </div>
-            </div>
-            <div class="demo-card reveal reveal-delay-1">
-                <div class="demo-media">
-                    <img src="screenshots/desktop-database.png" alt="Database inspection" loading="lazy">
-                </div>
-                <div class="demo-info">
-                    <h4>Database inspection &amp; editing</h4>
-                    <p>Browse tables, page through rows, view schema. Double-click any cell to edit
-                        values live on the device.</p>
-                </div>
-            </div>
-            <div class="demo-card reveal">
-                <div class="demo-media">
-                    <img src="screenshots/desktop-mock-rules.png" alt="Mock rules" loading="lazy">
-                </div>
-                <div class="demo-info">
-                    <h4>Mock rules</h4>
-                    <p>Create a mock from captured traffic, add template generators, see mocked
-                        responses on the next request.</p>
-                </div>
-            </div>
-            <div class="demo-card reveal reveal-delay-1">
-                <div class="demo-media">
-                    <img src="screenshots/desktop-feature-flags.png" alt="Feature flags" loading="lazy">
-                </div>
-                <div class="demo-info">
-                    <h4>Feature flags</h4>
-                    <p>View flags from Firebase Remote Config, LaunchDarkly, or any source.
-                        Expand to see metadata and raw values.</p>
-                </div>
-            </div>
-            <div class="demo-card reveal">
-                <div class="demo-media">
-                    <img src="screenshots/desktop-mcp-server.png" alt="MCP server settings" loading="lazy">
-                </div>
-                <div class="demo-info">
-                    <h4>MCP server for AI agents</h4>
-                    <p>AI coding assistants query your app's live data through read-only MCP tools.
-                        Debug with natural language.</p>
-                </div>
-            </div>
-            <div class="demo-card reveal reveal-delay-1">
-                <div class="demo-media">
-                    <img src="screenshots/desktop-adb.png" alt="ADB shortcuts" loading="lazy">
-                </div>
-                <div class="demo-info">
-                    <h4>ADB shortcuts</h4>
-                    <p>Launch, force stop, clear data, install APKs, toggle connectivity, and
-                        capture screenshots or screen recordings.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<hr class="section-divider">
 
 <!-- FEATURES -->
 <section id="features">
@@ -325,217 +188,140 @@
         <div class="section-title reveal">Everything your debug build should show you</div>
         <p class="section-desc reveal">Unified inspection across every dimension of your running
             app, streamed to an in-app console and a desktop companion.</p>
-        <div class="features-grid">
-            <div class="feature-card reveal">
-                <div class="feature-icon ic-blue">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                    </svg>
+        <div class="features-bento">
+            <!-- Row 1: Traffic (span 2) + Traces -->
+            <div class="feature-card bento-card bento-wide reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-traffic.png" alt="Traffic inspector" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>Traffic</h3>
+                    <p>Every outbound request captured with method, URL, status, latency, headers, and bodies. Auto-capture for OkHttp and Ktor.</p>
                 </div>
-                <h3>Traffic</h3>
-                <p>Every outbound request captured with method, URL, status, latency, headers, and
-                    bodies. Auto-capture for OkHttp and Ktor.</p>
-                <span class="tag">OkHttp &middot; Ktor &middot; Manual</span>
             </div>
+            <div class="feature-card bento-card reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-traces.png" alt="Trace waterfall" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>Traces</h3>
+                    <p>Waterfall view of spans grouped by trace ID, nested by parent. Adapters for OpenTelemetry and Sentry.</p>
+                </div>
+            </div>
+
+            <!-- Row 2: Database + Mock Rules (span 2) -->
+            <div class="feature-card bento-card reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-database.png" alt="Database inspector" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>Database</h3>
+                    <p>Browse tables, page through rows, view schema. Double-click any cell to edit values live on the device.</p>
+                </div>
+            </div>
+            <div class="feature-card bento-card bento-wide reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-mock-rules.png" alt="Mock rules editor" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>Mock Rules</h3>
+                    <p>Intercept requests and return custom responses. Template engine with generators. Import from HAR files.</p>
+                </div>
+            </div>
+
+            <!-- Row 3: Events + Errors + Cache -->
+            <div class="feature-card bento-card reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-events.png" alt="Events timeline" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>Events</h3>
+                    <p>Searchable timeline of named events with timestamps and optional properties.</p>
+                </div>
+            </div>
+            <div class="feature-card bento-card reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-errors.png" alt="Error details" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>Errors</h3>
+                    <p>Uncaught exceptions captured automatically. Caught exceptions via <code>recordError()</code>.</p>
+                </div>
+            </div>
+            <div class="feature-card bento-card reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-cache.png" alt="Cache inspector" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>Cache</h3>
+                    <p>Inspect SharedPreferences and NSUserDefaults. Encrypted entries flagged.</p>
+                </div>
+            </div>
+
+            <!-- Row 4: Feature Flags + Config + Git History -->
+            <div class="feature-card bento-card reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-feature-flags.png" alt="Feature flags" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>Feature Flags</h3>
+                    <p>Record and inspect feature flag state with source, type, and metadata.</p>
+                </div>
+            </div>
+            <div class="feature-card bento-card reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-config.png" alt="Build config" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>Config</h3>
+                    <p>Branch, commit SHA, dirty flag, version, and build timestamp embedded by the Gradle plugin.</p>
+                </div>
+            </div>
+            <div class="feature-card bento-card reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-git-history.png" alt="Git history" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>Git History</h3>
+                    <p>Last N commits injected at build time. SHA, message, author, and date.</p>
+                </div>
+            </div>
+
+            <!-- Row 5: Deep Links (span 2) + MCP Server -->
+            <div class="feature-card bento-card bento-wide reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-deep-links.png" alt="Deep link builder" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>Deep Link Builder</h3>
+                    <p>Compose deep links with scheme, host, path, and query params. Fire on-device. History persisted.</p>
+                </div>
+            </div>
+            <div class="feature-card bento-card reveal">
+                <div class="bento-card-screenshot"><img src="screenshots/bento-mcp-server.png" alt="MCP server settings" loading="lazy"></div>
+                <div class="bento-card-body">
+                    <h3>MCP Server</h3>
+                    <p>Expose captured data to AI coding assistants (Claude Code, Cursor) as read-only MCP tools over Streamable HTTP.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compact features without screenshots -->
+        <div class="features-grid-compact">
             <div class="feature-card reveal">
                 <div class="feature-icon ic-indigo">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <polyline points="1 4 1 10 7 10"/>
-                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-                    </svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
                 </div>
                 <h3>Traffic Replay</h3>
-                <p>Edit a captured request and re-send it through your own HTTP client. Signatures
-                    regenerated by your interceptors.</p>
+                <p>Edit and re-send captured requests through your own HTTP client. Signatures regenerated.</p>
                 <span class="tag">Edit &amp; Re-send</span>
             </div>
             <div class="feature-card reveal">
-                <div class="feature-icon ic-purple">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <line x1="2" y1="12" x2="22" y2="12"/>
-                        <line x1="6" y1="7" x2="20" y2="7"/>
-                        <line x1="4" y1="17" x2="14" y2="17"/>
-                    </svg>
-                </div>
-                <h3>Traces</h3>
-                <p>Waterfall view of spans grouped by trace ID, nested by parent. Adapters for
-                    OpenTelemetry and Sentry.</p>
-                <span class="tag">OpenTelemetry &middot; Sentry</span>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon ic-green">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                </div>
-                <h3>Events</h3>
-                <p>Searchable timeline of named events with timestamps and optional properties. What
-                    happened, in order.</p>
-                <span class="tag">Timeline &middot; Properties</span>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon ic-amber">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <ellipse cx="12" cy="5" rx="9" ry="3"/>
-                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-                    </svg>
-                </div>
-                <h3>Database</h3>
-                <p>Browse tables, page through rows, view schema. Double-click any cell to edit
-                    values live on the device. Android and iOS.</p>
-                <span class="tag">Room &middot; SQLite &middot; Inline Editing</span>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon ic-red">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                </div>
-                <h3>Errors</h3>
-                <p>Uncaught exceptions captured automatically. Caught exceptions via <code>recordError()</code>.
-                    Chains to your crash handler.</p>
-                <span class="tag">Crash Handler &middot; Stack Traces</span>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon ic-cyan">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                        <path d="M2 17l10 5 10-5"/>
-                        <path d="M2 12l10 5 10-5"/>
-                    </svg>
-                </div>
-                <h3>Cache</h3>
-                <p>Inspect SharedPreferences and NSUserDefaults. Encrypted entries flagged.
-                    Read-only view.</p>
-                <span class="tag">SharedPrefs &middot; UserDefaults</span>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon ic-purple">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
-                        <line x1="4" y1="22" x2="4" y2="15"/>
-                    </svg>
-                </div>
-                <h3>Feature Flags</h3>
-                <p>Record and inspect feature flag state with source, type, and metadata. Batch
-                    import from any provider.</p>
-                <span class="tag">Remote Config &middot; Custom</span>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon ic-amber">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <circle cx="18" cy="18" r="3"/>
-                        <circle cx="6" cy="6" r="3"/>
-                        <path d="M13 6h3a2 2 0 0 1 2 2v7"/>
-                        <line x1="6" y1="9" x2="6" y2="21"/>
-                    </svg>
-                </div>
-                <h3>Config &amp; Git History</h3>
-                <p>Branch, commit SHA, dirty flag, version, build timestamp. Last N commits injected
-                    at build time.</p>
-                <span class="tag">Gradle Plugin &middot; Xcode</span>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon ic-red">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="2" width="20" height="8" rx="2"/>
-                        <rect x="2" y="14" width="20" height="8" rx="2"/>
-                        <line x1="6" y1="6" x2="6.01" y2="6"/>
-                        <line x1="6" y1="18" x2="6.01" y2="18"/>
-                    </svg>
-                </div>
-                <h3>Mock Rules</h3>
-                <p>Intercept requests and return custom responses. Template engine with generators.
-                    Import from HAR files.</p>
-                <span class="tag">Templates &middot; HAR Import &middot; Sessions</span>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon ic-cyan">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                    </svg>
-                </div>
-                <h3>Deep Link Builder</h3>
-                <p>Compose deep links with scheme, host, path, and query params. Fire on-device.
-                    History persisted.</p>
-                <span class="tag">Builder &middot; History &middot; ADB</span>
-            </div>
-            <div class="feature-card reveal">
                 <div class="feature-icon ic-indigo">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        <line x1="11" y1="8" x2="11" y2="14"/>
-                        <line x1="8" y1="11" x2="14" y2="11"/>
-                    </svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
                 </div>
                 <h3>Command Palette</h3>
-                <p>Cmd/Ctrl+K to search and trigger any action. Navigate sections, toggle theme,
-                    fire ADB commands.</p>
+                <p>Cmd/Ctrl+K to search and trigger any action. Navigate sections, toggle theme.</p>
                 <span class="tag">Keyboard-first &middot; Desktop</span>
             </div>
             <div class="feature-card reveal">
-                <div class="feature-icon ic-green">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    </svg>
-                </div>
-                <h3>MCP Server</h3>
-                <p>Expose captured data to AI coding assistants (Claude Code, Cursor) as read-only
-                    MCP tools over Streamable HTTP.</p>
-                <span class="tag">AI Agents &middot; Desktop</span>
-            </div>
-            <div class="feature-card reveal">
                 <div class="feature-icon ic-amber">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                    </svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 </div>
                 <h3>Shake to Open</h3>
-                <p>Shake the device to instantly open the debug console. Configurable sensitivity
-                    threshold.</p>
+                <p>Shake the device to instantly open the debug console.</p>
                 <span class="tag">Android &middot; iOS</span>
             </div>
             <div class="feature-card reveal">
                 <div class="feature-icon ic-red">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <path
-                            d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                    </svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                 </div>
                 <h3>Network Throttling</h3>
-                <p>Simulate slow networks at interceptor level or device-wide via a local VPN. Edge,
-                    3G, and Wi-Fi presets.</p>
+                <p>Simulate slow networks via local VPN. Edge, 3G, and Wi-Fi presets.</p>
                 <span class="tag">VPN &middot; Interceptor &middot; Presets</span>
             </div>
-
-
         </div>
     </div>
 </section>
 
-<hr class="section-divider">
 
 <!-- ARCHITECTURE -->
 <section id="architecture" class="arch-section">
@@ -607,7 +393,6 @@
     </div>
 </section>
 
-<hr class="section-divider">
 
 <!-- COMPARISON -->
 <section class="comparison-section">
@@ -705,7 +490,6 @@
     </div>
 </section>
 
-<hr class="section-divider">
 
 <!-- DESKTOP COMPANION -->
 <section>
@@ -715,8 +499,8 @@
         <p class="section-desc reveal">Everything the in-app console shows, plus desktop-only
             panels.</p>
         <div class="desktop-grid">
-            <div class="desktop-card reveal"><h3>All captured data</h3>
-                <p>Streamed in real time over ADB.</p></div>
+            <div class="desktop-card span-2 reveal"><h3>All captured data</h3>
+                <p>Traffic, traces, events, errors, database, cache, feature flags, config, and git history. Streamed in real time over ADB.</p></div>
             <div class="desktop-card reveal"><h3>MCP Server</h3>
                 <p>Expose data to AI assistants via Streamable HTTP.</p></div>
             <div class="desktop-card reveal"><h3>Mock Rules</h3>
@@ -787,20 +571,30 @@
 </footer>
 
 <script>
-    document.querySelectorAll('.showcase-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.showcase-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            const img = document.querySelector('#showcase-img img');
-            if (!img) return;
-            img.classList.add('loading');
-            img.alt = tab.dataset.alt || '';
-            const preload = new Image();
-            preload.onload = () => { img.src = tab.dataset.img; img.classList.remove('loading'); };
-            preload.onerror = () => { img.classList.remove('loading'); };
-            preload.src = tab.dataset.img;
+    // Fan logic
+    const fanPhones = document.querySelectorAll('.fan-phone');
+    let fanActive = 4;
+
+    function updateFan(newActive) {
+        fanActive = newActive;
+        fanPhones.forEach((phone, i) => {
+            const offset = i - fanActive;
+            const abs = Math.abs(offset);
+            const gap = window.innerWidth < 640 ? 90 : 140;
+            phone.style.setProperty('--shift', `${offset * gap}px`);
+            phone.style.setProperty('--rotate', `${offset * 5}deg`);
+            phone.style.setProperty('--scale', `${Math.max(0.7, 1 - abs * 0.05)}`);
+            phone.style.setProperty('--z', `${10 - abs}`);
+            phone.style.setProperty('--opacity', `${Math.max(0.3, 1 - abs * 0.1)}`);
+            phone.style.setProperty('--brightness', offset === 0 ? '1' : `${Math.max(0.4, 0.75 - abs * 0.05)}`);
         });
+    }
+
+    fanPhones.forEach((phone, i) => {
+        phone.addEventListener('click', () => updateFan(i));
     });
+
+    updateFan(fanActive);
 
     document.querySelectorAll('a[href^="#"]').forEach(a => {
         a.addEventListener('click', () => document.getElementById('navbar').classList.remove('open'));
