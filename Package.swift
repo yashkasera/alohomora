@@ -15,7 +15,7 @@ let package = Package(
         .binaryTarget(
             name: "AlohomoraKit",
             url: "https://github.com/yashkasera/Alohomora/releases/download/v1.0.0/AlohomoraKit.xcframework.zip",
-            checksum: "0000000000000000000000000000000000000000000000000000000000000000"
+            checksum: "bf8eeac5ed184568510c06d8debd0ab485975617cbafb54fb6abb35e40bd494f"
         ),
     ]
 )
