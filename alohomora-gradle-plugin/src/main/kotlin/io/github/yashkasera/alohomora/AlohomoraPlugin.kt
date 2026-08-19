@@ -4,8 +4,6 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.LibraryVariant
-import com.android.build.gradle.BaseExtension
-import java.io.File
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -39,7 +37,7 @@ class AlohomoraPlugin : Plugin<Project> {
         androidComponents.onVariants { variant ->
             if (!extension.enabledVariants.contains(variant.name)) {
                 println("Skipping Alohomora for ${variant.name}")
-                configureReleaseVerification(project, variant)
+                configureReleaseVerification(project, androidComponents, variant)
                 return@onVariants
             }
             println("Generating Alohomora for ${variant.name}")
@@ -128,22 +126,19 @@ class AlohomoraPlugin : Plugin<Project> {
 
     private fun configureReleaseVerification(
         project: Project,
+        androidComponents: AndroidComponentsExtension<*, *, *>,
         variant: com.android.build.api.variant.Variant,
     ) {
         if (variant !is ApplicationVariant) return
 
-        val android = project.extensions.getByType(BaseExtension::class.java)
-        val aapt2 = File(
-            android.sdkDirectory,
-            "build-tools/${android.buildToolsVersion}/aapt2",
-        )
+        val aapt2 = androidComponents.sdkComponents.aapt2.map { it.executable.get() }
 
         val verifyTask = project.tasks.register(
             "verifyNoAlohomoraIn${variant.name.replaceFirstChar { it.uppercase() }}",
             VerifyNoAlohomoraInReleaseTask::class.java,
         ) {
             apkDir.set(variant.artifacts.get(SingleArtifact.APK))
-            aapt2Path.fileValue(aapt2)
+            aapt2Path.set(aapt2)
         }
 
         val assembleTaskName = "assemble${variant.name.replaceFirstChar { it.uppercase() }}"

@@ -4,13 +4,23 @@ on:
   push:
     tags:
       - 'v*'
+  # Publishes the Gradle plugin on its own. It shipped late — the library reached Central at 1.0.0
+  # while the plugin was in nobody's `publishedProjects` list — and Central refuses to overwrite an
+  # existing version, so backfilling it at an already-released version cannot go through the tag
+  # path. New releases need this only if a tag run fails partway.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish the Gradle plugin at (e.g. 1.0.0)'
+        required: true
 
 permissions:
   contents: write
 
 jobs:
   publish-library:
-    name: Publish library to Maven Central
+    name: Publish to Maven Central
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +44,8 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
+      # Covers all five artifacts: the four library modules plus the Gradle plugin, which the root
+      # task reaches through `gradle.includedBuild(...)`.
       - name: Publish to Maven Central
         run: ./gradlew publishMavenCentral --no-configuration-cache --no-parallel -Dorg.gradle.workers.max=1 -Palohomora.version=${{ steps.version.outputs.value }}
         env:
@@ -43,8 +55,40 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
 
+  publish-plugin:
+    name: Publish Gradle plugin to Maven Central
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      # `-p` rather than the root `publishMavenCentral`, which would also try the four library
+      # modules and fail on coordinates Central already holds.
+      - name: Publish plugin to Maven Central
+        run: ./gradlew -p alohomora-gradle-plugin publishAllPublicationsToMavenCentralRepository --no-configuration-cache --no-parallel -Palohomora.version=${{ inputs.version }}
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.GPG_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
+
   package-dmg:
     name: Build macOS DMG
+    if: github.event_name == 'push'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -71,6 +115,7 @@ jobs:
 
   build-xcframework:
     name: Build XCFramework for SPM
+    if: github.event_name == 'push'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -98,6 +143,7 @@ jobs:
 
   create-release:
     name: Create GitHub Release
+    if: github.event_name == 'push'
     needs: [ publish-library, package-dmg, build-xcframework ]
     runs-on: ubuntu-latest
     steps:

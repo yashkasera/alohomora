@@ -103,6 +103,19 @@
 
                 <p class="reveal">Optional. The Gradle plugin injects build metadata (Git branch, commit SHA, dirty flag, recent commits) into your debug build at compile time. This data appears in the Config and Git History tabs of the console.</p>
 
+                <p class="reveal">The plugin ships to Maven Central, not the Gradle Plugin Portal, so add <code>mavenCentral()</code> to plugin resolution first. The default <code>gradlePluginPortal()</code> alone will not find it.</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">settings.gradle.kts</div>
+                    <pre><span class="kw">pluginManagement</span> {
+    <span class="kw">repositories</span> {
+        <span class="fn">gradlePluginPortal</span>()
+        <span class="fn">google</span>()
+        <span class="fn">mavenCentral</span>()
+    }
+}</pre>
+                </div>
+
                 <div class="code-block reveal">
                     <div class="code-header">build.gradle.kts</div>
                     <pre><span class="kw">plugins</span> {

@@ -157,14 +157,23 @@ tasks.named("check") {
 val publishedProjects =
     listOf(":alohomora", ":alohomora-noop", ":alohomora-common", ":alohomora-ui")
 
+// The Gradle plugin is the fifth published artifact and cannot go in the list above: it is an
+// included build, not a subproject, so a `:alohomora-gradle-plugin:` task path does not resolve.
+// `gradle.includedBuild(...)` is how the root reaches it, which keeps one publish entry point for
+// all five rather than a second CI invocation that is easy to forget — the way the plugin went
+// unpublished through v1.0.0 in the first place.
+val pluginBuild = gradle.includedBuild("alohomora-gradle-plugin")
+
 tasks.register("publishMavenCentral") {
     group = "publishing"
     description = "Publishes all Alohomora artifacts to Maven Central"
     dependsOn(publishedProjects.map { "$it:publishAllPublicationsToMavenCentralRepository" })
+    dependsOn(pluginBuild.task(":publishAllPublicationsToMavenCentralRepository"))
 }
 
 tasks.register("publishToMavenLocal") {
     group = "publishing"
     description = "Publishes all Alohomora artifacts to Maven Local for verification"
     dependsOn(publishedProjects.map { "$it:publishToMavenLocal" })
+    dependsOn(pluginBuild.task(":publishToMavenLocal"))
 }

@@ -1,7 +1,7 @@
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
-    `maven-publish`
+    id("alohomora.publish")
 }
 
 group = "io.github.yashkasera"

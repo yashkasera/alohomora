@@ -29,7 +29,7 @@ Desktop app via a custom binary TCP protocol over ADB port forwarding.
 ./gradlew :showcaseApp:installDebug
 
 # Publishing
-./gradlew publishMavenCentral         # Publish all artifacts to Maven Central
+./gradlew publishMavenCentral         # Publish all five artifacts to Maven Central
 ./gradlew publishToMavenLocal         # Publish to Maven Local for verification
 
 # API compatibility (run before any public API change)
@@ -39,6 +39,23 @@ Desktop app via a custom binary TCP protocol over ADB port forwarding.
 
 **Env vars required for publishing:** `mavenCentralUsername`/`mavenCentralPassword` (Sonatype
 Central Portal) and `signing.keyId`/`signing.password`/`signing.secretKeyRingFile` (GPG).
+
+**Five artifacts ship, not four.** `publishMavenCentral` covers `:alohomora`, `:alohomora-noop`,
+`:alohomora-common`, `:alohomora-ui` *and* `alohomora-gradle-plugin`. The plugin cannot go in the
+root `publishedProjects` list because it is an included build, not a subproject — a
+`:alohomora-gradle-plugin:` task path does not resolve — so the root reaches it through
+`gradle.includedBuild(...)`. It went unpublished through v1.0.0 for exactly this reason while
+`docs/setup.html` documented a `plugins { id(...) version "1.0.0" }` block that no external consumer
+could resolve. Keep the plugin on the one publish entry point rather than a second CI invocation.
+
+Because `signAllPublications()` is unconditional, **`publishToMavenLocal` fails without a signing
+key** ("no configured signatory") — for every module, not just the plugin. To verify a publication
+locally without credentials, pass `-x` for the `sign*Publication` tasks, or supply a throwaway key
+via `-PsigningInMemoryKey`.
+
+The plugin ships to Central, **not the Gradle Plugin Portal**, so a consumer must add
+`mavenCentral()` to `pluginManagement.repositories`; the default `gradlePluginPortal()` cannot see
+it. `docs/setup.html` carries that snippet — keep them in step.
 
 ## Module Structure
 
@@ -83,6 +100,17 @@ alohomora {
     versionCode = 1
 }
 ```
+
+**Only AGP's public `com.android.build.api.*` surface may be used here.** This repo pins
+`android.newDsl=false` (gradle.properties), so the legacy `com.android.build.gradle.BaseExtension`
+resolves *inside* the repo and `showcaseApp` builds fine — while an AGP 9 consumer on defaults fails
+configuration the instant the plugin is applied ("Extension of type 'BaseExtension' does not exist").
+Nothing in the build catches this: `showcaseApp` is the only consumer `check` sees, and it inherits
+the flag. `configureReleaseVerification` hit it and now takes aapt2 from
+`androidComponents.sdkComponents.aapt2`, which is DSL-agnostic, lazy, and resolves AGP's own bundled
+binary instead of a hand-built `build-tools/<version>/aapt2` path that also assumed
+`buildToolsVersion` was set. **Verify plugin changes against a scratch consumer that does not set
+`newDsl`, not just `showcaseApp`.**
 
 ### iOS build-metadata injection
 

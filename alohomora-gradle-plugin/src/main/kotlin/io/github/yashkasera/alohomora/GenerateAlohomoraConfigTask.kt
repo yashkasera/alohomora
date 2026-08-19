@@ -7,7 +7,11 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
+// Every git fact this task emits comes from shelling out to `git`, none of it declared as an input,
+// so a cache hit would replay another checkout's branch, SHA and dirty flag into the build.
+@DisableCachingByDefault(because = "Reads undeclared git state; a cached result would be stale metadata")
 abstract class GenerateAlohomoraConfigTask : DefaultTask() {
 
     @get:OutputDirectory

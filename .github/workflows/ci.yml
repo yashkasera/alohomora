@@ -32,6 +32,12 @@ jobs:
       - name: Assemble
         run: ./gradlew assemble --no-configuration-cache
 
+      # The root build only compiles the plugin far enough to apply it to :showcaseApp, so its own
+      # `check` — including `validatePlugins` — never ran anywhere. Two missing caching annotations
+      # sat unnoticed until the plugin was first published.
+      - name: Gradle plugin check
+        run: ./gradlew -p alohomora-gradle-plugin check --no-configuration-cache -x signPluginMavenPublication -x signAlohomoraPluginMarkerMavenPublication
+
       - name: Unit tests (common)
         run: ./gradlew :alohomora-common:jvmTest
 

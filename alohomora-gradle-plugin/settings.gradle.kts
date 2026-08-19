@@ -7,6 +7,14 @@
 // a settings file: Gradle refuses the directory as "not part of the build" defined by the root.
 rootProject.name = "alohomora-gradle-plugin"
 
+// Supplies the `alohomora.publish` convention plugin, so the publishing metadata has one home for
+// all five published modules instead of a copy here. The root build also includes `build-logic`,
+// which makes this a nested inclusion of the same directory — Gradle deduplicates included builds
+// by directory, so it resolves to one build, not two.
+pluginManagement {
+    includeBuild("../build-logic")
+}
+
 dependencyResolutionManagement {
     repositories {
         google()
