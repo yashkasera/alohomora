@@ -141,7 +141,7 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraTabsKt 
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraTextFieldsKt {
-	public static final fun AlohomoraSearchTextField (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;ZLandroidx/compose/runtime/Composer;II)V
+	public static final fun AlohomoraSearchTextField (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;ZLandroidx/compose/runtime/Composer;II)V
 	public static final fun AlohomoraTextField-xB-N8qs (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ZZZLandroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/text/TextStyle;JJJJLandroidx/compose/runtime/Composer;IIII)V
 }
 
@@ -260,9 +260,9 @@ public final class io/github/yashkasera/alohomora/ui/components/ComposableSingle
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraTextFieldsKt;
 	public fun <init> ()V
 	public final fun getLambda$-1075678419$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-138960741$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-1516655324$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$-255063672$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-696975101$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-901191540$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraToggleGroupsKt {
