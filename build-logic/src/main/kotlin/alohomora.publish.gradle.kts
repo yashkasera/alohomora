@@ -37,13 +37,13 @@ mavenPublishing {
     }
 }
 
-// iOS consumers use SPM via the XCFramework built in release.yml, not Maven. The iOS klib
-// publications the KMP plugin auto-generates are dead weight on Central — no consumer resolves
-// them. Disable every iOS-targeted publish/sign task so they never leave the build.
+// Only Android and KotlinMultiplatform (metadata) publications belong on Central. iOS consumers
+// use SPM via the XCFramework, JVM is only used internally by desktopApp as a project dependency,
+// and no external consumer resolves either. Disable their publish/sign tasks.
 afterEvaluate {
-    val iosPattern = Regex("(?i)(ios|watchos|tvos|macos)")
+    val skipPattern = Regex("(?i)(ios|watchos|tvos|macos|jvm)")
     tasks.configureEach {
-        if (iosPattern.containsMatchIn(name) && (name.startsWith("publish") || name.startsWith("sign"))) {
+        if (skipPattern.containsMatchIn(name) && (name.startsWith("publish") || name.startsWith("sign"))) {
             enabled = false
         }
     }
