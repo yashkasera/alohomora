@@ -26,6 +26,21 @@ sealed interface ReplayOutcome {
 }
 
 /**
+ * No-op mirror of `:alohomora-common`'s `ReplayOutcomes`. See the rationale there — it exists so
+ * Swift can construct an outcome at all.
+ *
+ * Load-bearing here even though a release build never invokes a handler: a host app's Swift call to
+ * `ReplayOutcomes.shared.sent(...)` still has to compile and link against the release framework, so
+ * an object missing from this copy is a release-only failure in the consumer.
+ */
+@Suppress("unused")
+object ReplayOutcomes {
+    fun sent(traceId: String? = null): ReplayOutcome = ReplayOutcome.Sent(traceId)
+
+    fun failed(reason: String): ReplayOutcome = ReplayOutcome.Failed(reason)
+}
+
+/**
  * No-op mirror of `:alohomora`'s `TrafficReplayHandler`.
  *
  * A release build registers one and it is never invoked, so the app's client is never reached from
