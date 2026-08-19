@@ -36,3 +36,15 @@ mavenPublishing {
         }
     }
 }
+
+// iOS consumers use SPM via the XCFramework built in release.yml, not Maven. The iOS klib
+// publications the KMP plugin auto-generates are dead weight on Central — no consumer resolves
+// them. Disable every iOS-targeted publish/sign task so they never leave the build.
+afterEvaluate {
+    val iosPattern = Regex("(?i)(ios|watchos|tvos|macos)")
+    tasks.configureEach {
+        if (iosPattern.containsMatchIn(name) && (name.startsWith("publish") || name.startsWith("sign"))) {
+            enabled = false
+        }
+    }
+}
