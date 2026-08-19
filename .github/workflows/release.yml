@@ -195,10 +195,14 @@ jobs:
           sed -i "s|url: \".*AlohomoraKit.xcframework.zip\"|url: \"https://github.com/yashkasera/Alohomora/releases/download/v${VERSION}/AlohomoraKit.xcframework.zip\"|" Package.swift
           sed -i "s|checksum: \"[a-f0-9]*\"|checksum: \"${CHECKSUM}\"|" Package.swift
 
-      - name: Push updated Package.swift
+      - name: Push updated Package.swift and retag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Package.swift
           git commit -m "chore: update Package.swift for v${{ steps.version.outputs.value }}"
           git push origin HEAD:main
+          # SPM resolves Package.swift from the tag, not main. Move the tag to this
+          # commit so the checksum the tag serves matches the uploaded artifact.
+          git tag -f "v${{ steps.version.outputs.value }}"
+          git push origin "v${{ steps.version.outputs.value }}" --force
