@@ -1,6 +1,7 @@
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
+    id("com.gradle.plugin-publish") version "1.3.1"
     id("alohomora.publish")
 }
 
@@ -17,11 +18,17 @@ repositories {
 }
 
 gradlePlugin {
+    website = "https://yashkasera.github.io/alohomora"
+    vcsUrl = "https://github.com/yashkasera/Alohomora"
+
     plugins {
         create("alohomora") {
             id = "io.github.yashkasera.alohomora"
             implementationClass =
                 "io.github.yashkasera.alohomora.AlohomoraPlugin"
+            displayName = "Alohomora"
+            description = "Injects Git and build metadata into Alohomora debug builds"
+            tags = listOf("android", "debugging", "observability", "devtools")
         }
     }
 }

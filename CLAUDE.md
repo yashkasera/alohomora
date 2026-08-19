@@ -53,9 +53,10 @@ key** ("no configured signatory") — for every module, not just the plugin. To 
 locally without credentials, pass `-x` for the `sign*Publication` tasks, or supply a throwaway key
 via `-PsigningInMemoryKey`.
 
-The plugin ships to Central, **not the Gradle Plugin Portal**, so a consumer must add
-`mavenCentral()` to `pluginManagement.repositories`; the default `gradlePluginPortal()` cannot see
-it. `docs/setup.html` carries that snippet — keep them in step.
+The plugin ships to **both** Maven Central and the Gradle Plugin Portal, so a consumer's default
+`gradlePluginPortal()` resolves it with no settings change. CI needs four secrets:
+`MAVEN_CENTRAL_USERNAME`/`MAVEN_CENTRAL_PASSWORD` + `GPG_*` for Central, and
+`GRADLE_PUBLISH_KEY`/`GRADLE_PUBLISH_SECRET` for the Portal.
 
 ## Module Structure
 

@@ -14,7 +14,7 @@ mavenPublishing {
             providers.gradleProperty("alohomora.pom.description").orNull
                 ?: "Alohomora developer observability toolkit",
         )
-        url.set("https://github.com/yashkasera/Alohomora")
+        url.set("https://yashkasera.github.io/alohomora")
 
         licenses {
             license {
