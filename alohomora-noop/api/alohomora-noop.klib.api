@@ -131,6 +131,11 @@ final class io.github.yashkasera.alohomora.replay/ReplayRequest { // io.github.y
     final fun toString(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayRequest.toString|toString(){}[0]
 }
 
+final object io.github.yashkasera.alohomora.replay/ReplayOutcomes { // io.github.yashkasera.alohomora.replay/ReplayOutcomes|null[0]
+    final fun failed(kotlin/String): io.github.yashkasera.alohomora.replay/ReplayOutcome // io.github.yashkasera.alohomora.replay/ReplayOutcomes.failed|failed(kotlin.String){}[0]
+    final fun sent(kotlin/String? = ...): io.github.yashkasera.alohomora.replay/ReplayOutcome // io.github.yashkasera.alohomora.replay/ReplayOutcomes.sent|sent(kotlin.String?){}[0]
+}
+
 final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.alohomora/Alohomora|null[0]
     final val isReplaySupported // io.github.yashkasera.alohomora/Alohomora.isReplaySupported|{}isReplaySupported[0]
         final fun <get-isReplaySupported>(): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.isReplaySupported.<get-isReplaySupported>|<get-isReplaySupported>(){}[0]
@@ -164,6 +169,7 @@ final val io.github.yashkasera.alohomora.network/AlohomoraInspector // io.github
     final fun <get-AlohomoraInspector>(): io.ktor.client.plugins.api/ClientPlugin<kotlin/Unit> // io.github.yashkasera.alohomora.network/AlohomoraInspector.<get-AlohomoraInspector>|<get-AlohomoraInspector>(){}[0]
 final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop[0]
 final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop[0]
+final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop[0]
 final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop[0]
 final val io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop // io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop|#static{}io_github_yashkasera_alohomora_Alohomora$stableprop[0]
 
@@ -171,6 +177,7 @@ final fun io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_c
 final fun io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_SpanEvent$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_SpanEvent$stableprop_getter|io_github_yashkasera_alohomora_common_SpanEvent$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop_getter(){}[0]
+final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.replay/ktorReplayHandler(io.ktor.client/HttpClient): io.github.yashkasera.alohomora.replay/TrafficReplayHandler // io.github.yashkasera.alohomora.replay/ktorReplayHandler|ktorReplayHandler(io.ktor.client.HttpClient){}[0]
 final fun io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop_getter|io_github_yashkasera_alohomora_Alohomora$stableprop_getter(){}[0]

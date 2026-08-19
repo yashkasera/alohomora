@@ -149,6 +149,14 @@ public final class io/github/yashkasera/alohomora/replay/ReplayOutcome$Sent : io
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class io/github/yashkasera/alohomora/replay/ReplayOutcomes {
+	public static final field $stable I
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/replay/ReplayOutcomes;
+	public final fun failed (Ljava/lang/String;)Lio/github/yashkasera/alohomora/replay/ReplayOutcome;
+	public final fun sent (Ljava/lang/String;)Lio/github/yashkasera/alohomora/replay/ReplayOutcome;
+	public static synthetic fun sent$default (Lio/github/yashkasera/alohomora/replay/ReplayOutcomes;Ljava/lang/String;ILjava/lang/Object;)Lio/github/yashkasera/alohomora/replay/ReplayOutcome;
+}
+
 public final class io/github/yashkasera/alohomora/replay/ReplayRequest {
 	public static final field $stable I
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;)V
