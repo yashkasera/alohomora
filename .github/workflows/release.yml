@@ -156,13 +156,13 @@ jobs:
         run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Download DMG artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: Alohomora-${{ steps.version.outputs.value }}.dmg
           path: dmg
 
       - name: Download XCFramework artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: AlohomoraKit.xcframework.zip
           path: xcframework
