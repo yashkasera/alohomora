@@ -57,7 +57,7 @@ class SearchFieldTypingTest {
             }
         }
 
-        onNodeWithText("Filter by event name or property").performClick()
+        onNodeWithText("Search…").performClick()
         waitForIdle()
 
         // One character at a time, settling in between. A single performTextInput inserts the whole
