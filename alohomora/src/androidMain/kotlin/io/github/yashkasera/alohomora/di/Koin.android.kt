@@ -12,7 +12,9 @@ import io.github.yashkasera.alohomora.data.repository.CacheRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.DatabaseRepositoryImpl
 import io.github.yashkasera.alohomora.data.repository.PlatformDatabaseAccessor
 import io.github.yashkasera.alohomora.devtools.AndroidAppDatabaseProvider
+import io.github.yashkasera.alohomora.devtools.AndroidDebugConfigStore
 import io.github.yashkasera.alohomora.devtools.AndroidTrustStore
+import io.github.yashkasera.alohomora.devtools.DebugConfigStore
 import io.github.yashkasera.alohomora.devtools.DevToolsAppDatabaseProvider
 import io.github.yashkasera.alohomora.devtools.DevToolsCacheInspector
 import io.github.yashkasera.alohomora.devtools.DevToolsTcpServer
@@ -39,6 +41,7 @@ internal actual val platformModule = module {
     single<DevToolsAppDatabaseProvider> { AndroidAppDatabaseProvider(androidContext()) }
     single { DevToolsTcpServer() }
     single<DevToolsTrustStore> { AndroidTrustStore(androidContext()) }
+    single<DebugConfigStore> { AndroidDebugConfigStore(androidContext()) }
     single { ShareManager(androidContext()) }
     single { TrafficNotificationHelper(androidContext()) }
     single<TrafficNotificationCallback> {

@@ -14,6 +14,7 @@ import io.github.yashkasera.alohomora.common.SpanEvent
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.common.normalizeSpanId
 import io.github.yashkasera.alohomora.common.spanAttributesToJson
+import io.github.yashkasera.alohomora.devtools.DebugConfigStore
 import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
 import io.github.yashkasera.alohomora.data.model.discoverPlatformBuildConfig
@@ -596,5 +597,20 @@ object Alohomora {
      */
     fun getPlugins(): List<CustomScreenPlugin> {
         return PluginRegistry.getAllPlugins()
+    }
+
+    @JvmStatic
+    fun setDebugConfig(key: String, value: String) {
+        koin?.get<DebugConfigStore>()?.set(key, value)
+    }
+
+    @JvmStatic
+    fun getDebugConfig(key: String): String? {
+        return koin?.get<DebugConfigStore>()?.get(key)
+    }
+
+    @JvmStatic
+    fun removeDebugConfig(key: String) {
+        koin?.get<DebugConfigStore>()?.remove(key)
     }
 }

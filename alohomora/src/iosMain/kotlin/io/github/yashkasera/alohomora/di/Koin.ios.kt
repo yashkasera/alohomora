@@ -5,11 +5,13 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.yashkasera.alohomora.data.db.AlohomoraDb
 import io.github.yashkasera.alohomora.data.db.isSchemaIdentityMismatch
 import io.github.yashkasera.alohomora.data.repository.DatabaseRepositoryImpl
+import io.github.yashkasera.alohomora.devtools.DebugConfigStore
 import io.github.yashkasera.alohomora.devtools.DevToolsAppDatabaseProvider
 import io.github.yashkasera.alohomora.devtools.DevToolsCacheInspector
 import io.github.yashkasera.alohomora.devtools.DevToolsTcpServer
 import io.github.yashkasera.alohomora.devtools.DevToolsTrustStore
 import io.github.yashkasera.alohomora.devtools.IosAppDatabaseProvider
+import io.github.yashkasera.alohomora.devtools.IosDebugConfigStore
 import io.github.yashkasera.alohomora.devtools.IosTrustStore
 import io.github.yashkasera.alohomora.devtools.RepositoryCacheInspector
 import io.github.yashkasera.alohomora.domain.repository.DatabaseRepository
@@ -41,6 +43,7 @@ internal actual val platformModule = module {
     single<DevToolsAppDatabaseProvider> { IosAppDatabaseProvider() }
     single { DevToolsTcpServer() }
     single<DevToolsTrustStore> { IosTrustStore() }
+    single<DebugConfigStore> { IosDebugConfigStore() }
     single { ShareManager() }
     single<DatabaseRepository> { DatabaseRepositoryImpl() }
     single<io.github.yashkasera.alohomora.domain.repository.CacheRepository> {

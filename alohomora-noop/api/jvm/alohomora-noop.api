@@ -5,6 +5,7 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public static final fun clearFeatureFlags ()V
 	public final fun clearReplayHandler ()V
 	public final fun excludeAppDatabase (Ljava/lang/String;)V
+	public static final fun getDebugConfig (Ljava/lang/String;)Ljava/lang/String;
 	public final fun getPlugins ()Ljava/util/List;
 	public final fun init ()V
 	public final fun isReplaySupported ()Z
@@ -41,6 +42,8 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public static synthetic fun registerAppDatabase$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
 	public final fun registerPlugin (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)V
 	public final fun registerReplayHandler (Lio/github/yashkasera/alohomora/replay/TrafficReplayHandler;)V
+	public static final fun removeDebugConfig (Ljava/lang/String;)V
+	public static final fun setDebugConfig (Ljava/lang/String;Ljava/lang/String;)V
 	public static final fun setFeatureFlags (Ljava/util/List;)V
 	public static final fun setFeatureFlags (Ljava/util/List;Ljava/lang/String;)V
 	public static synthetic fun setFeatureFlags$default (Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)V

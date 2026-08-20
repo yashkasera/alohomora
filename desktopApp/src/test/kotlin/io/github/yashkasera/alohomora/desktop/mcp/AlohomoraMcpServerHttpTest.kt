@@ -125,7 +125,9 @@ class AlohomoraMcpServerHttpTest {
         registry.update(
             devices.map { id ->
                 val repo = FakeDevToolsRepository()
-                DeviceSessionHandle(id, "model", "ANDROID", repo, NetworkRulesViewModel(repo))
+                val vm = NetworkRulesViewModel(repo)
+                vm.close()
+                DeviceSessionHandle(id, "model", "ANDROID", repo, vm)
             },
         )
         val server = AlohomoraMcpServer(registry, "test", writeEnabled = { writeEnabled })
