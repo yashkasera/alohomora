@@ -131,7 +131,7 @@ one side. Two rules the two producers share, both load-bearing:
 
 The Android `actual` returns null on purpose: `AlohomoraInitializer` runs first with the `Context`
 and finds the plugin's generated config via `ServiceLoader`, and a bundled manifest must not beat it
-on the manual `init()` path. `versionName`, `versionCode`, `packageName` and `projectName` are read
+on the manual `init()` path. `versionName`, `versionCode`, `packageName` and `appName` are read
 from `Bundle.main` rather than injected, so there is no second source of truth to drift.
 
 Note `apiDump` after adding an internal `@Serializable` class to `:alohomora`: the Compose

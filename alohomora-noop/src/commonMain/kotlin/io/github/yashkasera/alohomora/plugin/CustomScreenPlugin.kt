@@ -24,6 +24,7 @@ interface CustomScreenPlugin {
     val showInNavigation: Boolean get() = false
     val priority: Int get() = 100
     val actions: List<PluginAction> get() = emptyList()
+    val dataFields: List<PluginDataField> get() = emptyList()
 
     @Composable
     fun Content()

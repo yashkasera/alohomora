@@ -444,6 +444,51 @@ data class CustomActionResultMessage(
     val error: String? = null,
 ) : DevToolsMessage()
 
+// ── Plugin data ──────────────────────────────────────────────────────────────
+
+@Serializable
+data class PluginDataFieldDescriptor(
+    val pluginId: String,
+    val key: String,
+    val label: String,
+    val type: String = "string",
+    val value: String,
+    val options: List<String>? = null,
+    val readOnly: Boolean = false,
+)
+
+@Serializable
+data class PluginDataSnapshot(
+    val pluginId: String,
+    val fields: List<PluginDataFieldDescriptor>,
+)
+
+@Serializable
+@SerialName("REQUEST_PLUGIN_DATA_UPDATE")
+data class RequestPluginDataUpdateMessage(
+    override val sequence: Long = 0,
+    val pluginId: String,
+    val key: String,
+    val value: String,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("PLUGIN_DATA_UPDATE_RESULT")
+data class PluginDataUpdateResultMessage(
+    override val sequence: Long,
+    val pluginId: String,
+    val key: String,
+    val success: Boolean,
+    val error: String? = null,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("STREAM_PLUGIN_DATA")
+data class StreamPluginDataMessage(
+    override val sequence: Long,
+    val snapshot: PluginDataSnapshot,
+) : DevToolsMessage()
+
 // ── Payload types (kept as named wrappers for complex payloads) ───────────────
 
 @Serializable
@@ -494,7 +539,6 @@ data class DatabaseSnapshotPayload(
 @Serializable
 data class BuildMetadataPayload(
     val appName: String? = null,
-    val projectName: String,
     val packageName: String? = null,
     val versionName: String,
     val versionCode: Int,
@@ -574,4 +618,5 @@ data class InitialStatePayload(
     val vpnThrottleActiveProfile: ThrottleProfile? = null,
     val featureFlags: List<FeatureFlag> = emptyList(),
     val actions: List<ActionDescriptor> = emptyList(),
+    val pluginData: List<PluginDataSnapshot> = emptyList(),
 )

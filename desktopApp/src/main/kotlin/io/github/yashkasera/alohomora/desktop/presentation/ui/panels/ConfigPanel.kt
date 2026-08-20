@@ -70,7 +70,7 @@ fun ConfigPanel(devToolsViewModel: DevToolsViewModel) {
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
                 ) {
                     ConfigCard(title = "Application") {
-                        ConfigRow("Project", info.projectName)
+                        ConfigRow("Project", info.appName)
                         ConfigRow("Package", info.packageName)
                         ConfigRow("Version", "${info.versionName} (${info.versionCode})")
                         ConfigRow("Variant", info.variantName)

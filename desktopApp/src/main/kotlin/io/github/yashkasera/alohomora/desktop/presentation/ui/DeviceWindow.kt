@@ -251,6 +251,7 @@ fun DeviceWindow(
                         databaseViewModel = session.composition.databaseViewModel,
                         cacheViewModel = session.composition.cacheViewModel,
                         featureFlagsViewModel = session.composition.featureFlagsViewModel,
+                        pluginDataViewModel = session.composition.pluginDataViewModel,
                         tracesViewModel = session.composition.tracesViewModel,
                         eventsViewModel = session.composition.eventsViewModel,
                         trafficViewModel = session.composition.trafficViewModel,

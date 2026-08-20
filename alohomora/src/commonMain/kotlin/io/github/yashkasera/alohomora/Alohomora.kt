@@ -16,6 +16,7 @@ import io.github.yashkasera.alohomora.common.SpanEvent
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.common.normalizeSpanId
 import io.github.yashkasera.alohomora.common.spanAttributesToJson
+import io.github.yashkasera.alohomora.devtools.DevToolsPluginDataRegistry
 import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
 import io.github.yashkasera.alohomora.data.model.discoverPlatformBuildConfig
@@ -116,7 +117,7 @@ object Alohomora {
 
     internal val identifier by lazy {
         config?.let {
-            "${it.projectName}-${it.variantName}-${it.versionName}-${it.commitSha}"
+            "${it.appName}-${it.variantName}-${it.versionName}-${it.commitSha}"
         }
     }
 
@@ -587,6 +588,9 @@ object Alohomora {
                     action.id, action.label, action.description, action.parameters, action.handler,
                 )
             }
+            if (plugin.dataFields.isNotEmpty()) {
+                DevToolsPluginDataRegistry.register(plugin.id, plugin.dataFields)
+            }
         }
     }
 
@@ -601,6 +605,7 @@ object Alohomora {
         val removed = PluginRegistry.unregister(pluginId)
         if (removed && plugin != null) {
             plugin.actions.forEach { DevToolsActionRegistry.unregister(it.id) }
+            DevToolsPluginDataRegistry.unregister(pluginId)
         }
         return removed
     }
@@ -637,6 +642,10 @@ object Alohomora {
 
     fun unregisterAction(id: String): Boolean {
         return DevToolsActionRegistry.unregister(id)
+    }
+
+    fun publishPluginData(pluginId: String) {
+        DevToolsPluginDataRegistry.notifyChanged(pluginId)
     }
 
     @JvmStatic

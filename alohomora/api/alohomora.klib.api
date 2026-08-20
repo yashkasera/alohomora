@@ -14,6 +14,10 @@ abstract fun interface io.github.yashkasera.alohomora.plugin/NativeScreenViewCon
     abstract fun createViewController(): platform.UIKit/UIViewController // io.github.yashkasera.alohomora.plugin/NativeScreenViewControllerProvider.createViewController|createViewController(){}[0]
 }
 
+abstract fun interface io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler { // io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler|null[0]
+    abstract suspend fun onUpdate(kotlin/String) // io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler.onUpdate|onUpdate(kotlin.String){}[0]
+}
+
 abstract interface io.github.yashkasera.alohomora.data.model/AlohomoraConfig { // io.github.yashkasera.alohomora.data.model/AlohomoraConfig|null[0]
     abstract val branch // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.branch|{}branch[0]
         abstract fun <get-branch>(): kotlin/String // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.branch.<get-branch>|<get-branch>(){}[0]
@@ -31,8 +35,6 @@ abstract interface io.github.yashkasera.alohomora.data.model/AlohomoraConfig { /
         abstract fun <get-isDirty>(): kotlin/Boolean // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.isDirty.<get-isDirty>|<get-isDirty>(){}[0]
     abstract val packageName // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.packageName|{}packageName[0]
         abstract fun <get-packageName>(): kotlin/String? // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.packageName.<get-packageName>|<get-packageName>(){}[0]
-    abstract val projectName // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.projectName|{}projectName[0]
-        abstract fun <get-projectName>(): kotlin/String // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.projectName.<get-projectName>|<get-projectName>(){}[0]
     abstract val slackWebhookUrl // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.slackWebhookUrl|{}slackWebhookUrl[0]
         abstract fun <get-slackWebhookUrl>(): kotlin/String? // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.slackWebhookUrl.<get-slackWebhookUrl>|<get-slackWebhookUrl>(){}[0]
     abstract val variantName // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.variantName|{}variantName[0]
@@ -52,6 +54,8 @@ abstract interface io.github.yashkasera.alohomora.plugin/CustomScreenPlugin { //
         abstract fun <get-title>(): kotlin/String // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.title.<get-title>|<get-title>(){}[0]
     open val actions // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.actions|{}actions[0]
         open fun <get-actions>(): kotlin.collections/List<io.github.yashkasera.alohomora.plugin/PluginAction> // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.actions.<get-actions>|<get-actions>(){}[0]
+    open val dataFields // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.dataFields|{}dataFields[0]
+        open fun <get-dataFields>(): kotlin.collections/List<io.github.yashkasera.alohomora.plugin/PluginDataField> // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.dataFields.<get-dataFields>|<get-dataFields>(){}[0]
     open val description // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.description|{}description[0]
         open fun <get-description>(): kotlin/String? // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.description.<get-description>|<get-description>(){}[0]
     open val icon // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin.icon|{}icon[0]
@@ -91,10 +95,12 @@ final class io.github.yashkasera.alohomora.data.model/GitHistoryCommit { // io.g
 }
 
 final class io.github.yashkasera.alohomora.plugin/NativeScreenPlugin : io.github.yashkasera.alohomora.plugin/CustomScreenPlugin { // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin|null[0]
-    constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.collections/List<io.github.yashkasera.alohomora.plugin/PluginAction> = ..., io.github.yashkasera.alohomora.plugin/NativeScreenViewControllerProvider) // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;kotlin.Boolean;kotlin.Boolean;kotlin.Int;kotlin.collections.List<io.github.yashkasera.alohomora.plugin.PluginAction>;io.github.yashkasera.alohomora.plugin.NativeScreenViewControllerProvider){}[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.collections/List<io.github.yashkasera.alohomora.plugin/PluginAction> = ..., kotlin.collections/List<io.github.yashkasera.alohomora.plugin/PluginDataField> = ..., io.github.yashkasera.alohomora.plugin/NativeScreenViewControllerProvider) // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;kotlin.Boolean;kotlin.Boolean;kotlin.Int;kotlin.collections.List<io.github.yashkasera.alohomora.plugin.PluginAction>;kotlin.collections.List<io.github.yashkasera.alohomora.plugin.PluginDataField>;io.github.yashkasera.alohomora.plugin.NativeScreenViewControllerProvider){}[0]
 
     final val actions // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.actions|{}actions[0]
         final fun <get-actions>(): kotlin.collections/List<io.github.yashkasera.alohomora.plugin/PluginAction> // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.actions.<get-actions>|<get-actions>(){}[0]
+    final val dataFields // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.dataFields|{}dataFields[0]
+        final fun <get-dataFields>(): kotlin.collections/List<io.github.yashkasera.alohomora.plugin/PluginDataField> // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.dataFields.<get-dataFields>|<get-dataFields>(){}[0]
     final val description // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.description|{}description[0]
         final fun <get-description>(): kotlin/String? // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.description.<get-description>|<get-description>(){}[0]
     final val id // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.id|{}id[0]
@@ -136,6 +142,37 @@ final class io.github.yashkasera.alohomora.plugin/PluginAction { // io.github.ya
     final fun toString(): kotlin/String // io.github.yashkasera.alohomora.plugin/PluginAction.toString|toString(){}[0]
 }
 
+final class io.github.yashkasera.alohomora.plugin/PluginDataField { // io.github.yashkasera.alohomora.plugin/PluginDataField|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String = ..., kotlin/Function0<kotlin/String>, kotlin.collections/List<kotlin/String>? = ..., kotlin/Boolean = ..., io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler? = ...) // io.github.yashkasera.alohomora.plugin/PluginDataField.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlin.Function0<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.Boolean;io.github.yashkasera.alohomora.plugin.PluginDataUpdateHandler?){}[0]
+
+    final val key // io.github.yashkasera.alohomora.plugin/PluginDataField.key|{}key[0]
+        final fun <get-key>(): kotlin/String // io.github.yashkasera.alohomora.plugin/PluginDataField.key.<get-key>|<get-key>(){}[0]
+    final val label // io.github.yashkasera.alohomora.plugin/PluginDataField.label|{}label[0]
+        final fun <get-label>(): kotlin/String // io.github.yashkasera.alohomora.plugin/PluginDataField.label.<get-label>|<get-label>(){}[0]
+    final val onUpdate // io.github.yashkasera.alohomora.plugin/PluginDataField.onUpdate|{}onUpdate[0]
+        final fun <get-onUpdate>(): io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler? // io.github.yashkasera.alohomora.plugin/PluginDataField.onUpdate.<get-onUpdate>|<get-onUpdate>(){}[0]
+    final val options // io.github.yashkasera.alohomora.plugin/PluginDataField.options|{}options[0]
+        final fun <get-options>(): kotlin.collections/List<kotlin/String>? // io.github.yashkasera.alohomora.plugin/PluginDataField.options.<get-options>|<get-options>(){}[0]
+    final val readOnly // io.github.yashkasera.alohomora.plugin/PluginDataField.readOnly|{}readOnly[0]
+        final fun <get-readOnly>(): kotlin/Boolean // io.github.yashkasera.alohomora.plugin/PluginDataField.readOnly.<get-readOnly>|<get-readOnly>(){}[0]
+    final val type // io.github.yashkasera.alohomora.plugin/PluginDataField.type|{}type[0]
+        final fun <get-type>(): kotlin/String // io.github.yashkasera.alohomora.plugin/PluginDataField.type.<get-type>|<get-type>(){}[0]
+    final val value // io.github.yashkasera.alohomora.plugin/PluginDataField.value|{}value[0]
+        final fun <get-value>(): kotlin/Function0<kotlin/String> // io.github.yashkasera.alohomora.plugin/PluginDataField.value.<get-value>|<get-value>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.yashkasera.alohomora.plugin/PluginDataField.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.yashkasera.alohomora.plugin/PluginDataField.component2|component2(){}[0]
+    final fun component3(): kotlin/String // io.github.yashkasera.alohomora.plugin/PluginDataField.component3|component3(){}[0]
+    final fun component4(): kotlin/Function0<kotlin/String> // io.github.yashkasera.alohomora.plugin/PluginDataField.component4|component4(){}[0]
+    final fun component5(): kotlin.collections/List<kotlin/String>? // io.github.yashkasera.alohomora.plugin/PluginDataField.component5|component5(){}[0]
+    final fun component6(): kotlin/Boolean // io.github.yashkasera.alohomora.plugin/PluginDataField.component6|component6(){}[0]
+    final fun component7(): io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler? // io.github.yashkasera.alohomora.plugin/PluginDataField.component7|component7(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/Function0<kotlin/String> = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/Boolean = ..., io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler? = ...): io.github.yashkasera.alohomora.plugin/PluginDataField // io.github.yashkasera.alohomora.plugin/PluginDataField.copy|copy(kotlin.String;kotlin.String;kotlin.String;kotlin.Function0<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.Boolean;io.github.yashkasera.alohomora.plugin.PluginDataUpdateHandler?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yashkasera.alohomora.plugin/PluginDataField.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yashkasera.alohomora.plugin/PluginDataField.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yashkasera.alohomora.plugin/PluginDataField.toString|toString(){}[0]
+}
+
 final class io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol : platform.Foundation/NSURLProtocol, platform.Foundation/NSURLSessionDataDelegateProtocol { // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol|null[0]
     constructor <init>(platform.Foundation/NSURLRequest, platform.Foundation/NSCachedURLResponse?, platform.Foundation/NSURLProtocolClientProtocol?) // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.<init>|<init>(request:platform.Foundation.NSURLRequest;cachedResponse:platform.Foundation.NSCachedURLResponse?;client:platform.Foundation.NSURLProtocolClientProtocol?){}[0]
 
@@ -169,6 +206,7 @@ final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.
     final fun getDebugConfig(kotlin/String): kotlin/String? // io.github.yashkasera.alohomora/Alohomora.getDebugConfig|getDebugConfig(kotlin.String){}[0]
     final fun getPlugins(): kotlin.collections/List<io.github.yashkasera.alohomora.plugin/CustomScreenPlugin> // io.github.yashkasera.alohomora/Alohomora.getPlugins|getPlugins(){}[0]
     final fun init() // io.github.yashkasera.alohomora/Alohomora.init|init(){}[0]
+    final fun publishPluginData(kotlin/String) // io.github.yashkasera.alohomora/Alohomora.publishPluginData|publishPluginData(kotlin.String){}[0]
     final fun recordError(kotlin/String, kotlin/String? = ..., kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.recordError|recordError(kotlin.String;kotlin.String?;kotlin.String?){}[0]
     final fun recordError(kotlin/Throwable, kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.recordError|recordError(kotlin.Throwable;kotlin.String?){}[0]
     final fun recordEvent(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String>? = ...) // io.github.yashkasera.alohomora/Alohomora.recordEvent|recordEvent(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
@@ -205,6 +243,7 @@ final val io.github.yashkasera.alohomora.network/AlohomoraReplayOfKey // io.gith
     final fun <get-AlohomoraReplayOfKey>(): io.ktor.util/AttributeKey<kotlin/String> // io.github.yashkasera.alohomora.network/AlohomoraReplayOfKey.<get-AlohomoraReplayOfKey>|<get-AlohomoraReplayOfKey>(){}[0]
 final val io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop|#static{}io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop[0]
 final val io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginAction$stableprop // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginAction$stableprop|#static{}io_github_yashkasera_alohomora_plugin_PluginAction$stableprop[0]
+final val io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop|#static{}io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop[0]
 final val io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Cache$stableprop // io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Cache$stableprop|#static{}io_github_yashkasera_alohomora_presentation_navigation_Routes_Cache$stableprop[0]
 final val io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Config$stableprop // io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Config$stableprop|#static{}io_github_yashkasera_alohomora_presentation_navigation_Routes_Config$stableprop[0]
 final val io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Database$stableprop // io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Database$stableprop|#static{}io_github_yashkasera_alohomora_presentation_navigation_Routes_Database$stableprop[0]
@@ -253,6 +292,7 @@ final fun io.github.yashkasera.alohomora.generated.resources/io_github_yashkaser
 final fun io.github.yashkasera.alohomora.generated.resources/io_github_yashkasera_alohomora_generated_resources_Res_string$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.generated.resources/io_github_yashkasera_alohomora_generated_resources_Res_string$stableprop_getter|io_github_yashkasera_alohomora_generated_resources_Res_string$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop_getter|io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginAction$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginAction$stableprop_getter|io_github_yashkasera_alohomora_plugin_PluginAction$stableprop_getter(){}[0]
+final fun io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop_getter|io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Cache$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Cache$stableprop_getter|io_github_yashkasera_alohomora_presentation_navigation_Routes_Cache$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Config$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Config$stableprop_getter|io_github_yashkasera_alohomora_presentation_navigation_Routes_Config$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Database$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.presentation.navigation/io_github_yashkasera_alohomora_presentation_navigation_Routes_Database$stableprop_getter|io_github_yashkasera_alohomora_presentation_navigation_Routes_Database$stableprop_getter(){}[0]

@@ -15,10 +15,13 @@ import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.FeatureFlagsSnapshotMessage
 import io.github.yashkasera.alohomora.common.InitialStateMessage
+import io.github.yashkasera.alohomora.common.PluginDataSnapshot
+import io.github.yashkasera.alohomora.common.PluginDataUpdateResultMessage
 import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
+import io.github.yashkasera.alohomora.common.RequestPluginDataUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseUpdateMessage
@@ -29,6 +32,7 @@ import io.github.yashkasera.alohomora.common.SetMockRulesMessage
 import io.github.yashkasera.alohomora.common.SetThrottleProfileMessage
 import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
 import io.github.yashkasera.alohomora.common.Span
+import io.github.yashkasera.alohomora.common.StreamPluginDataMessage
 import io.github.yashkasera.alohomora.common.StreamErrorMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
 import io.github.yashkasera.alohomora.common.StreamSpanMessage
@@ -44,6 +48,7 @@ import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.FeatureFlagStore
+import io.github.yashkasera.alohomora.desktop.data.local.PluginDataStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
 import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
@@ -85,6 +90,7 @@ class DevToolsRepositoryImpl(
     private val databaseStore: DatabaseSnapshotStore,
     private val cacheStore: CacheStore,
     private val featureFlagStore: FeatureFlagStore,
+    private val pluginDataStore: PluginDataStore,
     private val buildMetadataStore: BuildMetadataStore,
     private val gitHistoryStore: GitHistoryStore,
     private val replayStore: ReplayStore,
@@ -115,6 +121,7 @@ class DevToolsRepositoryImpl(
     override val databaseSnapshot: StateFlow<DatabaseSnapshot> = databaseStore.snapshot
     override val cacheState: StateFlow<CacheState> = cacheStore.state
     override val featureFlags: StateFlow<List<FeatureFlag>> = featureFlagStore.flags
+    override val pluginData: StateFlow<List<PluginDataSnapshot>> = pluginDataStore.snapshots
     override val buildInfo: StateFlow<BuildInfo?> = buildMetadataStore.buildInfo
     override val gitHistory: StateFlow<List<GitHistoryCommit>> = gitHistoryStore.commits
     override val replayState: StateFlow<ReplayState> = replayStore.state
@@ -380,6 +387,12 @@ class DevToolsRepositoryImpl(
         scope.launch { sendMessage(RequestCacheValueMessage(key = key)) }
     }
 
+    override fun requestPluginDataUpdate(pluginId: String, key: String, value: String) {
+        scope.launch {
+            sendMessage(RequestPluginDataUpdateMessage(pluginId = pluginId, key = key, value = value))
+        }
+    }
+
     override fun requestInitialState() {
         scope.launch { sendMessage(RequestInitialStateMessage()) }
     }
@@ -475,6 +488,7 @@ class DevToolsRepositoryImpl(
                     databaseStore.replaceSchema(payload.databaseSchema.toDomain())
                     cacheStore.replaceKeys(payload.cacheKeys)
                     featureFlagStore.replace(payload.featureFlags)
+                    pluginDataStore.replace(payload.pluginData)
                     buildMetadataStore.replace(payload.buildMetadata?.toDomain())
                     gitHistoryStore.replace(payload.gitHistory.map { it.toDomain() })
                     replayStore.setSupported(payload.replaySupported)
@@ -547,6 +561,19 @@ class DevToolsRepositoryImpl(
                 }
             }
 
+            is StreamPluginDataMessage -> {
+                withContext(Dispatchers.Default) {
+                    pluginDataStore.mergeSnapshot(message.snapshot)
+                }
+            }
+
+            is PluginDataUpdateResultMessage -> {
+                if (!message.success) {
+                    _deviceError.value =
+                        "Plugin data update failed (${message.pluginId}/${message.key}): ${message.error}"
+                }
+            }
+
             is VpnStateMessage -> {
                 _vpnState.value = message.state
             }
@@ -573,6 +600,7 @@ class DevToolsRepositoryImpl(
         databaseStore.clear()
         cacheStore.clear()
         featureFlagStore.clear()
+        pluginDataStore.clear()
         buildMetadataStore.clear()
         gitHistoryStore.clear()
         replayStore.clear()

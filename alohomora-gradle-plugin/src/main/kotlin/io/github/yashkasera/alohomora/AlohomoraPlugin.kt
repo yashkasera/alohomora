@@ -47,7 +47,6 @@ class AlohomoraPlugin : Plugin<Project> {
                 GenerateAlohomoraConfigTask::class.java,
             ) {
                 appName.set(extension.appName)
-                projectName.set(project.name)
                 val resolvedPackageName = when (variant) {
                     is ApplicationVariant -> variant.applicationId.orNull
                     is LibraryVariant -> variant.namespace.orNull
@@ -103,7 +102,7 @@ class AlohomoraPlugin : Plugin<Project> {
                 val appName = extension.appName
                     ?: readAppLabel(project)
                     ?: project.name
-                label.set(extension.devIconLabel ?: "$appName · ${variant.name}")
+                label.set(extension.devIconLabel ?: "$appName-${variant.name}")
                 outputDir.set(
                     project.layout.buildDirectory.dir(
                         "generated/res/devicon/${variant.name}",

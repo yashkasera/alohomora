@@ -154,6 +154,9 @@ object Alohomora {
         return false
     }
 
+    @Suppress("UNUSED_PARAMETER")
+    fun publishPluginData(pluginId: String) = Unit
+
     @JvmStatic
     @Suppress("UNUSED_PARAMETER")
     fun setDebugConfig(key: String, value: String) = Unit

@@ -16,7 +16,7 @@ private const val UNKNOWN = "unknown"
  * `Alohomora.init()` keeps its zero-argument signature (the noop mirror must match it exactly).
  *
  * **Only fields that cannot be recovered at runtime belong here.** `versionName`, `versionCode`,
- * `packageName` and `projectName` are all readable from `Bundle.main`, so injecting them would
+ * `packageName` and `appName` are all readable from `Bundle.main`, so injecting them would
  * create a second source of truth that drifts the moment someone edits `MARKETING_VERSION` without
  * rebuilding — see [AppIdentity].
  */
@@ -93,7 +93,7 @@ internal data class BundledCommit(
  * identical to a missing manifest field.
  */
 internal data class AppIdentity(
-    val projectName: String?,
+    val appName: String?,
     val packageName: String?,
     val versionName: String?,
     val versionCode: Int?,
@@ -112,7 +112,7 @@ private class BundledAlohomoraConfig(
     identity: AppIdentity,
     buildInfo: BundledBuildInfo?,
 ) : AlohomoraConfig {
-    override val projectName: String = identity.projectName ?: UNKNOWN
+    override val appName: String? = identity.appName
     override val packageName: String? = identity.packageName
     override val versionName: String = identity.versionName ?: UNKNOWN
     override val versionCode: Int = identity.versionCode ?: -1

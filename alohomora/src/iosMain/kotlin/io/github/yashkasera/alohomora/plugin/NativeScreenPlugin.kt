@@ -20,6 +20,7 @@ class NativeScreenPlugin(
     override val showInNavigation: Boolean = false,
     override val priority: Int = 100,
     override val actions: List<PluginAction> = emptyList(),
+    override val dataFields: List<PluginDataField> = emptyList(),
     private val viewControllerProvider: NativeScreenViewControllerProvider,
 ) : CustomScreenPlugin {
 

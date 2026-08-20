@@ -101,6 +101,17 @@ interface CustomScreenPlugin {
         get() = emptyList()
 
     /**
+     * Data fields the desktop DevTools can view and edit.
+     *
+     * Registered and unregistered automatically alongside the plugin itself.
+     * After changing the backing state that [PluginDataField.value] reads from,
+     * call [io.github.yashkasera.alohomora.Alohomora.publishPluginData] to push
+     * the new snapshot to the desktop.
+     */
+    val dataFields: List<PluginDataField>
+        get() = emptyList()
+
+    /**
      * Optional lifecycle callback when screen becomes visible.
      */
     fun onScreenVisible() {}

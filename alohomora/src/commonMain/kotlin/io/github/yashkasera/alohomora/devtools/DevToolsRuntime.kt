@@ -25,9 +25,11 @@ import io.github.yashkasera.alohomora.common.FeatureFlagsSnapshotMessage
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.InitialStatePayload
 import io.github.yashkasera.alohomora.common.PingMessage
+import io.github.yashkasera.alohomora.common.PluginDataUpdateResultMessage
 import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
 import io.github.yashkasera.alohomora.common.RequestCustomActionMessage
+import io.github.yashkasera.alohomora.common.RequestPluginDataUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
@@ -42,6 +44,7 @@ import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.StreamErrorMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
 import io.github.yashkasera.alohomora.common.StreamSpanMessage
+import io.github.yashkasera.alohomora.common.StreamPluginDataMessage
 import io.github.yashkasera.alohomora.common.StreamTrafficMessage
 import io.github.yashkasera.alohomora.common.TraceSpansSnapshotMessage
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -442,6 +445,7 @@ internal class DevToolsRuntime(
                             is SetMockRulesMessage -> NetworkRuleEngine.setMockRules(message.rules)
                             is SetVpnThrottleMessage -> handleVpnThrottle(message)
                             is RequestCustomActionMessage -> handleCustomAction(message)
+                            is RequestPluginDataUpdateMessage -> handlePluginDataUpdate(message)
                             // Includes UnknownMessage from a newer peer: ignore, don't disconnect.
                             else -> Unit
                         }
@@ -569,6 +573,7 @@ internal class DevToolsRuntime(
             connectionScope.launch { streamErrors() }
             connectionScope.launch { streamSpans() }
             connectionScope.launch { streamFeatureFlags() }
+            connectionScope.launch { streamPluginData() }
             connectionScope.launch { observeVpnState() }
             connectionScope.launch { sendInitialState() }
         }
@@ -630,6 +635,67 @@ internal class DevToolsRuntime(
                     )
                 }
                 send(result)
+            }
+        }
+
+        private fun handlePluginDataUpdate(message: RequestPluginDataUpdateMessage) {
+            connectionScope.launch {
+                val field = DevToolsPluginDataRegistry.getField(message.pluginId, message.key)
+                if (field == null) {
+                    send(
+                        PluginDataUpdateResultMessage(
+                            sequence = nextSequence(),
+                            pluginId = message.pluginId,
+                            key = message.key,
+                            success = false,
+                            error = "No data field '${message.key}' on plugin '${message.pluginId}'",
+                        ),
+                    )
+                    return@launch
+                }
+                if (field.readOnly || field.onUpdate == null) {
+                    send(
+                        PluginDataUpdateResultMessage(
+                            sequence = nextSequence(),
+                            pluginId = message.pluginId,
+                            key = message.key,
+                            success = false,
+                            error = "Field '${message.key}' is read-only",
+                        ),
+                    )
+                    return@launch
+                }
+                try {
+                    field.onUpdate.onUpdate(message.value)
+                    DevToolsPluginDataRegistry.notifyChanged(message.pluginId)
+                    send(
+                        PluginDataUpdateResultMessage(
+                            sequence = nextSequence(),
+                            pluginId = message.pluginId,
+                            key = message.key,
+                            success = true,
+                        ),
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    send(
+                        PluginDataUpdateResultMessage(
+                            sequence = nextSequence(),
+                            pluginId = message.pluginId,
+                            key = message.key,
+                            success = false,
+                            error = e.message ?: e.toString(),
+                        ),
+                    )
+                }
+            }
+        }
+
+        private suspend fun streamPluginData() {
+            DevToolsPluginDataRegistry.changes.collect { pluginId ->
+                val snapshot = DevToolsPluginDataRegistry.getSnapshot(pluginId) ?: return@collect
+                sendStream(StreamPluginDataMessage(nextSequence(), snapshot))
             }
         }
 
@@ -698,6 +764,7 @@ internal class DevToolsRuntime(
                 vpnThrottleActiveProfile = vpnThrottleActiveProfile(),
                 featureFlags = featureFlagStore.getAll(),
                 actions = DevToolsActionRegistry.getDescriptors(),
+                pluginData = DevToolsPluginDataRegistry.getSnapshots(),
             )
             eventAdapter.seed(events)
             errorAdapter.seed(errors)

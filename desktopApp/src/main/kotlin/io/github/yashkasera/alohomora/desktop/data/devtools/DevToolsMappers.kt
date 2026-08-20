@@ -49,7 +49,7 @@ internal fun DatabaseTableSnapshot.toDomain(): DatabaseTable = DatabaseTable(
 )
 
 internal fun BuildMetadataPayload.toDomain(): BuildInfo = BuildInfo(
-    projectName = projectName,
+    appName = appName,
     packageName = packageName,
     versionName = versionName,
     versionCode = versionCode,

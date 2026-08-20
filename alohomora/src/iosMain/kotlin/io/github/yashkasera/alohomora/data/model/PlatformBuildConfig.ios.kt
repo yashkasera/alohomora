@@ -16,7 +16,7 @@ internal actual fun discoverPlatformBuildConfig(): AlohomoraConfig? {
     val identity = AppIdentity(
         // CFBundleName is absent when a target sets no product name; the executable name is the
         // closest stand-in and is always present in a built app.
-        projectName = bundle.infoString("CFBundleName") ?: bundle.infoString("CFBundleExecutable"),
+        appName = bundle.infoString("CFBundleName") ?: bundle.infoString("CFBundleExecutable"),
         packageName = bundle.bundleIdentifier,
         versionName = bundle.infoString("CFBundleShortVersionString"),
         // CFBundleVersion is a *string* and may be dotted ("1.2.3"), which has no Int equivalent.
