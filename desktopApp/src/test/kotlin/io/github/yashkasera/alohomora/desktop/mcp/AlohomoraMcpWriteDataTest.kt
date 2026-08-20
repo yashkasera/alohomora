@@ -266,7 +266,14 @@ class AlohomoraMcpWriteDataTest {
         time = id.hashCode().toLong(),
     )
 
-    private fun testViewModel(supported: Boolean) = NetworkRulesViewModel(
-        FakeDevToolsRepository().apply { networkRulesSupported.value = supported },
-    )
+    private fun testViewModel(supported: Boolean): NetworkRulesViewModel {
+        val vm = NetworkRulesViewModel(
+            FakeDevToolsRepository().apply { networkRulesSupported.value = supported },
+        )
+        // Kill the init coroutines immediately — they hit the real filesystem via MockSessionStore
+        // and leak onto Dispatchers.IO, which runTest picks up as UncaughtExceptionsBeforeTest.
+        // The tests here only need addRule() and networkRulesSupported, both scope-independent.
+        vm.close()
+        return vm
+    }
 }
