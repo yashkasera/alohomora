@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.devtools
 
 import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.common.ActionDescriptor
 import io.github.yashkasera.alohomora.common.AuthChallengeMessage
 import io.github.yashkasera.alohomora.common.AuthFailureMessage
 import io.github.yashkasera.alohomora.common.AuthOtpRequiredMessage
@@ -8,6 +9,7 @@ import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.AuthSuccessMessage
 import io.github.yashkasera.alohomora.common.CacheSnapshotMessage
 import io.github.yashkasera.alohomora.common.CacheSnapshotPayload
+import io.github.yashkasera.alohomora.common.CustomActionResultMessage
 import io.github.yashkasera.alohomora.common.DatabaseSchemaSnapshot
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotPayload
@@ -25,6 +27,7 @@ import io.github.yashkasera.alohomora.common.InitialStatePayload
 import io.github.yashkasera.alohomora.common.PingMessage
 import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
+import io.github.yashkasera.alohomora.common.RequestCustomActionMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
@@ -438,6 +441,7 @@ internal class DevToolsRuntime(
                             is SetThrottleProfileMessage -> NetworkRuleEngine.setThrottle(message.profile)
                             is SetMockRulesMessage -> NetworkRuleEngine.setMockRules(message.rules)
                             is SetVpnThrottleMessage -> handleVpnThrottle(message)
+                            is RequestCustomActionMessage -> handleCustomAction(message)
                             // Includes UnknownMessage from a newer peer: ignore, don't disconnect.
                             else -> Unit
                         }
@@ -605,6 +609,30 @@ internal class DevToolsRuntime(
          * every other command behind it — the desktop could not so much as refresh a table until it
          * returned.
          */
+        private fun handleCustomAction(message: RequestCustomActionMessage) {
+            connectionScope.launch {
+                val result = try {
+                    val output = DevToolsActionRegistry.execute(message.actionId, message.params)
+                    CustomActionResultMessage(
+                        sequence = nextSequence(),
+                        actionId = message.actionId,
+                        success = true,
+                        result = output,
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    CustomActionResultMessage(
+                        sequence = nextSequence(),
+                        actionId = message.actionId,
+                        success = false,
+                        error = e.message ?: e.toString(),
+                    )
+                }
+                send(result)
+            }
+        }
+
         private fun handleReplayRequest(message: RequestReplayTraceMessage) {
             connectionScope.launch {
                 val request = message.request
@@ -669,6 +697,7 @@ internal class DevToolsRuntime(
                 vpnThrottleState = vpnThrottleStateFlow().value,
                 vpnThrottleActiveProfile = vpnThrottleActiveProfile(),
                 featureFlags = featureFlagStore.getAll(),
+                actions = DevToolsActionRegistry.getDescriptors(),
             )
             eventAdapter.seed(events)
             errorAdapter.seed(errors)

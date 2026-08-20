@@ -1,7 +1,12 @@
 package io.github.yashkasera.alohomora.presentation.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -22,6 +27,10 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.traces.list.Traces
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail.TrafficDetailsScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.list.TrafficScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.replay.ReplayScreen
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Icons
 
 @Composable
 internal fun AlohomoraNavHost(
@@ -132,7 +141,23 @@ internal fun AlohomoraNavHost(
             val plugin = PluginRegistry.getPlugin(route.extensionId)
 
             if (plugin != null) {
-                plugin.Content(onBackClick = navController::navigateUp)
+                Scaffold(
+                    topBar = {
+                        AlohomoraTopBar(
+                            title = plugin.title,
+                            subtitle = plugin.description,
+                            navigationIcon = {
+                                AlohomoraIconButton(onClick = navController::navigateUp) {
+                                    Icon(Icons.ArrowLeft, contentDescription = "back")
+                                }
+                            },
+                        )
+                    },
+                ) {
+                    Box(modifier = Modifier.padding(it)) {
+                        plugin.Content()
+                    }
+                }
             } else {
                 // Fallback if plugin not found - navigate back
                 navController.navigateUp()

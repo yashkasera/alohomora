@@ -2,9 +2,19 @@ package io.github.yashkasera.alohomora.plugin
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import io.github.yashkasera.alohomora.common.ActionParameter
+import io.github.yashkasera.alohomora.devtools.DevToolsActionHandler
 import kotlin.concurrent.Volatile
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
+
+data class PluginAction(
+    val id: String,
+    val label: String,
+    val description: String? = null,
+    val parameters: List<ActionParameter> = emptyList(),
+    val handler: DevToolsActionHandler,
+)
 
 /**
  * Interface for custom screens that can be added to Alohomora by library users.
@@ -17,7 +27,7 @@ import kotlinx.atomicfu.locks.withLock
  *     override val icon: ImageVector? = Icons.Default.Flag
  *
  *     @Composable
- *     override fun Content(onBackClick: () -> Unit) {
+ *     override fun Content() {
  *         // Your screen implementation
  *     }
  * }
@@ -78,11 +88,17 @@ interface CustomScreenPlugin {
 
     /**
      * The composable content of this screen.
-     *
-     * @param onBackClick Callback to navigate back. Call this when user taps back button.
      */
     @Composable
-    fun Content(onBackClick: () -> Unit)
+    fun Content()
+
+    /**
+     * Actions the desktop DevTools can trigger remotely for this plugin.
+     *
+     * Registered and unregistered automatically alongside the plugin itself.
+     */
+    val actions: List<PluginAction>
+        get() = emptyList()
 
     /**
      * Optional lifecycle callback when screen becomes visible.

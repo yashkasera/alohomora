@@ -11,7 +11,7 @@ private open class FakePlugin(override val id: String) : CustomScreenPlugin {
     override val title: String get() = "Plugin $id"
 
     @Composable
-    override fun Content(onBackClick: () -> Unit) = Unit
+    override fun Content() = Unit
 }
 
 private class FakeInternalPlugin(id: String) : FakePlugin(id), InternalPlugin

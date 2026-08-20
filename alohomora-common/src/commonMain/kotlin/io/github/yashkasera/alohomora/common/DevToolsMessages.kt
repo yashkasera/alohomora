@@ -391,6 +391,59 @@ data class DeviceErrorMessage(
     val message: String,
 ) : DevToolsMessage()
 
+// ── Custom actions ───────────────────────────────────────────────────────────
+
+@Serializable
+data class ActionDescriptor(
+    val id: String,
+    val label: String,
+    val description: String? = null,
+    val parameters: List<ActionParameter> = emptyList(),
+)
+
+@Serializable
+data class ActionParameter(
+    val key: String,
+    val label: String,
+    val type: String = "string",
+    val defaultValue: String? = null,
+    val options: List<String>? = null,
+    val required: Boolean = true,
+)
+
+/**
+ * Asks the device to execute a consumer-registered action.
+ *
+ * Actions are registered at startup via `Alohomora.registerAction` and advertised to the desktop
+ * in [InitialStatePayload.actions]. An unrecognised [actionId] returns a [CustomActionResultMessage]
+ * with `success = false` rather than a [DeviceErrorMessage], because it is a user error (stale UI)
+ * not a device fault.
+ */
+@Serializable
+@SerialName("REQUEST_CUSTOM_ACTION")
+data class RequestCustomActionMessage(
+    override val sequence: Long = 0,
+    val actionId: String,
+    val params: Map<String, String> = emptyMap(),
+) : DevToolsMessage()
+
+/**
+ * Reports the outcome of a [RequestCustomActionMessage].
+ *
+ * Modelled after [ReplayResultMessage]: an explicit reply because the desktop needs to know whether
+ * the action succeeded, and without it a failed action is indistinguishable from one that is still
+ * running.
+ */
+@Serializable
+@SerialName("CUSTOM_ACTION_RESULT")
+data class CustomActionResultMessage(
+    override val sequence: Long,
+    val actionId: String,
+    val success: Boolean,
+    val result: Map<String, String> = emptyMap(),
+    val error: String? = null,
+) : DevToolsMessage()
+
 // ── Payload types (kept as named wrappers for complex payloads) ───────────────
 
 @Serializable
@@ -440,6 +493,7 @@ data class DatabaseSnapshotPayload(
 
 @Serializable
 data class BuildMetadataPayload(
+    val appName: String? = null,
     val projectName: String,
     val packageName: String? = null,
     val versionName: String,
@@ -519,4 +573,5 @@ data class InitialStatePayload(
     val vpnThrottleState: VpnThrottleState = VpnThrottleState.OFF,
     val vpnThrottleActiveProfile: ThrottleProfile? = null,
     val featureFlags: List<FeatureFlag> = emptyList(),
+    val actions: List<ActionDescriptor> = emptyList(),
 )

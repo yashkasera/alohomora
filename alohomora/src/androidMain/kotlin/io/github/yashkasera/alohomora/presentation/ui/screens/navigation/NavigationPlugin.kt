@@ -11,7 +11,7 @@ internal object NavigationPlugin : CustomScreenPlugin, InternalPlugin {
         get() = "Navigation Logs"
 
     @Composable
-    override fun Content(onBackClick: () -> Unit) {
-        NavigationHistoryScreen(onBackClick = onBackClick)
+    override fun Content() {
+        NavigationHistoryScreen()
     }
 }
