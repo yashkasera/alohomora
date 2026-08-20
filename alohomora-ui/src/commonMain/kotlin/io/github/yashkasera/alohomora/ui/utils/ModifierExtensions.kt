@@ -24,7 +24,7 @@ fun Modifier.drawDiagonalLabel(
     color: Color,
     style: TextStyle = TextStyle(
         fontSize = 18.sp,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Normal,
         color = Color.White,
     ),
     labelTextRatio: Float = 2f,

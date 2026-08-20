@@ -209,13 +209,13 @@ private fun LauncherContent(
     Surface {
         Column(
             modifier = Modifier.fillMaxSize()
-                .padding(24.dp),
+                .padding(MaterialTheme.dimens.margin.xxl),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.AlohomoraFull,
-                    contentDescription = null,
+                    contentDescription = "Alohomora",
                     modifier = Modifier.width(256.dp),
                 )
                 Spacer(modifier = Modifier.weight(1f))

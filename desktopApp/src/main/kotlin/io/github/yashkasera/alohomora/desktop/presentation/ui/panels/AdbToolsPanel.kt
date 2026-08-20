@@ -655,8 +655,8 @@ private fun AdbConsoleBar(
                                 MaterialTheme.colorScheme.surfaceContainerLow,
                                 MaterialTheme.shapes.small,
                             )
-                            .padding(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                            .padding(MaterialTheme.dimens.margin.sm),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
                     ) {
                         items(rendered) { entry ->
                             Text(

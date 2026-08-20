@@ -95,7 +95,7 @@ fun ColumnScope.Sidebar(
 ) {
     Icon(
         imageVector = Icons.AlohomoraFull,
-        contentDescription = null,
+        contentDescription = "Alohomora",
         modifier = Modifier
             .padding(top = if (isMacOs) SidebarTopInsetMac else MaterialTheme.dimens.margin.xxl)
             .padding(horizontal = MaterialTheme.dimens.margin.xxl)
@@ -242,10 +242,10 @@ private fun SidebarConnectionCard(
                         if (selectedOnlineDevice.platform.isIos)
                             Icons.Apple
                         else Icons.Android,
-                    contentDescription = null,
+                    contentDescription = if (selectedOnlineDevice.platform.isIos) "iOS" else "Android",
                     modifier = Modifier
                         .padding(MaterialTheme.dimens.margin.sm)
-                        .size(24.dp),
+                        .size(MaterialTheme.dimens.icon.standard),
                     tint = MaterialTheme.colorScheme.primary,
                 )
                 Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))

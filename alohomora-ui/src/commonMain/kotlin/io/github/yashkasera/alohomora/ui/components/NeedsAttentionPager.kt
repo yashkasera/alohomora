@@ -25,6 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -111,8 +114,8 @@ private fun ErrorAttentionCard(
                     ),
                 ),
             )
+            .semantics { role = Role.Button }
             .clickable(onClick = onClick)
-
             .padding(MaterialTheme.dimens.margin.md),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
@@ -156,6 +159,7 @@ private fun TrafficAttentionCard(
 ) {
     Row(
         modifier = Modifier
+            .semantics { role = Role.Button }
             .clickable(onClick = onClick)
             .height(72.dp)
             .clip(MaterialTheme.shapes.medium)

@@ -246,7 +246,7 @@ fun CommandPalette(
 private fun FooterHint(key: String, label: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
     ) {
         ShortcutChip(key)
         Text(

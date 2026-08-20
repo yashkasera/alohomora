@@ -94,7 +94,7 @@ fun AboutDialog(
                 ) {
                     Icon(
                         imageVector = Icons.Alohomora,
-                        contentDescription = null,
+                        contentDescription = "Alohomora",
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )

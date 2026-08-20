@@ -600,7 +600,7 @@ private fun ThemeCard(
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
         ) {
             ColorDot(theme.accent)
             ColorDot(theme.success)

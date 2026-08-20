@@ -35,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.presentation.model.TrafficUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.trafficSubtitle
@@ -502,7 +501,7 @@ private fun DesktopOverviewTab(traffic: TrafficEntry) {
                 color = MaterialTheme.colorScheme.primary,
             )
         }
-        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.sm))
         OverviewStatRow(
             status = traffic.status?.toString() ?: "-",
             duration = "${traffic.duration ?: 0} ms",
@@ -536,7 +535,7 @@ private fun DesktopRequestTab(traffic: TrafficEntry) {
         }
         SectionLabel("Headers")
 
-        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.sm))
 
         AlohomoraCodeBlock(
             content = traffic.requestHeaders

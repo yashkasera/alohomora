@@ -21,6 +21,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -92,6 +95,7 @@ fun WaterfallRowItem(
             .fillMaxWidth()
             .height(WaterfallRowHeight)
             .background(rowBackground)
+            .semantics { role = Role.Button }
             .clickable(onClick = onSelect),
         verticalAlignment = WaterfallRowAlignment,
     ) {
@@ -187,6 +191,7 @@ private fun NameCell(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .size(MaterialTheme.dimens.icon.md)
+                    .semantics { role = Role.Button }
                     .clickable(onClick = onToggleCollapse),
             )
         } else {
