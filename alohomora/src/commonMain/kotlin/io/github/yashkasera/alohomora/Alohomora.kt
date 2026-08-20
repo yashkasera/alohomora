@@ -5,6 +5,7 @@ import io.github.yashkasera.alohomora.Alohomora.initLock
 import io.github.yashkasera.alohomora.Alohomora.isReplaySupported
 import io.github.yashkasera.alohomora.Alohomora.persistError
 import io.github.yashkasera.alohomora.Alohomora.persistSpan
+import io.github.yashkasera.alohomora.cache.SharedPreferencesOverrides
 import io.github.yashkasera.alohomora.common.CRASH_EVENT_NAME
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
@@ -487,6 +488,18 @@ object Alohomora {
 
     fun clearAppDatabaseOverrides() {
         DevToolsDatabaseOverrides.clear()
+    }
+
+    fun registerSharedPreferences(name: String, reader: () -> Map<String, Any?>) {
+        SharedPreferencesOverrides.register(name, reader)
+    }
+
+    fun unregisterSharedPreferences(name: String) {
+        SharedPreferencesOverrides.unregister(name)
+    }
+
+    fun clearSharedPreferencesOverrides() {
+        SharedPreferencesOverrides.clear()
     }
 
     /**
