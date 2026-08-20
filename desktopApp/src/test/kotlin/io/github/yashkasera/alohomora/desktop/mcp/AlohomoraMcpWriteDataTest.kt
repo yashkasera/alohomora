@@ -200,56 +200,44 @@ class AlohomoraMcpWriteDataTest {
             )
         }
         val vm = testViewModel(supported = true)
-        try {
-            val result = AlohomoraMcpWriteData.createMockFromTraffic(repo, vm, "1", "mock users")
-            assertTrue(result is WriteResult.Ok)
-            val rule = Json.decodeFromJsonElement(MockRule.serializer(), result.json)
-            assertEquals("/users", rule.urlPattern)
-            assertEquals("GET", rule.method)
-            assertEquals(200, rule.statusCode)
-            assertEquals("""{"name":"Alice"}""", rule.responseBody)
-            assertEquals("application/json", rule.contentType)
-            assertEquals("mock users", rule.name)
-            assertTrue(rule.id.isNotBlank(), "id must be auto-generated")
-        } finally {
-            vm.close()
-        }
+        val result = AlohomoraMcpWriteData.createMockFromTraffic(repo, vm, "1", "mock users")
+        assertTrue(result is WriteResult.Ok)
+        val rule = Json.decodeFromJsonElement(MockRule.serializer(), result.json)
+        assertEquals("/users", rule.urlPattern)
+        assertEquals("GET", rule.method)
+        assertEquals(200, rule.statusCode)
+        assertEquals("""{"name":"Alice"}""", rule.responseBody)
+        assertEquals("application/json", rule.contentType)
+        assertEquals("mock users", rule.name)
+        assertTrue(rule.id.isNotBlank(), "id must be auto-generated")
     }
 
     @Test
     fun `create_mock_from_traffic refuses unknown id`() {
         val repo = FakeDevToolsRepository()
         val vm = testViewModel(supported = true)
-        try {
-            assertTrue(
-                AlohomoraMcpWriteData.createMockFromTraffic(
-                    repo,
-                    vm,
-                    "missing",
-                    null,
-                ) is WriteResult.Error,
-            )
-        } finally {
-            vm.close()
-        }
+        assertTrue(
+            AlohomoraMcpWriteData.createMockFromTraffic(
+                repo,
+                vm,
+                "missing",
+                null,
+            ) is WriteResult.Error,
+        )
     }
 
     @Test
     fun `create_mock_from_traffic refuses when mocks are unsupported`() {
         val repo = FakeDevToolsRepository().apply { traffic.value = listOf(entry("1")) }
         val vm = testViewModel(supported = false)
-        try {
-            assertTrue(
-                AlohomoraMcpWriteData.createMockFromTraffic(
-                    repo,
-                    vm,
-                    "1",
-                    null,
-                ) is WriteResult.Error,
-            )
-        } finally {
-            vm.close()
-        }
+        assertTrue(
+            AlohomoraMcpWriteData.createMockFromTraffic(
+                repo,
+                vm,
+                "1",
+                null,
+            ) is WriteResult.Error,
+        )
     }
 
     @Test
@@ -278,7 +266,14 @@ class AlohomoraMcpWriteDataTest {
         time = id.hashCode().toLong(),
     )
 
-    private fun testViewModel(supported: Boolean) = NetworkRulesViewModel(
-        FakeDevToolsRepository().apply { networkRulesSupported.value = supported },
-    )
+    private fun testViewModel(supported: Boolean): NetworkRulesViewModel {
+        val vm = NetworkRulesViewModel(
+            FakeDevToolsRepository().apply { networkRulesSupported.value = supported },
+        )
+        // Kill the init coroutines immediately — they hit the real filesystem via MockSessionStore
+        // and leak onto Dispatchers.IO, which runTest picks up as UncaughtExceptionsBeforeTest.
+        // The tests here only need addRule() and networkRulesSupported, both scope-independent.
+        vm.close()
+        return vm
+    }
 }
