@@ -153,4 +153,16 @@ object Alohomora {
     fun getPlugins(): List<CustomScreenPlugin> {
         return emptyList()
     }
+
+    @JvmStatic
+    @Suppress("UNUSED_PARAMETER")
+    fun setDebugConfig(key: String, value: String) = Unit
+
+    @JvmStatic
+    @Suppress("UNUSED_PARAMETER")
+    fun getDebugConfig(key: String): String? = null
+
+    @JvmStatic
+    @Suppress("UNUSED_PARAMETER")
+    fun removeDebugConfig(key: String) = Unit
 }

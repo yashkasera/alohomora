@@ -24,7 +24,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import kotlinx.serialization.json.Json
-import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
