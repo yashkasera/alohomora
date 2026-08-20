@@ -53,12 +53,14 @@ class AlohomoraMcpServerTest {
 
     private fun handle(id: String): DeviceSessionHandle {
         val repo = FakeDevToolsRepository()
+        val vm = NetworkRulesViewModel(repo)
+        vm.close()
         return DeviceSessionHandle(
             deviceId = id,
             model = null,
             platform = null,
             devToolsRepository = repo,
-            networkRulesViewModel = NetworkRulesViewModel(repo),
+            networkRulesViewModel = vm,
         )
     }
 
