@@ -155,5 +155,8 @@ class FakeDevToolsRepository(
     ) = Unit
 
     override fun requestPluginDataUpdate(pluginId: String, key: String, value: String) = Unit
+    override fun requestCacheUpdate(storeName: String, key: String, newValue: String?, type: String) = Unit
+    override fun requestCacheDelete(storeName: String, key: String) = Unit
+    override fun requestCacheRefresh() = Unit
     override fun requestInitialState() = Unit
 }

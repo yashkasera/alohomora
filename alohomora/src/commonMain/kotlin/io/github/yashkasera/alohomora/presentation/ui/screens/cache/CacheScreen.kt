@@ -48,6 +48,7 @@ import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Key
+import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
@@ -74,6 +75,15 @@ internal fun CacheScreen(
                         modifier = Modifier.testTag(AlohomoraTestTags.Chrome.BACK),
                     ) {
                         Icon(Icons.ArrowLeft, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    AlohomoraIconButton(onClick = viewModel::refresh) {
+                        Icon(
+                            imageVector = Icons.RefreshCw,
+                            contentDescription = "Refresh",
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
+                        )
                     }
                 },
             )

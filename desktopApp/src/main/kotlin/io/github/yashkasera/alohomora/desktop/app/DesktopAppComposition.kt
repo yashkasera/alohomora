@@ -25,6 +25,9 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.InstallApkUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.ObserveLogcatUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RefreshDevicesUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.ReplayTrafficUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestCacheDeleteUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestCacheRefreshUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestCacheUpdateUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestCacheValueUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseSchemaUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestDatabaseTableUseCase
@@ -135,6 +138,9 @@ class DesktopAppComposition(
         val requestDatabaseTableUseCase = RequestDatabaseTableUseCase(devToolsRepository)
         val requestDatabaseUpdateUseCase = RequestDatabaseUpdateUseCase(devToolsRepository)
         val requestCacheValueUseCase = RequestCacheValueUseCase(devToolsRepository)
+        val requestCacheUpdateUseCase = RequestCacheUpdateUseCase(devToolsRepository)
+        val requestCacheDeleteUseCase = RequestCacheDeleteUseCase(devToolsRepository)
+        val requestCacheRefreshUseCase = RequestCacheRefreshUseCase(devToolsRepository)
         val replayTrafficUseCase = ReplayTrafficUseCase(devToolsRepository)
 
         val observeLogcatUseCase = ObserveLogcatUseCase(logcatRepository)
@@ -212,6 +218,9 @@ class DesktopAppComposition(
         cacheViewModel = CacheViewModel(
             repository = cacheRepository,
             requestCacheValueUseCase = requestCacheValueUseCase,
+            requestCacheUpdateUseCase = requestCacheUpdateUseCase,
+            requestCacheDeleteUseCase = requestCacheDeleteUseCase,
+            requestCacheRefreshUseCase = requestCacheRefreshUseCase,
         )
 
         featureFlagsViewModel =

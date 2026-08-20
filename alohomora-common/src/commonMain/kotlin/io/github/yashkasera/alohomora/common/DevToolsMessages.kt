@@ -342,7 +342,7 @@ data class RequestCacheUpdateMessage(
     val storeName: String,
     val key: String,
     val newValue: String?,
-    val type: String,
+    val valueType: String,
 ) : DevToolsMessage()
 
 @Serializable

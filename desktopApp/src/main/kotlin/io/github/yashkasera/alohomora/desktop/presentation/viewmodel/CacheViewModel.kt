@@ -1,6 +1,9 @@
 package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
 import io.github.yashkasera.alohomora.desktop.domain.repository.CacheRepository
+import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestCacheDeleteUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestCacheRefreshUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestCacheUpdateUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RequestCacheValueUseCase
 import io.github.yashkasera.alohomora.desktop.presentation.model.CacheUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.toCacheRows
@@ -19,19 +22,15 @@ import kotlinx.coroutines.launch
 class CacheViewModel(
     private val repository: CacheRepository,
     private val requestCacheValueUseCase: RequestCacheValueUseCase,
+    private val requestCacheUpdateUseCase: RequestCacheUpdateUseCase,
+    private val requestCacheDeleteUseCase: RequestCacheDeleteUseCase,
+    private val requestCacheRefreshUseCase: RequestCacheRefreshUseCase,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
 
-    /**
-     * Keys already asked for, so no key is requested twice.
-     *
-     * A plain set rather than a `StateFlow`: it is read and written only by the single collector in
-     * [init], so it never crosses threads, and nothing renders it — a pending row is derived from the
-     * store instead (`CacheRow.isLoaded`), which stays true even if this bookkeeping is wrong.
-     */
     private val requested = mutableSetOf<String>()
 
     val uiState: StateFlow<CacheUiState> =
@@ -41,23 +40,15 @@ class CacheViewModel(
                 query = query,
                 totalCount = state.keys.size,
                 loadedCount = state.keys.count { state.values.containsKey(it) },
+                hasStoreData = state.stores.isNotEmpty(),
             )
         }.stateIn(scope, SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE_MILLIS), CacheUiState())
 
     init {
-        // Values are fetched up front rather than on click, which is what lets the panel be one list
-        // instead of a key list and a separate value list. The wire only ever answers one key per
-        // `REQUEST_PREF_VALUE`, so "load everything" can only mean one request per key — but each is a
-        // tiny frame over a loopback tunnel, and the alternative is a table whose value column stays
-        // blank until the user has clicked every row. Search over values depends on this too: an
-        // unloaded value cannot be matched.
         scope.launch {
             repository.state.collect { state ->
-                // Pruned first, so a store clear on disconnect or device switch lets the same keys be
-                // requested again. Without this the set would still hold them and the second session
-                // would render every row pending forever.
+                if (state.stores.isNotEmpty()) return@collect
                 requested.retainAll(state.keys.toSet())
-
                 val missing =
                     state.keys.filter { it !in requested && !state.values.containsKey(it) }
                 if (missing.isEmpty()) return@collect
@@ -71,19 +62,23 @@ class CacheViewModel(
         _query.value = query
     }
 
-    /**
-     * Cancels this view model's scope.
-     *
-     * Required for per-window teardown: DesktopAppComposition.close() used to cancel
-     * only DevToolsViewModel, so every other scope (and its collectors) leaked for the
-     * life of the process each time a device window was closed.
-     */
+    fun updateValue(storeName: String, key: String, newValue: String?, type: String) {
+        requestCacheUpdateUseCase(storeName, key, newValue, type)
+    }
+
+    fun deleteValue(storeName: String, key: String) {
+        requestCacheDeleteUseCase(storeName, key)
+    }
+
+    fun refresh() {
+        requestCacheRefreshUseCase()
+    }
+
     fun close() {
         scope.cancel()
     }
 
     private companion object {
-        /** Keeps the derivation warm across a quick panel switch; see `TracesViewModel`. */
         const val SUBSCRIPTION_GRACE_MILLIS = 5_000L
     }
 }
