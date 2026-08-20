@@ -1,5 +1,7 @@
 package io.github.yashkasera.alohomora.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,6 +16,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -91,6 +95,30 @@ fun AlohomoraOutlinedCard(
         content = content,
     )
 }
+
+@Stable
+data class ViewedStateColors(
+    val containerColor: State<Color>,
+    val titleColor: State<Color>,
+)
+
+@Composable
+fun rememberViewedStateColors(
+    isViewed: Boolean,
+    unviewedContainerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    viewedContainerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    unviewedTitleColor: Color = MaterialTheme.colorScheme.onSurface,
+    viewedTitleColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+): ViewedStateColors = ViewedStateColors(
+    containerColor = animateColorAsState(
+        if (isViewed) viewedContainerColor else unviewedContainerColor,
+        spring(),
+    ),
+    titleColor = animateColorAsState(
+        if (isViewed) viewedTitleColor else unviewedTitleColor,
+        spring(),
+    ),
+)
 
 @Preview
 @Composable

@@ -11,25 +11,30 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.domain.model.CacheEntry
+import io.github.yashkasera.alohomora.domain.model.CacheSource
 import io.github.yashkasera.alohomora.domain.model.CacheType
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -42,8 +47,10 @@ import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Key
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -148,51 +155,77 @@ private fun PreferenceItem(
     entry: CacheEntry,
     modifier: Modifier = Modifier,
 ) {
-    AlohomoraCard(modifier = modifier) {
-        Column(
+    AlohomoraCard(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.large,
+    ) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(MaterialTheme.dimens.margin.md),
+                .padding(MaterialTheme.dimens.margin.lg),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = entry.key,
-                    style = MaterialTheme.typography.titleMedium.copy(),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
-
-                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-
-                AlohomoraChip(label = entry.type.displayLabel())
-            }
-
-            Spacer(modifier = Modifier.height(6.dp)) // 6.dp intentional: tight preference value gap
-
-            val valueColor = when (entry.type) {
-                CacheType.BOOLEAN -> MaterialTheme.colorScheme.tertiary
-                else -> MaterialTheme.colorScheme.onSurfaceVariant
-            }
-
-            val displayValue = if (entry.isEncrypted) {
-                "[encrypted]"
+            val iconTint = if (entry.isEncrypted) {
+                MaterialTheme.colorScheme.tertiary
             } else {
-                entry.value
+                MaterialTheme.colorScheme.primary
+            }
+            Box(
+                modifier = Modifier
+                    .size(MaterialTheme.dimens.icon.xl)
+                    .background(iconTint.copy(alpha = 0.12f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Key,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                )
             }
 
-            Text(
-                text = displayValue,
-                style = MaterialTheme.typography.bodySmall,
-                color = valueColor,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = entry.key,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+
+                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+
+                    AlohomoraChip(label = entry.type.displayLabel())
+                }
+
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+
+                val valueColor = when (entry.type) {
+                    CacheType.BOOLEAN -> MaterialTheme.colorScheme.tertiary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
+
+                val displayValue = if (entry.isEncrypted) {
+                    "[encrypted]"
+                } else {
+                    entry.value
+                }
+
+                Text(
+                    text = displayValue,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = valueColor,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
@@ -205,8 +238,10 @@ private fun CacheFooter(
     totalSize: String,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .then(modifier),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -218,15 +253,87 @@ private fun CacheFooter(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             val entriesText = if (filteredCount != totalEntries) {
-                "$filteredCount of $totalEntries Keys Found ($totalSize)"
+                "$filteredCount of $totalEntries keys ($totalSize)"
             } else {
-                "$totalEntries Keys Found ($totalSize)"
+                "$totalEntries keys ($totalSize)"
             }
             Text(
                 text = entriesText,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
             )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreferenceItemPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+            ) {
+                PreferenceItem(
+                    entry = CacheEntry(
+                        key = "user_auth_token",
+                        value = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY...",
+                        type = CacheType.STRING,
+                        source = CacheSource.SHARED_PREFERENCES,
+                    ),
+                )
+                PreferenceItem(
+                    entry = CacheEntry(
+                        key = "dark_mode_enabled",
+                        value = "true",
+                        type = CacheType.BOOLEAN,
+                        source = CacheSource.SHARED_PREFERENCES,
+                    ),
+                )
+                PreferenceItem(
+                    entry = CacheEntry(
+                        key = "encrypted_api_key",
+                        value = "[encrypted]",
+                        type = CacheType.STRING,
+                        source = CacheSource.ENCRYPTED_SHARED_PREFERENCES,
+                        isEncrypted = true,
+                    ),
+                )
+                PreferenceItem(
+                    entry = CacheEntry(
+                        key = "launch_count",
+                        value = "42",
+                        type = CacheType.INT,
+                        source = CacheSource.SHARED_PREFERENCES,
+                    ),
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun CacheFooterPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+            ) {
+                CacheFooter(
+                    modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                    totalEntries = 128,
+                    filteredCount = 128,
+                    totalSize = "4.2 KB",
+                )
+                CacheFooter(
+                    modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                    totalEntries = 128,
+                    filteredCount = 12,
+                    totalSize = "4.2 KB",
+                )
+            }
         }
     }
 }

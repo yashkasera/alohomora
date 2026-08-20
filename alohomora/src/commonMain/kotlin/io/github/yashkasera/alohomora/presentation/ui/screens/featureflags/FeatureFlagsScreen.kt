@@ -11,14 +11,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
@@ -41,8 +45,12 @@ import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Search
+import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
 import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
+import io.github.yashkasera.alohomora.ui.icons.ToggleRight
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -167,63 +175,91 @@ private fun FeatureFlagItem(
     flag: FeatureFlag,
     modifier: Modifier = Modifier,
 ) {
+    val isTrue = flag.value.equals("true", ignoreCase = true)
+    val isFalse = flag.value.equals("false", ignoreCase = true)
+    val iconTint = when {
+        isTrue -> MaterialTheme.alohomoraColors.success
+        isFalse -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.secondary
+    }
+    val flagIcon = when {
+        isTrue -> Icons.ToggleRight
+        isFalse -> Icons.ToggleLeft
+        else -> Icons.SlidersHorizontal
+    }
+
     AlohomoraCard(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
     ) {
-        Column(
-            modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(MaterialTheme.dimens.margin.lg),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+            verticalAlignment = Alignment.Top,
         ) {
-            Text(
-                text = flag.key,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-
-            val valueColor = when {
-                flag.value.equals("true", ignoreCase = true) -> MaterialTheme.colorScheme.primary
-                flag.value.equals("false", ignoreCase = true) -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.onSurface
-            }
-
-            Text(
-                modifier = Modifier.fillMaxWidth()
-                    .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .padding(MaterialTheme.dimens.margin.sm),
-                text = flag.value,
-                style = MaterialTheme.typography.labelMedium,
-                color = valueColor,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            val hasChips = flag.type != null || flag.source != null
-            val meta = flag.metadata
-            if (!meta.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
-                Text(
-                    text = meta.entries.joinToString(" | ") { "${it.key}: ${it.value}" },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+            Box(
+                modifier = Modifier
+                    .size(MaterialTheme.dimens.icon.xl)
+                    .background(iconTint.copy(alpha = 0.12f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = flagIcon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
                 )
             }
-            if (hasChips) {
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = flag.key,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    flag.type?.let { type -> AlohomoraChip(label = type) }
-                    flag.source?.let { source -> AlohomoraChip(label = source) }
+
+                Text(
+                    modifier = Modifier.fillMaxWidth()
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .padding(MaterialTheme.dimens.margin.sm),
+                    text = flag.value,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = iconTint,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                val meta = flag.metadata
+                if (!meta.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
+                    Text(
+                        text = meta.entries.joinToString(" | ") { "${it.key}: ${it.value}" },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+
+                val hasChips = flag.type != null || flag.source != null
+                if (hasChips) {
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        flag.type?.let { type -> AlohomoraChip(label = type) }
+                        flag.source?.let { source -> AlohomoraChip(label = source) }
+                    }
                 }
             }
-
         }
     }
 }
@@ -236,8 +272,10 @@ private fun FeatureFlagsFooter(
     sourceCount: Int,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .then(modifier),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -260,9 +298,92 @@ private fun FeatureFlagsFooter(
             }
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
             )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun FeatureFlagItemPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+            ) {
+                FeatureFlagItem(
+                    flag = FeatureFlag(
+                        key = "enable_new_checkout",
+                        value = "true",
+                        source = "Firebase",
+                        type = "Boolean",
+                    ),
+                )
+                FeatureFlagItem(
+                    flag = FeatureFlag(
+                        key = "dark_mode_v2",
+                        value = "false",
+                        source = "LaunchDarkly",
+                        type = "Boolean",
+                    ),
+                )
+                FeatureFlagItem(
+                    flag = FeatureFlag(
+                        key = "max_retry_count",
+                        value = "5",
+                        source = "Remote Config",
+                        type = "Int",
+                        metadata = mapOf("updated" to "2024-08-20", "env" to "prod"),
+                    ),
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun FeatureFlagItemLongValuePreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            FeatureFlagItem(
+                flag = FeatureFlag(
+                    key = "experiment_config_json",
+                    value = """{"variant": "B", "rollout": 0.25, "cohort": "new_users", "expires": "2025-01-01"}""",
+                    source = "Remote Config",
+                    type = "JSON",
+                ),
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun FeatureFlagsFooterPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+            ) {
+                FeatureFlagsFooter(
+                    modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                    totalCount = 42,
+                    filteredCount = 42,
+                    sourceCount = 3,
+                )
+                FeatureFlagsFooter(
+                    modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                    totalCount = 42,
+                    filteredCount = 12,
+                    sourceCount = 1,
+                )
+            }
         }
     }
 }

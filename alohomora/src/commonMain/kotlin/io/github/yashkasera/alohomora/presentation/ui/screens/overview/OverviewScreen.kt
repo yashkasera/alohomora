@@ -1,8 +1,8 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.overview
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,22 +19,22 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.Alohomora
@@ -44,7 +44,6 @@ import io.github.yashkasera.alohomora.plugin.PluginRegistry
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
-import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
@@ -66,6 +65,7 @@ import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
 import io.github.yashkasera.alohomora.ui.icons.ToggleRight
 import io.github.yashkasera.alohomora.ui.icons.Waypoints
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
@@ -262,13 +262,13 @@ internal fun OverviewScreen(
                 .padding(it)
                 .fillMaxSize()
                 .testTag(AlohomoraTestTags.Overview.GRID),
-            columns = GridCells.Fixed(4),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xl),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+            columns = GridCells.Fixed(2),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
             contentPadding = PaddingValues(MaterialTheme.dimens.margin.xl),
             state = lazyGridState,
         ) {
-            item(span = { GridItemSpan(4) }) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 Column {
                     Spacer(Modifier.height(MaterialTheme.dimens.margin.sm))
                     Text(
@@ -278,17 +278,23 @@ internal fun OverviewScreen(
                     )
                 }
             }
-            item(span = { GridItemSpan(4) }) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 Column {
                     DevToolsStatusCard(
                         state = state,
-                        onToggle = { isEnabled -> viewModel.onEvent(OverviewEvent.ToggleServer(isEnabled)) },
+                        onToggle = { isEnabled ->
+                            viewModel.onEvent(
+                                OverviewEvent.ToggleServer(
+                                    isEnabled,
+                                ),
+                            )
+                        },
                         onPortChange = { port -> viewModel.onEvent(OverviewEvent.PortChanged(port)) },
                     )
                 }
             }
             if (state.activeMockRuleCount > 0) {
-                item(span = { GridItemSpan(4) }) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     MockRulesActiveBanner(
                         ruleCount = state.activeMockRuleCount,
                         onClear = { viewModel.onEvent(OverviewEvent.ClearMockRules) },
@@ -296,9 +302,9 @@ internal fun OverviewScreen(
                 }
             }
             if (state.attentionItems.isNotEmpty()) {
-                item(span = { GridItemSpan(4) }) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Column {
-                        Spacer(Modifier.height(MaterialTheme.dimens.margin.lg))
+                        Spacer(Modifier.height(MaterialTheme.dimens.margin.xxl))
                         NeedsAttentionPager(
                             items = state.attentionItems,
                             onErrorClick = { error ->
@@ -314,12 +320,12 @@ internal fun OverviewScreen(
                     }
                 }
             }
-            item(span = { GridItemSpan(4) }) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 Column {
-                    Spacer(Modifier.height(MaterialTheme.dimens.margin.lg))
+                    Spacer(Modifier.height(MaterialTheme.dimens.margin.xxl))
                     Text(
                         "SYSTEM MODULES",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.tertiary,
                     )
                 }
@@ -328,7 +334,7 @@ internal fun OverviewScreen(
                 items = defaultModules,
                 key = { module -> module.gridKey },
                 span = { module ->
-                    if (module.isInverse) GridItemSpan(2)
+                    if (module.isInverse) GridItemSpan(maxLineSpan)
                     else GridItemSpan(1)
                 },
             ) { modules ->
@@ -341,12 +347,12 @@ internal fun OverviewScreen(
                 )
             }
             customPlugins.ifEmpty { null }?.let { plugins ->
-                item(span = { GridItemSpan(4) }) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Column {
-                        Spacer(Modifier.height(MaterialTheme.dimens.margin.lg))
+                        Spacer(Modifier.height(MaterialTheme.dimens.margin.xxl))
                         Text(
                             "CUSTOM MODULES",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.lg),
                         )
@@ -373,65 +379,81 @@ private fun DevToolsStatusCard(
     onToggle: (Boolean) -> Unit,
     onPortChange: (String) -> Unit,
 ) {
+    val isConnected = state.deviceConnectionStatus == DevConnectionStatus.Connected
+    val containerColor = if (isConnected)
+        MaterialTheme.alohomoraColors.successContainer
+    else
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    val toggleTint = if (state.serverEnabled)
+        MaterialTheme.alohomoraColors.success
+    else
+        MaterialTheme.colorScheme.onSurfaceVariant
+
     AlohomoraCard(
         onClick = {
             onToggle.invoke(!state.serverEnabled)
         },
         modifier = Modifier.testTag(AlohomoraTestTags.Overview.STATUS_CARD),
+        shape = MaterialTheme.shapes.extraLarge,
         colors = AlohomoraCardDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = containerColor,
         ),
     ) {
-        Column(
-            modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(MaterialTheme.dimens.margin.lg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
         ) {
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-            ) {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-                ) {
-                    val dotState = when (state.deviceConnectionStatus) {
-                        DevConnectionStatus.Connected -> ConnectionDotState.Connected
-                        DevConnectionStatus.AwaitingAuth -> ConnectionDotState.Reconnecting
-                        DevConnectionStatus.Disconnected,
-                        DevConnectionStatus.Off,
-                            -> ConnectionDotState.Disconnected
-                    }
-                    ConnectionStatusDot(
-                        state = dotState,
-                        modifier = Modifier.testTag(AlohomoraTestTags.Overview.STATUS_DOT),
-                    )
+            val dotState = when (state.deviceConnectionStatus) {
+                DevConnectionStatus.Connected -> ConnectionDotState.Connected
+                DevConnectionStatus.AwaitingAuth -> ConnectionDotState.Reconnecting
+                DevConnectionStatus.Disconnected,
+                DevConnectionStatus.Off,
+                    -> ConnectionDotState.Disconnected
+            }
+            ConnectionStatusDot(
+                state = dotState,
+                modifier = Modifier.testTag(AlohomoraTestTags.Overview.STATUS_DOT),
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    when (state.deviceConnectionStatus) {
+                        DevConnectionStatus.Connected -> "Connected"
+                        DevConnectionStatus.AwaitingAuth -> "Awaiting code"
+                        DevConnectionStatus.Disconnected -> "Waiting"
+                        DevConnectionStatus.Off -> "Server off"
+                    },
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (state.serverEnabled) {
                     Text(
-                        when (state.deviceConnectionStatus) {
-                            DevConnectionStatus.Connected -> "Connected"
-                            DevConnectionStatus.AwaitingAuth -> "Awaiting code"
-                            DevConnectionStatus.Disconnected -> "Waiting"
-                            DevConnectionStatus.Off -> "Server off"
-                        },
+                        text = "Port ${state.serverPort}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Icon(
-                    imageVector = if (state.serverEnabled)
-                        Icons.ToggleRight
-                    else Icons.ToggleLeft,
-                    contentDescription = null,
+            }
+            if (!state.serverEnabled) {
+                AlohomoraTextField(
+                    label = "PORT",
+                    value = state.serverPort,
+                    onValueChange = onPortChange,
+                    singleLine = true,
+                    modifier = Modifier
+                        .width(100.dp)
+                        .testTag(AlohomoraTestTags.Overview.STATUS_PORT_FIELD),
                 )
             }
-            Spacer(Modifier.height(MaterialTheme.dimens.margin.sm))
-            AlohomoraTextField(
-                label = "PORT",
-                value = state.serverPort,
-                onValueChange = onPortChange,
-                singleLine = true,
-                enabled = !state.serverEnabled,
-                modifier = Modifier.testTag(AlohomoraTestTags.Overview.STATUS_PORT_FIELD),
+            Icon(
+                imageVector = if (state.serverEnabled)
+                    Icons.ToggleRight
+                else Icons.ToggleLeft,
+                contentDescription = null,
+                tint = toggleTint,
+                modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
             )
         }
     }
@@ -443,41 +465,127 @@ private fun ModuleCard(
     onNavigate: (Routes) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (overviewModule.isInverse) {
+        FeaturedModuleCard(overviewModule, onNavigate, modifier)
+    } else {
+        StandardModuleCard(overviewModule, onNavigate, modifier)
+    }
+}
 
-    val containerColor = if (overviewModule.isInverse)
-        MaterialTheme.colorScheme.inverseSurface
+@Composable
+private fun FeaturedModuleCard(
+    overviewModule: OverviewModule,
+    onNavigate: (Routes) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val isEvents = overviewModule.route == Routes.Events
+    val containerColor = if (isEvents)
+        MaterialTheme.colorScheme.tertiaryContainer
     else
-        MaterialTheme.colorScheme.surfaceContainer
+        MaterialTheme.colorScheme.primaryContainer
+    val contentColor = if (isEvents)
+        MaterialTheme.colorScheme.onTertiaryContainer
+    else
+        MaterialTheme.colorScheme.onPrimaryContainer
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable {
-                onNavigate.invoke(overviewModule.route)
-            },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(
-            MaterialTheme.dimens.margin.sm,
-            Alignment.CenterVertically,
+    AlohomoraCard(
+        onClick = { onNavigate(overviewModule.route) },
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = AlohomoraCardDefaults.colors(containerColor = containerColor),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = MaterialTheme.dimens.margin.lg,
+                    vertical = MaterialTheme.dimens.margin.xxl,
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(MaterialTheme.dimens.margin.huge)
+                    .background(
+                        contentColor.copy(alpha = 0.12f),
+                        CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = overviewModule.icon,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
+                )
+            }
+            Spacer(Modifier.height(MaterialTheme.dimens.margin.md))
+            Text(
+                text = overviewModule.title,
+                style = MaterialTheme.typography.headlineSmall,
+                color = contentColor,
+            )
+            Text(
+                text = overviewModule.subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor.copy(alpha = 0.7f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun StandardModuleCard(
+    overviewModule: OverviewModule,
+    onNavigate: (Routes) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val iconTint = when (overviewModule.route) {
+        Routes.Error -> MaterialTheme.colorScheme.error
+        Routes.Traces, Routes.FeatureFlags, Routes.GitHistory -> MaterialTheme.colorScheme.tertiary
+        Routes.Database, Routes.Config -> MaterialTheme.colorScheme.secondary
+        else -> MaterialTheme.colorScheme.primary
+    }
+
+    AlohomoraCard(
+        onClick = { onNavigate(overviewModule.route) },
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = AlohomoraCardDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
     ) {
-        Icon(
-            modifier = Modifier.background(
-                color = containerColor,
-                shape = MaterialTheme.shapes.large,
-            )
+        Column(
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(MaterialTheme.dimens.margin.lg),
-            imageVector = overviewModule.icon,
-            contentDescription = overviewModule.title,
-            tint = contentColorFor(containerColor),
-        )
-        Text(
-            text = overviewModule.title,
-            style = MaterialTheme.typography.labelMedium,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.secondary,
-        )
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(MaterialTheme.dimens.icon.xl)
+                    .background(iconTint.copy(alpha = 0.12f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = overviewModule.icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                )
+            }
+            Spacer(Modifier.height(MaterialTheme.dimens.margin.md))
+            Text(
+                text = overviewModule.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = overviewModule.subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -486,38 +594,220 @@ private fun MockRulesActiveBanner(
     ruleCount: Int,
     onClear: () -> Unit,
 ) {
+    val warningColor = MaterialTheme.alohomoraColors.warning
+
     AlohomoraCard(
+        shape = MaterialTheme.shapes.extraLarge,
         colors = AlohomoraCardDefaults.colors(
-            containerColor = MaterialTheme.alohomoraColors.warning.copy(alpha = 0.15f),
+            containerColor = warningColor.copy(alpha = 0.12f),
         ),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    horizontal = MaterialTheme.dimens.margin.md,
-                    vertical = MaterialTheme.dimens.margin.sm,
+                    horizontal = MaterialTheme.dimens.margin.lg,
+                    vertical = MaterialTheme.dimens.margin.lg,
                 ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
         ) {
-            AlohomoraChip(
-                label = "$ruleCount active",
-                containerColor = MaterialTheme.alohomoraColors.warning,
-                contentColor = Color.Black,
-            )
-            Text(
-                text = "Mock rules are intercepting requests",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
-            )
+            Box(
+                modifier = Modifier
+                    .size(MaterialTheme.dimens.icon.xl)
+                    .background(warningColor.copy(alpha = 0.15f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.AlertTriangle,
+                    contentDescription = null,
+                    tint = warningColor,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "$ruleCount mock rules active",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = "Intercepting requests",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             AlohomoraTextButton(
                 text = "Clear",
                 onClick = onClear,
                 uppercase = false,
                 contentColor = MaterialTheme.colorScheme.error,
             )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun FeaturedModuleCardsPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.xl),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+            ) {
+                FeaturedModuleCard(
+                    overviewModule = OverviewModule(
+                        title = "Traffic",
+                        subtitle = "LIVE STREAM",
+                        icon = Icons.Route,
+                        isInverse = true,
+                        route = Routes.Traffic,
+                    ),
+                    onNavigate = {},
+                )
+                FeaturedModuleCard(
+                    overviewModule = OverviewModule(
+                        title = "Events",
+                        subtitle = "SYSTEM TRIGGERS",
+                        icon = Icons.Activity,
+                        isInverse = true,
+                        route = Routes.Events,
+                    ),
+                    onNavigate = {},
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun StandardModuleCardsPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.xl),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+            ) {
+                items(
+                    items = builtInModules.filter { !it.isInverse },
+                    key = { it.gridKey },
+                ) { module ->
+                    StandardModuleCard(
+                        overviewModule = module,
+                        onNavigate = {},
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun DevToolsStatusCardPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.xl),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+            ) {
+                DevToolsStatusCard(
+                    state = OverviewState(
+                        serverEnabled = true,
+                        deviceConnectionStatus = DevConnectionStatus.Connected,
+                    ),
+                    onToggle = {},
+                    onPortChange = {},
+                )
+                DevToolsStatusCard(
+                    state = OverviewState(
+                        serverEnabled = false,
+                        deviceConnectionStatus = DevConnectionStatus.Off,
+                    ),
+                    onToggle = {},
+                    onPortChange = {},
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun MockRulesActiveBannerPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(modifier = Modifier.padding(MaterialTheme.dimens.margin.xl)) {
+                MockRulesActiveBanner(
+                    ruleCount = 3,
+                    onClear = {},
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun OverviewGridPreview() {
+    AppTheme() {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(MaterialTheme.dimens.margin.xl),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+            ) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Column {
+                        Spacer(Modifier.height(MaterialTheme.dimens.margin.sm))
+                        Text(
+                            "SERVER STATUS",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
+                }
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    DevToolsStatusCard(
+                        state = OverviewState(
+                            serverEnabled = true,
+                            deviceConnectionStatus = DevConnectionStatus.Connected,
+                        ),
+                        onToggle = {},
+                        onPortChange = {},
+                    )
+                }
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    MockRulesActiveBanner(ruleCount = 2, onClear = {})
+                }
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Column {
+                        Spacer(Modifier.height(MaterialTheme.dimens.margin.xxl))
+                        Text(
+                            "SYSTEM MODULES",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
+                }
+                items(
+                    items = builtInModules,
+                    key = { it.gridKey },
+                    span = { module ->
+                        if (module.isInverse) GridItemSpan(maxLineSpan)
+                        else GridItemSpan(1)
+                    },
+                ) { module ->
+                    ModuleCard(module, onNavigate = {})
+                }
+            }
         }
     }
 }

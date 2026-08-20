@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.error.list
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,24 +11,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.exceptionTypeName
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
@@ -35,11 +40,13 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
+import io.github.yashkasera.alohomora.ui.components.rememberViewedStateColors
 import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -109,9 +116,7 @@ internal fun ErrorScreen(
                 ) {
                     Text(
                         text = "${state.errors.size} TOTAL OCCURRENCES",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 1.sp,
-                        ),
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -157,57 +162,138 @@ private fun ErrorListItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val viewedColors = rememberViewedStateColors(
+        isViewed = error.isViewed,
+        unviewedContainerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.38f),
+        unviewedTitleColor = MaterialTheme.colorScheme.error,
+    )
+
     AlohomoraCard(
         onClick = onClick,
         modifier = modifier,
+        shape = MaterialTheme.shapes.large,
+        colors = AlohomoraCardDefaults.colors(
+            containerColor = viewedColors.containerColor.value,
+        ),
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(MaterialTheme.dimens.margin.md),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+            verticalAlignment = Alignment.Top,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top,
+            Box(
+                modifier = Modifier
+                    .size(MaterialTheme.dimens.icon.xl)
+                    .background(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
+                Icon(
+                    Icons.AlertTriangle,
+                    contentDescription = null,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-                    ) {
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = error.exceptionTypeName(),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                        AlohomoraChip(
-                            label = "FATAL",
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        )
-                    }
-                    Spacer(Modifier.height(MaterialTheme.dimens.margin.xs))
-
                     Text(
-                        text = error.place ?: "Unknown location",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
+                        modifier = Modifier.weight(1f),
+                        text = error.exceptionTypeName(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = viewedColors.titleColor.value,
                     )
-
-                    Spacer(Modifier.height(MaterialTheme.dimens.margin.sm))
-
-                    Text(
-                        text = DateUtils.format(error.time, DateUtils.Format.READABLE_DATE_TIME),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    AlohomoraChip(
+                        label = "FATAL",
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
                     )
                 }
+                Spacer(Modifier.height(MaterialTheme.dimens.margin.xs))
+
+                Text(
+                    text = error.place ?: "Unknown location",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                )
+
+                Spacer(Modifier.height(MaterialTheme.dimens.margin.sm))
+
+                Text(
+                    text = DateUtils.format(error.time, DateUtils.Format.READABLE_DATE_TIME),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ErrorListItemFatalPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ErrorListItem(
+                error = Error(
+                    id = 1,
+                    reason = "java.lang.NullPointerException: Attempt to invoke method on null reference",
+                    place = "com.example.app.MainActivity.onCreate(MainActivity.kt:42)",
+                    time = 1724234567000L,
+                ),
+                onClick = {},
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ErrorListItemNoPlacePreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ErrorListItem(
+                error = Error(
+                    id = 2,
+                    reason = "IllegalStateException: Fragment not attached",
+                    place = null,
+                    time = 1724234567000L,
+                ),
+                onClick = {},
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ErrorListItemViewedPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ErrorListItem(
+                error = Error(
+                    id = 3,
+                    reason = "java.lang.NullPointerException: Attempt to invoke method on null reference",
+                    place = "com.example.app.UserRepository.fetchUser(UserRepository.kt:88)",
+                    time = 1724234567000L,
+                    isViewed = true,
+                ),
+                onClick = {},
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+            )
         }
     }
 }

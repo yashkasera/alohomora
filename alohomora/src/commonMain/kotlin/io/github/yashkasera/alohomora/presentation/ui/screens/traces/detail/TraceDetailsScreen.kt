@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.traces.detail
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,16 +9,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,12 +29,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Span
+import io.github.yashkasera.alohomora.common.SpanEvent
 import io.github.yashkasera.alohomora.common.durationNanos
 import io.github.yashkasera.alohomora.common.startEpochMillis
+import io.github.yashkasera.alohomora.common.trace.TraceSummary
 import io.github.yashkasera.alohomora.common.trace.formatDuration
 import io.github.yashkasera.alohomora.common.trace.selfTimeNanos
 import io.github.yashkasera.alohomora.ui.components.AlohomoraBottomSheetModal
@@ -44,8 +51,13 @@ import io.github.yashkasera.alohomora.ui.components.waterfall.TraceWaterfall
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Waypoints
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -160,20 +172,30 @@ internal fun TraceDetailsScreen(
 @Composable
 private fun TraceHeader(state: TraceDetailsState) {
     val summary = state.summary ?: return
+    val statusColor = if (summary.hasError)
+        MaterialTheme.colorScheme.error
+    else
+        MaterialTheme.alohomoraColors.success
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .testTag(AlohomoraTestTags.TraceDetails.HEADER)
             .padding(
                 horizontal = MaterialTheme.dimens.margin.lg,
-                vertical = MaterialTheme.dimens.margin.sm,
+                vertical = MaterialTheme.dimens.margin.md,
             ),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Box(
+            modifier = Modifier
+                .size(MaterialTheme.dimens.icon.xs)
+                .background(statusColor, CircleShape),
+        )
         Text(
             text = formatDuration(summary.durationNanos),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.titleMedium,
         )
         Text(
             text = DateUtils.format(summary.startMillis, DateUtils.Format.HH_MM_SS_2MS),
@@ -250,6 +272,11 @@ private fun WaterfallMode(state: TraceDetailsState, viewModel: TraceDetailsViewM
 /** Span detail, in a bottom sheet — the touch equivalent of the desktop's hover plus detail pane. */
 @Composable
 private fun SpanDetailSheet(span: Span, children: List<Span>, traceStartNanos: Long) {
+    val iconTint = if (span.statusCode.equals("ERROR", ignoreCase = true))
+        MaterialTheme.colorScheme.error
+    else
+        MaterialTheme.colorScheme.tertiary
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -258,7 +285,29 @@ private fun SpanDetailSheet(span: Span, children: List<Span>, traceStartNanos: L
             .padding(MaterialTheme.dimens.margin.lg),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
     ) {
-        Text(text = span.name, style = MaterialTheme.typography.titleSmall)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(MaterialTheme.dimens.icon.xl)
+                    .background(iconTint.copy(alpha = 0.12f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Waypoints,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                )
+            }
+            Text(
+                text = span.name,
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.weight(1f),
+            )
+        }
         SheetRow("Kind", span.kind)
         SheetRow("Status", span.statusCode + (span.statusDescription?.let { " · $it" } ?: ""))
         SheetRow("Start", "+${formatDuration(span.startEpochNanos - traceStartNanos)}")
@@ -275,7 +324,11 @@ private fun SpanDetailSheet(span: Span, children: List<Span>, traceStartNanos: L
 
         span.attributes?.let { attributes ->
             AlohomoraHorizontalDivider()
-            Text(text = "Attributes", style = MaterialTheme.typography.labelMedium)
+            Text(
+                text = "Attributes",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
             Text(
                 text = attributes.toString(),
                 style = MaterialTheme.typography.bodySmall,
@@ -284,7 +337,11 @@ private fun SpanDetailSheet(span: Span, children: List<Span>, traceStartNanos: L
 
         if (span.events.isNotEmpty()) {
             AlohomoraHorizontalDivider()
-            Text(text = "Events", style = MaterialTheme.typography.labelMedium)
+            Text(
+                text = "Events",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
             span.events.forEach { event ->
                 SheetRow(
                     event.name,
@@ -318,5 +375,97 @@ private fun SheetRow(label: String, value: String) {
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(start = MaterialTheme.dimens.margin.md),
         )
+    }
+}
+
+@Preview
+@Composable
+private fun TraceHeaderPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            TraceHeader(
+                state = TraceDetailsState(
+                    summary = TraceSummary(
+                        traceId = "abcdef1234567890abcdef1234567890",
+                        rootSpanName = "GET /api/v1/users",
+                        startMillis = 1724234567000L,
+                        durationNanos = 245_000_000L,
+                        spanCount = 5,
+                        hasError = true,
+                        isComplete = false,
+                        isViewed = false,
+                        scopeName = "io.ktor.client",
+                    ),
+                ),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun TraceHeaderHealthyPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            TraceHeader(
+                state = TraceDetailsState(
+                    summary = TraceSummary(
+                        traceId = "11111111111111111111111111111111",
+                        rootSpanName = "POST /api/v1/orders",
+                        startMillis = 1724234590000L,
+                        durationNanos = 82_000_000L,
+                        spanCount = 3,
+                        hasError = false,
+                        isComplete = true,
+                        isViewed = true,
+                        scopeName = "io.ktor.client",
+                    ),
+                ),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun SpanDetailSheetPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SpanDetailSheet(
+                span = Span(
+                    id = 1,
+                    traceId = "abcdef1234567890abcdef1234567890",
+                    spanId = "1234567890abcdef",
+                    parentSpanId = null,
+                    name = "GET /api/v1/users",
+                    kind = "CLIENT",
+                    startEpochNanos = 1_000_000_000L,
+                    endEpochNanos = 1_245_000_000L,
+                    statusCode = "OK",
+                    attributes = buildJsonObject {
+                        put("http.method", JsonPrimitive("GET"))
+                        put("http.status_code", JsonPrimitive(200))
+                    },
+                    events = listOf(
+                        SpanEvent(
+                            name = "dns.resolve",
+                            epochNanos = 1_010_000_000L,
+                        ),
+                    ),
+                ),
+                children = emptyList(),
+                traceStartNanos = 1_000_000_000L,
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun SheetRowPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SheetRow(label = "Duration", value = "245.00ms")
+        }
     }
 }
