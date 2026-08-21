@@ -7,14 +7,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -32,8 +37,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.presentation.model.CacheRow
 import io.github.yashkasera.alohomora.desktop.presentation.model.CacheUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.cacheSubtitle
@@ -45,28 +52,24 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraSwitch
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
+import io.github.yashkasera.alohomora.ui.icons.Check
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.ChevronRight
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Key
+import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Search
+import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
-/**
- * One row per key, value inline.
- *
- * Replaces a "Keys" box of fixed height above a separate "Values" list. That split mirrored the wire
- * rather than the question being asked: keys arrive in the initial snapshot and each value arrives later
- * in its own frame, so the panel showed you a key in one place and made you find its value in another —
- * and the value list only ever held the keys you had already clicked, in click order. Values are now
- * fetched up front by `CacheViewModel`, which is what makes a single list possible.
- */
 @Composable
 fun CachePanel(
     cacheViewModel: CacheViewModel,
@@ -78,8 +81,6 @@ fun CachePanel(
         if (searchFocusTrigger > 0) searchFocus.requestFocus()
     }
     val lazyListState = rememberLazyListState()
-    // Ephemeral view state, so it stays local like ErrorsPanel's expandedId. One row at a time: these
-    // are single values, not documents, and keeping several open turns the list back into a wall.
     var expandedKey by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
@@ -88,6 +89,17 @@ fun CachePanel(
                 title = "Cache",
                 layout = TopBarLayout.START_ALIGNED,
                 subtitle = cacheSubtitle(uiState),
+                actions = {
+                    if (uiState.hasStoreData) {
+                        AlohomoraIconButton(onClick = { cacheViewModel.refresh() }) {
+                            Icon(
+                                imageVector = Icons.RefreshCw,
+                                contentDescription = "Refresh cache",
+                                modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
+                            )
+                        }
+                    }
+                },
             )
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -131,6 +143,16 @@ fun CachePanel(
                                 onToggle = {
                                     expandedKey = if (expandedKey == row.key) null else row.key
                                 },
+                                onUpdate = { newValue ->
+                                    val store = row.storeName ?: return@CacheEntryRow
+                                    val type = row.type ?: return@CacheEntryRow
+                                    cacheViewModel.updateValue(store, row.key, newValue, type)
+                                },
+                                onDelete = {
+                                    val store = row.storeName ?: return@CacheEntryRow
+                                    cacheViewModel.deleteValue(store, row.key)
+                                    expandedKey = null
+                                },
                             )
                         }
                         fabClearanceItem()
@@ -147,6 +169,8 @@ private fun CacheEntryRow(
     row: CacheRow,
     expanded: Boolean,
     onToggle: () -> Unit,
+    onUpdate: (String?) -> Unit,
+    onDelete: () -> Unit,
 ) {
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
@@ -201,31 +225,55 @@ private fun CacheEntryRow(
                     modifier = Modifier.weight(KEY_WEIGHT),
                 )
 
+                row.type?.let { type ->
+                    TypeBadge(type)
+                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+                }
+
                 CacheValuePreview(row = row, modifier = Modifier.weight(VALUE_WEIGHT))
             }
 
             AnimatedVisibility(expanded) {
-                Row(
-                    modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    AlohomoraCodeBlock(
-                        modifier = Modifier.weight(1f),
-                        content = row.value ?: EMPTY_VALUE_LABEL,
-                        isScrollable = false,
-                        jsonPrettify = true,
-                    )
-                    AlohomoraIconButton(
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(row.value.orEmpty()))
-                            copyFeedback("Copied to clipboard")
-                        },
-                        enabled = row.value != null,
+                Column {
+                    Row(
+                        modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(
-                            imageVector = Icons.Copy,
-                            contentDescription = "Copy value",
-                            modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
+                        AlohomoraCodeBlock(
+                            modifier = Modifier.weight(1f),
+                            content = row.value ?: EMPTY_VALUE_LABEL,
+                            isScrollable = false,
+                            jsonPrettify = true,
+                        )
+                        AlohomoraIconButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(row.value.orEmpty()))
+                                copyFeedback("Copied to clipboard")
+                            },
+                            enabled = row.value != null,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Copy,
+                                contentDescription = "Copy value",
+                                modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
+                            )
+                        }
+                        if (row.isEditable) {
+                            AlohomoraIconButton(onClick = onDelete) {
+                                Icon(
+                                    imageVector = Icons.Trash,
+                                    contentDescription = "Delete entry",
+                                    modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
+                                    tint = MaterialTheme.colorScheme.error,
+                                )
+                            }
+                        }
+                    }
+                    if (row.isEditable) {
+                        CacheValueEditor(
+                            currentValue = row.value,
+                            type = row.type!!,
+                            onSubmit = onUpdate,
                         )
                     }
                 }
@@ -234,12 +282,158 @@ private fun CacheEntryRow(
     }
 }
 
-/**
- * The collapsed value, or why there is not one yet.
- *
- * Three outcomes, deliberately worded apart. The old panel printed the string "null" for the last two,
- * which reads as a value the app actually stored.
- */
+@Composable
+private fun CacheValueEditor(
+    currentValue: String?,
+    type: String,
+    onSubmit: (String?) -> Unit,
+) {
+    when (type) {
+        "BOOLEAN" -> {
+            val checked = currentValue.equals("true", ignoreCase = true)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.dimens.margin.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = if (checked) "true" else "false",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+                AlohomoraSwitch(
+                    checked = checked,
+                    onCheckedChange = { onSubmit(it.toString()) },
+                )
+            }
+        }
+
+        "INT", "LONG", "FLOAT" -> {
+            var draft by remember(currentValue) { mutableStateOf(currentValue.orEmpty()) }
+            var isError by remember { mutableStateOf(false) }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.dimens.margin.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AlohomoraTextField(
+                    value = draft,
+                    onValueChange = { newVal ->
+                        draft = newVal
+                        isError = !isValidNumeric(newVal, type)
+                    },
+                    modifier = Modifier.weight(1f),
+                    placeholder = "Enter $type value",
+                    isError = isError,
+                    supportingText = if (isError) "Invalid $type" else null,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (!isError && draft != currentValue) onSubmit(draft)
+                        },
+                    ),
+                )
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+                AlohomoraIconButton(
+                    onClick = { if (!isError && draft != currentValue) onSubmit(draft) },
+                    enabled = !isError && draft != currentValue,
+                ) {
+                    Icon(
+                        imageVector = Icons.Check,
+                        contentDescription = "Save",
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
+                    )
+                }
+            }
+        }
+
+        "STRING" -> {
+            var draft by remember(currentValue) { mutableStateOf(currentValue.orEmpty()) }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.dimens.margin.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AlohomoraTextField(
+                    value = draft,
+                    onValueChange = { draft = it },
+                    modifier = Modifier.weight(1f),
+                    placeholder = "Enter value",
+                    singleLine = true,
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (draft != currentValue) onSubmit(draft)
+                        },
+                    ),
+                )
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+                AlohomoraIconButton(
+                    onClick = { if (draft != currentValue) onSubmit(draft) },
+                    enabled = draft != currentValue,
+                ) {
+                    Icon(
+                        imageVector = Icons.Check,
+                        contentDescription = "Save",
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun isValidNumeric(value: String, type: String): Boolean {
+    if (value.isEmpty()) return false
+    return try {
+        when (type) {
+            "INT" -> {
+                value.toInt(); true
+            }
+
+            "LONG" -> {
+                value.toLong(); true
+            }
+
+            "FLOAT" -> {
+                value.toFloat(); true
+            }
+
+            else -> false
+        }
+    } catch (_: NumberFormatException) {
+        false
+    }
+}
+
+@Composable
+private fun TypeBadge(type: String) {
+    val label = when (type) {
+        "STRING" -> "TEXT"
+        "BOOLEAN" -> "BOOL"
+        "INT" -> "INT"
+        "LONG" -> "LONG"
+        "FLOAT" -> "FLOAT"
+        "STRING_SET" -> "SET"
+        else -> type
+    }
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSecondaryContainer,
+        modifier = Modifier
+            .background(
+                MaterialTheme.colorScheme.secondaryContainer,
+                RoundedCornerShape(4.dp),
+            )
+            .padding(horizontal = 4.dp, vertical = 1.dp),
+    )
+}
+
 @Composable
 private fun CacheValuePreview(row: CacheRow, modifier: Modifier = Modifier) {
     val (text, muted) = when {
@@ -275,8 +469,6 @@ private fun CacheEmptyState(state: CacheUiState, onClearQuery: () -> Unit) {
         EmptyState(
             icon = Icons.Search,
             title = "No entries match",
-            // Names the pending count, because a value still in flight genuinely cannot be matched yet
-            // and "no match" would otherwise look final.
             subtitle = buildString {
                 append("${state.totalCount} keys captured.")
                 if (state.pendingCount > 0) {
@@ -292,9 +484,6 @@ private fun CacheEmptyState(state: CacheUiState, onClearQuery: () -> Unit) {
     }
 }
 
-/** Reads as a sentence rather than the literal "null", which looks like stored data. */
 private const val EMPTY_VALUE_LABEL = "not set"
-
-/** The key earns less width than its value: keys are short identifiers, values are the payload. */
 private const val KEY_WEIGHT = 0.4f
 private const val VALUE_WEIGHT = 0.6f

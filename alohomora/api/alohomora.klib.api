@@ -202,6 +202,7 @@ final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.
     final fun clearAppDatabaseOverrides() // io.github.yashkasera.alohomora/Alohomora.clearAppDatabaseOverrides|clearAppDatabaseOverrides(){}[0]
     final fun clearFeatureFlags() // io.github.yashkasera.alohomora/Alohomora.clearFeatureFlags|clearFeatureFlags(){}[0]
     final fun clearReplayHandler() // io.github.yashkasera.alohomora/Alohomora.clearReplayHandler|clearReplayHandler(){}[0]
+    final fun clearSharedPreferencesOverrides() // io.github.yashkasera.alohomora/Alohomora.clearSharedPreferencesOverrides|clearSharedPreferencesOverrides(){}[0]
     final fun excludeAppDatabase(kotlin/String) // io.github.yashkasera.alohomora/Alohomora.excludeAppDatabase|excludeAppDatabase(kotlin.String){}[0]
     final fun getDebugConfig(kotlin/String): kotlin/String? // io.github.yashkasera.alohomora/Alohomora.getDebugConfig|getDebugConfig(kotlin.String){}[0]
     final fun getPlugins(): kotlin.collections/List<io.github.yashkasera.alohomora.plugin/CustomScreenPlugin> // io.github.yashkasera.alohomora/Alohomora.getPlugins|getPlugins(){}[0]
@@ -218,6 +219,7 @@ final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.
     final fun registerAppDatabase(kotlin/String, kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.registerAppDatabase|registerAppDatabase(kotlin.String;kotlin.String?){}[0]
     final fun registerPlugin(io.github.yashkasera.alohomora.plugin/CustomScreenPlugin) // io.github.yashkasera.alohomora/Alohomora.registerPlugin|registerPlugin(io.github.yashkasera.alohomora.plugin.CustomScreenPlugin){}[0]
     final fun registerReplayHandler(io.github.yashkasera.alohomora.replay/TrafficReplayHandler) // io.github.yashkasera.alohomora/Alohomora.registerReplayHandler|registerReplayHandler(io.github.yashkasera.alohomora.replay.TrafficReplayHandler){}[0]
+    final fun registerSharedPreferences(kotlin/String, kotlin/Function0<kotlin.collections/Map<kotlin/String, kotlin/Any?>>) // io.github.yashkasera.alohomora/Alohomora.registerSharedPreferences|registerSharedPreferences(kotlin.String;kotlin.Function0<kotlin.collections.Map<kotlin.String,kotlin.Any?>>){}[0]
     final fun removeDebugConfig(kotlin/String) // io.github.yashkasera.alohomora/Alohomora.removeDebugConfig|removeDebugConfig(kotlin.String){}[0]
     final fun setDebugConfig(kotlin/String, kotlin/String) // io.github.yashkasera.alohomora/Alohomora.setDebugConfig|setDebugConfig(kotlin.String;kotlin.String){}[0]
     final fun setFeatureFlags(kotlin.collections/List<io.github.yashkasera.alohomora.common/FeatureFlag>, kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.setFeatureFlags|setFeatureFlags(kotlin.collections.List<io.github.yashkasera.alohomora.common.FeatureFlag>;kotlin.String?){}[0]
@@ -226,6 +228,7 @@ final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.
     final fun stopDevToolsServer() // io.github.yashkasera.alohomora/Alohomora.stopDevToolsServer|stopDevToolsServer(){}[0]
     final fun unregisterAction(kotlin/String): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.unregisterAction|unregisterAction(kotlin.String){}[0]
     final fun unregisterPlugin(kotlin/String): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.unregisterPlugin|unregisterPlugin(kotlin.String){}[0]
+    final fun unregisterSharedPreferences(kotlin/String) // io.github.yashkasera.alohomora/Alohomora.unregisterSharedPreferences|unregisterSharedPreferences(kotlin.String){}[0]
 }
 
 final val io.github.yashkasera.alohomora.data.model/io_github_yashkasera_alohomora_data_model_BundledBuildInfo_$serializer$stableprop // io.github.yashkasera.alohomora.data.model/io_github_yashkasera_alohomora_data_model_BundledBuildInfo_$serializer$stableprop|#static{}io_github_yashkasera_alohomora_data_model_BundledBuildInfo_$serializer$stableprop[0]

@@ -127,5 +127,8 @@ interface DevToolsRepository {
 
     fun requestCacheValue(key: String)
     fun requestPluginDataUpdate(pluginId: String, key: String, value: String)
+    fun requestCacheUpdate(storeName: String, key: String, newValue: String?, type: String)
+    fun requestCacheDelete(storeName: String, key: String)
+    fun requestCacheRefresh()
     fun requestInitialState()
 }

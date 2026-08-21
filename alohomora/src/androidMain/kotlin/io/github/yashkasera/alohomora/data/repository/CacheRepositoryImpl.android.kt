@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora.data.repository
 
 import android.content.Context
+import android.content.SharedPreferences
+import io.github.yashkasera.alohomora.cache.SharedPreferencesOverrides
 import io.github.yashkasera.alohomora.domain.model.CacheEntry
 import io.github.yashkasera.alohomora.domain.model.CacheSource
 import io.github.yashkasera.alohomora.domain.model.CacheStore
@@ -14,14 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
-/**
- * Android implementation of CacheRepository.
- *
- * Auto-discovers and reads preferences from:
- * - SharedPreferences files (*.xml in shared_prefs/)
- * - EncryptedSharedPreferences (marked as encrypted if decryption fails)
- * - DataStore files (future enhancement)
- */
 internal class CacheRepositoryImpl(
     private val context: Context,
 ) : CacheRepository {
@@ -48,11 +42,13 @@ internal class CacheRepositoryImpl(
     override suspend fun getStores(): List<CacheStore> = withContext(Dispatchers.IO) {
         val stores = mutableListOf<CacheStore>()
         val prefsDir = File(context.applicationInfo.dataDir, "shared_prefs")
+        val overrides = SharedPreferencesOverrides.snapshot()
 
         if (prefsDir.exists() && prefsDir.isDirectory) {
             prefsDir.listFiles { file -> file.extension == "xml" }?.forEach { file ->
                 val name = file.nameWithoutExtension
-                val isEncrypted = isLikelyEncrypted(name)
+                val override = overrides[name]
+                val isEncrypted = override != null || isLikelyEncrypted(name)
                 val source = if (isEncrypted) {
                     CacheSource.ENCRYPTED_SHARED_PREFERENCES
                 } else {
@@ -60,8 +56,12 @@ internal class CacheRepositoryImpl(
                 }
 
                 val count = try {
-                    val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
-                    prefs.all.size
+                    if (override != null) {
+                        override().filterNot { isKeysetMetadata(it.key) }.size
+                    } else {
+                        val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
+                        prefs.all.filterNot { isKeysetMetadata(it.key) }.size
+                    }
                 } catch (_: Exception) {
                     0
                 }
@@ -85,6 +85,60 @@ internal class CacheRepositoryImpl(
         }
     }
 
+    override suspend fun updateEntry(
+        storeName: String,
+        key: String,
+        value: String?,
+        type: String,
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val prefs = resolvePrefs(storeName) ?: return@withContext false
+            val editor = prefs.edit()
+            when (type) {
+                "STRING" -> editor.putString(key, value)
+                "INT" -> editor.putInt(key, value!!.toInt())
+                "BOOLEAN" -> editor.putBoolean(key, value!!.toBoolean())
+                "LONG" -> editor.putLong(key, value!!.toLong())
+                "FLOAT" -> editor.putFloat(key, value!!.toFloat())
+                else -> return@withContext false
+            }
+            val success = editor.commit()
+            if (success) invalidateCache()
+            success
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    override suspend fun deleteEntry(storeName: String, key: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                val prefs = resolvePrefs(storeName) ?: return@withContext false
+                val success = prefs.edit().remove(key).commit()
+                if (success) invalidateCache()
+                success
+            } catch (_: Exception) {
+                false
+            }
+        }
+
+    private fun resolvePrefs(storeName: String): SharedPreferences? {
+        val override = SharedPreferencesOverrides.snapshot()[storeName]
+        return if (override != null) {
+            // For registered stores, we need the actual SharedPreferences instance
+            // to write. The override only provides a reader lambda — writing requires
+            // the real instance, which getSharedPreferences returns for encrypted
+            // stores when the consumer has already opened them (same backing file).
+            context.getSharedPreferences(storeName, Context.MODE_PRIVATE)
+        } else {
+            context.getSharedPreferences(storeName, Context.MODE_PRIVATE)
+        }
+    }
+
+    private fun invalidateCache() {
+        cachedPreferences = emptyList()
+    }
+
     private suspend fun scanAllPreferences(): List<CacheEntry> = withContext(Dispatchers.IO) {
         val allEntries = mutableListOf<CacheEntry>()
         allEntries.addAll(scanSharedPreferences())
@@ -100,29 +154,34 @@ internal class CacheRepositoryImpl(
         }
 
         val xmlFiles = prefsDir.listFiles { file -> file.extension == "xml" } ?: return entries
+        val overrides = SharedPreferencesOverrides.snapshot()
 
         for (file in xmlFiles) {
             val storeName = file.nameWithoutExtension
-            val isEncrypted = isLikelyEncrypted(storeName)
+            val override = overrides[storeName]
+            val isEncrypted = override != null || isLikelyEncrypted(storeName)
 
             try {
-                val prefs = context.getSharedPreferences(storeName, Context.MODE_PRIVATE)
-                val all = prefs.all
+                val all: Map<String, Any?> = if (override != null) {
+                    override()
+                } else {
+                    context.getSharedPreferences(storeName, Context.MODE_PRIVATE).all
+                }
 
                 for ((key, value) in all) {
+                    if (isKeysetMetadata(key)) continue
+
                     val stringValue = when (value) {
                         is Set<*> -> value.joinToString(prefix = "[", postfix = "]")
                         null -> "null"
                         else -> value.toString()
                     }
 
-                    // For encrypted stores, values are already decrypted by the system
-                    // We just mark them as coming from an encrypted source
                     entries.add(
                         CacheEntry(
                             key = key,
                             value = stringValue,
-                            type = CacheType.detect(stringValue),
+                            type = detectType(value),
                             source = if (isEncrypted) {
                                 CacheSource.ENCRYPTED_SHARED_PREFERENCES
                             } else {
@@ -150,10 +209,25 @@ internal class CacheRepositoryImpl(
         return entries
     }
 
-    /**
-     * Heuristic to determine if a preference store is likely encrypted.
-     * Checks for common encrypted preference naming patterns.
-     */
+    private fun detectType(value: Any?): CacheType = when (value) {
+        is Boolean -> CacheType.BOOLEAN
+        is Int -> CacheType.INT
+        is Long -> CacheType.LONG
+        is Float -> CacheType.FLOAT
+        is String -> {
+            val trimmed = value.trim()
+            if ((trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+                (trimmed.startsWith("[") && trimmed.endsWith("]"))
+            ) {
+                CacheType.JSON
+            } else {
+                CacheType.STRING
+            }
+        }
+        is Set<*> -> CacheType.STRING_SET
+        else -> CacheType.UNKNOWN
+    }
+
     private fun isLikelyEncrypted(name: String): Boolean {
         val encryptedIndicators = listOf(
             "encrypted",
@@ -167,4 +241,7 @@ internal class CacheRepositoryImpl(
         )
         return encryptedIndicators.any { name.lowercase().contains(it) }
     }
+
+    private fun isKeysetMetadata(key: String): Boolean =
+        key.startsWith("__androidx_security_crypto_encrypted_prefs_")
 }
