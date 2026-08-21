@@ -306,6 +306,7 @@ fun TrafficDetailsSideSheet(
         ?.takeIf { replayState.supported }
         ?.toReplayRequest()
     val replayBlockedReason = traffic?.replayBlockedReason()
+
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     val copyFeedback = LocalCopyFeedback.current
@@ -412,7 +413,7 @@ fun TrafficDetailsSideSheet(
         if (showReplayDialog && !replayInFlight && replayError == null) showReplayDialog = false
     }
 
-    if (replayRequest != null && traffic != null) {
+    if (replayRequest != null) {
         ReplayRequestSideSheet(
             visible = showReplayDialog,
             initial = replayRequest,

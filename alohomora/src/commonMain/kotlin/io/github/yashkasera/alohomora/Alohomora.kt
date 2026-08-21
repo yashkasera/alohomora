@@ -8,6 +8,7 @@ import io.github.yashkasera.alohomora.Alohomora.persistSpan
 import io.github.yashkasera.alohomora.common.CRASH_EVENT_NAME
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.ActionParameter
 import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.NANOS_PER_SECOND
 import io.github.yashkasera.alohomora.common.Span
@@ -15,10 +16,13 @@ import io.github.yashkasera.alohomora.common.SpanEvent
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.common.normalizeSpanId
 import io.github.yashkasera.alohomora.common.spanAttributesToJson
+import io.github.yashkasera.alohomora.devtools.DevToolsPluginDataRegistry
 import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
 import io.github.yashkasera.alohomora.data.model.discoverPlatformBuildConfig
 import io.github.yashkasera.alohomora.devtools.DebugConfigStore
+import io.github.yashkasera.alohomora.devtools.DevToolsActionHandler
+import io.github.yashkasera.alohomora.devtools.DevToolsActionRegistry
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
@@ -113,7 +117,7 @@ object Alohomora {
 
     internal val identifier by lazy {
         config?.let {
-            "${it.projectName}-${it.variantName}-${it.versionName}-${it.commitSha}"
+            "${it.appName}-${it.variantName}-${it.versionName}-${it.commitSha}"
         }
     }
 
@@ -578,7 +582,16 @@ object Alohomora {
      * @throws IllegalArgumentException if a plugin with the same id is already registered
      */
     fun registerPlugin(plugin: CustomScreenPlugin) {
-        PluginRegistry.register(plugin)
+        if (PluginRegistry.register(plugin)) {
+            plugin.actions.forEach { action ->
+                DevToolsActionRegistry.register(
+                    action.id, action.label, action.description, action.parameters, action.handler,
+                )
+            }
+            if (plugin.dataFields.isNotEmpty()) {
+                DevToolsPluginDataRegistry.register(plugin.id, plugin.dataFields)
+            }
+        }
     }
 
     /**
@@ -588,7 +601,13 @@ object Alohomora {
      * @return true if the plugin was removed, false if it wasn't found
      */
     fun unregisterPlugin(pluginId: String): Boolean {
-        return PluginRegistry.unregister(pluginId)
+        val plugin = PluginRegistry.getPlugin(pluginId)
+        val removed = PluginRegistry.unregister(pluginId)
+        if (removed && plugin != null) {
+            plugin.actions.forEach { DevToolsActionRegistry.unregister(it.id) }
+            DevToolsPluginDataRegistry.unregister(pluginId)
+        }
+        return removed
     }
 
     /**
@@ -598,6 +617,35 @@ object Alohomora {
      */
     fun getPlugins(): List<CustomScreenPlugin> {
         return PluginRegistry.getAllPlugins()
+    }
+
+    /**
+     * Registers an action the desktop DevTools can trigger remotely.
+     *
+     * Actions are advertised in the initial state payload so the desktop knows what is available
+     * before sending a request. [parameters] describe the inputs the desktop should collect from
+     * the user; [handler] receives them as a flat `Map<String, String>`.
+     *
+     * The handler runs on the DevTools I/O dispatcher, so it is safe to do blocking work. It must
+     * not be long-running — the desktop waits for a reply — and should throw on failure so the
+     * error is reported back.
+     */
+    fun registerAction(
+        id: String,
+        label: String,
+        description: String? = null,
+        parameters: List<ActionParameter> = emptyList(),
+        handler: DevToolsActionHandler,
+    ) {
+        DevToolsActionRegistry.register(id, label, description, parameters, handler)
+    }
+
+    fun unregisterAction(id: String): Boolean {
+        return DevToolsActionRegistry.unregister(id)
+    }
+
+    fun publishPluginData(pluginId: String) {
+        DevToolsPluginDataRegistry.notifyChanged(pluginId)
     }
 
     @JvmStatic

@@ -163,7 +163,7 @@ class AlohomoraMcpToolDataTest {
     fun `get_build_metadata never leaks the slack webhook`() {
         val repo = FakeDevToolsRepository().apply {
             buildInfo.value = io.github.yashkasera.alohomora.desktop.domain.model.BuildInfo(
-                projectName = "Demo",
+                appName = "Demo",
                 packageName = "com.demo",
                 versionName = "1.2.3",
                 versionCode = 4,
@@ -176,7 +176,7 @@ class AlohomoraMcpToolDataTest {
             )
         }
         val meta = AlohomoraMcpToolData.buildMetadata(repo)!!.jsonObject
-        assertEquals("Demo", meta["projectName"]!!.jsonPrimitive.content)
+        assertEquals("Demo", meta["appName"]!!.jsonPrimitive.content)
         assertFalse("slackWebhookUrl" in meta.keys, "the webhook must never be serialized")
     }
 

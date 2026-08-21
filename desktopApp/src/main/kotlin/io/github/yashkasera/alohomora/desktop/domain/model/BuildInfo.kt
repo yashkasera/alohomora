@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.domain.model
 
 data class BuildInfo(
-    val projectName: String,
+    val appName: String?,
     val packageName: String? = null,
     val versionName: String,
     val versionCode: Int,

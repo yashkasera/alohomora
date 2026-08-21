@@ -367,7 +367,7 @@ private fun CurrentBuildCard(buildInfo: BuildInfo?) {
                 }
             }
             Text(
-                buildInfo?.projectName ?: "No build info",
+                buildInfo?.appName ?: "No build info",
                 color = MaterialTheme.colorScheme.secondary,
                 style = MaterialTheme.typography.bodySmall,
             )

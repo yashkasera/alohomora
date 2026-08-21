@@ -73,6 +73,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorDetail
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.PluginDataPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.FeatureFlagsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
@@ -113,6 +114,7 @@ fun DevToolsDesktopApp(
     databaseViewModel: DatabaseViewModel,
     cacheViewModel: CacheViewModel,
     featureFlagsViewModel: FeatureFlagViewModel,
+    pluginDataViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.PluginDataViewModel,
     tracesViewModel: TracesViewModel,
     eventsViewModel: EventsViewModel,
     trafficViewModel: TrafficViewModel,
@@ -449,7 +451,7 @@ fun DevToolsDesktopApp(
                             activeSection = activeSection,
                             devices = devices,
                             selectedDeviceId = selectedDeviceId,
-                            appName = buildInfo?.projectName,
+                            appName = buildInfo?.appName,
                             onDisconnect = onDisconnectWindow,
                             onSectionClick = {
                                 activeSection = it
@@ -575,6 +577,10 @@ fun DevToolsDesktopApp(
                             DesktopSection.FeatureFlags -> FeatureFlagsPanel(
                                 featureFlagsViewModel = featureFlagsViewModel,
                                 searchFocusTrigger = searchFocusTrigger,
+                            )
+
+                            DesktopSection.PluginData -> PluginDataPanel(
+                                pluginDataViewModel = pluginDataViewModel,
                             )
 
                             DesktopSection.Errors -> ErrorsPanel(

@@ -29,7 +29,7 @@ class PlatformBuildConfigTest {
         val first = assertNotNull(discoverPlatformBuildConfig())
         val second = assertNotNull(discoverPlatformBuildConfig())
 
-        assertEquals(first.projectName, second.projectName)
+        assertEquals(first.appName, second.appName)
         assertEquals(first.versionName, second.versionName)
     }
 }

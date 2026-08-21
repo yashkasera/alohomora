@@ -37,7 +37,7 @@ private object TestPlugin : CustomScreenPlugin {
     override val description: String = "PLUGIN UNDER TEST"
 
     @Composable
-    override fun Content(onBackClick: () -> Unit) {
+    override fun Content() {
         Text("workbench body", modifier = Modifier.testTag(TEST_PLUGIN_CONTENT))
     }
 }

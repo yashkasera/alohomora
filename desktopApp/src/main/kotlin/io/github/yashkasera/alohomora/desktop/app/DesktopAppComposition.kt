@@ -10,6 +10,7 @@ import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.FeatureFlagStore
+import io.github.yashkasera.alohomora.desktop.data.local.PluginDataStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
 import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
@@ -42,6 +43,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesView
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.PluginDataViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
 import io.ktor.client.HttpClient
@@ -61,6 +63,7 @@ class DesktopAppComposition(
     val databaseViewModel: DatabaseViewModel
     val cacheViewModel: CacheViewModel
     val featureFlagsViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel
+    val pluginDataViewModel: PluginDataViewModel
     val tracesViewModel: TracesViewModel
     val eventsViewModel: EventsViewModel
     val trafficViewModel: TrafficViewModel
@@ -91,6 +94,7 @@ class DesktopAppComposition(
         val databaseSnapshotStore = DatabaseSnapshotStore()
         val cacheStore = CacheStore()
         val featureFlagStore = FeatureFlagStore()
+        val pluginDataStore = PluginDataStore()
         val buildMetadataStore = BuildMetadataStore()
         val gitHistoryStore = GitHistoryStore()
         val replayStore = ReplayStore()
@@ -104,6 +108,7 @@ class DesktopAppComposition(
             databaseStore = databaseSnapshotStore,
             cacheStore = cacheStore,
             featureFlagStore = featureFlagStore,
+            pluginDataStore = pluginDataStore,
             buildMetadataStore = buildMetadataStore,
             gitHistoryStore = gitHistoryStore,
             replayStore = replayStore,
@@ -213,6 +218,7 @@ class DesktopAppComposition(
             io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel(
                 repository = devToolsRepository,
             )
+        pluginDataViewModel = PluginDataViewModel(repository = devToolsRepository)
         tracesViewModel = TracesViewModel(repository = devToolsRepository)
         eventsViewModel = EventsViewModel(repository = devToolsRepository)
         trafficViewModel = TrafficViewModel(repository = devToolsRepository)
@@ -237,6 +243,7 @@ class DesktopAppComposition(
         databaseViewModel.close()
         cacheViewModel.close()
         featureFlagsViewModel.close()
+        pluginDataViewModel.close()
         tracesViewModel.close()
         eventsViewModel.close()
         trafficViewModel.close()

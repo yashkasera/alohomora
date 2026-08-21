@@ -4,6 +4,7 @@ import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.MockRule
+import io.github.yashkasera.alohomora.common.PluginDataSnapshot
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -51,6 +52,7 @@ class FakeDevToolsRepository(
     override val traffic = MutableStateFlow<List<TrafficEntry>>(emptyList())
     override val databaseSnapshot = MutableStateFlow(DatabaseSnapshot())
     override val featureFlags = MutableStateFlow<List<FeatureFlag>>(emptyList())
+    override val pluginData = MutableStateFlow<List<PluginDataSnapshot>>(emptyList())
     override val buildInfo = MutableStateFlow<BuildInfo?>(null)
     override val gitHistory = MutableStateFlow<List<GitHistoryCommit>>(emptyList())
     override val replayState = MutableStateFlow(ReplayState())
@@ -152,5 +154,6 @@ class FakeDevToolsRepository(
         newValue: String?,
     ) = Unit
 
+    override fun requestPluginDataUpdate(pluginId: String, key: String, value: String) = Unit
     override fun requestInitialState() = Unit
 }

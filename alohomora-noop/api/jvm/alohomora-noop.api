@@ -9,6 +9,7 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public final fun getPlugins ()Ljava/util/List;
 	public final fun init ()V
 	public final fun isReplaySupported ()Z
+	public final fun publishPluginData (Ljava/lang/String;)V
 	public static final fun recordError (Ljava/lang/String;)V
 	public static final fun recordError (Ljava/lang/String;Ljava/lang/String;)V
 	public static final fun recordError (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
@@ -38,6 +39,8 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public static synthetic fun recordSpan$default (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)V
 	public static final fun recordTraffic (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;)V
 	public static synthetic fun recordTraffic$default (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun registerAction (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;)V
+	public static synthetic fun registerAction$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;ILjava/lang/Object;)V
 	public final fun registerAppDatabase (Ljava/lang/String;Ljava/lang/String;)V
 	public static synthetic fun registerAppDatabase$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
 	public final fun registerPlugin (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)V
@@ -51,7 +54,31 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public final fun startDevToolsServer (I)Z
 	public static synthetic fun startDevToolsServer$default (Lio/github/yashkasera/alohomora/Alohomora;IILjava/lang/Object;)Z
 	public final fun stopDevToolsServer ()V
+	public final fun unregisterAction (Ljava/lang/String;)Z
 	public final fun unregisterPlugin (Ljava/lang/String;)Z
+}
+
+public final class io/github/yashkasera/alohomora/common/ActionParameter {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Z)Lio/github/yashkasera/alohomora/common/ActionParameter;
+	public static synthetic fun copy$default (Lio/github/yashkasera/alohomora/common/ActionParameter;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZILjava/lang/Object;)Lio/github/yashkasera/alohomora/common/ActionParameter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultValue ()Ljava/lang/String;
+	public final fun getKey ()Ljava/lang/String;
+	public final fun getLabel ()Ljava/lang/String;
+	public final fun getOptions ()Ljava/util/List;
+	public final fun getRequired ()Z
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class io/github/yashkasera/alohomora/common/FeatureFlag {
@@ -92,12 +119,18 @@ public final class io/github/yashkasera/alohomora/common/SpanEvent {
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract interface class io/github/yashkasera/alohomora/devtools/DevToolsActionHandler {
+	public abstract fun execute (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
 public final class io/github/yashkasera/alohomora/network/AlohomoraInspectorKt {
 	public static final fun getAlohomoraInspector ()Lio/ktor/client/plugins/api/ClientPlugin;
 }
 
 public abstract interface class io/github/yashkasera/alohomora/plugin/CustomScreenPlugin {
-	public abstract fun Content (Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V
+	public abstract fun Content (Landroidx/compose/runtime/Composer;I)V
+	public fun getActions ()Ljava/util/List;
+	public fun getDataFields ()Ljava/util/List;
 	public fun getDescription ()Ljava/lang/String;
 	public fun getIcon ()Landroidx/compose/ui/graphics/vector/ImageVector;
 	public abstract fun getId ()Ljava/lang/String;
@@ -110,6 +143,8 @@ public abstract interface class io/github/yashkasera/alohomora/plugin/CustomScre
 }
 
 public final class io/github/yashkasera/alohomora/plugin/CustomScreenPlugin$DefaultImpls {
+	public static fun getActions (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)Ljava/util/List;
+	public static fun getDataFields (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)Ljava/util/List;
 	public static fun getDescription (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)Ljava/lang/String;
 	public static fun getIcon (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)Landroidx/compose/ui/graphics/vector/ImageVector;
 	public static fun getPriority (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)I
@@ -117,6 +152,56 @@ public final class io/github/yashkasera/alohomora/plugin/CustomScreenPlugin$Defa
 	public static fun getShowInNavigation (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)Z
 	public static fun onScreenHidden (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)V
 	public static fun onScreenVisible (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)V
+}
+
+public final class io/github/yashkasera/alohomora/plugin/PluginAction {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;)Lio/github/yashkasera/alohomora/plugin/PluginAction;
+	public static synthetic fun copy$default (Lio/github/yashkasera/alohomora/plugin/PluginAction;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;ILjava/lang/Object;)Lio/github/yashkasera/alohomora/plugin/PluginAction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getHandler ()Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLabel ()Ljava/lang/String;
+	public final fun getParameters ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yashkasera/alohomora/plugin/PluginDataField {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Ljava/util/List;ZLio/github/yashkasera/alohomora/plugin/PluginDataUpdateHandler;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Ljava/util/List;ZLio/github/yashkasera/alohomora/plugin/PluginDataUpdateHandler;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlin/jvm/functions/Function0;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Z
+	public final fun component7 ()Lio/github/yashkasera/alohomora/plugin/PluginDataUpdateHandler;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Ljava/util/List;ZLio/github/yashkasera/alohomora/plugin/PluginDataUpdateHandler;)Lio/github/yashkasera/alohomora/plugin/PluginDataField;
+	public static synthetic fun copy$default (Lio/github/yashkasera/alohomora/plugin/PluginDataField;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Ljava/util/List;ZLio/github/yashkasera/alohomora/plugin/PluginDataUpdateHandler;ILjava/lang/Object;)Lio/github/yashkasera/alohomora/plugin/PluginDataField;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKey ()Ljava/lang/String;
+	public final fun getLabel ()Ljava/lang/String;
+	public final fun getOnUpdate ()Lio/github/yashkasera/alohomora/plugin/PluginDataUpdateHandler;
+	public final fun getOptions ()Ljava/util/List;
+	public final fun getReadOnly ()Z
+	public final fun getType ()Ljava/lang/String;
+	public final fun getValue ()Lkotlin/jvm/functions/Function0;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/yashkasera/alohomora/plugin/PluginDataUpdateHandler {
+	public abstract fun onUpdate (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class io/github/yashkasera/alohomora/replay/KtorReplayHandlerKt {

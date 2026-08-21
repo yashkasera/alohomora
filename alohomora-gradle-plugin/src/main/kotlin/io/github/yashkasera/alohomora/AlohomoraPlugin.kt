@@ -46,7 +46,7 @@ class AlohomoraPlugin : Plugin<Project> {
                 "generateAlohomora${variant.name.replaceFirstChar { it.uppercase() }}Config",
                 GenerateAlohomoraConfigTask::class.java,
             ) {
-                projectName.set(project.name)
+                appName.set(extension.appName)
                 val resolvedPackageName = when (variant) {
                     is ApplicationVariant -> variant.applicationId.orNull
                     is LibraryVariant -> variant.namespace.orNull
@@ -99,10 +99,10 @@ class AlohomoraPlugin : Plugin<Project> {
                     variantBarText.set(variant.name.uppercase())
                     variantBarPosition.set(pos.name)
                 }
-                val appName = extension.devIconAppName
+                val appName = extension.appName
                     ?: readAppLabel(project)
                     ?: project.name
-                label.set(extension.devIconLabel ?: "$appName · ${variant.name}")
+                label.set(extension.devIconLabel ?: "$appName-${variant.name}")
                 outputDir.set(
                     project.layout.buildDirectory.dir(
                         "generated/res/devicon/${variant.name}",

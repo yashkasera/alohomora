@@ -1,7 +1,9 @@
 package io.github.yashkasera.alohomora
 
+import io.github.yashkasera.alohomora.common.ActionParameter
 import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.SpanEvent
+import io.github.yashkasera.alohomora.devtools.DevToolsActionHandler
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.replay.TrafficReplayHandler
 import kotlin.jvm.JvmOverloads
@@ -14,7 +16,7 @@ import kotlin.jvm.JvmStatic
 @Suppress("unused")
 object Alohomora {
 
-    fun init() {}
+    fun init() = Unit
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
@@ -39,26 +41,22 @@ object Alohomora {
         requestSize: Long? = null,
         responseSize: Long? = null,
         mockedBy: String? = null,
-    ) {
-    }
+    ) = Unit
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordEvent(name: String, properties: Map<String, String>? = null) {
-    }
+    fun recordEvent(name: String, properties: Map<String, String>? = null) = Unit
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordError(throwable: Throwable, place: String? = null) {
-    }
+    fun recordError(throwable: Throwable, place: String? = null) = Unit
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordError(reason: String, stackTrace: String? = null, place: String? = null) {
-    }
+    fun recordError(reason: String, stackTrace: String? = null, place: String? = null) = Unit
 
     /** No-op. Defaults are literals to avoid depending on `:alohomora-common`. */
     @Suppress("UNUSED_PARAMETER")
@@ -77,42 +75,35 @@ object Alohomora {
         attributes: Map<String, String>? = null,
         events: List<SpanEvent> = emptyList(),
         scopeName: String? = null,
-    ) {
-    }
+    ) = Unit
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
-    fun recordSpan(name: String, durationNanos: Long, attributes: Map<String, String>? = null) {
-    }
+    fun recordSpan(name: String, durationNanos: Long, attributes: Map<String, String>? = null) =
+        Unit
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
-    fun setShakeToOpenEnabled(enabled: Boolean) {
-    }
+    fun setShakeToOpenEnabled(enabled: Boolean) = Unit
 
     @Suppress("UNUSED_PARAMETER")
-    fun startDevToolsServer(port: Int = 53999): Boolean {
-        return false
-    }
+    fun startDevToolsServer(port: Int = 53999): Boolean = false
 
-    fun stopDevToolsServer() {}
+    fun stopDevToolsServer() = Unit
 
     @Suppress("UNUSED_PARAMETER")
-    fun registerAppDatabase(name: String, path: String? = null) {
-    }
+    fun registerAppDatabase(name: String, path: String? = null) = Unit
 
     @Suppress("UNUSED_PARAMETER")
-    fun excludeAppDatabase(name: String) {
-    }
+    fun excludeAppDatabase(name: String) = Unit
 
-    fun clearAppDatabaseOverrides() {}
+    fun clearAppDatabaseOverrides() = Unit
 
     @Suppress("UNUSED_PARAMETER")
-    fun registerReplayHandler(handler: TrafficReplayHandler) {
-    }
+    fun registerReplayHandler(handler: TrafficReplayHandler) = Unit
 
-    fun clearReplayHandler() {}
+    fun clearReplayHandler() = Unit
 
     val isReplaySupported: Boolean get() = false
 
@@ -125,8 +116,7 @@ object Alohomora {
         source: String? = null,
         type: String? = null,
         metadata: Map<String, String>? = null,
-    ) {
-    }
+    ) = Unit
 
     @Suppress("UNUSED_PARAMETER")
     @JvmStatic
@@ -134,25 +124,38 @@ object Alohomora {
     fun setFeatureFlags(
         flags: List<FeatureFlag>,
         source: String? = null,
-    ) {
-    }
+    ) = Unit
 
     @JvmStatic
-    fun clearFeatureFlags() {
-    }
+    fun clearFeatureFlags() = Unit
 
     @Suppress("UNUSED_PARAMETER")
-    fun registerPlugin(plugin: CustomScreenPlugin) {
-    }
+    fun registerPlugin(plugin: CustomScreenPlugin) = Unit
 
     @Suppress("UNUSED_PARAMETER")
-    fun unregisterPlugin(pluginId: String): Boolean {
-        return false
-    }
+    fun unregisterPlugin(pluginId: String): Boolean = false
+
 
     fun getPlugins(): List<CustomScreenPlugin> {
         return emptyList()
     }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun registerAction(
+        id: String,
+        label: String,
+        description: String? = null,
+        parameters: List<ActionParameter> = emptyList(),
+        handler: DevToolsActionHandler,
+    ) = Unit
+
+    @Suppress("UNUSED_PARAMETER")
+    fun unregisterAction(id: String): Boolean {
+        return false
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun publishPluginData(pluginId: String) = Unit
 
     @JvmStatic
     @Suppress("UNUSED_PARAMETER")

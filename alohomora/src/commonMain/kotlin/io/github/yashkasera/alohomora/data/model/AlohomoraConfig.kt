@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.data.model
 
 interface AlohomoraConfig {
-    val projectName: String
+    val appName: String? get() = null
     val packageName: String?
     val versionName: String
     val versionCode: Int

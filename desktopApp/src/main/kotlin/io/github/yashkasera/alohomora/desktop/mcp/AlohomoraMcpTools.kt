@@ -405,7 +405,7 @@ internal object AlohomoraMcpToolData {
                     put("platform", handle.platform)
                     put("connection", handle.devToolsRepository.connectionState.value.label())
                     handle.devToolsRepository.buildInfo.value?.let { build ->
-                        put("app", build.projectName)
+                        put("app", build.appName)
                         put("versionName", build.versionName)
                         put("branch", build.branch)
                         put("commitSha", build.commitSha)
@@ -581,7 +581,7 @@ internal object AlohomoraMcpToolData {
         val build = repo.buildInfo.value ?: return null
         // slackWebhookUrl is deliberately not serialized — it is the one secret on this model.
         return buildJsonObject {
-            put("projectName", build.projectName)
+            put("appName", build.appName)
             put("packageName", build.packageName)
             put("versionName", build.versionName)
             put("versionCode", build.versionCode)

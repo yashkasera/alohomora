@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,56 +38,29 @@ import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
-import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
-import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
-import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.EmptyState
-import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.ChevronRight
 import io.github.yashkasera.alohomora.ui.icons.Icons
-import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-internal fun NavigationHistoryScreen(onBackClick: () -> Unit = {}) {
+internal fun NavigationHistoryScreen() {
     val viewModel = koinViewModel<NavigationHistoryViewModel>()
     val state by viewModel.state.collectAsState()
-
-    Scaffold(
-        topBar = {
-            AlohomoraTopBar(
-                title = "Navigation History",
-                subtitle = null,
-                navigationIcon = {
-                    AlohomoraIconButton(onClick = onBackClick) {
-                        Icon(Icons.ArrowLeft, contentDescription = "back")
-                    }
-                },
-                actions = {
-                    AlohomoraIconButton(onClick = { viewModel.refresh() }) {
-                        Icon(Icons.RefreshCw, contentDescription = "refresh")
-                    }
-                },
-            )
-        },
-        bottomBar = { SessionSummaryBar(state) },
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    horizontal = MaterialTheme.dimens.margin.lg,
-                    vertical = MaterialTheme.dimens.margin.md,
-                ),
-        ) {
-            NavigationTimeline(events = state.timelineEvents)
-        }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(
+                horizontal = MaterialTheme.dimens.margin.lg,
+                vertical = MaterialTheme.dimens.margin.md,
+            ),
+    ) {
+        NavigationTimeline(events = state.timelineEvents)
     }
 }
 
@@ -367,50 +339,3 @@ private fun StateChip(
     }
 }
 
-@Composable
-private fun SessionSummaryBar(state: NavigationHistoryState) {
-    Column {
-        AlohomoraHorizontalDivider()
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(
-                    horizontal = MaterialTheme.dimens.margin.xl,
-                    vertical = MaterialTheme.dimens.margin.lg,
-                ),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            SummaryStat(label = "SESSION DURATION", value = state.sessionDuration)
-            SummaryStat(
-                label = "SCREENS VISITED",
-                value = state.screensVisited.toString(),
-                alignEnd = true,
-                valueTestTag = "nav_screens_visited",
-            )
-        }
-    }
-}
-
-@Composable
-private fun SummaryStat(
-    label: String,
-    value: String,
-    alignEnd: Boolean = false,
-    valueTestTag: String? = null,
-) {
-    Column(horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = (if (valueTestTag != null) Modifier.testTag(valueTestTag) else Modifier)
-                .padding(top = MaterialTheme.dimens.margin.xs),
-        )
-    }
-}

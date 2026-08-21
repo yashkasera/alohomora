@@ -81,7 +81,7 @@ class BundledBuildInfoTest {
     @Test
     fun runtimeIdentityWinsOverTheManifest() {
         val config = AppIdentity(
-            projectName = "Showcase",
+            appName = "Showcase",
             packageName = "io.github.yashkasera.showcase",
             versionName = "2.1",
             versionCode = 47,
@@ -89,7 +89,7 @@ class BundledBuildInfoTest {
 
         // Version and bundle id come from Info.plist, never from the manifest: the generator
         // deliberately does not emit them, so there is nothing to drift out of sync.
-        assertEquals("Showcase", config.projectName)
+        assertEquals("Showcase", config.appName)
         assertEquals("io.github.yashkasera.showcase", config.packageName)
         assertEquals("2.1", config.versionName)
         assertEquals(47, config.versionCode)
@@ -100,7 +100,7 @@ class BundledBuildInfoTest {
     @Test
     fun missingManifestStillYieldsAUsableConfig() {
         val config = AppIdentity(
-            projectName = "Showcase",
+            appName = "Showcase",
             packageName = "io.github.yashkasera.showcase",
             versionName = "2.1",
             versionCode = 47,

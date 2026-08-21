@@ -4,6 +4,7 @@ import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.MockRule
+import io.github.yashkasera.alohomora.common.PluginDataSnapshot
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -40,6 +41,7 @@ interface DevToolsRepository {
     val databaseSnapshot: StateFlow<DatabaseSnapshot>
     val cacheState: StateFlow<CacheState>
     val featureFlags: StateFlow<List<FeatureFlag>>
+    val pluginData: StateFlow<List<PluginDataSnapshot>>
     val buildInfo: StateFlow<BuildInfo?>
     val gitHistory: StateFlow<List<GitHistoryCommit>>
     val replayState: StateFlow<ReplayState>
@@ -124,5 +126,6 @@ interface DevToolsRepository {
     )
 
     fun requestCacheValue(key: String)
+    fun requestPluginDataUpdate(pluginId: String, key: String, value: String)
     fun requestInitialState()
 }

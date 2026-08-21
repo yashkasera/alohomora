@@ -230,13 +230,15 @@ internal fun OverviewScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
                     ) {
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = it.projectName,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.secondary,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                        it.appName?.let { appName ->
+                            Text(
+                                modifier = Modifier.weight(1f),
+                                text = appName,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.secondary,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),

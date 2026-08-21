@@ -6,7 +6,7 @@ import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
 import io.github.yashkasera.alohomora.data.model.GitHistoryCommit
 
 internal fun AlohomoraConfig.toBuildMetadataPayload(): BuildMetadataPayload = BuildMetadataPayload(
-    projectName = projectName,
+    appName = appName,
     packageName = packageName,
     versionName = versionName,
     versionCode = versionCode,

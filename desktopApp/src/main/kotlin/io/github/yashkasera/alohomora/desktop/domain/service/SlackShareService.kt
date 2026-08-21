@@ -128,7 +128,7 @@ class SlackShareService(
 
     private fun BuildInfo?.toBuildIdentifier(): String? {
         if (this == null) return null
-        return "${projectName}-${variantName}-${versionName}-${commitSha}"
+        return "${appName}-${variantName}-${versionName}-${commitSha}"
     }
 
     private suspend fun postToWebhook(message: SlackMessage, webhookUrl: String?): Result<Unit> {
