@@ -61,6 +61,7 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraCardsKt
 	public static final fun AlohomoraCard (Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/CardColors;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
 	public static final fun AlohomoraCard (Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZLandroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/CardColors;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
 	public static final fun AlohomoraOutlinedCard (Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/CardColors;Landroidx/compose/foundation/BorderStroke;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+	public static final fun rememberViewedStateColors-zf8z9n0 (ZJJJJLandroidx/compose/runtime/Composer;II)Lio/github/yashkasera/alohomora/ui/components/ViewedStateColors;
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraChipDefaults {
@@ -404,6 +405,20 @@ public final class io/github/yashkasera/alohomora/ui/components/TopBarLayout : j
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/yashkasera/alohomora/ui/components/TopBarLayout;
 	public static fun values ()[Lio/github/yashkasera/alohomora/ui/components/TopBarLayout;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ViewedStateColors {
+	public static final field $stable I
+	public fun <init> (Landroidx/compose/runtime/State;Landroidx/compose/runtime/State;)V
+	public final fun component1 ()Landroidx/compose/runtime/State;
+	public final fun component2 ()Landroidx/compose/runtime/State;
+	public final fun copy (Landroidx/compose/runtime/State;Landroidx/compose/runtime/State;)Lio/github/yashkasera/alohomora/ui/components/ViewedStateColors;
+	public static synthetic fun copy$default (Lio/github/yashkasera/alohomora/ui/components/ViewedStateColors;Landroidx/compose/runtime/State;Landroidx/compose/runtime/State;ILjava/lang/Object;)Lio/github/yashkasera/alohomora/ui/components/ViewedStateColors;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContainerColor ()Landroidx/compose/runtime/State;
+	public final fun getTitleColor ()Landroidx/compose/runtime/State;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/jsoneditor/JsonEditorColors {
