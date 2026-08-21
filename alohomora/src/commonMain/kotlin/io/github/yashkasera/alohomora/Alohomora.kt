@@ -5,6 +5,7 @@ import io.github.yashkasera.alohomora.Alohomora.initLock
 import io.github.yashkasera.alohomora.Alohomora.isReplaySupported
 import io.github.yashkasera.alohomora.Alohomora.persistError
 import io.github.yashkasera.alohomora.Alohomora.persistSpan
+import io.github.yashkasera.alohomora.common.CRASH_EVENT_NAME
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.FeatureFlag
@@ -14,10 +15,10 @@ import io.github.yashkasera.alohomora.common.SpanEvent
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.common.normalizeSpanId
 import io.github.yashkasera.alohomora.common.spanAttributesToJson
-import io.github.yashkasera.alohomora.devtools.DebugConfigStore
 import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
 import io.github.yashkasera.alohomora.data.model.discoverPlatformBuildConfig
+import io.github.yashkasera.alohomora.devtools.DebugConfigStore
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
 import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
@@ -321,7 +322,7 @@ object Alohomora {
         koin?.get<EventsRepository>()?.save(
             Event(
                 time = error.time,
-                name = ErrorCapture.CRASH_EVENT_NAME,
+                name = CRASH_EVENT_NAME,
                 properties = Json.encodeToJsonElement(
                     buildMap {
                         error.reason?.let { put("reason", it) }

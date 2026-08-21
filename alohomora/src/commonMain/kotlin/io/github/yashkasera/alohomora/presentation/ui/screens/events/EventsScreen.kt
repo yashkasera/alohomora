@@ -1,7 +1,6 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.events
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,18 +28,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
-import io.github.yashkasera.alohomora.error.ErrorCapture
+import io.github.yashkasera.alohomora.common.clampLines
+import io.github.yashkasera.alohomora.common.isCrashEvent
+import io.github.yashkasera.alohomora.common.prettyProperties
 import io.github.yashkasera.alohomora.presentation.ui.components.EventsDetailsSheet
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
@@ -61,7 +61,6 @@ import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.koin.compose.viewmodel.koinViewModel
@@ -200,6 +199,8 @@ internal fun EventsList(
     }
 }
 
+private const val MAX_ROW_PROPERTY_LINES = 5
+
 @Composable
 internal fun EventItem(
     event: Event,
@@ -207,7 +208,7 @@ internal fun EventItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isFatal = event.name == ErrorCapture.CRASH_EVENT_NAME
+    val isFatal = event.isCrashEvent
     val viewedColors = rememberViewedStateColors(
         isViewed = event.isViewed,
         unviewedTitleColor = if (isFatal) MaterialTheme.alohomoraColors.fatal
@@ -256,26 +257,12 @@ internal fun EventItem(
 
                 if (showProperties) {
                     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-                    Text(
-                        text = event.properties
-                            ?.takeUnless { it is JsonNull }
-                            ?.toString()
-                            ?: "{}",
-                        maxLines = 5,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = MaterialTheme.dimens.margin.xs)
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                            .border(
-                                width = MaterialTheme.dimens.stroke.small,
-                                color = MaterialTheme.colorScheme.outline,
-                                shape = MaterialTheme.shapes.medium,
-                            )
-                            .padding(MaterialTheme.dimens.margin.sm),
+                    val properties = remember(event.id, event.time) {
+                        event.prettyProperties().clampLines(MAX_ROW_PROPERTY_LINES)
+                    }
+                    AlohomoraCodeBlock(
+                        content = properties,
+                        isScrollable = false,
                     )
                 }
             }

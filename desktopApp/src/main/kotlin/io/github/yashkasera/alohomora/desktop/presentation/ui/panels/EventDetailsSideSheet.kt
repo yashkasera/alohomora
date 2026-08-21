@@ -25,6 +25,7 @@ import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.prettyProperties
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValueRow
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SlackShareDialog
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
@@ -63,6 +64,7 @@ fun EventDetailsSideSheet(
     val isSlackConfigured = buildInfo?.slackWebhookUrl.isNullOrBlank().not()
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
+    val copyFeedback = LocalCopyFeedback.current
 
     // Keyed on the event, not bare `remember`: this composable is reused as the selection changes, so
     // an un-keyed flag stays true across the switch and the dialog reopens for whichever event was
@@ -120,7 +122,10 @@ fun EventDetailsSideSheet(
                         )
                     }
                     AlohomoraIconButton(
-                        onClick = { clipboardManager.setText(AnnotatedString(shareText)) },
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(shareText))
+                            copyFeedback("Copied to clipboard")
+                        },
                     ) {
                         Icon(imageVector = Icons.Copy, contentDescription = "Copy event")
                     }

@@ -186,7 +186,7 @@ private fun SidebarConnectionCard(
             .background(MaterialTheme.colorScheme.surfaceContainer, MaterialTheme.shapes.small)
             .fillMaxWidth()
             .padding(MaterialTheme.dimens.margin.md),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
         if (selectedOnlineDevice == null) {
             Text(
@@ -234,7 +234,7 @@ private fun SidebarConnectionCard(
                     .fillMaxWidth()
                     .clip(MaterialTheme.shapes.small)
                     .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(horizontal = 10.dp, vertical = MaterialTheme.dimens.margin.sm),
+                    .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = MaterialTheme.dimens.margin.sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(

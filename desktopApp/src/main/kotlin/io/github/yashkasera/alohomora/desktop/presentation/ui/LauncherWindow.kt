@@ -1,20 +1,44 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -30,9 +54,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.MenuBar
@@ -51,12 +80,24 @@ import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.UpdateBanner
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
+import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
+import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
+import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.icons.AlohomoraFull
+import io.github.yashkasera.alohomora.ui.icons.Android
+import io.github.yashkasera.alohomora.ui.icons.Apple
+import io.github.yashkasera.alohomora.ui.icons.CircleAlert
+import io.github.yashkasera.alohomora.ui.icons.HardDrive
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Key
+import io.github.yashkasera.alohomora.ui.icons.Link
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -78,6 +119,8 @@ private data class PendingSession(
     val composition: DesktopAppComposition,
 )
 
+private enum class LauncherState { DEVICE_SELECT, CONNECTING, AUTH_OTP }
+
 @Composable
 fun LauncherWindow(
     sharedComposition: DesktopAppComposition,
@@ -88,6 +131,7 @@ fun LauncherWindow(
     onDismissUpdate: () -> Unit,
     onShowSettings: () -> Unit,
     onShowAbout: () -> Unit,
+    appOverlays: @Composable () -> Unit,
     onOpenDeviceWindow: (deviceId: String, host: String, hostPort: Int, devicePort: Int, composition: DesktopAppComposition) -> Unit,
     onClose: () -> Unit,
     onExit: () -> Unit,
@@ -137,6 +181,7 @@ fun LauncherWindow(
                     )
                 }
             }
+            appOverlays()
         }
     }
 }
@@ -206,185 +251,46 @@ private fun LauncherContent(
         }
     }
 
+    val launcherState = when {
+        pendingSession == null -> LauncherState.DEVICE_SELECT
+        pendingConnectionState is DevToolsConnection.AwaitingAuth &&
+            (pendingConnectionState as DevToolsConnection.AwaitingAuth).otpRequired ->
+            LauncherState.AUTH_OTP
+        else -> LauncherState.CONNECTING
+    }
+
     Surface {
         Column(
             modifier = Modifier.fillMaxSize()
                 .padding(MaterialTheme.dimens.margin.xxl),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.AlohomoraFull,
-                    contentDescription = "Alohomora",
-                    modifier = Modifier.width(256.dp),
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                AlohomoraOutlinedButton(
-                    text = "Refresh",
-                    leadingIcon = {
-                        Icon(
-                            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                            imageVector = Icons.RefreshCw, contentDescription = null,
-                        )
-                    },
-                    onClick = devicesViewModel::refreshDevices,
-                    size = AlohomoraButtonSize.SMALL,
-                )
-            }
-            Spacer(Modifier.height(MaterialTheme.dimens.margin.md))
-
-            if (pendingSession != null) {
-                when (val pending = pendingConnectionState) {
-                    is DevToolsConnection.AwaitingAuth if pending.otpRequired -> {
-                        Text(
-                            "Authentication Required",
-                            style = MaterialTheme.typography.headlineSmall,
-                        )
-                        Text(
-                            "Enter the 4-digit code shown on your device.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.secondary,
-                        )
-                        AlohomoraTextField(
-                            value = otpInput,
-                            onValueChange = {
-                                if (it.length <= 4 && it.all(Char::isDigit)) otpInput = it
-                            },
-                            placeholder = "0000",
-                            singleLine = true,
-                            modifier = Modifier.width(160.dp),
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            AlohomoraFilledButton(
-                                text = "Confirm",
-                                onClick = {
-                                    pendingSession?.composition?.devToolsViewModel?.submitOtp(
-                                        otpInput,
-                                    )
-                                    otpInput = ""
-                                },
-                                enabled = otpInput.length == 4,
-                                uppercase = false,
-                            )
-                            AlohomoraOutlinedButton(
-                                text = "Cancel",
-                                size = AlohomoraButtonSize.SMALL,
-                                onClick = {
-                                    pendingSession?.composition?.devToolsViewModel?.disconnect()
-                                    pendingSession = null
-                                    otpInput = ""
-                                },
-                            )
-                        }
-                    }
-
-                    else -> {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(
-                                space = MaterialTheme.dimens.margin.md,
-                                alignment = Alignment.CenterVertically,
-                            ),
-                        ) {
-                            CircularWavyProgressIndicator()
-                            Text(
-                                "Connecting…",
-                                style = MaterialTheme.typography.headlineSmall,
-                            )
-                            (pendingConnectionState as? DevToolsConnection.Connecting)?.let { conn ->
-                                Text(
-                                    "${conn.host}:${conn.port}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.secondary,
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
-                            AlohomoraOutlinedButton(
-                                text = "Cancel",
-                                size = AlohomoraButtonSize.SMALL,
-                                onClick = {
-                                    pendingSession?.composition?.devToolsViewModel?.disconnect()
-                                    pendingSession = null
-                                },
-                            )
-                        }
-                    }
-                }
-                if (!actionError.isNullOrBlank()) {
-                    Text(actionError!!, color = MaterialTheme.colorScheme.error)
-                }
-            } else {
-                Text(
-                    "Select a device, connect, and open a dedicated window.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
-
-                if (onlineDevices.isEmpty()) {
-                    Text(
-                        "No online devices found. Connect a device and refresh.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.secondary,
-                    )
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        onlineDevices.forEach { device ->
-                            val selected = device.id == selectedDeviceId
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(MaterialTheme.shapes.small)
-                                    .background(
-                                        if (selected) MaterialTheme.colorScheme.secondaryContainer
-                                        else MaterialTheme.colorScheme.surface,
-                                    )
-                                    .clickable { selectedDeviceId = device.id }
-                                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                            ) {
-                                Text(device.model ?: device.id)
-                                Spacer(modifier = Modifier.weight(1f))
-                                Text(device.id, color = MaterialTheme.colorScheme.secondary)
-                            }
-                        }
-                    }
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    AlohomoraTextField(
-                        value = host,
-                        onValueChange = { host = it },
-                        label = "Host",
-                        singleLine = true,
-                        modifier = Modifier.width(220.dp),
-                    )
-                    AlohomoraTextField(
-                        value = hostPort,
-                        onValueChange = { hostPort = it.filter(Char::isDigit) },
-                        label = "Host Port",
-                        singleLine = true,
-                        modifier = Modifier.width(140.dp),
-                    )
-                    AlohomoraTextField(
-                        value = devicePort,
-                        onValueChange = { devicePort = it.filter(Char::isDigit) },
-                        label = "Device Port",
-                        singleLine = true,
-                        modifier = Modifier.width(140.dp),
-                    )
-                }
-
-                if (!actionError.isNullOrBlank()) {
-                    Text(actionError!!, color = MaterialTheme.colorScheme.error)
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    AlohomoraFilledButton(
-                        text = "Connect & Open Window",
-                        onClick = {
+            AnimatedContent(
+                targetState = launcherState,
+                modifier = Modifier.weight(1f),
+                transitionSpec = {
+                    (fadeIn(spring()) + slideInVertically(spring(dampingRatio = 0.8f)) { it / 12 })
+                        .togetherWith(fadeOut(spring()) + slideOutVertically(spring()) { -it / 12 })
+                },
+                label = "launcher-state",
+            ) { state ->
+                when (state) {
+                    LauncherState.DEVICE_SELECT -> DeviceSelectContent(
+                        onlineDevices = onlineDevices,
+                        selectedDeviceId = selectedDeviceId,
+                        selectedDevice = selectedDevice,
+                        host = host,
+                        hostPort = hostPort,
+                        devicePort = devicePort,
+                        actionError = actionError,
+                        onDeviceSelect = { selectedDeviceId = it },
+                        onHostChange = { host = it },
+                        onHostPortChange = { hostPort = it.filter(Char::isDigit) },
+                        onDevicePortChange = { devicePort = it.filter(Char::isDigit) },
+                        onRefresh = devicesViewModel::refreshDevices,
+                        onConnect = {
                             if (selectedDevice == null) {
                                 actionError = "Select an online device first"
-                                return@AlohomoraFilledButton
+                                return@DeviceSelectContent
                             }
                             val numericHostPort = hostPort.toIntOrNull() ?: DEFAULT_PORT.toInt()
                             val numericDevicePort = devicePort.toIntOrNull() ?: DEFAULT_PORT.toInt()
@@ -453,20 +359,607 @@ private fun LauncherContent(
                                 }
                             }
                         },
-                        enabled = selectedDevice != null,
+                    )
+
+                    LauncherState.CONNECTING -> ConnectingContent(
+                        connectionState = pendingConnectionState,
+                        onCancel = {
+                            pendingSession?.composition?.devToolsViewModel?.disconnect()
+                            pendingSession = null
+                        },
+                    )
+
+                    LauncherState.AUTH_OTP -> AuthOtpContent(
+                        otpInput = otpInput,
+                        onOtpChange = { if (it.length <= 4 && it.all(Char::isDigit)) otpInput = it },
+                        onConfirm = {
+                            pendingSession?.composition?.devToolsViewModel?.submitOtp(otpInput)
+                            otpInput = ""
+                        },
+                        onCancel = {
+                            pendingSession?.composition?.devToolsViewModel?.disconnect()
+                            pendingSession = null
+                            otpInput = ""
+                        },
                     )
                 }
             }
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                text = "v${DesktopBuildConfig.version}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.tertiary,
+        }
+    }
+}
+
+// region Device Selection
+
+@Composable
+private fun DeviceSelectContent(
+    onlineDevices: List<DeviceUi>,
+    selectedDeviceId: String?,
+    selectedDevice: DeviceUi?,
+    host: String,
+    hostPort: String,
+    devicePort: String,
+    actionError: String?,
+    onDeviceSelect: (String) -> Unit,
+    onHostChange: (String) -> Unit,
+    onHostPortChange: (String) -> Unit,
+    onDevicePortChange: (String) -> Unit,
+    onRefresh: () -> Unit,
+    onConnect: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
+    ) {
+        // Left column — branding + connection config
+        Column(
+            modifier = Modifier.weight(0.4f).fillMaxHeight(),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+        ) {
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                shape = MaterialTheme.shapes.medium,
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(MaterialTheme.dimens.margin.xs)
+                            .background(MaterialTheme.colorScheme.primary),
+                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(
+                                start = MaterialTheme.dimens.margin.xxl,
+                                end = MaterialTheme.dimens.margin.xxl,
+                                top = MaterialTheme.dimens.margin.xxxl,
+                                bottom = MaterialTheme.dimens.margin.xxl,
+                            ),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Icon(
+                            imageVector = Icons.AlohomoraFull,
+                            contentDescription = "Alohomora",
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(MaterialTheme.dimens.margin.sm))
+                        Text(
+                            "Developer Console",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.height(MaterialTheme.dimens.margin.md))
+                        Surface(
+                            shape = MaterialTheme.shapes.extraSmall,
+                            color = MaterialTheme.colorScheme.surfaceContainer,
+                        ) {
+                            Text(
+                                "v${DesktopBuildConfig.version}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.padding(
+                                    horizontal = MaterialTheme.dimens.margin.sm,
+                                    vertical = MaterialTheme.dimens.margin.xs,
+                                ),
+                            )
+                        }
+                    }
+                }
+            }
+
+            AlohomoraOutlinedCard(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                ) {
+                    Text(
+                        "Connection",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    AlohomoraTextField(
+                        value = host,
+                        onValueChange = onHostChange,
+                        label = "Host",
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm)) {
+                        AlohomoraTextField(
+                            value = hostPort,
+                            onValueChange = onHostPortChange,
+                            label = "Host Port",
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                        )
+                        AlohomoraTextField(
+                            value = devicePort,
+                            onValueChange = onDevicePortChange,
+                            label = "Device Port",
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = !actionError.isNullOrBlank(),
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                ) {
+                    Row(
+                        modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.CircleAlert,
+                            contentDescription = null,
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                        )
+                        Text(
+                            actionError.orEmpty(),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.weight(1f))
+        }
+
+        VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+        // Right column — device list
+        Column(
+            modifier = Modifier.weight(0.6f).fillMaxHeight(),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Devices",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (onlineDevices.isNotEmpty()) {
+                    Spacer(Modifier.width(MaterialTheme.dimens.margin.sm))
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ) {
+                        Text(
+                            "${onlineDevices.size}",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(
+                                horizontal = MaterialTheme.dimens.margin.sm,
+                                vertical = MaterialTheme.dimens.margin.xs,
+                            ),
+                        )
+                    }
+                }
+                Spacer(Modifier.weight(1f))
+                AlohomoraOutlinedButton(
+                    text = "Refresh",
+                    leadingIcon = {
+                        Icon(
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                            imageVector = Icons.RefreshCw,
+                            contentDescription = null,
+                        )
+                    },
+                    onClick = onRefresh,
+                    size = AlohomoraButtonSize.SMALL,
+                )
+            }
+
+            if (onlineDevices.isEmpty()) {
+                EmptyState(
+                    icon = Icons.HardDrive,
+                    title = "No devices found",
+                    subtitle = "Connect a device via USB and refresh",
+                    modifier = Modifier.weight(1f),
+                    action = {
+                        AlohomoraOutlinedButton(
+                            text = "Refresh Devices",
+                            onClick = onRefresh,
+                        )
+                    },
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                ) {
+                    itemsIndexed(onlineDevices, key = { _, d -> d.id }) { _, device ->
+                        DeviceListCard(
+                            device = device,
+                            selected = device.id == selectedDeviceId,
+                            onClick = { onDeviceSelect(device.id) },
+                        )
+                    }
+                }
+
+                AlohomoraFilledButton(
+                    text = "Connect & Open Window",
+                    onClick = onConnect,
+                    enabled = selectedDevice != null,
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = {
+                        Icon(
+                            Icons.Link,
+                            contentDescription = null,
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                        )
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DeviceListCard(
+    device: DeviceUi,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val containerColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.secondaryContainer
+        else AlohomoraCardDefaults.colors().containerColor,
+        animationSpec = spring(),
+        label = "device-card-color",
+    )
+    val borderWidth by animateDpAsState(
+        targetValue = if (selected) MaterialTheme.dimens.stroke.medium else 0.dp,
+        animationSpec = spring(),
+        label = "device-card-border",
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+        animationSpec = spring(),
+        label = "device-card-border-color",
+    )
+
+    AlohomoraCard(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(borderWidth, borderColor, AlohomoraCardDefaults.shape),
+        colors = AlohomoraCardDefaults.colors(containerColor = containerColor),
+    ) {
+        Row(
+            modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(MaterialTheme.dimens.icon.xl),
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(
+                        imageVector = when (device.platform) {
+                            DevicePlatform.IOS, DevicePlatform.IOS_SIMULATOR -> Icons.Apple
+                            else -> Icons.Android
+                        },
+                        contentDescription = null,
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    device.model ?: device.id,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        when (device.platform) {
+                            DevicePlatform.IOS -> "iOS"
+                            DevicePlatform.IOS_SIMULATOR -> "iOS Sim"
+                            DevicePlatform.ANDROID -> "Android"
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                    Text(
+                        device.id,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+
+            ConnectionStatusDot(state = ConnectionDotState.Connected, size = MaterialTheme.dimens.icon.xs)
+        }
+    }
+}
+
+// endregion
+
+// region Connecting State
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ConnectingContent(
+    connectionState: DevToolsConnection,
+    onCancel: () -> Unit,
+) {
+    val stepIndex = when (connectionState) {
+        is DevToolsConnection.Connecting -> 0
+        is DevToolsConnection.AwaitingAuth -> 1
+        is DevToolsConnection.Connected -> 2
+        else -> 0
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        AlohomoraCard(
+            modifier = Modifier.fillMaxWidth(0.6f),
+        ) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.xxxl),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
+            ) {
+                ConnectionStepper(activeStep = stepIndex)
+
+                CircularWavyProgressIndicator()
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "Connecting…",
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                    (connectionState as? DevToolsConnection.Connecting)?.let { conn ->
+                        Spacer(Modifier.height(MaterialTheme.dimens.margin.sm))
+                        Text(
+                            "${conn.host}:${conn.port}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary,
+                        )
+                    }
+                }
+
+                AlohomoraOutlinedButton(
+                    text = "Cancel",
+                    size = AlohomoraButtonSize.SMALL,
+                    onClick = onCancel,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConnectionStepper(activeStep: Int) {
+    val steps = listOf("Port Forward", "Handshake", "Connected")
+    val dotSize = MaterialTheme.dimens.icon.lg
+    val lineThickness = MaterialTheme.dimens.stroke.medium
+    val lineTopOffset = (dotSize - lineThickness) / 2
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        steps.forEachIndexed { index, label ->
+            if (index > 0) {
+                val lineColor by animateColorAsState(
+                    targetValue = if (index <= activeStep) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.outlineVariant,
+                    animationSpec = spring(),
+                    label = "stepper-line-$index",
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f).padding(top = lineTopOffset),
+                    thickness = lineThickness,
+                    color = lineColor,
+                )
+            }
+
+            StepIndicator(
+                label = label,
+                state = when {
+                    index < activeStep -> StepState.COMPLETED
+                    index == activeStep -> StepState.ACTIVE
+                    else -> StepState.UPCOMING
+                },
             )
         }
     }
 }
+
+private enum class StepState { UPCOMING, ACTIVE, COMPLETED }
+
+@Composable
+private fun StepIndicator(label: String, state: StepState) {
+    val dotSize = MaterialTheme.dimens.icon.lg
+
+    val bgColor by animateColorAsState(
+        targetValue = when (state) {
+            StepState.COMPLETED -> MaterialTheme.colorScheme.primary
+            StepState.ACTIVE -> MaterialTheme.colorScheme.primary
+            StepState.UPCOMING -> MaterialTheme.colorScheme.outlineVariant
+        },
+        animationSpec = spring(),
+        label = "step-bg",
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            if (state == StepState.ACTIVE) {
+                val transition = rememberInfiniteTransition(label = "step-pulse")
+                val pulseScale by transition.animateFloat(
+                    initialValue = 1f,
+                    targetValue = 2f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(durationMillis = 1200, easing = LinearOutSlowInEasing),
+                        repeatMode = RepeatMode.Restart,
+                    ),
+                    label = "step-pulse-scale",
+                )
+                val pulseAlpha by transition.animateFloat(
+                    initialValue = 0.5f,
+                    targetValue = 0f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(durationMillis = 1200, easing = LinearOutSlowInEasing),
+                        repeatMode = RepeatMode.Restart,
+                    ),
+                    label = "step-pulse-alpha",
+                )
+                Box(
+                    modifier = Modifier
+                        .size(dotSize)
+                        .scale(pulseScale)
+                        .alpha(pulseAlpha)
+                        .clip(CircleShape)
+                        .background(bgColor),
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(dotSize)
+                    .clip(CircleShape)
+                    .background(bgColor),
+            )
+        }
+
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+// endregion
+
+// region OTP Auth
+
+@Composable
+private fun AuthOtpContent(
+    otpInput: String,
+    onOtpChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        AlohomoraOutlinedCard(
+            modifier = Modifier.fillMaxWidth(0.5f),
+        ) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.xxxl),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.illustration / 2),
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            Icons.Key,
+                            contentDescription = null,
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
+                        )
+                    }
+                }
+
+                Text(
+                    "Authentication Required",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+
+                Text(
+                    "Enter the 4-digit code shown on your device.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+
+                AlohomoraTextField(
+                    value = otpInput,
+                    onValueChange = onOtpChange,
+                    placeholder = "0000",
+                    singleLine = true,
+                    modifier = Modifier.width(160.dp),
+                )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md)) {
+                    AlohomoraFilledButton(
+                        text = "Confirm",
+                        onClick = onConfirm,
+                        enabled = otpInput.length == 4,
+                        uppercase = false,
+                    )
+                    AlohomoraOutlinedButton(
+                        text = "Cancel",
+                        size = AlohomoraButtonSize.SMALL,
+                        onClick = onCancel,
+                    )
+                }
+            }
+        }
+    }
+}
+
+// endregion
+
+// region Suspend helpers
 
 private suspend fun suspendConnectOverTcp(
     viewModel: DevicesViewModel,
@@ -485,3 +978,97 @@ private suspend fun suspendSelectDevice(
 ): String? = suspendCancellableCoroutine { continuation ->
     viewModel.selectDevice(deviceId, hostPort, devicePort) { error -> continuation.resume(error) }
 }
+
+// endregion
+
+// region Previews
+
+@Preview
+@Composable
+private fun DeviceListCardPreview() {
+    AppTheme(initialIsDark = true) {
+        Surface {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            ) {
+                DeviceListCard(
+                    device = DeviceUi(
+                        id = "emulator-5554",
+                        state = DeviceState.DEVICE,
+                        model = "Pixel 8 Pro",
+                    ),
+                    selected = true,
+                    onClick = {},
+                )
+                DeviceListCard(
+                    device = DeviceUi(
+                        id = "R3CT20BDJFR",
+                        state = DeviceState.DEVICE,
+                        model = "Galaxy S24",
+                    ),
+                    selected = false,
+                    onClick = {},
+                )
+                DeviceListCard(
+                    device = DeviceUi(
+                        id = "00008101-001A2C4E3C10001E",
+                        state = DeviceState.DEVICE,
+                        model = "iPhone 15 Pro",
+                        platform = DevicePlatform.IOS,
+                    ),
+                    selected = false,
+                    onClick = {},
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Preview
+@Composable
+private fun ConnectingContentPreview() {
+    AppTheme(initialIsDark = true) {
+        Surface(modifier = Modifier.size(600.dp, 400.dp)) {
+            ConnectingContent(
+                connectionState = DevToolsConnection.Connecting("127.0.0.1", 53999),
+                onCancel = {},
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun AuthOtpContentPreview() {
+    AppTheme(initialIsDark = true) {
+        Surface(modifier = Modifier.size(600.dp, 400.dp)) {
+            AuthOtpContent(
+                otpInput = "12",
+                onOtpChange = {},
+                onConfirm = {},
+                onCancel = {},
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ConnectionStepperPreview() {
+    AppTheme(initialIsDark = true) {
+        Surface {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.xxl).width(400.dp),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
+            ) {
+                ConnectionStepper(activeStep = 0)
+                ConnectionStepper(activeStep = 1)
+                ConnectionStepper(activeStep = 2)
+            }
+        }
+    }
+}
+
+// endregion

@@ -1,21 +1,25 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -37,7 +43,6 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import io.github.yashkasera.alohomora.desktop.app.displayModifier
 import io.github.yashkasera.alohomora.desktop.app.navigationShortcutDigit
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DesktopSection
@@ -110,85 +115,99 @@ fun CommandPalette(
         focusRequester.requestFocus()
     }
 
-    Dialog(
-        onDismissRequest = onDismiss,
-    ) {
-        Card(
-            modifier = Modifier
-                .padding(top = 80.dp)
-                .widthIn(max = 720.dp)
-                .fillMaxWidth(0.6f)
-                .clickable(indication = null, interactionSource = null) {},
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f))
+            .focusable()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onDismiss,
             ),
-            shape = MaterialTheme.shapes.medium,
-            elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        val gradientBrush = Brush.verticalGradient(
+            colors = listOf(
+                MaterialTheme.colorScheme.surfaceContainer,
+                MaterialTheme.colorScheme.surfaceContainerHighest,
+            ),
+        )
+        Surface(
+            modifier = Modifier
+                .padding(bottom = 48.dp)
+                .width(640.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {},
+                ),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = Color.Transparent,
+            shadowElevation = 8.dp,
         ) {
             Column(
-                modifier = Modifier.onPreviewKeyEvent { event ->
-                    if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                    when (event.key) {
-                        Key.Escape -> {
-                            onDismiss()
-                            true
-                        }
-
-                        Key.DirectionDown -> {
-                            if (filtered.isNotEmpty()) {
-                                selectedIndex = (selectedIndex + 1).coerceAtMost(filtered.size - 1)
+                modifier = Modifier
+                    .border(
+                        width = MaterialTheme.dimens.stroke.small,
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        shape = MaterialTheme.shapes.extraLarge,
+                    )
+                    .background(gradientBrush, MaterialTheme.shapes.extraLarge)
+                    .onPreviewKeyEvent { event ->
+                        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                        when (event.key) {
+                            Key.Escape -> {
+                                onDismiss()
+                                true
                             }
-                            true
-                        }
 
-                        Key.DirectionUp -> {
-                            if (filtered.isNotEmpty()) {
-                                selectedIndex = (selectedIndex - 1).coerceAtLeast(0)
-                            }
-                            true
-                        }
-
-                        Key.Enter -> {
-                            filtered.getOrNull(selectedIndex)?.let {
-                                if (it.enabled) {
-                                    onDismiss(); it.action()
+                            Key.DirectionDown -> {
+                                if (filtered.isNotEmpty()) {
+                                    selectedIndex =
+                                        (selectedIndex + 1).coerceAtMost(filtered.size - 1)
                                 }
+                                true
                             }
-                            true
+
+                            Key.DirectionUp -> {
+                                if (filtered.isNotEmpty()) {
+                                    selectedIndex = (selectedIndex - 1).coerceAtLeast(0)
+                                }
+                                true
+                            }
+
+                            Key.Enter -> {
+                                filtered.getOrNull(selectedIndex)?.let {
+                                    if (it.enabled) {
+                                        onDismiss(); it.action()
+                                    }
+                                }
+                                true
+                            }
+
+                            else -> false
                         }
-
-                        else -> false
-                    }
-                },
-            ) {
-                AlohomoraSearchTextField(
-                    query = query,
-                    onQueryChange = {
-                        query = it
-                        selectedIndex = 0
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(MaterialTheme.dimens.margin.md)
-                        .focusRequester(focusRequester),
-                )
-
-                AlohomoraHorizontalDivider()
-
+            ) {
                 if (filtered.isEmpty()) {
                     Text(
                         "No matching commands",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                        modifier = Modifier.padding(MaterialTheme.dimens.margin.xl),
                     )
                 } else {
                     LazyColumn(
                         state = listState,
+                        reverseLayout = true,
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = 400.dp)
-                            .padding(vertical = MaterialTheme.dimens.margin.xs),
+                            .padding(
+                                horizontal = MaterialTheme.dimens.margin.sm,
+                                vertical = MaterialTheme.dimens.margin.xs,
+                            ),
                     ) {
                         var lastCategory: ActionCategory? = null
                         filtered.forEachIndexed { index, action ->
@@ -200,8 +219,8 @@ fun CommandPalette(
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.padding(
-                                            start = MaterialTheme.dimens.margin.lg,
-                                            top = MaterialTheme.dimens.margin.md,
+                                            start = MaterialTheme.dimens.margin.md,
+                                            top = MaterialTheme.dimens.margin.lg,
                                             bottom = MaterialTheme.dimens.margin.xs,
                                         ),
                                     )
@@ -227,8 +246,8 @@ fun CommandPalette(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
-                                horizontal = MaterialTheme.dimens.margin.lg,
-                                vertical = MaterialTheme.dimens.margin.sm,
+                                horizontal = MaterialTheme.dimens.margin.xl,
+                                vertical = MaterialTheme.dimens.margin.md,
                             ),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
                     ) {
@@ -237,6 +256,20 @@ fun CommandPalette(
                         FooterHint("Esc", "Close")
                     }
                 }
+
+                AlohomoraHorizontalDivider()
+
+                AlohomoraSearchTextField(
+                    query = query,
+                    onQueryChange = {
+                        query = it
+                        selectedIndex = 0
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(MaterialTheme.dimens.margin.lg)
+                        .focusRequester(focusRequester),
+                )
             }
         }
     }
@@ -268,13 +301,13 @@ private fun CommandActionRow(
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.small)
             .background(
-                if (isSelected) MaterialTheme.colorScheme.surfaceContainerHighest
-                else MaterialTheme.colorScheme.surface,
+                if (isSelected) MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.7f)
+                else Color.Transparent,
             )
             .clickable(enabled = action.enabled, onClick = onClick)
             .padding(
-                horizontal = MaterialTheme.dimens.margin.lg,
-                vertical = MaterialTheme.dimens.margin.sm,
+                horizontal = MaterialTheme.dimens.margin.xl,
+                vertical = MaterialTheme.dimens.margin.md,
             ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
@@ -282,7 +315,7 @@ private fun CommandActionRow(
         Icon(
             imageVector = action.icon,
             contentDescription = null,
-            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+            modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
             tint = if (action.enabled) MaterialTheme.colorScheme.onSurface
             else MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -310,7 +343,7 @@ fun ShortcutChip(text: String) {
                 MaterialTheme.colorScheme.surfaceContainerHigh,
                 MaterialTheme.shapes.extraSmall,
             )
-            .padding(horizontal = 6.dp, vertical = 2.dp),
+            .padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = MaterialTheme.dimens.margin.xs),
     )
 }
 

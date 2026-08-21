@@ -1,16 +1,9 @@
-package io.github.yashkasera.alohomora.desktop.presentation.model
+package io.github.yashkasera.alohomora.common
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * The row payload clamp.
- *
- * Rows clamp rather than scroll: a `verticalScroll` inside a `LazyColumn` row fights the list for the
- * wheel, and an unbounded row lets one large payload grow taller than the window. The clamp has to
- * announce itself, or a cut payload reads as an event that genuinely carried only six keys.
- */
 class ClampLinesTest {
 
     @Test

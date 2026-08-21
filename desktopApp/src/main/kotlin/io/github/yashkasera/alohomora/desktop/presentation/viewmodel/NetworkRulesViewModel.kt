@@ -43,25 +43,6 @@ class NetworkRulesViewModel(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var autoSaveJob: Job? = null
 
-    init {
-        scope.launch {
-            val lastActive = sessionStore.loadLastActive()
-            if (lastActive != null) {
-                _currentSession.value = lastActive
-                _mockRules.value = lastActive.rules
-            }
-            refreshSessionList()
-        }
-        scope.launch {
-            repository.connectionState
-                .filterIsInstance<DevToolsConnection.Connected>()
-                .collect {
-                    sendRules()
-                    repository.setThrottleProfile(_throttleProfile.value)
-                }
-        }
-    }
-
     val networkRulesSupported: StateFlow<Boolean> = repository.networkRulesSupported
     val vpnThrottleSupported: StateFlow<Boolean> = repository.vpnThrottleSupported
     val vpnState: StateFlow<VpnThrottleState> = repository.vpnState
@@ -81,6 +62,25 @@ class NetworkRulesViewModel(
 
     private val _sessions = MutableStateFlow<List<MockSessionSummary>>(emptyList())
     val sessions: StateFlow<List<MockSessionSummary>> = _sessions.asStateFlow()
+
+    init {
+        scope.launch {
+            val lastActive = sessionStore.loadLastActive()
+            if (lastActive != null) {
+                _currentSession.value = lastActive
+                _mockRules.value = lastActive.rules
+            }
+            refreshSessionList()
+        }
+        scope.launch {
+            repository.connectionState
+                .filterIsInstance<DevToolsConnection.Connected>()
+                .collect {
+                    sendRules()
+                    repository.setThrottleProfile(_throttleProfile.value)
+                }
+        }
+    }
 
     fun selectProfile(profile: ThrottleProfile) {
         _throttleProfile.value = profile

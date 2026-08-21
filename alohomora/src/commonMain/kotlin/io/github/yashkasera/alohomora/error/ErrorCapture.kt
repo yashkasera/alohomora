@@ -14,15 +14,6 @@ import kotlin.time.Clock
 internal object ErrorCapture {
 
     /**
-     * Event name for a fatal, mirrored into the Events timeline alongside the [Error] row.
-     *
-     * `EventItem` renders events with this name using a left error-coloured accent bar, and events
-     * already stream to the desktop over `STREAM_EVENT` — so a crash reaches the desktop app
-     * without the protocol gaining an error message type it does not have.
-     */
-    const val CRASH_EVENT_NAME = "App.Exception"
-
-    /**
      * Ceiling on how long a crashing thread may block writing the error.
      *
      * Persisting has to be synchronous — the process is about to die and a `scope.launch` would

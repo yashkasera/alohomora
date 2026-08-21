@@ -1,28 +1,39 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +44,8 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.app.isClearShortcut
 import io.github.yashkasera.alohomora.desktop.app.isDeepLinkShortcut
@@ -46,6 +59,7 @@ import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.CommandPalette
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.HelpDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.OtpPromptDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.buildCommandActions
@@ -79,9 +93,17 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewM
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import java.io.File
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+private const val SWITCHING_SCRIM_ALPHA = 0.40f
+
+private val PermanentDrawerShape = RoundedCornerShape(
+    topStart = 0.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 0.dp,
+)
 
 @Composable
 fun DevToolsDesktopApp(
@@ -120,6 +142,8 @@ fun DevToolsDesktopApp(
 ) {
     var activeSection by remember { mutableStateOf(DesktopSection.Traffic) }
     var searchFocusTrigger by remember { mutableLongStateOf(0L) }
+    val copySnackbarState = remember { SnackbarHostState() }
+    val copyScope = rememberCoroutineScope()
 
     val devices by devicesViewModel.devices.collectAsState()
     val adbCommandHistory by devicesViewModel.adbCommandHistory.collectAsState()
@@ -179,6 +203,7 @@ fun DevToolsDesktopApp(
     LaunchedEffect(selectedDeviceId, buildInfo?.packageName) {
         devicesViewModel.startDashboardPolling(selectedDeviceId, buildInfo?.packageName)
     }
+
 
     val selectedDevice = devices.firstOrNull { it.id == selectedDeviceId }
     val isConnected = devToolsState.connection is DevToolsConnection.Connected
@@ -282,10 +307,18 @@ fun DevToolsDesktopApp(
 
     val rootFocus = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(activeSection) {
         rootFocus.requestFocus()
     }
 
+    CompositionLocalProvider(
+        LocalCopyFeedback provides { message ->
+            copyScope.launch {
+                copySnackbarState.currentSnackbarData?.dismiss()
+                copySnackbarState.showSnackbar(message)
+            }
+        },
+    ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -314,6 +347,10 @@ fun DevToolsDesktopApp(
 
                         showDeepLinkBuilder -> {
                             onDismissDeepLinkBuilder(); return@onPreviewKeyEvent true
+                        }
+
+                        showMockRules -> {
+                            onDismissMockRules(); return@onPreviewKeyEvent true
                         }
 
                         selectedTrafficForSheet != null -> {
@@ -405,7 +442,7 @@ fun DevToolsDesktopApp(
                     PermanentDrawerSheet(
                         modifier = Modifier.fillMaxWidth(0.2f),
                         windowInsets = WindowInsets.safeContent,
-                        drawerShape = MaterialTheme.shapes.medium,
+                        drawerShape = PermanentDrawerShape,
                     ) {
                         Sidebar(
                             connection = devToolsState.connection,
@@ -434,7 +471,13 @@ fun DevToolsDesktopApp(
                             NoDevicePanel(onRefresh = { devicesViewModel.refreshDevices() })
                         }
                     } else {
-                        when (activeSection) {
+                        AnimatedContent(
+                            targetState = activeSection,
+                            transitionSpec = {
+                                fadeIn(tween(200)) togetherWith fadeOut(tween(200))
+                            },
+                        ) { section ->
+                        when (section) {
                             DesktopSection.Dashboard -> DashboardContent(
                                 devToolsViewModel = devToolsViewModel,
                                 devicesViewModel = devicesViewModel,
@@ -544,6 +587,7 @@ fun DevToolsDesktopApp(
                             DesktopSection.GitHistory -> GitHistoryPanel(devToolsViewModel = devToolsViewModel)
                             DesktopSection.Database -> DatabasePanel(databaseViewModel = databaseViewModel)
                         }
+                        }
                     }
 
                     AnimatedVisibility(
@@ -575,15 +619,7 @@ fun DevToolsDesktopApp(
                     }
 
                     if (devToolsState.switching) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
-                                .clickable(indication = null, interactionSource = null) {},
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            AlohomoraCircularProgressIndicator()
-                        }
+                        SwitchingOverlay()
                     }
                 }
             }
@@ -592,6 +628,7 @@ fun DevToolsDesktopApp(
                 traffic = selectedTrafficForSheet,
                 devToolsViewModel = devToolsViewModel,
                 networkRulesViewModel = networkRulesViewModel,
+                onOpenMockRules = { onOpenMockRules() },
                 onDismiss = { selectedTrafficForSheet = null },
             )
 
@@ -649,21 +686,48 @@ fun DevToolsDesktopApp(
             )
         }
 
+        SnackbarHost(
+            hostState = copySnackbarState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
+
         if (showCommandPalette) {
             CommandPalette(
                 actions = commandActions,
                 onDismiss = onDismissCommandPalette,
             )
         }
-    }
 
-    if (showHelp) {
-        HelpDialog(
-            visibleSections = visibleSections,
-            actions = commandActions,
-            isDark = isDark,
-            themeId = themeId,
-            onDismiss = onDismissHelp,
-        )
+        if (showHelp) {
+            HelpDialog(
+                visibleSections = visibleSections,
+                actions = commandActions,
+                onDismiss = onDismissHelp,
+            )
+        }
+    }
+    }
+}
+
+@Composable
+private fun SwitchingOverlay() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = SWITCHING_SCRIM_ALPHA))
+            .clickable(indication = null, interactionSource = null) {},
+        contentAlignment = Alignment.Center,
+    ) {
+        AlohomoraCircularProgressIndicator()
+    }
+}
+
+@Preview
+@Composable
+private fun SwitchingOverlayPreview() {
+    AppTheme(initialIsDark = true) {
+        Surface(modifier = Modifier.size(400.dp, 300.dp)) {
+            SwitchingOverlay()
+        }
     }
 }

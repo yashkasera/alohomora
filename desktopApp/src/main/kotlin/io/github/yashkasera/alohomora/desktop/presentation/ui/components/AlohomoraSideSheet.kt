@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -83,9 +84,13 @@ fun AlohomoraSideSheet(
                 modifier = Modifier
                     .fillMaxWidth(widthFraction)
                     .fillMaxHeight(),
+                shape = RoundedCornerShape(
+                    topStart = 16.dp,
+                    bottomStart = 16.dp,
+                ),
                 color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 2.dp,
-                tonalElevation = 1.dp,
+                shadowElevation = 4.dp,
+                tonalElevation = 2.dp,
             ) {
                 Box {
                     Column(modifier = Modifier.fillMaxSize()) {
@@ -110,4 +115,4 @@ fun AlohomoraSideSheet(
     }
 }
 
-private const val SCRIM_ALPHA = 0.40f
+private const val SCRIM_ALPHA = 0.6f

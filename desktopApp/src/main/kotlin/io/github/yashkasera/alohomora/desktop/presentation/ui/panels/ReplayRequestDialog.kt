@@ -232,8 +232,8 @@ fun ReplayRequestSideSheet(
                 content = if (inFlight) {
                     {
                         AlohomoraCircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                            strokeWidth = MaterialTheme.dimens.stroke.medium,
                             color = MaterialTheme.colorScheme.background,
                         )
                     }

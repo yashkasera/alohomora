@@ -1,10 +1,16 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -15,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -116,31 +121,54 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
                             if (isExpanded && schema?.databaseName == database.name) schema.tables else emptyList()
 
                         item(key = "db:${database.name}") {
-                            DatabaseHeader(
-                                name = database.name,
-                                tableCount = childTables.size,
-                                expanded = isExpanded,
-                                onClick = {
-                                    if (isExpanded) {
-                                        expandedDb = null
-                                    } else {
-                                        expandedDb = database.name
-                                        databaseViewModel.selectDatabase(database.name)
-                                    }
-                                },
-                            )
-                        }
-
-                        if (isExpanded) {
-                            items(childTables, key = { "table:${database.name}:$it" }) { table ->
-                                TableItem(
-                                    name = table,
-                                    selected = table == tableSnapshot?.name
-                                        && database.name == tableSnapshot.databaseName,
+                            Column {
+                                DatabaseHeader(
+                                    name = database.name,
+                                    tableCount = childTables.size,
+                                    expanded = isExpanded,
                                     onClick = {
-                                        databaseViewModel.requestTable(database.name, table)
+                                        if (isExpanded) {
+                                            expandedDb = null
+                                        } else {
+                                            expandedDb = database.name
+                                            databaseViewModel.selectDatabase(database.name)
+                                        }
                                     },
                                 )
+                                AnimatedVisibility(
+                                    visible = isExpanded,
+                                    enter = expandVertically() + fadeIn(),
+                                    exit = shrinkVertically() + fadeOut(),
+                                ) {
+                                    Column {
+                                        if (childTables.isEmpty()) {
+                                            Text(
+                                                "No tables found",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(
+                                                    start = MaterialTheme.dimens.margin.xxxl,
+                                                    top = MaterialTheme.dimens.margin.sm,
+                                                    bottom = MaterialTheme.dimens.margin.sm,
+                                                ),
+                                            )
+                                        } else {
+                                            childTables.forEach { table ->
+                                                TableItem(
+                                                    name = table,
+                                                    selected = table == tableSnapshot?.name
+                                                        && database.name == tableSnapshot.databaseName,
+                                                    onClick = {
+                                                        databaseViewModel.requestTable(
+                                                            database.name,
+                                                            table,
+                                                        )
+                                                    },
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -148,9 +176,8 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
 
                 Box(
                     modifier = Modifier
-                        .width(DIVIDER_WIDTH)
+                        .width(DRAG_HANDLE_WIDTH)
                         .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.outlineVariant)
                         .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
                         .pointerInput(totalWidthPx) {
                             detectDragGestures { _, dragAmount ->
@@ -159,7 +186,15 @@ fun DatabasePanel(databaseViewModel: DatabaseViewModel) {
                                     .coerceIn(SIDEBAR_MIN, SIDEBAR_MAX)
                             }
                         },
-                )
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(MaterialTheme.dimens.stroke.small)
+                            .fillMaxHeight()
+                            .background(MaterialTheme.colorScheme.outlineVariant),
+                    )
+                }
 
                 Box(
                     modifier = Modifier
@@ -317,4 +352,4 @@ private fun buildSubtitle(dbCount: Int, tableCount: Int, rowCount: Int?): String
 private const val SIDEBAR_DEFAULT = 0.25f
 private const val SIDEBAR_MIN = 0.15f
 private const val SIDEBAR_MAX = 0.5f
-private val DIVIDER_WIDTH = 4.dp
+private val DRAG_HANDLE_WIDTH = 8.dp

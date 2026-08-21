@@ -1,5 +1,10 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -118,7 +123,7 @@ fun AdbToolsPanel(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(padding)
-                .padding(horizontal = 40.dp, vertical = 20.dp)
+                .padding(horizontal = MaterialTheme.dimens.margin.xxxl, vertical = MaterialTheme.dimens.margin.xl)
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
         ) {
@@ -249,9 +254,13 @@ fun AdbToolsPanel(
                         containerColor = if (isRecording) {
                             MaterialTheme.colorScheme.error
                         } else {
-                            MaterialTheme.colorScheme.onBackground
+                            MaterialTheme.colorScheme.primary
                         },
-                        contentColor = MaterialTheme.colorScheme.background,
+                        contentColor = if (isRecording) {
+                            MaterialTheme.colorScheme.onError
+                        } else {
+                            MaterialTheme.colorScheme.onPrimary
+                        },
                     )
                     AdbActionButton("Bugreport", isDeviceSelected) {
                         val ts = System.currentTimeMillis()
@@ -637,37 +646,43 @@ private fun AdbConsoleBar(
                     contentColor = MaterialTheme.alohomoraColors.accent,
                 )
             }
-            if (expanded) {
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
-                val rendered = history.asReversed()
-                if (rendered.isEmpty()) {
-                    Text(
-                        "No commands yet.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary,
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(220.dp)
-                            .background(
-                                MaterialTheme.colorScheme.surfaceContainerLow,
-                                MaterialTheme.shapes.small,
-                            )
-                            .padding(MaterialTheme.dimens.margin.sm),
-                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
-                    ) {
-                        items(rendered) { entry ->
-                            Text(
-                                text = formatLogEntry(entry),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (entry.isError) {
-                                    MaterialTheme.colorScheme.error
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                            )
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+                    val rendered = history.asReversed()
+                    if (rendered.isEmpty()) {
+                        Text(
+                            "No commands yet.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(220.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceContainerLow,
+                                    MaterialTheme.shapes.small,
+                                )
+                                .padding(MaterialTheme.dimens.margin.sm),
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
+                        ) {
+                            items(rendered) { entry ->
+                                Text(
+                                    text = formatLogEntry(entry),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (entry.isError) {
+                                        MaterialTheme.colorScheme.error
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                )
+                            }
                         }
                     }
                 }

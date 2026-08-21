@@ -1,16 +1,21 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +50,7 @@ import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
+import io.github.yashkasera.alohomora.ui.components.rememberViewedStateColors
 import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
@@ -169,66 +175,88 @@ private fun ErrorRow(
     error: Error,
     onClick: () -> Unit,
 ) {
-    val containerColor = when {
-        error.isViewed -> MaterialTheme.colorScheme.surfaceVariant
-        else -> MaterialTheme.colorScheme.surfaceContainer
-    }
+    val viewedColors = rememberViewedStateColors(
+        isViewed = error.isViewed,
+        unviewedContainerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.38f),
+        unviewedTitleColor = MaterialTheme.colorScheme.error,
+    )
     AlohomoraCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = AlohomoraCardDefaults.colors(containerColor = containerColor),
+        shape = MaterialTheme.shapes.large,
+        colors = AlohomoraCardDefaults.colors(containerColor = viewedColors.containerColor.value),
         onClick = onClick,
     ) {
-        Column(
-            modifier = Modifier.padding(
-                horizontal = MaterialTheme.dimens.margin.xxl,
-                vertical = MaterialTheme.dimens.margin.md,
-            ),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = MaterialTheme.dimens.margin.lg,
+                    vertical = MaterialTheme.dimens.margin.md,
+                ),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+            verticalAlignment = Alignment.Top,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-                verticalAlignment = Alignment.CenterVertically,
+            Box(
+                modifier = Modifier
+                    .size(MaterialTheme.dimens.icon.xl)
+                    .background(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = error.exceptionTypeName(),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = if (error.isViewed) {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                )
-                AlohomoraChip(
-                    label = "FATAL",
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                )
-                Box(modifier = Modifier.weight(1f))
-                Text(
-                    text = DateUtils.format(error.time, DateUtils.Format.HH_MM_SS_3MS),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Icon(
+                    Icons.AlertTriangle,
+                    contentDescription = null,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                    tint = MaterialTheme.colorScheme.error,
                 )
             }
 
-            error.reason?.takeIf { it.isNotBlank() }?.let { reason ->
-                Text(
-                    text = reason,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+                ) {
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = error.exceptionTypeName(),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = viewedColors.titleColor.value,
+                    )
+                    AlohomoraChip(
+                        label = "FATAL",
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                    Text(
+                        text = DateUtils.format(error.time, DateUtils.Format.HH_MM_SS_3MS),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
 
-            error.place?.takeIf { it.isNotBlank() }?.let { place ->
-                Text(
-                    text = place,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
-                )
+                error.place?.takeIf { it.isNotBlank() }?.let { place ->
+                    Text(
+                        text = place,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(top = MaterialTheme.dimens.margin.xs),
+                        maxLines = 1,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
+
+                error.reason?.takeIf { it.isNotBlank() }?.let { reason ->
+                    Text(
+                        text = reason,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }

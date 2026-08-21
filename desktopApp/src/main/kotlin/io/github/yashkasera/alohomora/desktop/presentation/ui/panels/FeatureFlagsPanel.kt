@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -37,8 +39,8 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.FeatureFlag
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagUiState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
@@ -59,7 +61,10 @@ import io.github.yashkasera.alohomora.ui.icons.ChevronRight
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Search
+import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
 import io.github.yashkasera.alohomora.ui.icons.ToggleLeft
+import io.github.yashkasera.alohomora.ui.icons.ToggleRight
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
@@ -167,22 +172,52 @@ private fun FeatureFlagRow(
 ) {
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
+    val copyFeedback = LocalCopyFeedback.current
+    val isTrue = flag.value.equals("true", ignoreCase = true)
+    val isFalse = flag.value.equals("false", ignoreCase = true)
+    val iconTint = when {
+        isTrue -> MaterialTheme.alohomoraColors.success
+        isFalse -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.secondary
+    }
+    val flagIcon = when {
+        isTrue -> Icons.ToggleRight
+        isFalse -> Icons.ToggleLeft
+        else -> Icons.SlidersHorizontal
+    }
+
     AlohomoraCard(
         modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
         colors = AlohomoraCardDefaults.colors(
-            containerColor = if (expanded) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = if (expanded) MaterialTheme.colorScheme.surfaceContainerHighest else MaterialTheme.colorScheme.surfaceContainer,
         ),
         onClick = onToggle,
     ) {
-        Column(
+        Row(
             modifier = Modifier.padding(
-                horizontal = MaterialTheme.dimens.margin.xxl,
+                horizontal = MaterialTheme.dimens.margin.lg,
                 vertical = MaterialTheme.dimens.margin.md,
             ),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+            verticalAlignment = Alignment.Top,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(MaterialTheme.dimens.icon.xl)
+                    .background(iconTint.copy(alpha = 0.12f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = flagIcon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
                 Row(
-                    modifier = Modifier.weight(0.6f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
                 ) {
@@ -195,84 +230,91 @@ private fun FeatureFlagRow(
 
                     Text(
                         text = flag.key,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
-                        modifier = Modifier.weight(1f, fill = false),
+                        modifier = Modifier.weight(1f),
                         overflow = TextOverflow.Ellipsis,
                     )
-                    flag.type?.let { type ->
-                        AlohomoraChip(
-                            label = type,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        )
-                    }
 
-                    flag.source?.let { source ->
-                        AlohomoraChip(
-                            label = source,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        )
-                    }
+                    FlagValuePreview(flag = flag)
                 }
 
-                FlagValuePreview(
-                    flag = flag,
-                    modifier = Modifier.weight(0.4f),
-                )
-            }
-
-            AnimatedVisibility(expanded) {
-                Column {
-                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                val hasChips = flag.type != null || flag.source != null
+                if (hasChips) {
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
                     Row(
-                        modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        AlohomoraCodeBlock(
-                            modifier = Modifier.weight(1f),
-                            content = flag.value,
-                            isScrollable = false,
-                            jsonPrettify = true,
-                        )
-                        AlohomoraIconButton(
-                            onClick = {
-                                clipboardManager.setText(
-                                    buildAnnotatedString {
-                                        append("Key:")
-                                        appendLine("`${flag.key}`")
-                                        append("Value:")
-                                        appendLine("`${flag.value}`")
-                                        flag.metadata?.ifEmpty { null }?.let {
-                                            appendLine("Metadata:")
-                                            append("```${it}```")
-                                        }
-                                    },
-                                )
-                            },
-                        ) {
-                            Icon(
-                                imageVector = Icons.Copy,
-                                contentDescription = "Copy value",
-                                modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
+                        flag.type?.let { type ->
+                            AlohomoraChip(
+                                label = type,
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            )
+                        }
+                        flag.source?.let { source ->
+                            AlohomoraChip(
+                                label = source,
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             )
                         }
                     }
+                }
 
-                    val meta = flag.metadata
-                    if (!meta.isNullOrEmpty()) {
-                        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
-                        meta.forEach { (k, v) ->
-                            Row(modifier = Modifier.padding(vertical = 2.dp)) {
-                                Text(
-                                    text = "$k: ",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                AnimatedVisibility(expanded) {
+                    Column {
+                        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                        Row(
+                            modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            AlohomoraCodeBlock(
+                                modifier = Modifier.weight(1f),
+                                content = flag.value,
+                                isScrollable = false,
+                                jsonPrettify = true,
+                            )
+                            AlohomoraIconButton(
+                                onClick = {
+                                    clipboardManager.setText(
+                                        buildAnnotatedString {
+                                            append("Key:")
+                                            appendLine("`${flag.key}`")
+                                            append("Value:")
+                                            appendLine("`${flag.value}`")
+                                            flag.metadata?.ifEmpty { null }?.let {
+                                                appendLine("Metadata:")
+                                                append("```${it}```")
+                                            }
+                                        },
+                                    )
+                                    copyFeedback("Copied to clipboard")
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Copy,
+                                    contentDescription = "Copy value",
+                                    modifier = Modifier.size(MaterialTheme.dimens.icon.standard),
                                 )
-                                Text(
-                                    text = v,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
+                            }
+                        }
+
+                        val meta = flag.metadata
+                        if (!meta.isNullOrEmpty()) {
+                            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
+                            meta.forEach { (k, v) ->
+                                Row(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.xs)) {
+                                    Text(
+                                        text = "$k: ",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Text(
+                                        text = v,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
                             }
                         }
                     }
