@@ -21,6 +21,7 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.traces.detail.Trac
 import io.github.yashkasera.alohomora.presentation.ui.screens.traces.list.TracesScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail.TrafficDetailsScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.list.TrafficScreen
+import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.replay.ReplayScreen
 
 @Composable
 internal fun AlohomoraNavHost(
@@ -58,6 +59,15 @@ internal fun AlohomoraNavHost(
                 trafficId = route.trafficId,
                 onBackClick = navController::navigateUp,
                 onOpenTraffic = { id -> navController.navigate(Routes.TrafficDetails(id)) },
+                onReplay = { id -> navController.navigate(Routes.Replay(id)) },
+            )
+        }
+
+        composable<Routes.Replay> { backStackEntry ->
+            val route: Routes.Replay = backStackEntry.toRoute()
+            ReplayScreen(
+                trafficId = route.trafficId,
+                onBackClick = navController::navigateUp,
             )
         }
 

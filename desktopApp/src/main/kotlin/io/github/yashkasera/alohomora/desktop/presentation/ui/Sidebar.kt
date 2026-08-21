@@ -95,7 +95,7 @@ fun ColumnScope.Sidebar(
 ) {
     Icon(
         imageVector = Icons.AlohomoraFull,
-        contentDescription = null,
+        contentDescription = "Alohomora",
         modifier = Modifier
             .padding(top = if (isMacOs) SidebarTopInsetMac else MaterialTheme.dimens.margin.xxl)
             .padding(horizontal = MaterialTheme.dimens.margin.xxl)
@@ -186,7 +186,7 @@ private fun SidebarConnectionCard(
             .background(MaterialTheme.colorScheme.surfaceContainer, MaterialTheme.shapes.small)
             .fillMaxWidth()
             .padding(MaterialTheme.dimens.margin.md),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
     ) {
         if (selectedOnlineDevice == null) {
             Text(
@@ -234,7 +234,7 @@ private fun SidebarConnectionCard(
                     .fillMaxWidth()
                     .clip(MaterialTheme.shapes.small)
                     .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(horizontal = 10.dp, vertical = MaterialTheme.dimens.margin.sm),
+                    .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = MaterialTheme.dimens.margin.sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -242,10 +242,10 @@ private fun SidebarConnectionCard(
                         if (selectedOnlineDevice.platform.isIos)
                             Icons.Apple
                         else Icons.Android,
-                    contentDescription = null,
+                    contentDescription = if (selectedOnlineDevice.platform.isIos) "iOS" else "Android",
                     modifier = Modifier
                         .padding(MaterialTheme.dimens.margin.sm)
-                        .size(24.dp),
+                        .size(MaterialTheme.dimens.icon.standard),
                     tint = MaterialTheme.colorScheme.primary,
                 )
                 Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))

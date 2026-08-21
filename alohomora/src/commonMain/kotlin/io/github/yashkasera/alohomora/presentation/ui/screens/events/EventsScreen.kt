@@ -1,7 +1,6 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.events
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,23 +21,26 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
-import io.github.yashkasera.alohomora.error.ErrorCapture
+import io.github.yashkasera.alohomora.common.clampLines
+import io.github.yashkasera.alohomora.common.isCrashEvent
+import io.github.yashkasera.alohomora.common.prettyProperties
 import io.github.yashkasera.alohomora.presentation.ui.components.EventsDetailsSheet
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
@@ -48,6 +50,7 @@ import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
+import io.github.yashkasera.alohomora.ui.components.rememberViewedStateColors
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.Eye
@@ -55,8 +58,11 @@ import io.github.yashkasera.alohomora.ui.icons.EyeOff
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
-import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -193,6 +199,8 @@ internal fun EventsList(
     }
 }
 
+private const val MAX_ROW_PROPERTY_LINES = 5
+
 @Composable
 internal fun EventItem(
     event: Event,
@@ -200,16 +208,20 @@ internal fun EventItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isFatal = event.name == ErrorCapture.CRASH_EVENT_NAME
-    val containerColor = when {
-        event.isViewed -> MaterialTheme.colorScheme.surfaceContainer
-        else -> MaterialTheme.colorScheme.surfaceContainerHighest
-    }
+    val isFatal = event.isCrashEvent
+    val viewedColors = rememberViewedStateColors(
+        isViewed = event.isViewed,
+        unviewedTitleColor = if (isFatal) MaterialTheme.alohomoraColors.fatal
+        else MaterialTheme.colorScheme.onSurface,
+        viewedTitleColor = if (isFatal) MaterialTheme.alohomoraColors.fatal
+        else MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     AlohomoraCard(
         onClick = onClick,
         modifier = modifier,
+        shape = MaterialTheme.shapes.large,
         colors = AlohomoraCardDefaults.colors(
-            containerColor = containerColor,
+            containerColor = viewedColors.containerColor.value,
         ),
     ) {
         Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
@@ -218,7 +230,7 @@ internal fun EventItem(
                     modifier = Modifier
                         .fillMaxHeight()
                         .width(MaterialTheme.dimens.stroke.medium)
-                        .background(MaterialTheme.colorScheme.error),
+                        .background(MaterialTheme.alohomoraColors.fatal),
                 )
             }
             Column(
@@ -233,42 +245,117 @@ internal fun EventItem(
                 ) {
                     Text(
                         text = event.name,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isFatal) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = viewedColors.titleColor.value,
                     )
                     Text(
                         text = DateUtils.format(event.time, DateUtils.Format.HH_MM_SS),
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
                 if (showProperties) {
                     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-                    Text(
-                        text = event.properties
-                            ?.takeUnless { it is JsonNull }
-                            ?.toString()
-                            ?: "{}",
-                        maxLines = 5,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = MaterialTheme.dimens.margin.xs)
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                            .border(
-                                width = MaterialTheme.dimens.stroke.small,
-                                color = MaterialTheme.colorScheme.outline,
-                                shape = MaterialTheme.shapes.medium,
-                            )
-                            .padding(MaterialTheme.dimens.margin.sm),
+                    val properties = remember(event.id, event.time) {
+                        event.prettyProperties().clampLines(MAX_ROW_PROPERTY_LINES)
+                    }
+                    AlohomoraCodeBlock(
+                        content = properties,
+                        isScrollable = false,
                     )
                 }
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun EventItemNormalPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            EventItem(
+                event = Event(
+                    id = 1,
+                    name = "screen_view",
+                    properties = buildJsonObject { put("screen", JsonPrimitive("HomeScreen")) },
+                    time = 1724234567000L,
+                    isViewed = false,
+                ),
+                showProperties = false,
+                onClick = {},
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun EventItemFatalPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            EventItem(
+                event = Event(
+                    id = 2,
+                    name = "App.Exception",
+                    properties = buildJsonObject {
+                        put("reason", JsonPrimitive("NullPointerException"))
+                    },
+                    time = 1724234567000L,
+                    isViewed = false,
+                ),
+                showProperties = false,
+                onClick = {},
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun EventItemWithPropertiesPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            EventItem(
+                event = Event(
+                    id = 3,
+                    name = "button_click",
+                    properties = buildJsonObject {
+                        put("button_id", JsonPrimitive("checkout"))
+                        put("screen", JsonPrimitive("CartScreen"))
+                        put("item_count", JsonPrimitive(3))
+                    },
+                    time = 1724234567000L,
+                    isViewed = true,
+                ),
+                showProperties = true,
+                onClick = {},
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun EventItemViewedPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            EventItem(
+                event = Event(
+                    id = 4,
+                    name = "api_response",
+                    properties = null,
+                    time = 1724234567000L,
+                    isViewed = true,
+                ),
+                showProperties = false,
+                onClick = {},
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+            )
         }
     }
 }

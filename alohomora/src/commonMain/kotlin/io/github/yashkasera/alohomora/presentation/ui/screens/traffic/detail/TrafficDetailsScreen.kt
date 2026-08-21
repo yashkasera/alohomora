@@ -15,22 +15,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.yashkasera.alohomora.presentation.ui.components.ReplayBottomSheet
 import io.github.yashkasera.alohomora.presentation.ui.components.ShareBottomSheet
 import io.github.yashkasera.alohomora.presentation.ui.components.SlackShareBottomSheet
 import io.github.yashkasera.alohomora.presentation.ui.components.SlackShareOption
 import io.github.yashkasera.alohomora.presentation.ui.components.rememberClipboardCopy
-import io.github.yashkasera.alohomora.replay.ReplayRequest
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
@@ -40,6 +37,7 @@ import io.github.yashkasera.alohomora.ui.icons.Repeat
 import io.github.yashkasera.alohomora.ui.icons.Share
 import io.github.yashkasera.alohomora.ui.icons.Slack
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -50,11 +48,11 @@ internal fun TrafficDetailsScreen(
     trafficId: String,
     onBackClick: () -> Unit = {},
     onOpenTraffic: (String) -> Unit = {},
+    onReplay: (String) -> Unit = {},
 ) {
     val viewModel = koinViewModel<TrafficDetailsViewModel> { parametersOf(trafficId) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val trace = state.trace
-    var replayDraft by remember { mutableStateOf<ReplayRequest?>(null) }
     val clipboardCopy = rememberClipboardCopy()
 
     if (trace == null) {
@@ -88,7 +86,7 @@ internal fun TrafficDetailsScreen(
                 actions = {
                     if (state.canReplay) {
                         AlohomoraIconButton(
-                            onClick = { replayDraft = viewModel.startReplay() },
+                            onClick = { onReplay(trafficId) },
                             modifier = Modifier.testTag(AlohomoraTestTags.TrafficDetails.REPLAY),
                             content = {
                                 Icon(
@@ -135,18 +133,6 @@ internal fun TrafficDetailsScreen(
                 ReplayResultBanner(onClick = { onOpenTraffic(resultId) })
             }
             TrafficDetailsContent(trace = trace, onCopy = clipboardCopy.copy)
-        }
-    }
-
-    if (state.showReplaySheet) {
-        replayDraft?.let { draft ->
-            ReplayBottomSheet(
-                initial = draft,
-                isReplaying = state.isReplaying,
-                error = state.replayError,
-                onDismiss = viewModel::hideReplaySheet,
-                onSend = viewModel::replay,
-            )
         }
     }
 
@@ -209,5 +195,15 @@ private fun ReplayResultBanner(onClick: () -> Unit) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSecondaryContainer,
         )
+    }
+}
+
+@Preview
+@Composable
+private fun ReplayResultBannerPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ReplayResultBanner(onClick = {})
+        }
     }
 }

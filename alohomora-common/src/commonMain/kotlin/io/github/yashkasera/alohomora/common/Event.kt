@@ -8,6 +8,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
+const val CRASH_EVENT_NAME = "App.Exception"
+
 @Entity
 @Serializable
 data class Event(
@@ -22,6 +24,8 @@ data class Event(
     /** Set once the user opens the event, so the list can dim it. Mirrors TrafficEntry.isViewed. */
     val isViewed: Boolean = false,
 )
+
+val Event.isCrashEvent: Boolean get() = name == CRASH_EVENT_NAME
 
 class PropertiesConverter {
     @TypeConverter

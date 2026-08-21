@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -43,12 +46,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogWindow
-import androidx.compose.ui.window.rememberDialogState
-import io.github.yashkasera.alohomora.desktop.app.MacTitleBarHeight
 import io.github.yashkasera.alohomora.desktop.app.ThemeMode
-import io.github.yashkasera.alohomora.desktop.app.applyMacTitleBar
-import io.github.yashkasera.alohomora.desktop.app.isMacOs
 import io.github.yashkasera.alohomora.desktop.app.isShortcutModifier
 import io.github.yashkasera.alohomora.desktop.mcp.AlohomoraMcpServer
 import io.github.yashkasera.alohomora.desktop.mcp.McpClient
@@ -65,9 +63,16 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraSwitch
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraToggleItem
+import io.github.yashkasera.alohomora.ui.icons.Check
 import io.github.yashkasera.alohomora.ui.icons.Copy
+import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Server
+import io.github.yashkasera.alohomora.ui.icons.Settings
+import io.github.yashkasera.alohomora.ui.icons.SlidersHorizontal
+import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.AlohomoraColorTheme
+import kotlinx.coroutines.delay
 import io.github.yashkasera.alohomora.ui.theme.AlohomoraThemes
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -95,47 +100,81 @@ fun SettingsDialog(
     onMcpWriteEnabledChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val state = rememberDialogState(width = 780.dp, height = 620.dp)
-    DialogWindow(
-        title = "Preferences",
-        state = state,
-        onCloseRequest = onDismiss,
-        resizable = false,
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f))
+            .focusRequester(focusRequester)
+            .focusable()
+            .onPreviewKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                when (event.key) {
+                    Key.Escape -> {
+                        onDismiss(); true
+                    }
+                    Key.W if event.isShortcutModifier() -> {
+                        onDismiss(); true
+                    }
+                    else -> false
+                }
+            }
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onDismiss,
+            ),
+        contentAlignment = Alignment.Center,
     ) {
-        AppTheme(initialIsDark = isDark, themeId = themeId) {
-            applyMacTitleBar(window)
-            val focusRequester = remember { FocusRequester() }
-            LaunchedEffect(Unit) { focusRequester.requestFocus() }
+        var section by remember { mutableStateOf(SettingsSection.APPEARANCE) }
 
-            Surface(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .focusRequester(focusRequester)
-                    .focusable()
-                    .onPreviewKeyEvent { event ->
-                        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                        when (event.key) {
-                            Key.Escape -> {
-                                onDismiss(); true
-                            }
-                            Key.W if event.isShortcutModifier() -> {
-                                onDismiss(); true
-                            }
-                            else -> false
-                        }
-                    },
-            ) {
-                var section by remember { mutableStateOf(SettingsSection.APPEARANCE) }
-
+        Surface(
+            modifier = Modifier
+                .width(780.dp)
+                .height(580.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {},
+                ),
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp,
+        ) {
+            Column {
                 Row(
                     modifier = Modifier
-                        .fillMaxSize()
-                        // Clear the macOS traffic lights that overlay the transparent title bar.
-                        .padding(top = if (isMacOs) MacTitleBarHeight else 0.dp),
+                        .fillMaxWidth()
+                        .padding(
+                            start = MaterialTheme.dimens.margin.xl,
+                            end = MaterialTheme.dimens.margin.md,
+                            top = MaterialTheme.dimens.margin.lg,
+                            bottom = MaterialTheme.dimens.margin.md,
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    Text(
+                        text = "Preferences",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.weight(1f),
+                    )
+                    AlohomoraIconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.X,
+                            contentDescription = "Close",
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                        )
+                    }
+                }
+
+                AlohomoraHorizontalDivider()
+
+                Row(modifier = Modifier.fillMaxSize()) {
                     Column(
                         modifier = Modifier
-                            .width(184.dp)
+                            .width(200.dp)
                             .fillMaxHeight()
                             .background(MaterialTheme.colorScheme.surfaceContainerLow)
                             .padding(MaterialTheme.dimens.margin.md),
@@ -144,11 +183,14 @@ fun SettingsDialog(
                         SettingsSection.entries.forEach { item ->
                             SettingsNavItem(
                                 label = item.label,
+                                icon = item.icon,
                                 selected = item == section,
                                 onClick = { section = item },
                             )
                         }
                     }
+
+                    VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                     Column(
                         modifier = Modifier
@@ -333,6 +375,13 @@ private fun McpServerSection(
 @Suppress("DEPRECATION")
 private fun LabeledCopyBlock(label: String, content: String) {
     val clipboard = LocalClipboardManager.current
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(1500)
+            copied = false
+        }
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -343,12 +392,15 @@ private fun LabeledCopyBlock(label: String, content: String) {
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        AlohomoraIconButton(onClick = { clipboard.setText(AnnotatedString(content)) }) {
+        AlohomoraIconButton(onClick = {
+            clipboard.setText(AnnotatedString(content))
+            copied = true
+        }) {
             Icon(
-                imageVector = Icons.Copy,
+                imageVector = if (copied) Icons.Check else Icons.Copy,
                 contentDescription = "Copy $label",
                 modifier = Modifier.size(MaterialTheme.dimens.icon.md),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (copied) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -356,15 +408,20 @@ private fun LabeledCopyBlock(label: String, content: String) {
     AlohomoraCodeBlock(content = content, isScrollable = false)
 }
 
-private enum class SettingsSection(val label: String) {
-    APPEARANCE("Appearance"),
-    GENERAL("General"),
-    MCP("MCP server"),
-    DATA("Data"),
+private enum class SettingsSection(val label: String, val icon: ImageVector) {
+    APPEARANCE("Appearance", Icons.SlidersHorizontal),
+    GENERAL("General", Icons.Settings),
+    MCP("MCP server", Icons.Server),
+    DATA("Data", Icons.Database),
 }
 
 @Composable
-private fun SettingsNavItem(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun SettingsNavItem(
+    label: String,
+    icon: ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
     val background =
         if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
     val contentColor =
@@ -372,7 +429,7 @@ private fun SettingsNavItem(label: String, selected: Boolean, onClick: () -> Uni
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(MaterialTheme.shapes.small)
+            .clip(CircleShape)
             .background(background)
             .clickable(onClick = onClick)
             .padding(
@@ -380,7 +437,14 @@ private fun SettingsNavItem(label: String, selected: Boolean, onClick: () -> Uni
                 vertical = MaterialTheme.dimens.margin.sm,
             ),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
     ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+            tint = contentColor,
+        )
         Text(text = label, style = MaterialTheme.typography.bodyMedium, color = contentColor)
     }
 }
@@ -600,7 +664,7 @@ private fun ThemeCard(
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
         ) {
             ColorDot(theme.accent)
             ColorDot(theme.success)
@@ -620,7 +684,7 @@ private fun ThemeCard(
 private fun ColorDot(color: Color) {
     Box(
         modifier = Modifier
-            .size(12.dp)
+            .size(MaterialTheme.dimens.icon.xs)
             .clip(CircleShape)
             .background(color),
     )

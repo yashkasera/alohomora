@@ -1,8 +1,12 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -33,14 +38,13 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.app.displayModifier
 import io.github.yashkasera.alohomora.desktop.app.isShortcutModifier
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DesktopSection
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
-import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlinx.coroutines.launch
 
@@ -60,62 +64,75 @@ private val SECTION_DESCRIPTIONS = mapOf(
 fun HelpDialog(
     visibleSections: List<DesktopSection>,
     actions: List<CommandAction>,
-    isDark: Boolean,
-    themeId: String = "default",
     onDismiss: () -> Unit,
 ) {
-    Dialog(
-        onDismissRequest = onDismiss,
-    ) {
-        AppTheme(initialIsDark = isDark, themeId = themeId) {
-            val focusRequester = remember { FocusRequester() }
-            LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-            Surface(
-                modifier = Modifier
-                    .fillMaxHeight(0.7f)
-                    .focusRequester(focusRequester)
-                    .focusable()
-                    .onPreviewKeyEvent { event ->
-                        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                        when (event.key) {
-                            Key.Escape -> {
-                                onDismiss(); true
-                            }
-                            Key.W if event.isShortcutModifier() -> {
-                                onDismiss(); true
-                            }
-                            else -> false
-                        }
-                    },
-            ) {
-                val tabs = listOf("Shortcuts", "Features")
-                val pagerState = rememberPagerState(pageCount = { tabs.size })
-                val scope = rememberCoroutineScope()
-
-                Column(modifier = Modifier.fillMaxSize()) {
-                    AlohomoraPrimaryTabRow(
-                        selectedTabIndex = pagerState.currentPage,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        tabs.forEachIndexed { index, tab ->
-                            AlohomoraTab(
-                                selected = pagerState.currentPage == index,
-                                onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                                text = tab,
-                                uppercase = false,
-                            )
-                        }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f))
+            .focusRequester(focusRequester)
+            .focusable()
+            .onPreviewKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                when (event.key) {
+                    Key.Escape -> {
+                        onDismiss(); true
                     }
+                    Key.W if event.isShortcutModifier() -> {
+                        onDismiss(); true
+                    }
+                    else -> false
+                }
+            }
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onDismiss,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Surface(
+            modifier = Modifier
+                .width(640.dp)
+                .fillMaxHeight(0.7f)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {},
+                ),
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp,
+        ) {
+            val tabs = listOf("Shortcuts", "Features")
+            val pagerState = rememberPagerState(pageCount = { tabs.size })
+            val scope = rememberCoroutineScope()
 
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.fillMaxSize(),
-                    ) { page ->
-                        when (page) {
-                            0 -> ShortcutsTab(actions = actions)
-                            1 -> FeaturesTab(visibleSections = visibleSections)
-                        }
+            Column(modifier = Modifier.fillMaxSize()) {
+                AlohomoraPrimaryTabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    tabs.forEachIndexed { index, tab ->
+                        AlohomoraTab(
+                            selected = pagerState.currentPage == index,
+                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                            text = tab,
+                            uppercase = false,
+                        )
+                    }
+                }
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                ) { page ->
+                    when (page) {
+                        0 -> ShortcutsTab(actions = actions)
+                        1 -> FeaturesTab(visibleSections = visibleSections)
                     }
                 }
             }

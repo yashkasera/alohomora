@@ -32,6 +32,7 @@ import io.github.yashkasera.alohomora.presentation.ui.screens.traces.detail.Trac
 import io.github.yashkasera.alohomora.presentation.ui.screens.traces.list.TracesViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail.TrafficDetailsViewModel
 import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.list.TrafficViewModel
+import io.github.yashkasera.alohomora.presentation.ui.screens.traffic.replay.ReplayViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
@@ -95,7 +96,7 @@ internal val appModule = module {
     viewModel { OverviewViewModel(get(), get(), get()) }
     viewModel { TrafficViewModel(get()) }
     viewModel { (traceId: String) ->
-        TrafficDetailsViewModel(traceId, get(), get(), get(), get(), get(), get())
+        TrafficDetailsViewModel(traceId, get(), get(), get(), get(), get())
     }
     viewModel { EventsViewModel(get()) }
     viewModel { DatabaseViewModel(get()) }
@@ -106,6 +107,7 @@ internal val appModule = module {
     viewModel { (errorId: Long) -> ErrorDetailsViewModel(errorId, get(), get()) }
     viewModel { TracesViewModel(get()) }
     viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get()) }
+    viewModel { (trafficId: String) -> ReplayViewModel(trafficId, get(), get()) }
 }
 
 

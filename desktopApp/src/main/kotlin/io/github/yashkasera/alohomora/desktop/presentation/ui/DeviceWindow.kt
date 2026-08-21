@@ -44,6 +44,7 @@ fun DeviceWindow(
     onDismissUpdate: () -> Unit,
     onShowSettings: () -> Unit,
     onShowAbout: () -> Unit,
+    appOverlays: @Composable () -> Unit,
     onOpenLauncher: () -> Unit,
     onExit: () -> Unit,
     onSessionClosed: () -> Unit,
@@ -279,6 +280,7 @@ fun DeviceWindow(
                     )
                 }
             }
+            appOverlays()
         }
     }
 }

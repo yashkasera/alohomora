@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -45,6 +47,7 @@ import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.MethodBadge
 import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
+import io.github.yashkasera.alohomora.ui.components.rememberViewedStateColors
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeftRight
 import io.github.yashkasera.alohomora.ui.icons.Check
@@ -52,6 +55,7 @@ import io.github.yashkasera.alohomora.ui.icons.CircleAlert
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.utils.drawDiagonalLabel
@@ -159,30 +163,13 @@ private fun TrafficTopBar(
                     .testTag(AlohomoraTestTags.Chrome.SEARCH),
             )
             Spacer(modifier = Modifier.size(MaterialTheme.dimens.margin.sm))
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = MaterialTheme.dimens.margin.xl),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-            ) {
-                items(listOf("GET", "POST", "PUT", "PATCH", "DELETE")) { method ->
-                    val isSelected = method.equals(selectedMethod, ignoreCase = true)
-                    AlohomoraFilterChip(
-                        label = method,
-                        selected = isSelected,
-                        modifier = Modifier.testTag(
-                            AlohomoraTestTags.Traffic.methodFilter(method),
-                        ),
-                        onClick = {
-                            if (method != selectedMethod) {
-                                viewModel.setMethod(method)
-                            } else {
-                                viewModel.setMethod("")
-                            }
-                        },
-                    )
-                }
-            }
+            MethodFilterBar(
+                selectedMethod = selectedMethod,
+                onMethodClick = { method ->
+                    if (method != selectedMethod) viewModel.setMethod(method)
+                    else viewModel.setMethod("")
+                },
+            )
             AlohomoraHorizontalDivider()
         }
     }
@@ -190,10 +177,7 @@ private fun TrafficTopBar(
 
 @Composable
 private fun TrafficItem(call: TrafficEntry, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val containerColor = when {
-        call.isViewed -> MaterialTheme.colorScheme.surfaceContainer
-        else -> MaterialTheme.colorScheme.surfaceContainerHighest
-    }
+    val viewedColors = rememberViewedStateColors(call.isViewed)
 
     AlohomoraCard(
         onClick = onClick,
@@ -205,8 +189,9 @@ private fun TrafficItem(call: TrafficEntry, modifier: Modifier = Modifier, onCli
                     color = MaterialTheme.colorScheme.primary,
                 )
         } else modifier,
+        shape = MaterialTheme.shapes.large,
         colors = AlohomoraCardDefaults.colors(
-            containerColor = containerColor,
+            containerColor = viewedColors.containerColor.value,
         ),
     ) {
         Row(
@@ -217,6 +202,7 @@ private fun TrafficItem(call: TrafficEntry, modifier: Modifier = Modifier, onCli
         ) {
             AlohomoraCard(
                 modifier = Modifier.fillMaxHeight(),
+                shape = MaterialTheme.shapes.medium,
                 colors = AlohomoraCardDefaults.colors(
                     containerColor = if (call.isSuccessful())
                         MaterialTheme.alohomoraColors.successContainer
@@ -268,35 +254,162 @@ private fun TrafficItem(call: TrafficEntry, modifier: Modifier = Modifier, onCli
                     }
 
                     if (call.isMocked().not()) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-                        ) {
-                            Text(
-                                text = "${call.duration}ms",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer,
-                            )
-                        }
+                        Text(
+                            text = "${call.duration}ms",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
                     }
                 }
 
                 Text(
                     text = call.pathWithQuery(),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = viewedColors.titleColor.value,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
 
                 Text(
-                    text = "${call.host}",
+                    text = call.host.orEmpty(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun TrafficItemSuccessPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            TrafficItem(
+                call = TrafficEntry(
+                    id = "preview-1",
+                    status = 200,
+                    method = "GET",
+                    host = "api.example.com",
+                    path = "/v1/users/me/profile",
+                    query = "include=avatar",
+                    time = 1724234567000L,
+                    duration = 142,
+                    requestSize = 256,
+                    responseSize = 4096,
+                    responseContentType = "application/json",
+                    isViewed = false,
+                ),
+                onClick = {},
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun TrafficItemErrorPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            TrafficItem(
+                call = TrafficEntry(
+                    id = "preview-2",
+                    status = 500,
+                    method = "POST",
+                    host = "api.example.com",
+                    path = "/v1/orders",
+                    time = 1724234568000L,
+                    duration = 3200,
+                    requestSize = 1024,
+                    responseSize = 512,
+                    responseContentType = "application/json",
+                    isViewed = true,
+                ),
+                onClick = {},
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun TrafficItemMockedPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            TrafficItem(
+                call = TrafficEntry(
+                    id = "preview-3",
+                    status = 200,
+                    method = "GET",
+                    host = "api.example.com",
+                    path = "/v1/config",
+                    time = 1724234569000L,
+                    duration = 5,
+                    requestSize = 128,
+                    responseSize = 2048,
+                    responseContentType = "application/json",
+                    isViewed = false,
+                    mockedBy = "mock-rule-1",
+                ),
+                onClick = {},
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+            )
+        }
+    }
+}
+
+@Composable
+private fun MethodFilterBar(
+    selectedMethod: String?,
+    onMethodClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+        contentPadding = PaddingValues(horizontal = MaterialTheme.dimens.margin.xl),
+    ) {
+        items(listOf("GET", "POST", "PUT", "PATCH", "DELETE")) { method ->
+            AlohomoraFilterChip(
+                label = method,
+                selected = method.equals(selectedMethod, ignoreCase = true),
+                modifier = Modifier.testTag(
+                    AlohomoraTestTags.Traffic.methodFilter(method),
+                ),
+                onClick = { onMethodClick(method) },
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun MethodFilterBarSelectedPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            MethodFilterBar(
+                selectedMethod = "POST",
+                onMethodClick = {},
+                modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.sm),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun MethodFilterBarNoneSelectedPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            MethodFilterBar(
+                selectedMethod = null,
+                onMethodClick = {},
+                modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.sm),
+            )
         }
     }
 }

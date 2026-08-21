@@ -25,6 +25,7 @@ import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.exceptionTypeName
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValueRow
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SlackShareDialog
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
@@ -47,6 +48,7 @@ fun ErrorDetailsSideSheet(
 ) {
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
+    val copyFeedback = LocalCopyFeedback.current
     val slackShareError by devToolsViewModel.slackShareError.collectAsState()
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()
     val isSlackConfigured = buildInfo?.slackWebhookUrl.isNullOrBlank().not()
@@ -108,7 +110,10 @@ fun ErrorDetailsSideSheet(
                         )
                     }
                     AlohomoraIconButton(
-                        onClick = { clipboardManager.setText(AnnotatedString(shareText)) },
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(shareText))
+                            copyFeedback("Copied to clipboard")
+                        },
                     ) {
                         Icon(imageVector = Icons.Copy, contentDescription = "Copy error")
                     }

@@ -40,6 +40,9 @@ internal sealed interface Routes {
     data class ErrorDetails(val errorId: Long) : Routes
 
     @Serializable
+    data class Replay(val trafficId: String) : Routes
+
+    @Serializable
     data object GitHistory : Routes
 
     /**

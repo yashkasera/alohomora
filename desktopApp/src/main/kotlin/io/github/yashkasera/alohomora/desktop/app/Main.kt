@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.app
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -127,72 +128,71 @@ fun main() {
             onDispose { mcpServer.stop() }
         }
 
-        if (showAbout) {
-            AboutDialog(
-                isDark = effectiveIsDark,
-                themeId = themeId,
-                updateInfo = updateInfo,
-                onDismiss = { showAbout = false },
-            )
-        }
-
-        if (showSettings) {
-            SettingsDialog(
-                isDark = effectiveIsDark,
-                themeId = themeId,
-                themeMode = themeMode,
-                onThemeIdChange = { id ->
-                    themeId = id
-                    DesktopThemePrefs.saveThemeId(id)
-                },
-                onThemeModeChange = { mode ->
-                    themeMode = mode
-                    DesktopThemePrefs.saveMode(mode)
-                },
-                screenshotDir = screenshotDir,
-                screenshotShowToast = screenshotShowToast,
-                onScreenshotDirChange = { dir ->
-                    screenshotDir = dir
-                    DesktopScreenshotPrefs.saveDefaultDir(dir)
-                },
-                onScreenshotShowToastChange = { show ->
-                    screenshotShowToast = show
-                    DesktopScreenshotPrefs.saveShowToast(show)
-                },
-                onClearTrustTokens = { DesktopTrustPrefs.clearAll() },
-                onClearMutedEvents = { DesktopEventPrefs.clearAll() },
-                onResetPreferences = {
-                    DesktopThemePrefs.clear()
-                    DesktopTrustPrefs.clearAll()
-                    DesktopEventPrefs.clearAll()
-                    DesktopMcpPrefs.clear()
-                    DesktopScreenshotPrefs.clear()
-                    themeMode = ThemeMode.SYSTEM
-                    themeId = "default"
-                    mcpEnabled = false
-                    mcpPort = DesktopMcpPrefs.DEFAULT_PORT
-                    mcpWriteEnabled = false
-                    screenshotDir = ""
-                    screenshotShowToast = true
-                },
-                mcpEnabled = mcpEnabled,
-                mcpPort = mcpPort,
-                mcpStatus = mcpStatus,
-                mcpWriteEnabled = mcpWriteEnabled,
-                onMcpEnabledChange = { enabled ->
-                    mcpEnabled = enabled
-                    DesktopMcpPrefs.saveEnabled(enabled)
-                },
-                onMcpPortChange = { port ->
-                    mcpPort = port
-                    DesktopMcpPrefs.savePort(port)
-                },
-                onMcpWriteEnabledChange = { enabled ->
-                    mcpWriteEnabled = enabled
-                    DesktopMcpPrefs.saveWriteEnabled(enabled)
-                },
-                onDismiss = { showSettings = false },
-            )
+        val appOverlays: @Composable () -> Unit = {
+            if (showAbout) {
+                AboutDialog(
+                    updateInfo = updateInfo,
+                    onDismiss = { showAbout = false },
+                )
+            }
+            if (showSettings) {
+                SettingsDialog(
+                    isDark = effectiveIsDark,
+                    themeId = themeId,
+                    themeMode = themeMode,
+                    onThemeIdChange = { id ->
+                        themeId = id
+                        DesktopThemePrefs.saveThemeId(id)
+                    },
+                    onThemeModeChange = { mode ->
+                        themeMode = mode
+                        DesktopThemePrefs.saveMode(mode)
+                    },
+                    screenshotDir = screenshotDir,
+                    screenshotShowToast = screenshotShowToast,
+                    onScreenshotDirChange = { dir ->
+                        screenshotDir = dir
+                        DesktopScreenshotPrefs.saveDefaultDir(dir)
+                    },
+                    onScreenshotShowToastChange = { show ->
+                        screenshotShowToast = show
+                        DesktopScreenshotPrefs.saveShowToast(show)
+                    },
+                    onClearTrustTokens = { DesktopTrustPrefs.clearAll() },
+                    onClearMutedEvents = { DesktopEventPrefs.clearAll() },
+                    onResetPreferences = {
+                        DesktopThemePrefs.clear()
+                        DesktopTrustPrefs.clearAll()
+                        DesktopEventPrefs.clearAll()
+                        DesktopMcpPrefs.clear()
+                        DesktopScreenshotPrefs.clear()
+                        themeMode = ThemeMode.SYSTEM
+                        themeId = "default"
+                        mcpEnabled = false
+                        mcpPort = DesktopMcpPrefs.DEFAULT_PORT
+                        mcpWriteEnabled = false
+                        screenshotDir = ""
+                        screenshotShowToast = true
+                    },
+                    mcpEnabled = mcpEnabled,
+                    mcpPort = mcpPort,
+                    mcpStatus = mcpStatus,
+                    mcpWriteEnabled = mcpWriteEnabled,
+                    onMcpEnabledChange = { enabled ->
+                        mcpEnabled = enabled
+                        DesktopMcpPrefs.saveEnabled(enabled)
+                    },
+                    onMcpPortChange = { port ->
+                        mcpPort = port
+                        DesktopMcpPrefs.savePort(port)
+                    },
+                    onMcpWriteEnabledChange = { enabled ->
+                        mcpWriteEnabled = enabled
+                        DesktopMcpPrefs.saveWriteEnabled(enabled)
+                    },
+                    onDismiss = { showSettings = false },
+                )
+            }
         }
 
         pendingMcpConfirmation?.let { pending ->
@@ -213,6 +213,7 @@ fun main() {
                 onDismissUpdate = { updateDismissed = true },
                 onShowSettings = { showSettings = true },
                 onShowAbout = { showAbout = true },
+                appOverlays = appOverlays,
                 onOpenDeviceWindow = { deviceId, host, hostPort, devicePort, composition ->
                     val duplicate = sessions.any { it.deviceId == deviceId }
                     if (!duplicate) {
@@ -246,6 +247,7 @@ fun main() {
                     onDismissUpdate = { updateDismissed = true },
                     onShowSettings = { showSettings = true },
                     onShowAbout = { showAbout = true },
+                    appOverlays = appOverlays,
                     onOpenLauncher = { launcherVisible = true },
                     onExit = ::exitApplication,
                     onSessionClosed = {

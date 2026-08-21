@@ -22,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -36,7 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -52,6 +53,7 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.Server
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -533,6 +535,7 @@ private fun SectionHeader(
         modifier = modifier,
         text = title,
         style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.tertiary,
     )
 }
 
@@ -557,7 +560,10 @@ private fun ResponseMetadata(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.extraSmall)
                     .background(MaterialTheme.colorScheme.primary)
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .padding(
+                        horizontal = MaterialTheme.dimens.margin.md,
+                        vertical = MaterialTheme.dimens.margin.xs,
+                    ),
             ) {
                 Text(
                     text = HttpStatusCode.fromValue(statusCode).toString(),
@@ -624,3 +630,88 @@ private fun detectFormatFromContentType(contentType: String?): ContentType =
     runCatching {
         ContentType.parse(contentType ?: throw Exception())
     }.getOrDefault(ContentType.Any)
+
+private val PreviewTrafficEntry = TrafficEntry(
+    id = "preview-detail-1",
+    status = 200,
+    url = "https://api.example.com/v1/users/me/profile?include=avatar",
+    method = "GET",
+    scheme = "https",
+    host = "api.example.com",
+    path = "/v1/users/me/profile",
+    query = "include=avatar",
+    time = 1724234567000L,
+    duration = 142,
+    requestSize = 256,
+    responseSize = 4096,
+    requestContentType = "application/json",
+    responseContentType = "application/json",
+    requestHeaders = mapOf(
+        "Authorization" to listOf("Bearer ***"),
+        "Accept" to listOf("application/json"),
+    ),
+    responseHeaders = mapOf(
+        "Content-Type" to listOf("application/json"),
+        "Cache-Control" to listOf("no-cache"),
+    ),
+    requestBody = """{"name": "Yash"}""",
+    responseBody = """{"id": 1, "name": "Yash", "email": "yash@example.com"}""",
+)
+
+@Preview
+@Composable
+private fun HeroStatsSectionPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(modifier = Modifier.padding(MaterialTheme.dimens.margin.lg)) {
+                HeroStatsSection(
+                    statusCode = 200,
+                    latencyMs = 142,
+                    responseSize = 4096,
+                    requestSize = 256,
+                    format = "application/json",
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun InfoRowPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
+            ) {
+                InfoRow(
+                    icon = Icons.Clock,
+                    label = "TIMESTAMP",
+                    value = "2024-08-21T10:22:47.000Z",
+                )
+                InfoRow(
+                    icon = Icons.Server,
+                    label = "HOST",
+                    value = "api.example.com",
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun OverviewTabPreview() {
+    AppTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(MaterialTheme.dimens.margin.md),
+            ) {
+                OverviewTab(entry = PreviewTrafficEntry)
+            }
+        }
+    }
+}

@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -22,17 +24,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -176,7 +181,7 @@ fun DashboardContent(
                         title = "Recent Events",
                         onAction = onEventsClick,
                         isEmpty = events.isEmpty(),
-                        emptyIcon = Icons.ChartLine,
+                        icon = Icons.ChartLine,
                         emptyTitle = "No events yet",
                         itemCount = events.size,
                         modifier = modifier,
@@ -202,7 +207,7 @@ fun DashboardContent(
                         title = "Recent Traffic",
                         onAction = onTrafficClick,
                         isEmpty = traffic.isEmpty(),
-                        emptyIcon = Icons.Server,
+                        icon = Icons.Server,
                         emptyTitle = "No traffic yet",
                         itemCount = traffic.size,
                         modifier = modifier,
@@ -264,15 +269,16 @@ private fun MetricsStrip(dashboard: DashboardUiState) {
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
     ) {
-        MetricTile("BATTERY", dashboard.batteryPercent, dashboard.batteryStatus)
-        MetricTile("MEMORY", dashboard.memoryUsageGb, "/ ${dashboard.memoryTotalGb} GB")
-        MetricTile("CPU", dashboard.cpuUsagePercent)
-        MetricTile("FPS", dashboard.frameRateFps, "${dashboard.frameTimeMs}ms")
-        MetricTile("JANK", dashboard.jankFrames, "frames")
+        MetricTile("BATTERY", dashboard.batteryPercent, dashboard.batteryStatus, accentColor = MaterialTheme.alohomoraColors.success)
+        MetricTile("MEMORY", dashboard.memoryUsageGb, "/ ${dashboard.memoryTotalGb} GB", accentColor = MaterialTheme.alohomoraColors.info)
+        MetricTile("CPU", dashboard.cpuUsagePercent, accentColor = MaterialTheme.alohomoraColors.accent)
+        MetricTile("FPS", dashboard.frameRateFps, "${dashboard.frameTimeMs}ms", accentColor = MaterialTheme.colorScheme.primary)
+        MetricTile("JANK", dashboard.jankFrames, "frames", accentColor = MaterialTheme.alohomoraColors.warning)
         MetricTile(
             "LATENCY",
             "${dashboard.latencyMs}ms",
             valueColor = MaterialTheme.alohomoraColors.accent,
+            accentColor = MaterialTheme.alohomoraColors.accent,
         )
     }
 }
@@ -283,16 +289,31 @@ private fun MetricTile(
     value: String,
     subValue: String? = null,
     valueColor: Color = Color.Unspecified,
+    accentColor: Color = Color.Unspecified,
 ) {
     val resolvedValueColor =
         if (valueColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else valueColor
+    val resolvedAccent =
+        if (accentColor == Color.Unspecified) MaterialTheme.colorScheme.primary else accentColor
     AlohomoraOutlinedCard(modifier = Modifier.widthIn(min = 140.dp)) {
         Column(modifier = Modifier.padding(MaterialTheme.dimens.margin.lg)) {
-            Text(
-                label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(MaterialTheme.dimens.icon.xs)
+                        .clip(CircleShape)
+                        .background(resolvedAccent),
+                )
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+            }
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
                     value,
@@ -316,6 +337,12 @@ private fun MetricTile(
 @Composable
 private fun CurrentBuildCard(buildInfo: BuildInfo?) {
     AlohomoraOutlinedCard(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(MaterialTheme.dimens.margin.xs)
+                .background(MaterialTheme.colorScheme.primary),
+        )
         Column(modifier = Modifier.padding(MaterialTheme.dimens.margin.xxl)) {
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
@@ -377,13 +404,23 @@ private fun CurrentBuildCard(buildInfo: BuildInfo?) {
 
 @Composable
 private fun BuildMeta(label: String, value: String) {
-    Column {
-        Text(
-            label.uppercase(),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.secondary,
-        )
-        Text(value, style = MaterialTheme.typography.bodySmall)
+    Surface(
+        shape = MaterialTheme.shapes.extraSmall,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column(
+            modifier = Modifier.padding(
+                horizontal = MaterialTheme.dimens.margin.sm,
+                vertical = MaterialTheme.dimens.margin.xs,
+            ),
+        ) {
+            Text(
+                label.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+            Text(value, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 
@@ -400,7 +437,7 @@ private fun DashboardListCard(
     title: String,
     onAction: () -> Unit,
     isEmpty: Boolean,
-    emptyIcon: ImageVector,
+    icon: ImageVector,
     emptyTitle: String,
     itemCount: Int,
     modifier: Modifier = Modifier,
@@ -418,14 +455,21 @@ private fun DashboardListCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     Text(
                         title,
                         style = MaterialTheme.typography.titleMedium,
                     )
                     if (itemCount > 0) {
-                        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
-                        // Tells you whether an empty viewport means no data or just scrolled.
                         AlohomoraChip(label = itemCount.toString())
                     }
                 }
@@ -436,7 +480,7 @@ private fun DashboardListCard(
             }
 
             if (isEmpty) {
-                EmptyState(icon = emptyIcon, title = emptyTitle)
+                EmptyState(icon = icon, title = emptyTitle)
             } else {
                 val listState = rememberLazyListState()
                 FollowNewest(listState, itemCount)

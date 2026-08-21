@@ -137,18 +137,6 @@ data class EventsUiState(
 }
 
 /**
- * Clamps a payload to [max] lines, reporting what it hid.
- *
- * Truncation has to announce itself: a silently cut payload reads as an event that genuinely carried
- * only six keys. See `EventItem` for why the row clamps rather than scrolls.
- */
-fun String.clampLines(max: Int): String {
-    val lines = lines()
-    if (lines.size <= max) return this
-    return lines.take(max).joinToString("\n") + "\n… ${lines.size - max} more lines"
-}
-
-/**
  * The panel subtitle, e.g. "412 events · 38 shown · oldest dropped at 2000".
  *
  * A pure function so the string is testable. The cap clause matters because [EventStore] drops its

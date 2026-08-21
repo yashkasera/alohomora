@@ -34,14 +34,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.presentation.model.TrafficUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.trafficSubtitle
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ClearCapturedDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValueRow
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SlackShareDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficItem
@@ -70,6 +72,7 @@ import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Repeat
+import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Slack
@@ -282,6 +285,7 @@ fun TrafficDetailsSideSheet(
     traffic: TrafficEntry?,
     devToolsViewModel: DevToolsViewModel,
     networkRulesViewModel: NetworkRulesViewModel? = null,
+    onOpenMockRules: () -> Unit = {},
     onDismiss: () -> Unit,
 ) {
     // Keyed on the entry, not bare `remember`: this composable is reused as the selection changes,
@@ -302,6 +306,9 @@ fun TrafficDetailsSideSheet(
         ?.takeIf { replayState.supported }
         ?.toReplayRequest()
     val replayBlockedReason = traffic?.replayBlockedReason()
+    @Suppress("DEPRECATION")
+    val clipboardManager = LocalClipboardManager.current
+    val copyFeedback = LocalCopyFeedback.current
 
     AlohomoraSideSheet(
         visible = traffic != null,
@@ -346,24 +353,40 @@ fun TrafficDetailsSideSheet(
                             )
                         }
                     }
+                    AlohomoraIconButton(
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(traffic.curlCommand()))
+                            copyFeedback("Copied as cURL")
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Copy,
+                            contentDescription = "Copy as cURL",
+                        )
+                    }
                     if (networkRulesViewModel != null) {
                         val networkRulesSupported by networkRulesViewModel.networkRulesSupported.collectAsState()
                         if (networkRulesSupported) {
                             AlohomoraIconButton(
-                                onClick = { networkRulesViewModel.addRuleFromTraffic(traffic) },
+                                onClick = {
+                                    networkRulesViewModel.addRuleFromTraffic(traffic)
+                                    onOpenMockRules()
+                                },
                             ) {
                                 Icon(
-                                    imageVector = Icons.Copy,
+                                    imageVector = Icons.Route,
                                     contentDescription = "Create mock from this request",
                                 )
                             }
                         }
                     }
-                    AlohomoraIconButton(onClick = { showSlackShareDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Slack,
-                            contentDescription = "Share to Slack",
-                        )
+                    if (isSlackConfigured) {
+                        AlohomoraIconButton(onClick = { showSlackShareDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Slack,
+                                contentDescription = "Share to Slack",
+                            )
+                        }
                     }
                     AlohomoraIconButton(onClick = onDismiss) {
                         Icon(imageVector = Icons.X, contentDescription = "Close")
@@ -502,7 +525,7 @@ private fun DesktopOverviewTab(traffic: TrafficEntry) {
                 color = MaterialTheme.colorScheme.primary,
             )
         }
-        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.sm))
         OverviewStatRow(
             status = traffic.status?.toString() ?: "-",
             duration = "${traffic.duration ?: 0} ms",
@@ -536,7 +559,7 @@ private fun DesktopRequestTab(traffic: TrafficEntry) {
         }
         SectionLabel("Headers")
 
-        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.sm))
 
         AlohomoraCodeBlock(
             content = traffic.requestHeaders
