@@ -31,7 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.clampLines
@@ -70,7 +70,7 @@ import org.koin.compose.viewmodel.koinViewModel
 internal fun EventsScreen(onBackClick: () -> Unit) {
     val viewModel = koinViewModel<EventsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val isSlackConfigured = remember { Alohomora.config?.slackWebhookUrl.isNullOrBlank().not() }
+    val isSlackConfigured = remember { AlohomoraImpl.config?.slackWebhookUrl.isNullOrBlank().not() }
 
     Scaffold(
         topBar = {

@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.network
 
-import io.github.yashkasera.alohomora.AlohomoraInternal
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.common.HeaderRedaction
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.devtools.MOCK_ID_HEADER
@@ -125,7 +125,7 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
                 "<binary or unreadable body: ${e.message}>"
             }
 
-            AlohomoraInternal.recordTraffic(entity)
+            AlohomoraImpl.persistTrafficEntry(entity)
 
             // Ktor hooks are suspending, so delay() throttles the caller directly.
             // Bandwidth throttling is not implemented here — on Android, the OkHttp engine's

@@ -25,7 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.data.model.BuildMetadata
 import io.github.yashkasera.alohomora.data.model.toBuildMetadata
@@ -68,12 +68,12 @@ internal fun ConfigScreen(
                 .testTag(AlohomoraTestTags.Config.ROOT),
         ) {
             ConfigSection(title = "BUILD INFORMATION") {
-                BuildInfoGrid(buildConfig = Alohomora.config?.toBuildMetadata())
+                BuildInfoGrid(buildConfig = AlohomoraImpl.config?.toBuildMetadata())
             }
 
             AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.md))
 
-            Alohomora.config?.let {
+            AlohomoraImpl.config?.let {
                 ConfigSection(title = "ENVIRONMENT") {
                     EnvironmentDetails(
                         environment = buildString {

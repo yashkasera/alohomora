@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.traffic
 
 import io.github.yashkasera.alohomora.Alohomora
-import io.github.yashkasera.alohomora.AlohomoraInternal
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.common.HeaderRedaction
 import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -259,7 +259,7 @@ class AlohomoraURLProtocol :
                 ?: emptyMap(),
         ).orEmpty()
 
-        AlohomoraInternal.recordTraffic(
+        AlohomoraImpl.persistTrafficEntry(
             TrafficEntry(
                 id = traceId,
                 url = url.absoluteString,
@@ -313,7 +313,7 @@ class AlohomoraURLProtocol :
                 .toMap(),
         ).orEmpty()
 
-        AlohomoraInternal.recordTraffic(
+        AlohomoraImpl.persistTrafficEntry(
             TrafficEntry(
                 id = traceId,
                 url = url?.absoluteString,

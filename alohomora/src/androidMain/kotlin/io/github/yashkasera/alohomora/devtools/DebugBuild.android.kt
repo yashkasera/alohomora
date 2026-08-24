@@ -2,7 +2,7 @@ package io.github.yashkasera.alohomora.devtools
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 
 /**
  * Whether the host app is a debuggable build.
@@ -18,7 +18,8 @@ import io.github.yashkasera.alohomora.Alohomora
  */
 internal actual val isDebugBuild: Boolean
     get() {
-        val context = runCatching { Alohomora.koinApplication?.koin?.get<Context>() }.getOrNull()
-            ?: return false
+        val context =
+            runCatching { AlohomoraImpl.koinApplication?.koin?.get<Context>() }.getOrNull()
+                ?: return false
         return context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     }

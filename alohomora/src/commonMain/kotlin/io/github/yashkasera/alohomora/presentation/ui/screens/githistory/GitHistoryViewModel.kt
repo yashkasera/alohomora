@@ -2,7 +2,7 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.githistory
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.data.model.GitHistoryCommit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +25,7 @@ internal class GitHistoryViewModel : ViewModel() {
 
     private fun loadCommits() {
         try {
-            val commits = Alohomora.config?.commits.orEmpty()
+            val commits = AlohomoraImpl.config?.commits.orEmpty()
             _state.value = GitHistoryState(
                 commits = commits,
                 isLoading = false,

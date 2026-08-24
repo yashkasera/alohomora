@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.devtools
 
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.common.AuthChallengeMessage
 import io.github.yashkasera.alohomora.common.AuthFailureMessage
 import io.github.yashkasera.alohomora.common.AuthOtpRequiredMessage
@@ -761,8 +761,8 @@ internal class DevToolsRuntime(
                 selectedDatabase = selectedDatabase,
                 cacheKeys = cacheKeys,
                 cacheStores = cacheStores,
-                buildMetadata = Alohomora.config?.toBuildMetadataPayload(),
-                gitHistory = Alohomora.config?.commits?.map { it.toGitHistoryPayload() }.orEmpty(),
+                buildMetadata = AlohomoraImpl.config?.toBuildMetadataPayload(),
+                gitHistory = AlohomoraImpl.config?.commits?.map { it.toGitHistoryPayload() }.orEmpty(),
                 replaySupported = TrafficReplayRegistry.isSupported,
                 spanCaptureSupported = SpanCaptureRegistry.isSupported,
                 networkRulesSupported = true,

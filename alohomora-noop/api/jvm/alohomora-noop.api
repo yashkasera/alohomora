@@ -2,45 +2,30 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public static final field $stable I
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/Alohomora;
 	public final fun clearAppDatabaseOverrides ()V
-	public static final fun clearFeatureFlags ()V
+	public final fun clearFeatureFlags ()V
 	public final fun clearRedactedHeaders ()V
 	public final fun clearReplayHandler ()V
 	public final fun clearSharedPreferencesOverrides ()V
 	public final fun excludeAppDatabase (Ljava/lang/String;)V
-	public static final fun getDebugConfig (Ljava/lang/String;)Ljava/lang/String;
+	public final fun getDebugConfig (Ljava/lang/String;)Ljava/lang/String;
 	public final fun getPlugins ()Ljava/util/List;
 	public final fun init ()V
 	public final fun isReplaySupported ()Z
 	public final fun publishPluginData (Ljava/lang/String;)V
-	public static final fun recordError (Ljava/lang/String;)V
-	public static final fun recordError (Ljava/lang/String;Ljava/lang/String;)V
-	public static final fun recordError (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public static final fun recordError (Ljava/lang/Throwable;)V
-	public static final fun recordError (Ljava/lang/Throwable;Ljava/lang/String;)V
-	public static synthetic fun recordError$default (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
-	public static synthetic fun recordError$default (Ljava/lang/Throwable;Ljava/lang/String;ILjava/lang/Object;)V
-	public static final fun recordEvent (Ljava/lang/String;)V
-	public static final fun recordEvent (Ljava/lang/String;Ljava/util/Map;)V
-	public static synthetic fun recordEvent$default (Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
-	public static final fun recordFeatureFlag (Ljava/lang/String;Ljava/lang/String;)V
-	public static final fun recordFeatureFlag (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public static final fun recordFeatureFlag (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public static final fun recordFeatureFlag (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
-	public static synthetic fun recordFeatureFlag$default (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
-	public static final fun recordSpan (Ljava/lang/String;J)V
-	public static final fun recordSpan (Ljava/lang/String;JLjava/util/Map;)V
-	public static final fun recordSpan (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJ)V
-	public static final fun recordSpan (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;)V
-	public static final fun recordSpan (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;Ljava/lang/String;)V
-	public static final fun recordSpan (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public static final fun recordSpan (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public static final fun recordSpan (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
-	public static final fun recordSpan (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;)V
-	public static final fun recordSpan (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;)V
-	public static synthetic fun recordSpan$default (Ljava/lang/String;JLjava/util/Map;ILjava/lang/Object;)V
-	public static synthetic fun recordSpan$default (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)V
-	public static final fun recordTraffic (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;)V
-	public static synthetic fun recordTraffic$default (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun recordError (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun recordError (Ljava/lang/Throwable;Ljava/lang/String;)V
+	public static synthetic fun recordError$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public static synthetic fun recordError$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/Throwable;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun recordEvent (Ljava/lang/String;Ljava/util/Map;)V
+	public static synthetic fun recordEvent$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
+	public final fun recordFeatureFlag (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public static synthetic fun recordFeatureFlag$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
+	public final fun recordSpan (Ljava/lang/String;JLjava/util/Map;)V
+	public final fun recordSpan (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;)V
+	public static synthetic fun recordSpan$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;JLjava/util/Map;ILjava/lang/Object;)V
+	public static synthetic fun recordSpan$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun recordTraffic (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;)V
+	public static synthetic fun recordTraffic$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;ILjava/lang/Object;)V
 	public final fun redactHeaders ([Ljava/lang/String;)V
 	public final fun registerAction (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;)V
 	public static synthetic fun registerAction$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;ILjava/lang/Object;)V
@@ -49,12 +34,11 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public final fun registerPlugin (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)V
 	public final fun registerReplayHandler (Lio/github/yashkasera/alohomora/replay/TrafficReplayHandler;)V
 	public final fun registerSharedPreferences (Ljava/lang/String;Lkotlin/jvm/functions/Function0;)V
-	public static final fun removeDebugConfig (Ljava/lang/String;)V
-	public static final fun setDebugConfig (Ljava/lang/String;Ljava/lang/String;)V
-	public static final fun setFeatureFlags (Ljava/util/List;)V
-	public static final fun setFeatureFlags (Ljava/util/List;Ljava/lang/String;)V
-	public static synthetic fun setFeatureFlags$default (Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)V
-	public static final fun setShakeToOpenEnabled (Z)V
+	public final fun removeDebugConfig (Ljava/lang/String;)V
+	public final fun setDebugConfig (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun setFeatureFlags (Ljava/util/List;Ljava/lang/String;)V
+	public static synthetic fun setFeatureFlags$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun setShakeToOpenEnabled (Z)V
 	public final fun startDevToolsServer (I)Z
 	public static synthetic fun startDevToolsServer$default (Lio/github/yashkasera/alohomora/Alohomora;IILjava/lang/Object;)Z
 	public final fun stopDevToolsServer ()V

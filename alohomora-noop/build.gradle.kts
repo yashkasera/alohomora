@@ -41,6 +41,7 @@ kotlin {
             // Mirrors :alohomora — TraceInterceptor implements okhttp3.Interceptor.
             api(libs.okhttp)
             implementation(libs.kotlinx.coroutines.android)
+            compileOnly(libs.firebase.config)
         }
 
         jvmMain.dependencies {

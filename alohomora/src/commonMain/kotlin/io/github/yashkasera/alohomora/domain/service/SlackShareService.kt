@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.domain.service
 
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
@@ -13,7 +13,7 @@ internal class SlackShareService(
     private val httpClient: HttpClient,
 ) {
     private val webhookUrl: String? by lazy {
-        Alohomora.config?.slackWebhookUrl
+        AlohomoraImpl.config?.slackWebhookUrl
     }
 
     suspend fun shareCurl(
@@ -60,7 +60,7 @@ internal class SlackShareService(
         return SlackMessage(
             content = summary,
             recipientEmail = recipientEmail,
-            buildIdentifier = Alohomora.identifier,
+            buildIdentifier = AlohomoraImpl.identifier,
         )
     }
 
