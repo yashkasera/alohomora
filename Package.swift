@@ -27,8 +27,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "AlohomoraKit",
-            url: "https://github.com/yashkasera/Alohomora/releases/download/v1.0.0/AlohomoraKit.xcframework.zip",
-            checksum: "bcc4731574f21c594773659c641c8ceb71260eecf5bf3dfb659ee16422c30042"
+            url: "https://github.com/yashkasera/Alohomora/releases/download/v1.1.0/AlohomoraKit.xcframework.zip",
+            checksum: "ba50699161a472f7afc8aad75349a6dc59083e4be09083b66243421d373c97de"
         ),
     ]
 )
