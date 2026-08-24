@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog - Alohomora</title>
+    <meta name="description" content="Release history and changelog for Alohomora. All notable changes between versions.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+<nav id="navbar">
+    <div class="nav-inner">
+        <a href="index.html" class="nav-logo">
+            <svg viewBox="0 0 787 107" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M776.875 96.4497H786.775V105.15H776.875V96.4497Z" fill="currentColor"/>
+                <path d="M706.512 100.65H755.412L724.662 28.1999L691.962 105.15H687.162L724.662 16.6499L762.162 105.15H706.512V100.65Z" fill="currentColor"/>
+                <path d="M657.818 61.4999L678.218 105.15H673.268L652.268 60.1499C652.468 60.0499 653.318 59.6499 654.818 58.9499C656.418 58.1499 657.518 57.5999 658.118 57.2999C658.718 56.8999 659.718 56.2499 661.118 55.3499C662.518 54.4499 663.568 53.5999 664.268 52.7999C664.968 51.8999 665.718 50.8999 666.518 49.7999C667.418 48.5999 668.068 47.2999 668.468 45.8999C668.868 44.3999 669.068 42.7999 669.068 41.0999C669.068 34.7999 666.068 30.1499 660.068 27.1499C654.068 24.1499 646.618 22.6499 637.718 22.6499H625.718V105.15H621.218V18.1499H637.718C649.518 18.1499 658.418 20.1999 664.418 24.2999C670.518 28.3999 673.568 33.9999 673.568 41.0999C673.568 45.6999 672.018 49.7999 668.918 53.3999C665.818 56.8999 662.118 59.5999 657.818 61.4999Z" fill="currentColor"/>
+                <path d="M574.051 22.7999C570.651 21.6999 566.451 21.1499 561.451 21.1499C556.451 21.1499 552.251 21.6999 548.851 22.7999C545.451 23.7999 542.301 25.7499 539.401 28.6499C536.601 31.4499 534.501 35.5999 533.101 41.0999C531.701 46.4999 531.001 53.3499 531.001 61.6499C531.001 69.9499 531.701 76.8499 533.101 82.3499C534.501 87.7499 536.601 91.8999 539.401 94.7999C542.301 97.5999 545.451 99.5499 548.851 100.65C552.251 101.65 556.451 102.15 561.451 102.15C566.451 102.15 570.651 101.65 574.051 100.65C577.451 99.5499 580.551 97.5999 583.351 94.7999C586.251 91.8999 588.401 87.7499 589.801 82.3499C591.201 76.8499 591.901 69.9499 591.901 61.6499C591.901 53.3499 591.201 46.4999 589.801 41.0999C588.401 35.5999 586.251 31.4499 583.351 28.6499C580.551 25.7499 577.451 23.7999 574.051 22.7999ZM588.301 95.9999C582.901 103.1 573.951 106.65 561.451 106.65C548.951 106.65 540.001 103.1 534.601 95.9999C529.201 88.8999 526.501 77.4499 526.501 61.6499C526.501 45.8499 529.201 34.3999 534.601 27.2999C540.001 20.1999 548.951 16.6499 561.451 16.6499C573.951 16.6499 582.901 20.1999 588.301 27.2999C593.701 34.3999 596.401 45.8499 596.401 61.6499C596.401 77.4499 593.701 88.8999 588.301 95.9999Z" fill="currentColor"/>
+                <path d="M439.322 100.65H497.222V24.4499L463.472 58.1999L429.722 24.4499V105.15L425.222 105V18.1499H429.722L463.472 51.8999L497.222 18.1499H501.722V105.15L439.322 105V100.65Z" fill="currentColor"/>
+                <path d="M378.055 22.7999C374.655 21.6999 370.455 21.1499 365.455 21.1499C360.455 21.1499 356.255 21.6999 352.855 22.7999C349.455 23.7999 346.305 25.7499 343.405 28.6499C340.605 31.4499 338.505 35.5999 337.105 41.0999C335.705 46.4999 335.005 53.3499 335.005 61.6499C335.005 69.9499 335.705 76.8499 337.105 82.3499C338.505 87.7499 340.605 91.8999 343.405 94.7999C346.305 97.5999 349.455 99.5499 352.855 100.65C356.255 101.65 360.455 102.15 365.455 102.15C370.455 102.15 374.655 101.65 378.055 100.65C381.455 99.5499 384.555 97.5999 387.355 94.7999C390.255 91.8999 392.405 87.7499 393.805 82.3499C395.205 76.8499 395.905 69.9499 395.905 61.6499C395.905 53.3499 395.205 46.4999 393.805 41.0999C392.405 35.5999 390.255 31.4499 387.355 28.6499C384.555 25.7499 381.455 23.7999 378.055 22.7999ZM392.305 95.9999C386.905 103.1 377.955 106.65 365.455 106.65C352.955 106.65 344.005 103.1 338.605 95.9999C333.205 88.8999 330.505 77.4499 330.505 61.6499C330.505 45.8499 333.205 34.3999 338.605 27.2999C344.005 20.1999 352.955 16.6499 365.455 16.6499C377.955 16.6499 386.905 20.1999 392.305 27.2999C397.705 34.3999 400.405 45.8499 400.405 61.6499C400.405 77.4499 397.705 88.8999 392.305 95.9999Z" fill="currentColor"/>
+                <path d="M305.784 105.15H301.284V61.6499H256.284V105.15H251.784V18.1499H256.284V57.1499H301.284V18.1499H305.784V105.15Z" fill="currentColor"/>
+                <path d="M204.617 22.7999C201.217 21.6999 197.017 21.1499 192.017 21.1499C187.017 21.1499 182.817 21.6999 179.417 22.7999C176.017 23.7999 172.867 25.7499 169.967 28.6499C167.167 31.4499 165.067 35.5999 163.667 41.0999C162.267 46.4999 161.567 53.3499 161.567 61.6499C161.567 69.9499 162.267 76.8499 163.667 82.3499C165.067 87.7499 167.167 91.8999 169.967 94.7999C172.867 97.5999 176.017 99.5499 179.417 100.65C182.817 101.65 187.017 102.15 192.017 102.15C197.017 102.15 201.217 101.65 204.617 100.65C208.017 99.5499 211.117 97.5999 213.917 94.7999C216.817 91.8999 218.967 87.7499 220.367 82.3499C221.767 76.8499 222.467 69.9499 222.467 61.6499C222.467 53.3499 221.767 46.4999 220.367 41.0999C218.967 35.5999 216.817 31.4499 213.917 28.6499C211.117 25.7499 208.017 23.7999 204.617 22.7999ZM218.867 95.9999C213.467 103.1 204.517 106.65 192.017 106.65C179.517 106.65 170.567 103.1 165.167 95.9999C159.767 88.8999 157.067 77.4499 157.067 61.6499C157.067 45.8499 159.767 34.3999 165.167 27.2999C170.567 20.1999 179.517 16.6499 192.017 16.6499C204.517 16.6499 213.467 20.1999 218.867 27.2999C224.267 34.3999 226.967 45.8499 226.967 61.6499C226.967 77.4499 224.267 88.8999 218.867 95.9999Z" fill="currentColor"/>
+                <path d="M143.535 100.65V105.15H93.4346V18.1499H97.9346V100.65H143.535Z" fill="currentColor"/>
+                <path d="M14.85 100.65H70.05L38.25 13.2L4.8 105.15H0L38.25 0L76.5 105.15H14.85V100.65Z" fill="currentColor"/>
+            </svg>
+        </a>
+        <div class="nav-links">
+            <a href="features.html">Features</a>
+            <a href="traces.html">Traces</a>
+            <a href="mcp.html">MCP</a>
+            <a href="setup.html">Setup</a>
+            <a href="api.html">API</a>
+            <a href="changelog.html" class="active">Changelog</a>
+            <a href="https://github.com/yashkasera/alohomora" class="nav-gh">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                GitHub
+            </a>
+        </div>
+        <button class="hamburger" onclick="document.getElementById('navbar').classList.toggle('open')" aria-label="Toggle navigation">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        </button>
+    </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<section class="page-header">
+    <div class="container">
+        <h1>Changelog</h1>
+        <p>All notable changes between releases. Release notes are pulled directly from <a href="https://github.com/yashkasera/alohomora/releases" style="color:var(--brand)">GitHub Releases</a>.</p>
+    </div>
+</section>
+
+<!-- CHANGELOG CONTENT -->
+<section class="doc-content">
+    <div class="container">
+        <div id="changelog-container">
+            <div id="changelog-loading" class="changelog-loading">
+                <div class="changelog-spinner"></div>
+                <p>Loading releases...</p>
+            </div>
+            <div id="changelog-error" style="display:none" class="changelog-error">
+                <p>Could not load releases from GitHub.</p>
+                <a href="https://github.com/yashkasera/alohomora/releases" class="btn-primary" target="_blank">View on GitHub</a>
+            </div>
+            <div id="changelog-list"></div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="container">
+        <div class="footer-inner">
+            <div class="footer-left">
+                <div class="nav-logo" style="font-size:16px">alohomora<span class="dot">.</span></div>
+                <p>Apache 2.0 License &middot; Kotlin Multiplatform</p>
+            </div>
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="features.html">Features</a>
+                <a href="setup.html">Setup</a>
+                <a href="api.html">API</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="https://github.com/yashkasera/alohomora">GitHub</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    const REPO = 'yashkasera/alohomora';
+    const CACHE_KEY = 'alohomora_releases_cache';
+
+    function formatDate(dateStr) {
+        var d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function renderReleases(releases) {
+        var container = document.getElementById('changelog-list');
+        if (!releases.length) {
+            container.innerHTML = '<p class="changelog-empty">No releases published yet.</p>';
+            return;
+        }
+
+        var html = '';
+        releases.forEach(function (release) {
+            var version = release.tag_name || '';
+            var date = release.published_at ? formatDate(release.published_at) : '';
+            var body = release.body || '';
+            var bodyHtml = typeof marked !== 'undefined' && marked.parse ? marked.parse(body) : '<pre>' + body + '</pre>';
+            var url = release.html_url || '#';
+
+            html += '<article class="changelog-entry">';
+            html += '<div class="changelog-header">';
+            html += '<a href="' + url + '" class="changelog-version" target="_blank">' + version + '</a>';
+            if (date) html += '<span class="changelog-date">' + date + '</span>';
+            if (release.prerelease) html += '<span class="changelog-prerelease">Pre-release</span>';
+            html += '</div>';
+            html += '<div class="changelog-body">' + bodyHtml + '</div>';
+            html += '</article>';
+        });
+
+        container.innerHTML = html;
+    }
+
+    function init() {
+        var cached = sessionStorage.getItem(CACHE_KEY);
+        if (cached) {
+            try {
+                var data = JSON.parse(cached);
+                document.getElementById('changelog-loading').style.display = 'none';
+                renderReleases(data);
+                return;
+            } catch (e) { /* fall through to fetch */ }
+        }
+
+        fetch('https://api.github.com/repos/' + REPO + '/releases')
+            .then(function (res) {
+                if (!res.ok) throw new Error(res.status);
+                return res.json();
+            })
+            .then(function (data) {
+                sessionStorage.setItem(CACHE_KEY, JSON.stringify(data));
+                document.getElementById('changelog-loading').style.display = 'none';
+                renderReleases(data);
+            })
+            .catch(function () {
+                document.getElementById('changelog-loading').style.display = 'none';
+                document.getElementById('changelog-error').style.display = 'block';
+            });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+</script>
+<script src="version.js"></script>
+
+</body>
+</html>

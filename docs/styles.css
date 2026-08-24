@@ -531,6 +531,7 @@ pre .type { color: var(--span-server); }
 /* ── API ── */
 .tabs {
     display: flex; gap: 0;
+    margin: 0 0 16px 0;
     border-bottom: 1px solid var(--outline-variant);
     overflow-x: auto; -webkit-overflow-scrolling: touch;
 }
@@ -842,6 +843,38 @@ footer {
     .fan-phone:first-child, .fan-phone:last-child { display: none; }
     .showcase-fan { min-height: 440px; }
 }
+
+/* Changelog */
+.changelog-loading { text-align: center; padding: 80px 0; color: var(--text-2); }
+.changelog-spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--brand);
+    border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.changelog-error { text-align: center; padding: 80px 0; color: var(--text-2); }
+.changelog-error .btn-primary { margin-top: 16px; display: inline-block; }
+.changelog-empty { text-align: center; padding: 80px 0; color: var(--text-2); }
+.changelog-entry { padding: 32px 0; border-bottom: 1px solid var(--border); }
+.changelog-entry:first-child { padding-top: 0; }
+.changelog-entry:last-child { border-bottom: none; }
+.changelog-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.changelog-version { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600;
+    color: var(--brand); text-decoration: none; }
+.changelog-version:hover { text-decoration: underline; }
+.changelog-date { font-size: 14px; color: var(--text-2); }
+.changelog-prerelease { font-size: 11px; padding: 2px 8px; border-radius: 12px;
+    background: rgba(255, 170, 51, 0.15); color: #fa3; font-weight: 500; }
+.changelog-body { font-size: 15px; line-height: 1.7; color: var(--text-1); }
+.changelog-body h2 { font-size: 17px; font-weight: 600; margin: 24px 0 8px; color: var(--text-0); }
+.changelog-body h3 { font-size: 15px; font-weight: 600; margin: 20px 0 6px; color: var(--text-0); }
+.changelog-body ul { margin: 8px 0; padding-left: 24px; }
+.changelog-body li { margin: 4px 0; }
+.changelog-body code { font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    background: var(--surface-1); padding: 2px 6px; border-radius: 4px; }
+.changelog-body pre { background: var(--surface-1); padding: 16px; border-radius: 8px;
+    overflow-x: auto; margin: 12px 0; }
+.changelog-body pre code { background: none; padding: 0; }
+.changelog-body a { color: var(--brand); text-decoration: none; }
+.changelog-body a:hover { text-decoration: underline; }
+.changelog-body strong { color: var(--text-0); }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }

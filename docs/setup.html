@@ -36,6 +36,7 @@
             <a href="mcp.html">MCP</a>
             <a href="setup.html" class="active">Setup</a>
             <a href="api.html">API</a>
+            <a href="changelog.html">Changelog</a>
             <a href="https://github.com/yashkasera/alohomora" class="nav-gh">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
                 GitHub
@@ -88,8 +89,8 @@
                 <div class="code-block reveal">
                     <div class="code-header">build.gradle.kts</div>
                     <pre><span class="kw">dependencies</span> {
-    <span class="fn">debugImplementation</span>(<span class="str">"io.github.yashkasera:alohomora:1.0.0"</span>)
-    <span class="fn">releaseImplementation</span>(<span class="str">"io.github.yashkasera:alohomora-noop:1.0.0"</span>)
+    <span class="fn">debugImplementation</span>(<span class="str">"io.github.yashkasera:alohomora:<span class="alohomora-version">latest</span>"</span>)
+    <span class="fn">releaseImplementation</span>(<span class="str">"io.github.yashkasera:alohomora-noop:<span class="alohomora-version">latest</span>"</span>)
 }</pre>
                 </div>
 
@@ -106,11 +107,12 @@
                 <div class="code-block reveal">
                     <div class="code-header">build.gradle.kts</div>
                     <pre><span class="kw">plugins</span> {
-    <span class="fn">id</span>(<span class="str">"io.github.yashkasera.alohomora"</span>) <span class="kw">version</span> <span class="str">"1.0.0"</span>
+    <span class="fn">id</span>(<span class="str">"io.github.yashkasera.alohomora"</span>) <span class="kw">version</span> <span class="str">"<span class="alohomora-version">latest</span>"</span>
 }
 
 <span class="fn">alohomora</span> {
     enabledVariants = <span class="fn">setOf</span>(<span class="str">"debug"</span>)
+    appName = <span class="str">"MyApp"</span>
     maxCommits = <span class="num">50</span>
     versionName = project.version.<span class="fn">toString</span>()
     versionCode = <span class="num">1</span>
@@ -119,6 +121,7 @@
                 </div>
 
                 <ul class="reveal">
+                    <li><code>appName</code> overrides the display name in the desktop companion window title and export metadata. Defaults to the Android manifest's app label.</li>
                     <li><code>versionName</code> is required when the plugin is applied.</li>
                     <li><code>slackWebhookUrl</code> is automatically dropped for non-debuggable variants to prevent the webhook from shipping in a release APK.</li>
                     <li><code>enabledVariants</code> controls which build variants get the generated config. Defaults to <code>debug</code> only.</li>
@@ -191,6 +194,27 @@
 
                 <div class="note reveal">
                     <strong>Retrofit users:</strong> pass the <code>OkHttpClient</code> you give to <code>Retrofit.Builder().client(...)</code> into <code>okHttpReplayHandler()</code>. Retrofit delegates to OkHttp for actual HTTP calls, so this covers it. There is no separate Retrofit handler.
+                </div>
+
+                <h4 class="reveal">Swift replay handlers</h4>
+                <p class="reveal">Kotlin sealed class subtypes are not exported to ObjC/Swift. Use <code>ReplayOutcomes</code> factory methods to construct results:</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">Swift</div>
+                    <pre><span class="kw">final class</span> <span class="type">URLSessionReplayHandler</span>: <span class="type">Alohomora_commonTrafficReplayHandler</span> {
+    <span class="kw">func</span> <span class="fn">replay</span>(request: <span class="type">Alohomora_commonReplayRequest</span>,
+        completionHandler: <span class="kw">@escaping</span> (<span class="type">Alohomora_commonReplayOutcome</span>?, <span class="type">Error</span>?) -> <span class="type">Void</span>) {
+
+        <span class="cmt">// Send through your app's own URLSession</span>
+        session.<span class="fn">dataTask</span>(with: urlRequest) { data, response, error <span class="kw">in</span>
+            <span class="kw">if let</span> error = error {
+                completionHandler(<span class="type">ReplayOutcomes</span>.shared.<span class="fn">failed</span>(reason: error.localizedDescription), <span class="kw">nil</span>)
+            } <span class="kw">else</span> {
+                completionHandler(<span class="type">ReplayOutcomes</span>.shared.<span class="fn">sent</span>(traceId: <span class="kw">nil</span>), <span class="kw">nil</span>)
+            }
+        }.<span class="fn">resume</span>()
+    }
+}</pre>
                 </div>
 
 
@@ -406,6 +430,7 @@ vc.sheetPresentationController?.prefersGrabberVisible = <span class="kw">true</s
     window.addEventListener('scroll', updateToc, { passive: true });
     updateToc();
 </script>
+<script src="version.js"></script>
 
 </body>
 </html>
