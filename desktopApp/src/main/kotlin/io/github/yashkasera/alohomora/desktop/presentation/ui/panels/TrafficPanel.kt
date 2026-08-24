@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -21,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,9 +38,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.desktop.app.DesktopBuildConfig
 import io.github.yashkasera.alohomora.desktop.presentation.model.TrafficUiState
 import io.github.yashkasera.alohomora.desktop.presentation.model.trafficSubtitle
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
@@ -46,10 +51,12 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValu
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SlackShareDialog
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficExportDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.TrafficItem
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
+import io.github.yashkasera.alohomora.desktop.util.pickSavePath
 import io.github.yashkasera.alohomora.replay.replayBlockedReason
 import io.github.yashkasera.alohomora.replay.toReplayRequest
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -61,7 +68,9 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTriStateCheckbox
 import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.components.FollowNewest
 import io.github.yashkasera.alohomora.ui.components.MethodBadge
@@ -70,6 +79,7 @@ import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
 import io.github.yashkasera.alohomora.ui.icons.Copy
+import io.github.yashkasera.alohomora.ui.icons.Download
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Repeat
 import io.github.yashkasera.alohomora.ui.icons.Route
@@ -93,6 +103,7 @@ fun TrafficPanel(
     val query by trafficViewModel.query.collectAsState()
     val lazyListState = rememberLazyListState()
     var showClearConfirmation by remember { mutableStateOf(false) }
+    var showExportDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -101,10 +112,23 @@ fun TrafficPanel(
                 layout = TopBarLayout.START_ALIGNED,
                 subtitle = trafficSubtitle(uiState),
                 actions = {
-                    NetworkRulesActions(
-                        viewModel = networkRulesViewModel,
-                        onOpenMockRules = onOpenMockRules,
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        NetworkRulesActions(
+                            viewModel = networkRulesViewModel,
+                            onOpenMockRules = onOpenMockRules,
+                        )
+                        AlohomoraFilterChip(
+                            label = if (uiState.selectionMode && uiState.selectedCount > 0)
+                                "${uiState.selectedCount} selected"
+                            else "Select",
+                            selected = uiState.selectionMode,
+                            uppercase = false,
+                            onClick = trafficViewModel::toggleSelectionMode,
+                        )
+                    }
                     AlohomoraIconButton(onClick = { showClearConfirmation = true }) {
                         Icon(
                             imageVector = Icons.Trash,
@@ -117,6 +141,19 @@ fun TrafficPanel(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+            AnimatedVisibility(uiState.selectionMode) {
+                SelectionToolbar(
+                    selectedCount = uiState.selectedCount,
+                    totalCount = uiState.entries.size,
+                    allSelected = uiState.allFilteredSelected,
+                    onSelectAll = trafficViewModel::selectAll,
+                    onDeselectAll = trafficViewModel::deselectAll,
+                    onExport = {
+                        showExportDialog = true
+                    },
+                )
+            }
+
             TrafficFilters(
                 state = uiState,
                 query = query,
@@ -147,6 +184,14 @@ fun TrafficPanel(
                                     trafficViewModel.markViewed(log)
                                     onLogClick(log)
                                 },
+                                selectionMode = uiState.selectionMode,
+                                selected = log.id in uiState.selectedIds,
+                                onSelectionToggle = { trafficViewModel.toggleSelected(log.id) },
+                                onLongClick = {
+                                    if (!uiState.selectionMode) {
+                                        trafficViewModel.startSelectionWith(log.id)
+                                    }
+                                },
                             )
                         }
                         fabClearanceItem()
@@ -169,11 +214,84 @@ fun TrafficPanel(
             onDismiss = { showClearConfirmation = false },
         )
     }
+
+    if (showExportDialog) {
+        TrafficExportDialog(
+            entryCount = uiState.exportableCount,
+            onExport = { format ->
+                showExportDialog = false
+                val timestamp = java.time.LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
+                val path = pickSavePath(
+                    defaultName = "traffic-export-$timestamp${format.extension}",
+                    dialogTitle = format.dialogTitle,
+                    extension = format.extension,
+                )
+                if (path != null) {
+                    trafficViewModel.exportTraffic(format, path, DesktopBuildConfig.version)
+                }
+            },
+            onDismiss = { showExportDialog = false },
+        )
+    }
 }
 
-/**
- * Search plus a method filter, laid out like the Traces and Events rows so the three panels read alike.
- */
+@Composable
+private fun SelectionToolbar(
+    selectedCount: Int,
+    totalCount: Int,
+    allSelected: Boolean,
+    onSelectAll: () -> Unit,
+    onDeselectAll: () -> Unit,
+    onExport: () -> Unit,
+) {
+    Surface {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = MaterialTheme.dimens.margin.xxl,
+                    vertical = MaterialTheme.dimens.margin.sm,
+                ),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val triState = when {
+                selectedCount == 0 -> ToggleableState.Off
+                allSelected -> ToggleableState.On
+                else -> ToggleableState.Indeterminate
+            }
+            AlohomoraTriStateCheckbox(
+                state = triState,
+                onClick = { if (allSelected) onDeselectAll() else onSelectAll() },
+            )
+            Text(
+                text = "$selectedCount of $totalCount selected",
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.weight(1f),
+            )
+            AlohomoraTextButton(text = "Select All", onClick = onSelectAll, enabled = !allSelected)
+            AlohomoraTextButton(
+                text = "Deselect All",
+                onClick = onDeselectAll,
+                enabled = selectedCount != 0,
+            )
+            AlohomoraOutlinedButton(
+                text = "Export",
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Download,
+                        contentDescription = "Export traffic",
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.sm)
+                    )
+                },
+                onClick = onExport,
+                enabled = selectedCount != 0,
+            )
+        }
+    }
+}
+
 @Composable
 private fun TrafficFilters(
     state: TrafficUiState,

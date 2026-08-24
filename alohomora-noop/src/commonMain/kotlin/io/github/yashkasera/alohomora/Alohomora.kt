@@ -118,6 +118,11 @@ object Alohomora {
     val isReplaySupported: Boolean get() = false
 
     @Suppress("UNUSED_PARAMETER")
+    fun redactHeaders(vararg headerNames: String) = Unit
+
+    fun clearRedactedHeaders() = Unit
+
+    @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     @JvmOverloads
     fun recordFeatureFlag(

@@ -13,46 +13,38 @@ import io.github.yashkasera.alohomora.common.HeaderRedaction.REDACTED
  * Redaction is applied at capture time, not at render time, so a secret never reaches the
  * database in the first place — clearing the UI or rotating the desktop client cannot
  * retroactively leak what was never stored.
+ *
+ * No headers are redacted by default. Call `Alohomora.redactHeaders(...)` to specify which
+ * headers to redact.
  */
 object HeaderRedaction {
 
     const val REDACTED = "[REDACTED]"
 
     /**
-     * Header names redacted by default. Matched case-insensitively, since HTTP header names
-     * are case-insensitive and real traffic mixes `authorization` and `Authorization`.
-     */
-    val DEFAULT_DENYLIST: Set<String> = setOf(
-        "authorization",
-        "proxy-authorization",
-        "cookie",
-        "set-cookie",
-        "x-api-key",
-        "x-auth-token",
-        "x-csrf-token",
-    )
-
-    /**
-     * Additional header names to redact, contributed by the host app.
+     * Header names to redact, lowercased for case-insensitive matching.
      *
-     * Assign at startup; every app has its own bespoke auth headers that no built-in list can
-     * anticipate.
+     * Set via `Alohomora.redactHeaders(...)`. Empty by default — nothing is redacted until
+     * the developer opts in.
      */
-    var additionalDenylist: Set<String> = emptySet()
+    var headersToRedact: Set<String> = emptySet()
+        private set
 
-    fun isSensitive(name: String): Boolean {
-        val lower = name.lowercase()
-        return lower in DEFAULT_DENYLIST || additionalDenylist.any {
-            it.equals(
-                name,
-                ignoreCase = true,
-            )
-        }
+    fun setHeaders(headers: Set<String>) {
+        headersToRedact = headers.mapTo(HashSet()) { it.lowercase() }
     }
+
+    fun clearHeaders() {
+        headersToRedact = emptySet()
+    }
+
+    fun isSensitive(name: String): Boolean =
+        headersToRedact.isNotEmpty() && name.lowercase() in headersToRedact
 
     /** Returns [headers] with the values of every sensitive header replaced by [REDACTED]. */
     fun redact(headers: Map<String, List<String>>?): Map<String, List<String>>? {
         if (headers == null) return null
+        if (headersToRedact.isEmpty()) return headers
         if (headers.none { isSensitive(it.key) }) return headers
         return headers.mapValues { (name, values) ->
             if (isSensitive(name)) values.map { REDACTED } else values

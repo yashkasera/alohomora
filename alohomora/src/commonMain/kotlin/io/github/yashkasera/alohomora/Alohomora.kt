@@ -11,6 +11,7 @@ import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.ActionParameter
 import io.github.yashkasera.alohomora.common.FeatureFlag
+import io.github.yashkasera.alohomora.common.HeaderRedaction
 import io.github.yashkasera.alohomora.common.NANOS_PER_SECOND
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.SpanEvent
@@ -539,6 +540,26 @@ object Alohomora {
 
     /** True when a replay handler is registered and captured requests can be re-sent. */
     val isReplaySupported: Boolean get() = TrafficReplayRegistry.isSupported
+
+    /**
+     * Specifies which HTTP header names should have their values replaced with `[REDACTED]`
+     * at capture time. Matching is case-insensitive.
+     *
+     * No headers are redacted by default. Call this at startup with the headers your app
+     * considers sensitive:
+     *
+     * ```kotlin
+     * Alohomora.redactHeaders("Authorization", "X-Custom-Token", "Cookie")
+     * ```
+     */
+    fun redactHeaders(vararg headerNames: String) {
+        HeaderRedaction.setHeaders(headerNames.toSet())
+    }
+
+    /** Stops redacting any headers. */
+    fun clearRedactedHeaders() {
+        HeaderRedaction.clearHeaders()
+    }
 
     @JvmStatic
     @JvmOverloads

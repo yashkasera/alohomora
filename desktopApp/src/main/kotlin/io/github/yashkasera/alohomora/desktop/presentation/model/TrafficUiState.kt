@@ -95,8 +95,26 @@ data class TrafficUiState(
     /** Failed responses across everything held, so the chip can say whether it is worth pressing. */
     val errorCount: Int = 0,
     val filters: TrafficFilterState = TrafficFilterState(),
+    val selectionMode: Boolean = false,
+    val selectedIds: Set<String> = emptySet(),
 ) {
     val shownCount: Int get() = entries.size
+
+    private val visibleSelectedIds: Set<String> by lazy {
+        if (selectedIds.isEmpty()) emptySet()
+        else {
+            val visibleIds = entries.mapTo(HashSet(entries.size)) { it.id }
+            selectedIds.intersect(visibleIds)
+        }
+    }
+
+    val selectedCount: Int get() = visibleSelectedIds.size
+
+    val allFilteredSelected: Boolean
+        get() = entries.isNotEmpty() && visibleSelectedIds.size == entries.size
+
+    val exportableCount: Int
+        get() = if (selectionMode && visibleSelectedIds.isNotEmpty()) visibleSelectedIds.size else entries.size
 }
 
 /** Builds the rows for [filters], newest first as the store hands them over. */

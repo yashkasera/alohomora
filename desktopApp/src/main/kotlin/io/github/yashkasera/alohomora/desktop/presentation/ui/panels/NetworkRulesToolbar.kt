@@ -1,7 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -12,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
 import io.github.yashkasera.alohomora.common.VpnThrottleState
@@ -25,7 +23,7 @@ import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 @Composable
-fun NetworkRulesActions(
+fun RowScope.NetworkRulesActions(
     viewModel: NetworkRulesViewModel,
     onOpenMockRules: () -> Unit,
 ) {
@@ -51,32 +49,27 @@ fun NetworkRulesActions(
 
     val enabledMockCount = mockRules.count { it.enabled }
 
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ThrottleDropdown(
-            label = activeThrottleLabel?.let { "Throttle: $it" } ?: "No throttle",
-            expanded = showThrottleMenu,
-            onExpandChange = { showThrottleMenu = it },
-            onSelect = { viewModel.selectProfile(it) },
-            isActive = activeThrottleLabel != null,
-        )
+    ThrottleDropdown(
+        label = activeThrottleLabel?.let { "Throttle: $it" } ?: "No throttle",
+        expanded = showThrottleMenu,
+        onExpandChange = { showThrottleMenu = it },
+        onSelect = { viewModel.selectProfile(it) },
+        isActive = activeThrottleLabel != null,
+    )
 
-        MockRulesChip(
-            count = enabledMockCount,
-            total = mockRules.size,
-            sessionName = currentSession?.name,
-            onClick = onOpenMockRules,
-        )
+    MockRulesChip(
+        count = enabledMockCount,
+        total = mockRules.size,
+        sessionName = currentSession?.name,
+        onClick = onOpenMockRules,
+    )
 
-        if (vpnSupported && activeThrottleLabel != null) {
-            DeviceWideChip(
-                enabled = vpnEnabled,
-                state = vpnState,
-                onToggle = { viewModel.toggleDeviceWideThrottle(!vpnEnabled) },
-            )
-        }
+    if (vpnSupported && activeThrottleLabel != null) {
+        DeviceWideChip(
+            enabled = vpnEnabled,
+            state = vpnState,
+            onToggle = { viewModel.toggleDeviceWideThrottle(!vpnEnabled) },
+        )
     }
 }
 

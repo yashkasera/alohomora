@@ -3,6 +3,7 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/Alohomora;
 	public final fun clearAppDatabaseOverrides ()V
 	public static final fun clearFeatureFlags ()V
+	public final fun clearRedactedHeaders ()V
 	public final fun clearReplayHandler ()V
 	public final fun clearSharedPreferencesOverrides ()V
 	public final fun excludeAppDatabase (Ljava/lang/String;)V
@@ -40,6 +41,7 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public static synthetic fun recordSpan$default (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)V
 	public static final fun recordTraffic (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;)V
 	public static synthetic fun recordTraffic$default (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun redactHeaders ([Ljava/lang/String;)V
 	public final fun registerAction (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;)V
 	public static synthetic fun registerAction$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/yashkasera/alohomora/devtools/DevToolsActionHandler;ILjava/lang/Object;)V
 	public final fun registerAppDatabase (Ljava/lang/String;Ljava/lang/String;)V
