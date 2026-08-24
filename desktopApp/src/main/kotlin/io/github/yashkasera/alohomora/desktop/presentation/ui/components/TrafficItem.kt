@@ -1,5 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -15,12 +17,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCheckbox
 import io.github.yashkasera.alohomora.ui.components.MethodBadge
 import io.github.yashkasera.alohomora.ui.components.rememberViewedStateColors
 import io.github.yashkasera.alohomora.ui.icons.Check
@@ -30,26 +34,40 @@ import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.github.yashkasera.alohomora.ui.utils.drawDiagonalLabel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
+fun TrafficItem(
+    call: TrafficEntry,
+    onClick: () -> Unit,
+    selectionMode: Boolean = false,
+    selected: Boolean = false,
+    onSelectionToggle: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+) {
     val viewedColors = rememberViewedStateColors(call.isViewed)
 
+    val baseModifier = if (call.isMocked()) {
+        Modifier.fillMaxWidth().clipToBounds()
+            .drawDiagonalLabel(
+                text = "MOCKED",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+    } else {
+        Modifier.fillMaxWidth()
+    }
+
     AlohomoraCard(
-        modifier = if (call.isMocked()) {
-            Modifier.fillMaxWidth().clipToBounds()
-                .drawDiagonalLabel(
-                    text = "MOCKED",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-        } else {
-            Modifier.fillMaxWidth()
-        },
+        modifier = baseModifier
+            .clip(MaterialTheme.shapes.large)
+            .combinedClickable(
+                onClick = if (selectionMode) (onSelectionToggle ?: onClick) else onClick,
+                onLongClick = onLongClick,
+            ),
         shape = MaterialTheme.shapes.large,
         colors = AlohomoraCardDefaults.colors(
             containerColor = viewedColors.containerColor.value,
         ),
-        onClick = onClick,
     ) {
         Row(
             modifier = Modifier
@@ -61,6 +79,12 @@ fun TrafficItem(call: TrafficEntry, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
         ) {
+            if (selectionMode) {
+                AlohomoraCheckbox(
+                    checked = selected,
+                    onCheckedChange = { onSelectionToggle?.invoke() },
+                )
+            }
             AlohomoraCard(
                 modifier = Modifier.fillMaxHeight(),
                 shape = MaterialTheme.shapes.medium,

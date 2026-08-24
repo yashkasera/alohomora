@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.desktop.data.local.TrafficExportFormat
+import io.github.yashkasera.alohomora.desktop.data.local.toExportString
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
 import io.github.yashkasera.alohomora.desktop.presentation.model.IndexedTraffic
 import io.github.yashkasera.alohomora.desktop.presentation.model.TrafficFilterState
@@ -21,6 +23,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.io.File
 
 /**
  * Owns the Traffic panel's filter state and derived list.
@@ -35,6 +39,8 @@ class TrafficViewModel(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val _filters = MutableStateFlow(TrafficFilterState())
+    private val _selectionMode = MutableStateFlow(false)
+    private val _selectedIds = MutableStateFlow<Set<String>>(emptySet())
 
     /**
      * Exposed on its own rather than read out of [uiState].
@@ -60,9 +66,7 @@ class TrafficViewModel(
         .stateIn(scope, SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE_MILLIS), emptyList())
 
     val uiState: StateFlow<TrafficUiState> =
-        combine(indexed, _filters) { entries, filters ->
-            // Counted before the filters narrow anything: the number that tells you whether filtering to a
-            // method is worth it is how much of the stream that method is.
+        combine(indexed, _filters, _selectionMode, _selectedIds) { entries, filters, selMode, selIds ->
             val counts = entries.groupingBy { it.entry.methodLabel() }.eachCount()
             TrafficUiState(
                 entries = entries.filterTraffic(filters),
@@ -75,6 +79,8 @@ class TrafficViewModel(
                     )
                     .map { it.key },
                 filters = filters,
+                selectionMode = selMode,
+                selectedIds = selIds,
             )
         }.stateIn(
             scope,
@@ -95,6 +101,52 @@ class TrafficViewModel(
     fun markViewed(entry: TrafficEntry) = repository.markTrafficViewed(entry.id)
 
     fun clearTraffic() = repository.clearCaptured(traces = true)
+
+    // ── Selection ───────────────────────────────────────────────────────────────
+
+    fun toggleSelectionMode() {
+        val entering = !_selectionMode.value
+        _selectionMode.value = entering
+        if (!entering) _selectedIds.value = emptySet()
+    }
+
+    fun startSelectionWith(id: String) {
+        _selectionMode.value = true
+        _selectedIds.value = setOf(id)
+    }
+
+    fun toggleSelected(id: String) {
+        _selectedIds.update { ids ->
+            val next = if (id in ids) ids - id else ids + id
+            if (next.isEmpty()) _selectionMode.value = false
+            next
+        }
+    }
+
+    fun selectAll() {
+        _selectedIds.value = uiState.value.entries.mapTo(HashSet()) { it.id }
+    }
+
+    fun deselectAll() {
+        _selectedIds.value = emptySet()
+        _selectionMode.value = false
+    }
+
+    // ── Export ───────────────────────────────────────────────────────────────────
+
+    fun entriesToExport(): List<TrafficEntry> {
+        val state = uiState.value
+        if (!state.selectionMode || state.selectedIds.isEmpty()) return state.entries
+        val selected = state.selectedIds
+        return state.entries.filter { it.id in selected }
+    }
+
+    fun exportTraffic(format: TrafficExportFormat, path: String, appVersion: String) {
+        scope.launch {
+            val content = entriesToExport().toExportString(format, appVersion)
+            File(path).writeText(content)
+        }
+    }
 
     fun close() {
         scope.cancel()
