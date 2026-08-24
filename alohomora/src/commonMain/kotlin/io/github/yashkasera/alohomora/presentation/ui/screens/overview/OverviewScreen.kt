@@ -37,7 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.InternalPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
@@ -223,7 +223,7 @@ internal fun OverviewScreen(
                         contentDescription = null,
                     )
                 }
-                Alohomora.config?.let {
+                AlohomoraImpl.config?.let {
                     Row(
                         modifier = Modifier
                             .padding(top = MaterialTheme.dimens.margin.sm),

@@ -4,7 +4,7 @@ import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.LocalThemeIsDark
@@ -17,7 +17,7 @@ internal fun AlohomoraApp(
 ) {
     // KoinIsolatedContext, not KoinContext: KoinContext reads Koin's GlobalContext, which
     // Alohomora deliberately never populates so it can coexist with the host app's Koin.
-    val koinApplication = Alohomora.koinApplication
+    val koinApplication = AlohomoraImpl.koinApplication
     if (koinApplication == null) {
         AppTheme { Text("Alohomora is not initialized. Call Alohomora.init() first.") }
         return

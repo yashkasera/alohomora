@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.error
 
 import co.touchlab.kermit.Logger
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -35,7 +35,7 @@ private fun recordFatal(throwable: Throwable, place: String) {
     try {
         runBlocking {
             withTimeoutOrNull(ErrorCapture.FATAL_TIMEOUT_MILLIS.milliseconds) {
-                Alohomora.persistError(ErrorCapture.toError(throwable, place))
+                AlohomoraImpl.persistError(ErrorCapture.toError(throwable, place))
             } ?: Logger.d { "[Alohomora] timed out persisting fatal; crash not recorded" }
         }
     } catch (e: Throwable) {

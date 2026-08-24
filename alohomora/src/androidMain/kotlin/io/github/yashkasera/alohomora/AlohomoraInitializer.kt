@@ -12,7 +12,7 @@ import org.koin.android.ext.koin.androidLogger
 class AlohomoraInitializer : Initializer<Unit> {
     override fun create(context: Context) {
         val config = discoverConfig(context)
-        AlohomoraInternal.init(config) {
+        AlohomoraImpl.initInternal(config) {
             androidLogger()
             androidContext(context)
         }

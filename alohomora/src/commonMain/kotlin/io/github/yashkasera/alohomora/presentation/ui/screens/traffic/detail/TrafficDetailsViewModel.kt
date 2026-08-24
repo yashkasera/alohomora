@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.domain.service.SlackShareService
 import io.github.yashkasera.alohomora.domain.usecase.traffic.GetTrafficDetailsUseCase
@@ -23,7 +24,7 @@ internal data class TraceDetailsState(
     val isLoading: Boolean = true,
     val showShareSheet: Boolean = false,
     val showSlackSheet: Boolean = false,
-    val isSlackConfigured: Boolean = Alohomora.config?.slackWebhookUrl.isNullOrBlank().not(),
+    val isSlackConfigured: Boolean = AlohomoraImpl.config?.slackWebhookUrl.isNullOrBlank().not(),
     val shareError: String? = null,
     val replayResultTraceId: String? = null,
 ) {

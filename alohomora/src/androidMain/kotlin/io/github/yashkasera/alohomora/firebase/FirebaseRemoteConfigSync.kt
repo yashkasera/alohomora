@@ -13,7 +13,7 @@ private const val SOURCE = "Firebase Remote Config"
  *
  * ```kotlin
  * remoteConfig.fetchAndActivate().addOnSuccessListener {
- *     syncFirebaseRemoteConfig(remoteConfig)
+ *     Alohomora.syncFirebaseRemoteConfig(remoteConfig)
  * }
  * ```
  *
@@ -23,7 +23,7 @@ private const val SOURCE = "Firebase Remote Config"
  * @param type optional type label for all synced flags (default: `"remote_config"`)
  */
 @Suppress("unused")
-fun syncFirebaseRemoteConfig(
+fun Alohomora.syncFirebaseRemoteConfig(
     remoteConfig: FirebaseRemoteConfig,
     type: String = "remote_config",
 ) {

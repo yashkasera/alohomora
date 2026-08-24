@@ -4,7 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 import kotlinx.coroutines.CoroutineScope
@@ -22,8 +22,8 @@ class TrafficCollector(
     // Resolved lazily from Alohomora's isolated Koin container rather than through
     // KoinComponent/GlobalContext, which the library no longer populates. Lazy also means
     // `TrafficInterceptor()` can be constructed before Alohomora.init() without throwing.
-    private val dao: TrafficDao? get() = Alohomora.koinApplication?.koin?.get()
-    private val context: Context? get() = Alohomora.koinApplication?.koin?.get()
+    private val dao: TrafficDao? get() = AlohomoraImpl.koinApplication?.koin?.get()
+    private val context: Context? get() = AlohomoraImpl.koinApplication?.koin?.get()
 
     private val notificationHelper: TrafficNotificationHelper? by lazy {
         context?.let(::TrafficNotificationHelper)

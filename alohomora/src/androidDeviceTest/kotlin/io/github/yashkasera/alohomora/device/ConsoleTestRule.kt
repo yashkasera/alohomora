@@ -1,6 +1,6 @@
 package io.github.yashkasera.alohomora.device
 
-import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.data.datasource.local.ScreenDao
 import io.github.yashkasera.alohomora.devtools.FeatureFlagStore
 import io.github.yashkasera.alohomora.domain.repository.ErrorRepository
@@ -38,7 +38,7 @@ class ConsoleTestRule : TestRule {
 
     /** The library's own Koin container. Not the global one — Alohomora deliberately never uses it. */
     val koin: Koin
-        get() = checkNotNull(Alohomora.koinApplication) {
+        get() = checkNotNull(AlohomoraImpl.koinApplication) {
             "Alohomora is not initialised. AlohomoraInitializer should have run from the test " +
                 "APK's merged manifest — check that androidx.startup's InitializationProvider " +
                 "survived manifest merging."
@@ -54,9 +54,9 @@ class ConsoleTestRule : TestRule {
 
     /** Empties every store the console reads from. */
     fun reset() {
-        Alohomora.setShakeToOpenEnabled(false)
-        Alohomora.clearReplayHandler()
-        Alohomora.clearAppDatabaseOverrides()
+        AlohomoraImpl.setShakeToOpenEnabled(false)
+        AlohomoraImpl.clearReplayHandler()
+        AlohomoraImpl.clearAppDatabaseOverrides()
 
         runBlocking {
             koin.get<TrafficRepository>().clearAll()
