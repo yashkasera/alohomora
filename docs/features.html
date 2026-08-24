@@ -35,6 +35,7 @@
             <a href="mcp.html">MCP</a>
             <a href="setup.html">Setup</a>
             <a href="api.html">API</a>
+            <a href="changelog.html">Changelog</a>
             <a href="https://github.com/yashkasera/alohomora" class="nav-gh">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
                 GitHub
@@ -75,6 +76,17 @@
 
                 <p class="reveal">Capture is automatic for OkHttp and Ktor. On iOS, you need to use the provided session configuration. For anything else, record manually.</p>
 
+                <h4 class="reveal">Header redaction</h4>
+                <p class="reveal">Opt-in redaction strips sensitive header values <strong>at capture time</strong>, so secrets never reach the database or exports. Matching is case-insensitive.</p>
+                <div class="code-block reveal">
+                    <div class="code-header">Kotlin</div>
+                    <pre><span class="type">Alohomora</span>.<span class="fn">redactHeaders</span>(<span class="str">"Authorization"</span>, <span class="str">"X-Api-Key"</span>)
+
+<span class="cmt">// Clear all redaction rules</span>
+<span class="type">Alohomora</span>.<span class="fn">clearRedactedHeaders</span>()</pre>
+                </div>
+                <p class="reveal">Redacted values show as <code>[REDACTED]</code> in the console, exports, and Slack shares. Replays strip redacted headers entirely so your interceptors regenerate them.</p>
+
                 <h4 class="reveal">OkHttp</h4>
                 <div class="code-block reveal">
                     <div class="code-header">Kotlin</div>
@@ -109,6 +121,17 @@
     responseBody = body
 )</pre>
                 </div>
+
+                <!-- EXPORT -->
+                <h2 id="traffic-export" class="reveal">Traffic Export</h2>
+
+                <p class="reveal">Export captured traffic from the desktop companion in three formats:</p>
+                <ul class="reveal">
+                    <li><strong>JSON</strong> &mdash; custom envelope with version, timestamp, entry count, and full entry data</li>
+                    <li><strong>HAR 1.2</strong> &mdash; standard HTTP Archive format, compatible with Chrome DevTools and other third-party tools</li>
+                    <li><strong>cURL</strong> &mdash; a bash script with one <code>curl</code> command per request, ready to replay from the terminal</li>
+                </ul>
+                <p class="reveal">Select entries in the traffic list (or select all), then use the export button in the toolbar. Header redaction rules are respected across all formats.</p>
 
                 <!-- REPLAY -->
                 <h2 id="replay" class="reveal">Traffic Replay</h2>
@@ -260,13 +283,35 @@
                 <!-- CACHE -->
                 <h2 id="cache" class="reveal">Cache</h2>
 
-                <p class="reveal">Read live key-value state from the device:</p>
+                <p class="reveal">Browse and edit live key-value state from the device:</p>
                 <ul class="reveal">
-                    <li><strong>Android:</strong> SharedPreferences (including EncryptedSharedPreferences, flagged as encrypted)</li>
+                    <li><strong>Android:</strong> SharedPreferences (including EncryptedSharedPreferences, flagged with an encrypted badge)</li>
                     <li><strong>iOS:</strong> NSUserDefaults</li>
                 </ul>
 
-                <p class="reveal">Keys load lazily. Click a key to fetch its current value. Read-only.</p>
+                <h4 class="reveal">Editing from desktop</h4>
+                <p class="reveal">The desktop companion can edit and delete cache values. Editing is type-aware:</p>
+                <ul class="reveal">
+                    <li>Booleans get a toggle switch</li>
+                    <li>Numbers (int, long, float) get validated input</li>
+                    <li>Strings get a text field</li>
+                    <li>StringSet entries are read-only</li>
+                </ul>
+                <p class="reveal">Use the refresh button to re-scan all stores after external changes.</p>
+
+                <h4 class="reveal">Custom SharedPreferences</h4>
+                <p class="reveal">Register custom readers for encrypted or non-standard stores that Alohomora can't auto-discover:</p>
+                <div class="code-block reveal">
+                    <div class="code-header">Kotlin</div>
+                    <pre><span class="cmt">// Register an EncryptedSharedPreferences instance</span>
+<span class="type">Alohomora</span>.<span class="fn">registerSharedPreferences</span>(<span class="str">"secure_prefs"</span>) {
+    encryptedPrefs.all
+}
+
+<span class="cmt">// Unregister when no longer needed</span>
+<span class="type">Alohomora</span>.<span class="fn">unregisterSharedPreferences</span>(<span class="str">"secure_prefs"</span>)</pre>
+                </div>
+                <p class="reveal">The reader lambda is called on-demand to snapshot the current state. Registered stores appear alongside auto-discovered ones in the Cache panel.</p>
 
                 <!-- ERRORS -->
                 <h2 id="errors" class="reveal">Errors</h2>
@@ -301,7 +346,7 @@
                 <!-- CONFIG -->
                 <h2 id="config" class="reveal">Config &amp; Git History</h2>
 
-                <p class="reveal"><strong>Config</strong> shows build metadata: project name, variant, version name/code, branch, commit SHA, dirty flag, and build timestamp.</p>
+                <p class="reveal"><strong>Config</strong> shows build metadata: app name, variant, version name/code, branch, commit SHA, dirty flag, and build timestamp. Set <code>appName</code> in the plugin config to override the display name in the desktop window title and exports.</p>
 
                 <p class="reveal"><strong>Git History</strong> shows the last N commits (configurable, default 50): SHA, author, subject, and timestamp.</p>
 
@@ -311,6 +356,7 @@
                     <div class="code-header">build.gradle.kts</div>
                     <pre><span class="fn">alohomora</span> {
     enabledVariants = <span class="fn">setOf</span>(<span class="str">"debug"</span>)
+    appName = <span class="str">"MyApp"</span>
     maxCommits = <span class="num">50</span>
     slackWebhookUrl = <span class="str">"https://hooks.slack.com/services/..."</span>
     versionName = project.version.<span class="fn">toString</span>()
@@ -380,6 +426,7 @@
             <aside class="doc-toc">
                 <h4>On this page</h4>
                 <a href="#traffic">Traffic Capture</a>
+                <a href="#traffic-export">Traffic Export</a>
                 <a href="#replay">Traffic Replay</a>
                 <a href="#mock-rules">Mock Rules</a>
                 <a href="#throttling">Network Throttling</a>

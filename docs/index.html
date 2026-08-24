@@ -38,6 +38,7 @@
             <a href="mcp.html">MCP</a>
             <a href="setup.html">Setup</a>
             <a href="api.html">API</a>
+            <a href="changelog.html">Changelog</a>
             <a href="https://github.com/yashkasera/alohomora" class="nav-gh">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                     <path
@@ -65,7 +66,8 @@
         <div class="hero-inner">
             <div class="hero-badge">
                 <span class="hero-badge-dot"></span>
-                v1.0.0 &middot; Kotlin Multiplatform
+                <span>v<span class="alohomora-version">latest</span></span> &middot; Kotlin Multiplatform
+                <a class="version-fallback" href="https://github.com/yashkasera/alohomora/releases" style="display:none;margin-left:6px;font-size:12px;color:var(--brand)" target="_blank">Check releases</a>
             </div>
             <h1>See what your app<br>is <span class="accent">really doing</span></h1>
             <p class="hero-sub">
@@ -84,9 +86,10 @@
                 </a>
             </div>
             <div class="hero-install">
-                <code>debugImplementation("io.github.yashkasera:alohomora:1.0.0")</code>
+                <code>debugImplementation("io.github.yashkasera:alohomora:<span class="alohomora-version">latest</span>")</code>
                 <button class="copy-btn"
-                        onclick="navigator.clipboard.writeText('debugImplementation(&quot;io.github.yashkasera:alohomora:1.0.0&quot;)');this.textContent='Copied!';setTimeout(()=>{this.textContent='&#x2398;'},1500)"
+                        data-copy-version='debugImplementation("io.github.yashkasera:alohomora:{version}")'
+                        onclick="navigator.clipboard.writeText('debugImplementation(&quot;io.github.yashkasera:alohomora:latest&quot;)');this.textContent='Copied!';setTimeout(()=>{this.textContent='&#x2398;'},1500)"
                         aria-label="Copy">&#x2398;
                 </button>
             </div>
@@ -372,8 +375,8 @@
         <div class="code-block reveal" style="margin-top:36px;max-width:640px;">
             <div class="code-header">build.gradle.kts</div>
             <pre><span class="kw">dependencies</span> {
-    <span class="fn">debugImplementation</span>(<span class="str">"io.github.yashkasera:alohomora:1.0.0"</span>)
-    <span class="fn">releaseImplementation</span>(<span class="str">"io.github.yashkasera:alohomora-noop:1.0.0"</span>)
+    <span class="fn">debugImplementation</span>(<span class="str">"io.github.yashkasera:alohomora:<span class="alohomora-version">latest</span>"</span>)
+    <span class="fn">releaseImplementation</span>(<span class="str">"io.github.yashkasera:alohomora-noop:<span class="alohomora-version">latest</span>"</span>)
 }</pre>
         </div>
         <p class="section-desc reveal" style="margin-top:24px;">
@@ -608,6 +611,7 @@
 
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 </script>
+<script src="version.js"></script>
 
 </body>
 </html>
