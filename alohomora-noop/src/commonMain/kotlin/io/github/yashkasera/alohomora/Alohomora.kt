@@ -101,6 +101,16 @@ object Alohomora {
     fun clearAppDatabaseOverrides() = Unit
 
     @Suppress("UNUSED_PARAMETER")
+    fun registerSharedPreferences(name: String, reader: () -> Map<String, Any?>) {
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun unregisterSharedPreferences(name: String) {
+    }
+
+    fun clearSharedPreferencesOverrides() {}
+
+    @Suppress("UNUSED_PARAMETER")
     fun registerReplayHandler(handler: TrafficReplayHandler) = Unit
 
     fun clearReplayHandler() = Unit

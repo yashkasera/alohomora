@@ -15,4 +15,8 @@ internal interface CacheRepository {
     suspend fun getStores(): List<CacheStore>
 
     fun getTotalSize(entries: List<CacheEntry>): String
+
+    suspend fun updateEntry(storeName: String, key: String, value: String?, type: String): Boolean
+
+    suspend fun deleteEntry(storeName: String, key: String): Boolean
 }

@@ -46,6 +46,10 @@ class RepositoryCacheInspectorTest {
         override suspend fun getStores(): List<CacheStore> = emptyList()
 
         override fun getTotalSize(entries: List<CacheEntry>): String = "0 B"
+
+        override suspend fun updateEntry(storeName: String, key: String, value: String?, type: String): Boolean = false
+
+        override suspend fun deleteEntry(storeName: String, key: String): Boolean = false
     }
 
     private fun entry(key: String, value: String, store: String) = CacheEntry(

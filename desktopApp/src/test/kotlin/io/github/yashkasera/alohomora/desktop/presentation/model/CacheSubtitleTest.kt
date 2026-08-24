@@ -7,7 +7,16 @@ import kotlin.test.assertEquals
 class CacheSubtitleTest {
 
     private fun state(total: Int, shown: Int, loaded: Int) = CacheUiState(
-        rows = (1..shown).map { CacheRow("k$it", "v$it", isLoaded = true) },
+        rows = (1..shown).map {
+            CacheRow(
+                key = "k$it",
+                value = "v$it",
+                type = null,
+                storeName = null,
+                isEncrypted = false,
+                isLoaded = true,
+            )
+        },
         totalCount = total,
         loadedCount = loaded,
     )

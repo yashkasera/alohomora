@@ -1,7 +1,6 @@
 package io.github.yashkasera.alohomora.devtools
 
 import io.github.yashkasera.alohomora.Alohomora
-import io.github.yashkasera.alohomora.common.ActionDescriptor
 import io.github.yashkasera.alohomora.common.AuthChallengeMessage
 import io.github.yashkasera.alohomora.common.AuthFailureMessage
 import io.github.yashkasera.alohomora.common.AuthOtpRequiredMessage
@@ -27,14 +26,17 @@ import io.github.yashkasera.alohomora.common.InitialStatePayload
 import io.github.yashkasera.alohomora.common.PingMessage
 import io.github.yashkasera.alohomora.common.PluginDataUpdateResultMessage
 import io.github.yashkasera.alohomora.common.ReplayResultMessage
+import io.github.yashkasera.alohomora.common.RequestCacheDeleteMessage
+import io.github.yashkasera.alohomora.common.RequestCacheRefreshMessage
+import io.github.yashkasera.alohomora.common.RequestCacheUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
-import io.github.yashkasera.alohomora.common.RequestCustomActionMessage
-import io.github.yashkasera.alohomora.common.RequestPluginDataUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
+import io.github.yashkasera.alohomora.common.RequestCustomActionMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
+import io.github.yashkasera.alohomora.common.RequestPluginDataUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
 import io.github.yashkasera.alohomora.common.RequestTraceSpansMessage
 import io.github.yashkasera.alohomora.common.SetMockRulesMessage
@@ -43,8 +45,8 @@ import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.StreamErrorMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
-import io.github.yashkasera.alohomora.common.StreamSpanMessage
 import io.github.yashkasera.alohomora.common.StreamPluginDataMessage
+import io.github.yashkasera.alohomora.common.StreamSpanMessage
 import io.github.yashkasera.alohomora.common.StreamTrafficMessage
 import io.github.yashkasera.alohomora.common.TraceSpansSnapshotMessage
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -439,6 +441,9 @@ internal class DevToolsRuntime(
 
                             is RequestDatabaseUpdateMessage -> handleDatabaseUpdate(message)
                             is RequestCacheValueMessage -> handleCacheRequest(message.key)
+                            is RequestCacheUpdateMessage -> handleCacheUpdate(message)
+                            is RequestCacheDeleteMessage -> handleCacheDelete(message)
+                            is RequestCacheRefreshMessage -> handleCacheRefresh()
                             is RequestReplayTraceMessage -> handleReplayRequest(message)
                             is RequestTraceSpansMessage -> handleTraceSpansRequest(message.traceId)
                             is SetThrottleProfileMessage -> NetworkRuleEngine.setThrottle(message.profile)
@@ -745,6 +750,7 @@ internal class DevToolsRuntime(
                 databaseInspector.loadSchema(selectedDatabase)
             }
             val cacheKeys = cacheInspector.getAllKeys()
+            val cacheStores = cacheInspector.getStores()
             val payload = InitialStatePayload(
                 events = events,
                 traffic = traffic,
@@ -754,6 +760,7 @@ internal class DevToolsRuntime(
                 databases = databases,
                 selectedDatabase = selectedDatabase,
                 cacheKeys = cacheKeys,
+                cacheStores = cacheStores,
                 buildMetadata = Alohomora.config?.toBuildMetadataPayload(),
                 gitHistory = Alohomora.config?.commits?.map { it.toGitHistoryPayload() }.orEmpty(),
                 replaySupported = TrafficReplayRegistry.isSupported,
@@ -935,6 +942,44 @@ internal class DevToolsRuntime(
                 CacheSnapshotMessage(
                     nextSequence(),
                     CacheSnapshotPayload(values = mapOf(key to value)),
+                ),
+            )
+        }
+
+        private suspend fun handleCacheUpdate(message: RequestCacheUpdateMessage) {
+            cacheInspector.updateValue(
+                storeName = message.storeName,
+                key = message.key,
+                newValue = message.newValue,
+                type = message.valueType,
+            )
+            sendCacheSnapshot()
+        }
+
+        private suspend fun handleCacheDelete(message: RequestCacheDeleteMessage) {
+            cacheInspector.deleteValue(
+                storeName = message.storeName,
+                key = message.key,
+            )
+            sendCacheSnapshot()
+        }
+
+        private suspend fun handleCacheRefresh() {
+            sendCacheSnapshot()
+        }
+
+        private suspend fun sendCacheSnapshot() {
+            val stores = cacheInspector.refreshStores()
+            val keys = stores.flatMap { s -> s.entries.map { it.key } }
+            val values = stores.flatMap { s -> s.entries.map { it.key to it.value } }.toMap()
+            send(
+                CacheSnapshotMessage(
+                    nextSequence(),
+                    CacheSnapshotPayload(
+                        keys = keys,
+                        values = values,
+                        stores = stores,
+                    ),
                 ),
             )
         }

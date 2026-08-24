@@ -335,6 +335,30 @@ data class RequestCacheValueMessage(
     val key: String,
 ) : DevToolsMessage()
 
+@Serializable
+@SerialName("REQUEST_CACHE_UPDATE")
+data class RequestCacheUpdateMessage(
+    override val sequence: Long = 0,
+    val storeName: String,
+    val key: String,
+    val newValue: String?,
+    val valueType: String,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("REQUEST_CACHE_DELETE")
+data class RequestCacheDeleteMessage(
+    override val sequence: Long = 0,
+    val storeName: String,
+    val key: String,
+) : DevToolsMessage()
+
+@Serializable
+@SerialName("REQUEST_CACHE_REFRESH")
+data class RequestCacheRefreshMessage(
+    override val sequence: Long = 0,
+) : DevToolsMessage()
+
 /**
  * Asks the device to re-send a captured request through the host app's own HTTP client.
  *
@@ -561,9 +585,24 @@ data class GitHistoryPayload(
 )
 
 @Serializable
+data class CacheEntrySnapshot(
+    val key: String,
+    val value: String?,
+    val type: String,
+)
+
+@Serializable
+data class CacheStoreSnapshot(
+    val name: String,
+    val isEncrypted: Boolean = false,
+    val entries: List<CacheEntrySnapshot> = emptyList(),
+)
+
+@Serializable
 data class CacheSnapshotPayload(
     val keys: List<String> = emptyList(),
     val values: Map<String, String?> = emptyMap(),
+    val stores: List<CacheStoreSnapshot> = emptyList(),
 )
 
 @Serializable
@@ -584,6 +623,7 @@ data class InitialStatePayload(
     val databases: List<AppDatabaseInfo> = emptyList(),
     val selectedDatabase: String? = null,
     val cacheKeys: List<String>,
+    val cacheStores: List<CacheStoreSnapshot> = emptyList(),
     val buildMetadata: BuildMetadataPayload? = null,
     val gitHistory: List<GitHistoryPayload> = emptyList(),
     /**

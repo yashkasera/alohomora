@@ -4,6 +4,7 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public final fun clearAppDatabaseOverrides ()V
 	public static final fun clearFeatureFlags ()V
 	public final fun clearReplayHandler ()V
+	public final fun clearSharedPreferencesOverrides ()V
 	public final fun excludeAppDatabase (Ljava/lang/String;)V
 	public static final fun getDebugConfig (Ljava/lang/String;)Ljava/lang/String;
 	public final fun getPlugins ()Ljava/util/List;
@@ -45,6 +46,7 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public static synthetic fun registerAppDatabase$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
 	public final fun registerPlugin (Lio/github/yashkasera/alohomora/plugin/CustomScreenPlugin;)V
 	public final fun registerReplayHandler (Lio/github/yashkasera/alohomora/replay/TrafficReplayHandler;)V
+	public final fun registerSharedPreferences (Ljava/lang/String;Lkotlin/jvm/functions/Function0;)V
 	public static final fun removeDebugConfig (Ljava/lang/String;)V
 	public static final fun setDebugConfig (Ljava/lang/String;Ljava/lang/String;)V
 	public static final fun setFeatureFlags (Ljava/util/List;)V
@@ -56,6 +58,7 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public final fun stopDevToolsServer ()V
 	public final fun unregisterAction (Ljava/lang/String;)Z
 	public final fun unregisterPlugin (Ljava/lang/String;)Z
+	public final fun unregisterSharedPreferences (Ljava/lang/String;)V
 }
 
 public final class io/github/yashkasera/alohomora/common/ActionParameter {

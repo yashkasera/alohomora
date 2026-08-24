@@ -70,6 +70,45 @@ internal class CacheRepositoryImpl : CacheRepository {
         return defaults.dictionaryRepresentation().size
     }
 
+    override suspend fun updateEntry(
+        storeName: String,
+        key: String,
+        value: String?,
+        type: String,
+    ): Boolean = withContext(Dispatchers.Default) {
+        try {
+            when (type) {
+                "STRING" -> defaults.setObject(value, forKey = key)
+                "INT" -> defaults.setInteger(value!!.toLong(), forKey = key)
+                "BOOLEAN" -> defaults.setBool(value!!.toBoolean(), forKey = key)
+                "LONG" -> defaults.setInteger(value!!.toLong(), forKey = key)
+                "FLOAT" -> defaults.setFloat(value!!.toFloat(), forKey = key)
+                else -> return@withContext false
+            }
+            defaults.synchronize()
+            invalidateCache()
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    override suspend fun deleteEntry(storeName: String, key: String): Boolean =
+        withContext(Dispatchers.Default) {
+            try {
+                defaults.removeObjectForKey(key)
+                defaults.synchronize()
+                invalidateCache()
+                true
+            } catch (_: Exception) {
+                false
+            }
+        }
+
+    private fun invalidateCache() {
+        cachedPreferences = emptyList()
+    }
+
     private suspend fun scanAllPreferences(): List<CacheEntry> = withContext(Dispatchers.Default) {
         val entries = mutableListOf<CacheEntry>()
         val dict = defaults.dictionaryRepresentation()

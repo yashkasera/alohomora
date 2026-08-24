@@ -15,26 +15,29 @@ import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.FeatureFlagsSnapshotMessage
 import io.github.yashkasera.alohomora.common.InitialStateMessage
+import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.PluginDataSnapshot
 import io.github.yashkasera.alohomora.common.PluginDataUpdateResultMessage
-import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.ReplayResultMessage
+import io.github.yashkasera.alohomora.common.RequestCacheDeleteMessage
+import io.github.yashkasera.alohomora.common.RequestCacheRefreshMessage
+import io.github.yashkasera.alohomora.common.RequestCacheUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestCacheValueMessage
 import io.github.yashkasera.alohomora.common.RequestClearMessage
-import io.github.yashkasera.alohomora.common.RequestPluginDataUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseSchemaMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseTableMessage
 import io.github.yashkasera.alohomora.common.RequestDatabaseUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
+import io.github.yashkasera.alohomora.common.RequestPluginDataUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
 import io.github.yashkasera.alohomora.common.RequestTraceSpansMessage
 import io.github.yashkasera.alohomora.common.SetMockRulesMessage
 import io.github.yashkasera.alohomora.common.SetThrottleProfileMessage
 import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
 import io.github.yashkasera.alohomora.common.Span
-import io.github.yashkasera.alohomora.common.StreamPluginDataMessage
 import io.github.yashkasera.alohomora.common.StreamErrorMessage
 import io.github.yashkasera.alohomora.common.StreamEventMessage
+import io.github.yashkasera.alohomora.common.StreamPluginDataMessage
 import io.github.yashkasera.alohomora.common.StreamSpanMessage
 import io.github.yashkasera.alohomora.common.StreamTrafficMessage
 import io.github.yashkasera.alohomora.common.ThrottleProfile
@@ -48,8 +51,8 @@ import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.FeatureFlagStore
-import io.github.yashkasera.alohomora.desktop.data.local.PluginDataStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
+import io.github.yashkasera.alohomora.desktop.data.local.PluginDataStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
 import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
 import io.github.yashkasera.alohomora.desktop.data.local.TrafficStore
@@ -393,6 +396,29 @@ class DevToolsRepositoryImpl(
         }
     }
 
+    override fun requestCacheUpdate(storeName: String, key: String, newValue: String?, type: String) {
+        scope.launch {
+            sendMessage(
+                RequestCacheUpdateMessage(
+                    storeName = storeName,
+                    key = key,
+                    newValue = newValue,
+                    valueType = type,
+                ),
+            )
+        }
+    }
+
+    override fun requestCacheDelete(storeName: String, key: String) {
+        scope.launch {
+            sendMessage(RequestCacheDeleteMessage(storeName = storeName, key = key))
+        }
+    }
+
+    override fun requestCacheRefresh() {
+        scope.launch { sendMessage(RequestCacheRefreshMessage()) }
+    }
+
     override fun requestInitialState() {
         scope.launch { sendMessage(RequestInitialStateMessage()) }
     }
@@ -486,7 +512,11 @@ class DevToolsRepositoryImpl(
                         payload.selectedDatabase,
                     )
                     databaseStore.replaceSchema(payload.databaseSchema.toDomain())
-                    cacheStore.replaceKeys(payload.cacheKeys)
+                    if (payload.cacheStores.isNotEmpty()) {
+                        cacheStore.applyStoreSnapshot(payload.cacheStores)
+                    } else {
+                        cacheStore.replaceKeys(payload.cacheKeys)
+                    }
                     featureFlagStore.replace(payload.featureFlags)
                     pluginDataStore.replace(payload.pluginData)
                     buildMetadataStore.replace(payload.buildMetadata?.toDomain())
@@ -551,7 +581,11 @@ class DevToolsRepositoryImpl(
 
             is CacheSnapshotMessage -> {
                 withContext(Dispatchers.Default) {
-                    cacheStore.applySnapshot(message.payload.keys, message.payload.values)
+                    if (message.payload.stores.isNotEmpty()) {
+                        cacheStore.applyStoreSnapshot(message.payload.stores)
+                    } else {
+                        cacheStore.applySnapshot(message.payload.keys, message.payload.values)
+                    }
                 }
             }
 
