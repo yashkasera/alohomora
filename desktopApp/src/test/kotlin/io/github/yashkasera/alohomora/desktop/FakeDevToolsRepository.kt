@@ -135,6 +135,7 @@ class FakeDevToolsRepository(
 
     override fun connect(target: DevToolsTarget) = Unit
     override fun switchDevice(target: DevToolsTarget, deviceId: String?) = Unit
+    override fun reconnect() = Unit
     override fun disconnect() = Unit
     override fun submitOtp(otp: String) = Unit
     override fun markTrafficViewed(id: String) = Unit

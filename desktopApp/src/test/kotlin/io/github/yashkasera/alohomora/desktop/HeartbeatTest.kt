@@ -7,9 +7,11 @@ import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.PingMessage
 import io.github.yashkasera.alohomora.common.PongMessage
+import io.github.yashkasera.alohomora.common.ServerShuttingDownMessage
 import io.github.yashkasera.alohomora.common.UnknownMessage
 import io.github.yashkasera.alohomora.desktop.data.devtools.nextReconnectAttempt
 import io.github.yashkasera.alohomora.desktop.data.devtools.reconnectDelayMillis
+import io.github.yashkasera.alohomora.desktop.data.devtools.shouldDropSilentDevice
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -53,6 +55,27 @@ class HeartbeatTest {
         val decoded = roundTrip(PongMessage(sequence = 12)) as PongMessage
 
         assertEquals(12L, decoded.sequence)
+    }
+
+    @Test
+    fun `a server-shutting-down frame round-trips`() {
+        // The frame that tells the desktop a disconnect was deliberate, so it stops reconnecting.
+        // A rename on either side silently reverts to infinite retry, which is what this guards.
+        val decoded = roundTrip(ServerShuttingDownMessage(sequence = 7))
+
+        assertTrue(decoded is ServerShuttingDownMessage)
+        assertEquals(7L, decoded.sequence)
+    }
+
+    @Test
+    fun `an older desktop ignores a server-shutting-down frame instead of dropping`() {
+        // A desktop predating this frame must not choke on it: it decodes to UnknownMessage and is
+        // skipped, leaving that older desktop on its previous retry behaviour rather than crashing
+        // the read loop. The current build knows the real type, so an older peer can only be
+        // simulated with a name it has never seen.
+        val decoded = decodePayload("""{"type":"SERVER_STOPPING_LEGACY","sequence":7}""")
+
+        assertTrue(decoded is UnknownMessage)
     }
 
     @Test
@@ -163,6 +186,25 @@ class HeartbeatTest {
             DevToolsHeartbeat.SILENCE_TIMEOUT_MILLIS <= 60_000,
             "too slack: the connection slot must come back in seconds, not minutes",
         )
+    }
+
+    // ── desktop watchdog gate ─────────────────────────────────────────────────
+
+    @Test
+    fun `an unarmed watchdog never drops a device no matter how silent`() {
+        // A device on an SDK predating PING sends none, so the desktop never arms — and silence
+        // from it must not be read as death. Dropping it would reintroduce the read-timeout bug
+        // this whole mechanism replaced, this time on the desktop side.
+        assertFalse(shouldDropSilentDevice(armed = false, peerSilent = true))
+        assertFalse(shouldDropSilentDevice(armed = false, peerSilent = false))
+    }
+
+    @Test
+    fun `an armed watchdog drops only once the device is actually silent`() {
+        // Armed by the first PING. Now silence is evidence: a pinging device that stops has died
+        // without a FIN, exactly the case the parked read loop can never notice on its own.
+        assertTrue(shouldDropSilentDevice(armed = true, peerSilent = true))
+        assertFalse(shouldDropSilentDevice(armed = true, peerSilent = false))
     }
 
     // ── backoff reset ─────────────────────────────────────────────────────────

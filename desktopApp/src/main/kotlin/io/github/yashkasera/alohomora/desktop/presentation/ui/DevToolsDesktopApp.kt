@@ -453,6 +453,7 @@ fun DevToolsDesktopApp(
                             selectedDeviceId = selectedDeviceId,
                             appName = buildInfo?.appName,
                             onDisconnect = onDisconnectWindow,
+                            onReconnect = { devToolsViewModel.reconnect() },
                             onSectionClick = {
                                 activeSection = it
                                 searchFocusTrigger = System.nanoTime()

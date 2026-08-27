@@ -58,6 +58,15 @@ interface DevToolsRepository {
     fun connect(target: DevToolsTarget)
     fun switchDevice(target: DevToolsTarget, deviceId: String? = null)
 
+    /**
+     * Reconnects to the last target this window connected to, reusing its stored trust token.
+     *
+     * For the state a deliberate server-stop leaves behind: the retry loop has given up, but the
+     * adb forward (or usbmux tunnel) and the device id are still in place, so a single call
+     * re-establishes silently. A no-op if the window never connected.
+     */
+    fun reconnect()
+
     /** Convenience for TCP targets (adb forward, or the iOS Simulator's shared loopback). */
     fun connect(host: String, port: Int) = connect(DevToolsTarget.Tcp(host, port))
 

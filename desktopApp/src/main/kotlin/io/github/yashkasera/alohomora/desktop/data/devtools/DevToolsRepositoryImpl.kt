@@ -6,6 +6,8 @@ import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.AuthSuccessMessage
 import io.github.yashkasera.alohomora.common.CacheSnapshotMessage
 import io.github.yashkasera.alohomora.common.DatabaseSnapshotMessage
+import io.github.yashkasera.alohomora.common.DevToolsHeartbeat
+import io.github.yashkasera.alohomora.common.DevToolsLiveness
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.DeviceErrorMessage
@@ -16,8 +18,10 @@ import io.github.yashkasera.alohomora.common.FeatureFlag
 import io.github.yashkasera.alohomora.common.FeatureFlagsSnapshotMessage
 import io.github.yashkasera.alohomora.common.InitialStateMessage
 import io.github.yashkasera.alohomora.common.MockRule
+import io.github.yashkasera.alohomora.common.PingMessage
 import io.github.yashkasera.alohomora.common.PluginDataSnapshot
 import io.github.yashkasera.alohomora.common.PluginDataUpdateResultMessage
+import io.github.yashkasera.alohomora.common.PongMessage
 import io.github.yashkasera.alohomora.common.ReplayResultMessage
 import io.github.yashkasera.alohomora.common.RequestCacheDeleteMessage
 import io.github.yashkasera.alohomora.common.RequestCacheRefreshMessage
@@ -31,6 +35,7 @@ import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestPluginDataUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
 import io.github.yashkasera.alohomora.common.RequestTraceSpansMessage
+import io.github.yashkasera.alohomora.common.ServerShuttingDownMessage
 import io.github.yashkasera.alohomora.common.SetMockRulesMessage
 import io.github.yashkasera.alohomora.common.SetThrottleProfileMessage
 import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
@@ -66,6 +71,7 @@ import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
 import io.github.yashkasera.alohomora.devtools.DevToolsSocket
 import io.github.yashkasera.alohomora.replay.ReplayRequest
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -148,10 +154,29 @@ class DevToolsRepositoryImpl(
     @Volatile
     private var generation: Int = 0
 
+    /**
+     * Set when the device sends [ServerShuttingDownMessage] — the developer toggled the server off.
+     *
+     * The retry loop treats this as terminal: unlike a crash or a suspend (a bare EOF, which is
+     * worth retrying because the app may come back on its own), a stopped server will not answer
+     * again until the developer restarts it, so climbing the backoff against it is pointless noise.
+     * Written on the read coroutine, read on the retry coroutine, reset at the start of each fresh
+     * connect.
+     */
+    @Volatile
+    private var stoppedByServer = false
+
+    /** The last target passed to [connect]; replayed by [reconnect]. */
+    @Volatile
+    private var lastTarget: DevToolsTarget? = null
+
     /** Serialises connect/disconnect so only one may mutate the connection at a time. */
     private val lifecycleMutex = Mutex()
 
     override fun connect(target: DevToolsTarget) {
+        // Remembered so reconnect() can reuse it after a deliberate server-stop drops us to
+        // Disconnected without a live target to reach.
+        lastTarget = target
         val host = target.displayHost
         val port = target.port
         scope.launch {
@@ -160,6 +185,7 @@ class DevToolsRepositoryImpl(
                 val myGeneration = ++generation
                 _switching.value = true
                 _state.value = DevToolsConnection.Connecting(host, port)
+                stoppedByServer = false
                 connectionJob = scope.launch {
                     // Retry rather than give up. An iOS app suspended in the background stops
                     // servicing its socket, which is indistinguishable from a crash from here —
@@ -175,6 +201,14 @@ class DevToolsRepositoryImpl(
                         // version mismatch just hides the one thing the developer needs to read.
                         if (outcome is SessionOutcome.Fatal) {
                             _state.value = DevToolsConnection.Failed(outcome.reason)
+                            return@launch
+                        }
+                        // The device told us it was stopping on purpose. Not an error — a clean,
+                        // deliberate disconnect — so unlike Fatal it lands on Disconnected, but it
+                        // is just as terminal: retrying against a server the developer switched off
+                        // is the exact 30-attempts-into-the-void behaviour this frame exists to end.
+                        if (stoppedByServer) {
+                            _state.value = DevToolsConnection.Disconnected
                             return@launch
                         }
                         // A handler already reported something terminal, an invalid OTP being the
@@ -236,6 +270,9 @@ class DevToolsRepositoryImpl(
         myGeneration: Int,
     ): SessionOutcome {
         var socket: DevToolsSocket? = null
+        val liveness = DevToolsLiveness()
+        val watchdogArmed = AtomicBoolean(false)
+        var watchdogJob: Job? = null
         try {
             val live = when (target) {
                 is DevToolsTarget.Tcp -> remoteDataSource.connect(target.host, target.port)
@@ -263,7 +300,28 @@ class DevToolsRepositoryImpl(
                     heartbeatSupported = true,
                 ),
             )
-            return when (val read = remoteDataSource.processConnection(socket, ::handleMessage)) {
+            watchdogJob = scope.launch {
+                while (isActive) {
+                    delay(DevToolsHeartbeat.PING_INTERVAL_MILLIS.milliseconds)
+                    if (shouldDropSilentDevice(watchdogArmed.get(), liveness.isPeerSilent())) {
+                        println(
+                            "[Alohomora] Device silent for ${liveness.silentForMillis()}ms; " +
+                                "dropping session.",
+                        )
+                        socket.close()
+                        return@launch
+                    }
+                }
+            }
+            val onMessage: suspend (DevToolsMessage) -> Unit = { message ->
+                // Any inbound frame proves the device is alive — a stream, a snapshot, or a PING.
+                liveness.recordSignOfLife()
+                // First PING is the only proof the device speaks the heartbeat and will keep
+                // pinging; only then may its future silence be held against it.
+                if (message is PingMessage) watchdogArmed.set(true)
+                handleMessage(message)
+            }
+            return when (val read = remoteDataSource.processConnection(socket, onMessage)) {
                 is EnvelopeRead.VersionMismatch -> SessionOutcome.Fatal(
                     "This app's Alohomora SDK speaks DevTools protocol v${read.peerVersion}, " +
                         "this desktop speaks v${read.localVersion}. " +
@@ -287,6 +345,7 @@ class DevToolsRepositoryImpl(
             println("[Alohomora] Connection dropped: ${e::class.simpleName}: ${e.message}")
             return SessionOutcome.Retryable
         } finally {
+            watchdogJob?.cancel()
             socket?.close()
             if (generation == myGeneration) {
                 connection = null
@@ -312,6 +371,13 @@ class DevToolsRepositoryImpl(
         // connection under lifecycleMutex. Calling both raced, because each is an independent
         // scope.launch with no ordering guarantee on which acquires the mutex first — the
         // disconnect could land *after* the connect and immediately tear it down again.
+        connect(target)
+    }
+
+    override fun reconnect() {
+        // Reuses the last target and the retained device id, so a server that was toggled back on
+        // comes back with no OTP. connect() resets stoppedByServer, so the retry loop is live again.
+        val target = lastTarget ?: return
         connect(target)
     }
 
@@ -612,6 +678,19 @@ class DevToolsRepositoryImpl(
                 _vpnState.value = message.state
             }
 
+            is PingMessage -> {
+                scope.launch { sendMessage(PongMessage(sequence = message.sequence)) }
+            }
+
+            is ServerShuttingDownMessage -> {
+                // The device is stopping on purpose. Flag it so the retry loop gives up instead of
+                // reconnecting forever against a port that will stay shut until the developer turns
+                // the server back on. The socket EOF that follows this frame would otherwise be
+                // indistinguishable from a recoverable drop.
+                println("[Alohomora] Device reported its DevTools server is stopping.")
+                stoppedByServer = true
+            }
+
             is DeviceErrorMessage -> {
                 // Not a connection failure: the socket is healthy, one command could not be
                 // served. Surfaced so a device that cannot read its own database says so instead
@@ -683,3 +762,15 @@ internal fun reconnectDelayMillis(attempt: Int): Long =
  */
 internal fun nextReconnectAttempt(previous: Int, sessionEstablished: Boolean): Int =
     if (sessionEstablished) 1 else previous + 1
+
+/**
+ * Whether the desktop should drop a session because the device has gone silent.
+ *
+ * The whole safety property of the desktop-side watchdog lives in [armed]. The desktop arms it
+ * only after the first PING arrives, because a device running an SDK that predates the heartbeat
+ * never pings, and its silence is therefore not evidence of death — condemning an unarmed peer
+ * would turn a fix for a wedged connection into a spurious-disconnect bug. A free function rather
+ * than an inline `&&` so the gate can be tested against the real caller.
+ */
+internal fun shouldDropSilentDevice(armed: Boolean, peerSilent: Boolean): Boolean =
+    armed && peerSilent
