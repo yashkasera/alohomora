@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,7 +30,7 @@ fun AlohomoraFloatingActionButton(
     shape: Shape? = null,
     content: @Composable () -> Unit,
 ) {
-    val resolvedShape = shape ?: MaterialTheme.shapes.extraLarge
+    val resolvedShape = shape ?: MaterialTheme.shapes.large
     FloatingActionButton(
         onClick = onClick,
         modifier = modifier,

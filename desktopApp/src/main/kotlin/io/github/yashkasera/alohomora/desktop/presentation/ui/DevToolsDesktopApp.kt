@@ -108,6 +108,7 @@ private val PermanentDrawerShape = RoundedCornerShape(
 
 @Composable
 fun DevToolsDesktopApp(
+    modifier: Modifier = Modifier,
     devToolsViewModel: DevToolsViewModel,
     devicesViewModel: DevicesViewModel,
     logcatViewModel: LogcatViewModel,
@@ -136,8 +137,6 @@ fun DevToolsDesktopApp(
     onZoomIn: () -> Unit = {},
     onZoomOut: () -> Unit = {},
     onResetZoom: () -> Unit = {},
-    isDark: Boolean = true,
-    themeId: String = "default",
     onDisconnectWindow: () -> Unit,
     screenshotDir: String = "",
     screenshotShowToast: Boolean = true,
@@ -322,8 +321,7 @@ fun DevToolsDesktopApp(
         },
     ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
             .focusRequester(rootFocus)
             .focusable()
             .onPreviewKeyEvent { event ->

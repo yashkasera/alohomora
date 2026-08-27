@@ -128,7 +128,7 @@ fun MockRulesSideSheet(
                 }
                 val count = rules.count { it.enabled }
                 val state = when {
-                    count == rules.size -> ToggleableState.On
+                    count != 0 && count == rules.size -> ToggleableState.On
                     count >= 1 -> ToggleableState.Indeterminate
                     else -> ToggleableState.Off
                 }
