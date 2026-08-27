@@ -39,6 +39,7 @@ import io.github.yashkasera.alohomora.common.RequestInitialStateMessage
 import io.github.yashkasera.alohomora.common.RequestPluginDataUpdateMessage
 import io.github.yashkasera.alohomora.common.RequestReplayTraceMessage
 import io.github.yashkasera.alohomora.common.RequestTraceSpansMessage
+import io.github.yashkasera.alohomora.common.ServerShuttingDownMessage
 import io.github.yashkasera.alohomora.common.SetMockRulesMessage
 import io.github.yashkasera.alohomora.common.SetThrottleProfileMessage
 import io.github.yashkasera.alohomora.common.SetVpnThrottleMessage
@@ -210,7 +211,7 @@ internal class DevToolsRuntime(
         AppLifecycle.stopObserving()
         ServerActiveNotificationHost.dismiss()
         listenPort = null
-        activeConnection?.close()
+        activeConnection?.shutDownGracefully()
         activeConnection = null
         server.stop()
         _serverState.value = _serverState.value.copy(
@@ -383,6 +384,12 @@ internal class DevToolsRuntime(
                         }
                         ?: break
                     socket.write(DevToolsProtocol.encodeEnvelope(message))
+                    // A graceful-shutdown frame is the last thing this connection ever sends. Break
+                    // only *after* the write so the frame is on the wire before finally→close()
+                    // tears the socket down — the whole point is that the desktop reads it and stops
+                    // reconnecting. Done here, in the sole writer, rather than by close() racing the
+                    // write: two writers on one socket interleave bytes and corrupt the stream.
+                    if (message is ServerShuttingDownMessage) break
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -424,6 +431,7 @@ internal class DevToolsRuntime(
                             break
                         }
                     }
+                    liveness.recordSignOfLife()
                     if (!isAuthenticated) {
                         if (message is AuthResponseMessage) handleAuthResponse(message)
                         continue
@@ -987,6 +995,19 @@ internal class DevToolsRuntime(
         /** Queues a control message. Never dropped — [control] is unbounded. */
         private fun send(message: DevToolsMessage) {
             control.trySend(message)
+        }
+
+        /**
+         * Tells the client the server is stopping on purpose, then lets the writer close the socket.
+         *
+         * Queued like any other control frame rather than written inline: the writer is the only
+         * coroutine allowed to touch the socket, and it closes the connection the moment this frame
+         * goes out (see [writerLoop]). Best-effort — if the peer is already gone the write fails and
+         * the finally block closes anyway. The caller must not also call [close] first, which would
+         * cancel the writer before it could send this.
+         */
+        fun shutDownGracefully() {
+            send(ServerShuttingDownMessage(nextSequence()))
         }
 
         /**

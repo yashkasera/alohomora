@@ -194,6 +194,14 @@ data class PingMessage(override val sequence: Long) : DevToolsMessage()
 @SerialName("PONG")
 data class PongMessage(override val sequence: Long = 0) : DevToolsMessage()
 
+/**
+ * The device is shutting its DevTools server down on purpose — the developer toggled it off, not a
+ * crash or suspend.
+ */
+@Serializable
+@SerialName("SERVER_SHUTTING_DOWN")
+data class ServerShuttingDownMessage(override val sequence: Long = 0) : DevToolsMessage()
+
 // ── Client → Server ──────────────────────────────────────────────────────────
 
 @Serializable

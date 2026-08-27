@@ -25,20 +25,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.app.isMacOs
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
+import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
 import io.github.yashkasera.alohomora.ui.icons.AlohomoraFull
 import io.github.yashkasera.alohomora.ui.icons.Android
 import io.github.yashkasera.alohomora.ui.icons.Apple
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.X
+import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 private val SidebarTopInsetMac = 40.dp
@@ -84,6 +89,7 @@ private fun CommandPaletteSearchPill(
 fun ColumnScope.Sidebar(
     activeSection: DesktopSection,
     onDisconnect: () -> Unit,
+    onReconnect: () -> Unit,
     onSectionClick: (DesktopSection) -> Unit,
     connection: DevToolsConnection,
     devices: List<DeviceUi>,
@@ -119,6 +125,7 @@ fun ColumnScope.Sidebar(
         selectedDeviceId = selectedDeviceId,
         appName = appName,
         onDisconnect = onDisconnect,
+        onReconnect = onReconnect,
     )
     LazyColumn(
         modifier = Modifier
@@ -171,6 +178,7 @@ private fun SidebarConnectionCard(
     selectedDeviceId: String?,
     appName: String? = null,
     onDisconnect: () -> Unit,
+    onReconnect: () -> Unit,
 ) {
     val selectedOnlineDevice =
         devices.firstOrNull { it.id == selectedDeviceId && it.state == DeviceState.DEVICE }
@@ -234,7 +242,10 @@ private fun SidebarConnectionCard(
                     .fillMaxWidth()
                     .clip(MaterialTheme.shapes.small)
                     .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = MaterialTheme.dimens.margin.sm),
+                    .padding(
+                        horizontal = MaterialTheme.dimens.margin.md,
+                        vertical = MaterialTheme.dimens.margin.sm,
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -270,6 +281,36 @@ private fun SidebarConnectionCard(
                     }
                 }
             }
+            if (connection is DevToolsConnection.Disconnected) {
+                AlohomoraOutlinedButton(
+                    text = "Reconnect",
+                    onClick = onReconnect,
+                    size = AlohomoraButtonSize.SMALL,
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.RefreshCw,
+                            contentDescription = null,
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                        )
+                    },
+                )
+            }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun SidebarConnectionCardPreview() {
+    AppTheme {
+        SidebarConnectionCard(
+            connection = DevToolsConnection.Disconnected,
+            devices = listOf(),
+            selectedDeviceId = null,
+            appName = "Famapp",
+            onDisconnect = { },
+            onReconnect = { },
+        )
     }
 }

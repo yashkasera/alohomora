@@ -72,6 +72,9 @@ class DevToolsViewModel(
         switchDeviceUseCase(target, deviceId)
     }
 
+    /** Re-establishes the last connection after a deliberate server-stop dropped the session. */
+    fun reconnect() = repository.reconnect()
+
     fun submitOtp(otp: String) = repository.submitOtp(otp)
 
     fun markErrorViewed(id: Long) = repository.markErrorViewed(id)
