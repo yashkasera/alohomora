@@ -38,11 +38,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -80,9 +80,9 @@ import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.UpdateBanner
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
-import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedCard
@@ -161,23 +161,23 @@ fun LauncherWindow(
             window.minimumSize = Dimension(900, 560)
             applyMacTitleBar(window)
 
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)
                     .padding(top = if (isMacOs) MacTitleBarHeight else 0.dp),
             ) {
-                Column {
-                    if (updateInfo != null && !updateDismissed) {
-                        UpdateBanner(
-                            updateInfo = updateInfo,
-                            onDismiss = onDismissUpdate,
-                        )
-                    }
+                LauncherContent(
+                    modifier = Modifier.weight(1f),
+                    sharedDevicesComposition = sharedComposition,
+                    onOpenDeviceWindow = onOpenDeviceWindow,
+                )
 
-                    LauncherContent(
-                        sharedDevicesComposition = sharedComposition,
-                        onOpenDeviceWindow = onOpenDeviceWindow,
+                if (updateInfo != null && !updateDismissed) {
+                    UpdateBanner(
+                        updateInfo = updateInfo,
+                        onDismiss = onDismissUpdate,
+                        modifier = Modifier
                     )
                 }
             }
@@ -189,6 +189,7 @@ fun LauncherWindow(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LauncherContent(
+    modifier: Modifier = Modifier,
     sharedDevicesComposition: DesktopAppComposition,
     onOpenDeviceWindow: (deviceId: String, host: String, hostPort: Int, devicePort: Int, composition: DesktopAppComposition) -> Unit,
 ) {
@@ -256,10 +257,13 @@ private fun LauncherContent(
         pendingConnectionState is DevToolsConnection.AwaitingAuth &&
             (pendingConnectionState as DevToolsConnection.AwaitingAuth).otpRequired ->
             LauncherState.AUTH_OTP
+
         else -> LauncherState.CONNECTING
     }
 
-    Surface {
+    Surface(
+        modifier = modifier,
+    ) {
         Column(
             modifier = Modifier.fillMaxSize()
                 .padding(MaterialTheme.dimens.margin.xxl),
@@ -371,7 +375,9 @@ private fun LauncherContent(
 
                     LauncherState.AUTH_OTP -> AuthOtpContent(
                         otpInput = otpInput,
-                        onOtpChange = { if (it.length <= 4 && it.all(Char::isDigit)) otpInput = it },
+                        onOtpChange = {
+                            if (it.length <= 4 && it.all(Char::isDigit)) otpInput = it
+                        },
                         onConfirm = {
                             pendingSession?.composition?.devToolsViewModel?.submitOtp(otpInput)
                             otpInput = ""
@@ -713,7 +719,10 @@ private fun DeviceListCard(
                 }
             }
 
-            ConnectionStatusDot(state = ConnectionDotState.Connected, size = MaterialTheme.dimens.icon.xs)
+            ConnectionStatusDot(
+                state = ConnectionDotState.Connected,
+                size = MaterialTheme.dimens.icon.xs,
+            )
         }
     }
 }

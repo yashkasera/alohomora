@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.platform.LocalDensity
@@ -237,14 +238,8 @@ fun DeviceWindow(
 
             CompositionLocalProvider(LocalDensity provides scaledDensity) {
                 Column {
-                    if (updateInfo != null && !updateDismissed) {
-                        UpdateBanner(
-                            updateInfo = updateInfo,
-                            onDismiss = onDismissUpdate,
-                        )
-                    }
-
                     DevToolsDesktopApp(
+                        modifier = Modifier.weight(1f),
                         devToolsViewModel = session.composition.devToolsViewModel,
                         devicesViewModel = session.composition.devicesViewModel,
                         logcatViewModel = session.composition.logcatViewModel,
@@ -273,12 +268,17 @@ fun DeviceWindow(
                         onZoomIn = zoomIn,
                         onZoomOut = zoomOut,
                         onResetZoom = resetZoom,
-                        isDark = isDark,
-                        themeId = themeId,
                         onDisconnectWindow = closeWindow,
                         screenshotDir = screenshotDir,
                         screenshotShowToast = screenshotShowToast,
                     )
+
+                    if (updateInfo != null && !updateDismissed) {
+                        UpdateBanner(
+                            updateInfo = updateInfo,
+                            onDismiss = onDismissUpdate,
+                        )
+                    }
                 }
             }
             appOverlays()
