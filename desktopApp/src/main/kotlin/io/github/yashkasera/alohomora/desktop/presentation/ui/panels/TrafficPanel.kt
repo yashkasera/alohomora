@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -78,6 +80,8 @@ import io.github.yashkasera.alohomora.ui.components.ScrollToTopButton
 import io.github.yashkasera.alohomora.ui.components.TopBarLayout
 import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.components.jsonviewer.JsonTreeView
+import io.github.yashkasera.alohomora.ui.icons.ChevronDown
+import io.github.yashkasera.alohomora.ui.icons.ChevronRight
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Download
 import io.github.yashkasera.alohomora.ui.icons.Icons
@@ -659,9 +663,18 @@ private fun DesktopOverviewTab(traffic: TrafficEntry) {
 
 @Composable
 private fun DesktopRequestTab(traffic: TrafficEntry) {
+    // The whole tab scrolls as one column so a long headers block can never push the body
+    // out of reach. The code blocks are therefore non-scrollable (a nested same-direction
+    // scroll would fight this one) and the sections collapse to fold the giant blocks away.
+    var headersExpanded by remember(traffic.id) { mutableStateOf(true) }
+    var bodyExpanded by remember(traffic.id) { mutableStateOf(true) }
+
+    val headerCount = traffic.requestHeaders?.values?.sumOf { it.size } ?: 0
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(
                 horizontal = MaterialTheme.dimens.margin.xl,
                 vertical = MaterialTheme.dimens.margin.lg,
@@ -676,21 +689,77 @@ private fun DesktopRequestTab(traffic: TrafficEntry) {
                 color = MaterialTheme.colorScheme.primary,
             )
         }
-        SectionLabel("Headers")
 
-        AlohomoraHorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.margin.sm))
+        CollapsibleSection(
+            title = "Headers",
+            count = headerCount,
+            expanded = headersExpanded,
+            onToggle = { headersExpanded = !headersExpanded },
+        ) {
+            AlohomoraCodeBlock(
+                isScrollable = false,
+                content = traffic.requestHeaders
+                    ?.flatMap { (key, values) -> values.map { "$key: $it" } }
+                    ?.joinToString("\n")
+                    .orEmpty()
+                    .ifBlank { "No headers" },
+            )
+        }
 
-        AlohomoraCodeBlock(
-            content = traffic.requestHeaders
-                ?.flatMap { (key, values) -> values.map { "$key: $it" } }
-                ?.joinToString("\n")
-                .orEmpty()
-                .ifBlank { "No headers" },
-        )
-        SectionLabel("Body")
-        AlohomoraCodeBlock(
-            content = traffic.requestBody.orEmpty().ifBlank { "{}" },
-        )
+        CollapsibleSection(
+            title = "Body",
+            expanded = bodyExpanded,
+            onToggle = { bodyExpanded = !bodyExpanded },
+        ) {
+            AlohomoraCodeBlock(
+                isScrollable = false,
+                content = traffic.requestBody.orEmpty().ifBlank { "{}" },
+            )
+        }
+    }
+}
+
+/**
+ * A section whose body folds away behind a chevron. Used in the request detail tab so a long
+ * headers block can be collapsed to reach the body — and so nothing relies on an inner scroll,
+ * which cannot coexist with the tab's own vertical scroll.
+ */
+@Composable
+private fun CollapsibleSection(
+    title: String,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+    count: Int = 0,
+    content: @Composable () -> Unit,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.small)
+                .clickable(onClick = onToggle)
+                .padding(vertical = MaterialTheme.dimens.margin.xs),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = if (expanded) Icons.ChevronDown else Icons.ChevronRight,
+                contentDescription = if (expanded) "Collapse $title" else "Expand $title",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+            )
+            SectionLabel(title)
+            if (count > 0) {
+                AlohomoraChip(label = count.toString(), uppercase = false)
+            }
+        }
+        AnimatedVisibility(visible = expanded) {
+            content()
+        }
     }
 }
 
