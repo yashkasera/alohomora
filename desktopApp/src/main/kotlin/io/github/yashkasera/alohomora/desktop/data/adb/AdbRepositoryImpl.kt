@@ -3,6 +3,8 @@ package io.github.yashkasera.alohomora.desktop.data.adb
 import io.github.yashkasera.alohomora.desktop.data.ios.IosDeviceDataSource
 import io.github.yashkasera.alohomora.desktop.domain.model.CommandResult
 import io.github.yashkasera.alohomora.desktop.domain.model.Device
+import io.github.yashkasera.alohomora.desktop.domain.model.WirelessDiscovery
+import io.github.yashkasera.alohomora.desktop.domain.model.WirelessEndpoint
 import io.github.yashkasera.alohomora.desktop.domain.repository.AdbRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -160,6 +162,64 @@ class AdbRepositoryImpl(
             _error.value = e.message
             e.message ?: "Failed to disconnect host"
         }
+    }
+
+    override suspend fun pairDevice(host: String, port: Int, code: String): String? {
+        return try {
+            val message = failureMessage(dataSource.pair(host, port, code), "adb pair")
+            _error.value = message
+            message
+        } catch (e: Exception) {
+            _error.value = e.message
+            e.message ?: "Failed to pair"
+        }
+    }
+
+    override suspend fun connectWireless(host: String, port: Int): String? {
+        return try {
+            val message = failureMessage(dataSource.connect(host, port), "adb connect")
+            _error.value = message
+            message
+        } catch (e: Exception) {
+            _error.value = e.message
+            e.message ?: "Failed to connect"
+        }
+    }
+
+    override suspend fun discoverWirelessEndpoints(): WirelessDiscovery {
+        return try {
+            val services = AdbParser.parseMdnsServices(dataSource.listMdnsServices().stdout)
+            WirelessDiscovery(
+                pairing = services.firstOrNull { it.isPairing }
+                    ?.let { WirelessEndpoint(it.host, it.port) },
+                connect = services.firstOrNull { it.isConnect }
+                    ?.let { WirelessEndpoint(it.host, it.port) },
+            )
+        } catch (e: Exception) {
+            WirelessDiscovery()
+        }
+    }
+
+    override suspend fun findPairingEndpoint(serviceName: String): WirelessEndpoint? {
+        return try {
+            AdbParser.parseMdnsServices(dataSource.listMdnsServices().stdout)
+                .firstOrNull { it.isPairing && it.name == serviceName }
+                ?.let { WirelessEndpoint(it.host, it.port) }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Non-null error message when [result] indicates failure. `adb connect`/`adb pair` sometimes
+     * exit 0 while printing a failure line, so the output is inspected as well as the exit code.
+     */
+    private fun failureMessage(result: AdbCommandResult, action: String): String? {
+        val combined = "${result.stdout}\n${result.stderr}"
+        val failed = result.exitCode != 0 ||
+            Regex("failed|cannot|unable", RegexOption.IGNORE_CASE).containsMatchIn(combined)
+        if (!failed) return null
+        return result.stderr.ifBlank { result.stdout.ifBlank { "$action failed" } }.trim()
     }
 
     override suspend fun restartServer(): String? {

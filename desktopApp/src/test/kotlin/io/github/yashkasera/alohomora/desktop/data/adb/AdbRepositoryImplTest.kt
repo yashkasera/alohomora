@@ -35,6 +35,8 @@ class AdbRepositoryImplTest {
         override suspend fun enableTcpMode(deviceId: String, tcpPort: Int) = Unit
         override suspend fun connect(host: String, port: Int) = AdbCommandResult(0, "", "")
         override suspend fun disconnect(host: String, port: Int) = AdbCommandResult(0, "", "")
+        override suspend fun pair(host: String, port: Int, code: String) = AdbCommandResult(0, "", "")
+        override suspend fun listMdnsServices() = AdbCommandResult(0, "", "")
         override suspend fun restartServer() = AdbCommandResult(0, "", "")
         override suspend fun runCommand(deviceId: String?, args: List<String>) =
             AdbCommandResult(0, "", "")

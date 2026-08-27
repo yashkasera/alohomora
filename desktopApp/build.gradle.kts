@@ -46,6 +46,9 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
+    // QR encoding for Wireless-debugging "Pair with QR code".
+    implementation(libs.zxing.core)
+
     // Ktor client — the desktop app is a TCP *client* of the in-app DevTools server over an
     // adb port forward.
     implementation(libs.ktor.client.core)

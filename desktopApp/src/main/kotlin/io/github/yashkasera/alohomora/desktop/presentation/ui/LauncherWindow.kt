@@ -75,17 +75,23 @@ import io.github.yashkasera.alohomora.desktop.app.isMacOs
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
+import io.github.yashkasera.alohomora.desktop.data.adb.WirelessQr
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
+import io.github.yashkasera.alohomora.desktop.domain.model.WirelessDiscovery
+import io.github.yashkasera.alohomora.desktop.domain.model.WirelessEndpoint
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeviceUi
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.QrCode
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.UpdateBanner
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
+import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.ConnectionDotState
 import io.github.yashkasera.alohomora.ui.components.ConnectionStatusDot
@@ -136,7 +142,7 @@ fun LauncherWindow(
     onClose: () -> Unit,
     onExit: () -> Unit,
 ) {
-    val state = rememberWindowState(size = DpSize(900.dp, 560.dp))
+    val state = rememberWindowState(size = DpSize(900.dp, 720.dp))
     Window(
         title = "Alohomora",
         state = state,
@@ -205,6 +211,7 @@ private fun LauncherContent(
     var pendingSession by remember { mutableStateOf<PendingSession?>(null) }
     var pendingConnectionState by remember { mutableStateOf<DevToolsConnection>(DevToolsConnection.Disconnected) }
     var otpInput by remember { mutableStateOf("") }
+    var showPairingDialog by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
 
@@ -291,6 +298,7 @@ private fun LauncherContent(
                         onHostPortChange = { hostPort = it.filter(Char::isDigit) },
                         onDevicePortChange = { devicePort = it.filter(Char::isDigit) },
                         onRefresh = devicesViewModel::refreshDevices,
+                        onPairWifi = { showPairingDialog = true },
                         onConnect = {
                             if (selectedDevice == null) {
                                 actionError = "Select an online device first"
@@ -392,6 +400,21 @@ private fun LauncherContent(
             }
         }
     }
+
+    if (showPairingDialog) {
+        WirelessPairingDialog(
+            viewModel = devicesViewModel,
+            onConnected = { connectHost, connectPort ->
+                // The serial adb assigns a wireless device is exactly host:port. Selecting it now
+                // means the poll that adds it lands on the right device, ready for Connect.
+                selectedDeviceId = "$connectHost:$connectPort"
+                actionError = null
+                showPairingDialog = false
+                devicesViewModel.refreshDevices()
+            },
+            onDismiss = { showPairingDialog = false },
+        )
+    }
 }
 
 // region Device Selection
@@ -411,6 +434,7 @@ private fun DeviceSelectContent(
     onDevicePortChange: (String) -> Unit,
     onRefresh: () -> Unit,
     onConnect: () -> Unit,
+    onPairWifi: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxSize(),
@@ -507,6 +531,27 @@ private fun DeviceSelectContent(
                             modifier = Modifier.weight(1f),
                         )
                     }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                    Text(
+                        "No cable? Pair over Wi-Fi using Android 11+ Wireless debugging, then " +
+                            "connect the paired device below.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    AlohomoraOutlinedButton(
+                        text = "Pair over Wi-Fi",
+                        onClick = onPairWifi,
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                Icons.Link,
+                                contentDescription = null,
+                                modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                            )
+                        },
+                    )
                 }
             }
 
@@ -988,6 +1033,38 @@ private suspend fun suspendSelectDevice(
     viewModel.selectDevice(deviceId, hostPort, devicePort) { error -> continuation.resume(error) }
 }
 
+private suspend fun suspendPairDevice(
+    viewModel: DevicesViewModel,
+    host: String,
+    port: Int,
+    code: String,
+): String? = suspendCancellableCoroutine { continuation ->
+    viewModel.pairDevice(host, port, code) { error -> continuation.resume(error) }
+}
+
+private suspend fun suspendConnectWireless(
+    viewModel: DevicesViewModel,
+    host: String,
+    port: Int,
+): String? = suspendCancellableCoroutine { continuation ->
+    viewModel.connectWireless(host, port) { error -> continuation.resume(error) }
+}
+
+private suspend fun suspendDiscoverWireless(
+    viewModel: DevicesViewModel,
+): WirelessDiscovery = suspendCancellableCoroutine { continuation ->
+    viewModel.discoverWirelessEndpoints { result -> continuation.resume(result) }
+}
+
+/** Splits "host:port" on the last colon. Returns null when malformed. */
+private fun parseHostPort(address: String): Pair<String, Int>? {
+    val trimmed = address.trim()
+    val separator = trimmed.lastIndexOf(':')
+    if (separator <= 0 || separator == trimmed.length - 1) return null
+    val port = trimmed.substring(separator + 1).toIntOrNull() ?: return null
+    return trimmed.substring(0, separator) to port
+}
+
 // endregion
 
 // region Previews
@@ -1078,6 +1155,272 @@ private fun ConnectionStepperPreview() {
             }
         }
     }
+}
+
+// endregion
+
+// region Wireless pairing
+
+private enum class PairMethod { QR, CODE }
+
+private const val QR_POLL_INTERVAL_MS = 1500L
+private const val QR_PAIR_ATTEMPTS = 40 // ~60s at the poll interval above
+
+private fun randomPairingToken(): String =
+    java.util.UUID.randomUUID().toString().replace("-", "").take(12)
+
+/**
+ * Android 11+ Wireless-debugging pairing, two ways:
+ *
+ *  - **QR code**: the desktop shows a QR that the device scans from "Pair device with QR code".
+ *    The device then advertises an mDNS pairing service named after the QR; we poll `adb mdns
+ *    services` for it, `adb pair`, then discover the connect service and `adb connect`. Fully
+ *    automatic once scanned.
+ *  - **Pairing code**: the manual fallback — type the address + 6-digit code, then the connect
+ *    address. Reliable when mDNS/QR does not work on a given device or network.
+ *
+ * Either way, once `adb connect` succeeds the device joins `adb devices` and the normal Connect
+ * flow takes over.
+ */
+@Composable
+private fun WirelessPairingDialog(
+    viewModel: DevicesViewModel,
+    onConnected: (host: String, port: Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    var method by remember { mutableStateOf(PairMethod.QR) }
+    var busy by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    // Manual (code) mode.
+    var pairAddress by remember { mutableStateOf("") }
+    var code by remember { mutableStateOf("") }
+    var connectAddress by remember { mutableStateOf("") }
+    var paired by remember { mutableStateOf(false) }
+
+    // QR mode. Service name + password are generated once; the device echoes the service name as
+    // its mDNS pairing instance, which is how we match it.
+    val serviceName = remember { "alohomora-${randomPairingToken()}" }
+    val password = remember { randomPairingToken() }
+    val qrContent = remember(serviceName, password) {
+        WirelessQr.pairingPayload(serviceName, password)
+    }
+    var qrStatus by remember { mutableStateOf("Waiting for the device to scan…") }
+
+    // Poll for the scanned device only while QR mode is active; leaving QR mode (or closing the
+    // dialog) cancels this effect and stops polling.
+    LaunchedEffect(method) {
+        if (method != PairMethod.QR) return@LaunchedEffect
+        error = null
+        qrStatus = "Waiting for the device to scan…"
+        repeat(QR_PAIR_ATTEMPTS) {
+            val endpoint = suspendFindPairingEndpoint(viewModel, serviceName)
+            if (endpoint != null) {
+                qrStatus = "Pairing…"
+                val pairError = suspendPairDevice(viewModel, endpoint.host, endpoint.port, password)
+                if (pairError != null) {
+                    error = pairError
+                    qrStatus = "Pairing failed"
+                    return@LaunchedEffect
+                }
+                qrStatus = "Connecting…"
+                val connect = suspendDiscoverWireless(viewModel).connect
+                if (connect == null) {
+                    error = "Paired, but couldn't find the connect endpoint"
+                    return@LaunchedEffect
+                }
+                val connectError = suspendConnectWireless(viewModel, connect.host, connect.port)
+                if (connectError != null) {
+                    error = connectError
+                    qrStatus = "Connect failed"
+                    return@LaunchedEffect
+                }
+                onConnected(connect.host, connect.port)
+                return@LaunchedEffect
+            }
+            delay(QR_POLL_INTERVAL_MS.milliseconds)
+        }
+        qrStatus = "Timed out. Check the device is on the same network, or use a pairing code."
+    }
+
+    AlohomoraAlertDialog(
+        onDismissRequest = { if (!busy) onDismiss() },
+        title = "Pair over Wi-Fi",
+        content = {
+            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm)) {
+                    PairMethodChip("QR code", method == PairMethod.QR) {
+                        method = PairMethod.QR
+                        error = null
+                    }
+                    PairMethodChip("Pairing code", method == PairMethod.CODE) {
+                        method = PairMethod.CODE
+                        error = null
+                    }
+                }
+
+                when (method) {
+                    PairMethod.QR -> {
+                        Text(
+                            "On the device: Developer options → Wireless debugging → \"Pair " +
+                                "device with QR code\", then scan this.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        QrCode(
+                            content = qrContent,
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .size(220.dp),
+                        )
+                        Text(
+                            qrStatus,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    PairMethod.CODE -> if (!paired) {
+                        Text(
+                            "On the device: Wireless debugging → \"Pair device with pairing " +
+                                "code\". Enter that address and code.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        AlohomoraTextField(
+                            value = pairAddress,
+                            onValueChange = { pairAddress = it },
+                            label = "Pairing address (IP:port)",
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        AlohomoraTextField(
+                            value = code,
+                            onValueChange = { input ->
+                                if (input.length <= 6 && input.all(Char::isDigit)) code = input
+                            },
+                            label = "Pairing code",
+                            placeholder = "000000",
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        AlohomoraTextButton(
+                            text = "Discover on network",
+                            enabled = !busy,
+                            onClick = {
+                                scope.launch {
+                                    error = null
+                                    val discovery = suspendDiscoverWireless(viewModel)
+                                    discovery.pairing?.let { pairAddress = it.address }
+                                    discovery.connect?.let { connectAddress = it.address }
+                                    if (discovery.pairing == null && discovery.connect == null) {
+                                        error = "No wireless devices found on the network"
+                                    }
+                                }
+                            },
+                        )
+                    } else {
+                        Text(
+                            "Paired. Enter the connect address from the main Wireless debugging " +
+                                "screen — its port differs from the pairing port.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        AlohomoraTextField(
+                            value = connectAddress,
+                            onValueChange = { connectAddress = it },
+                            label = "Connect address (IP:port)",
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+
+                error?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            when {
+                // QR pairing is automatic — nothing to confirm.
+                method == PairMethod.QR -> Unit
+
+                !paired -> AlohomoraTextButton(
+                    text = if (busy) "Pairing…" else "Pair",
+                    enabled = !busy && parseHostPort(pairAddress) != null && code.length == 6,
+                    onClick = {
+                        val (host, port) = parseHostPort(pairAddress) ?: return@AlohomoraTextButton
+                        scope.launch {
+                            busy = true
+                            error = null
+                            val err = suspendPairDevice(viewModel, host, port, code)
+                            if (err == null) {
+                                paired = true
+                                if (connectAddress.isBlank()) {
+                                    suspendDiscoverWireless(viewModel).connect
+                                        ?.let { connectAddress = it.address }
+                                }
+                            } else {
+                                error = err
+                            }
+                            busy = false
+                        }
+                    },
+                )
+
+                else -> AlohomoraTextButton(
+                    text = if (busy) "Connecting…" else "Connect",
+                    enabled = !busy && parseHostPort(connectAddress) != null,
+                    onClick = {
+                        val (host, port) = parseHostPort(connectAddress)
+                            ?: return@AlohomoraTextButton
+                        scope.launch {
+                            busy = true
+                            error = null
+                            val err = suspendConnectWireless(viewModel, host, port)
+                            busy = false
+                            if (err == null) onConnected(host, port) else error = err
+                        }
+                    },
+                )
+            }
+        },
+        dismissButton = {
+            AlohomoraTextButton(text = "Cancel", enabled = !busy, onClick = onDismiss)
+        },
+    )
+}
+
+@Composable
+private fun PairMethodChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    if (selected) {
+        AlohomoraFilledButton(
+            text = label,
+            onClick = onClick,
+            size = AlohomoraButtonSize.SMALL,
+            uppercase = false,
+        )
+    } else {
+        AlohomoraOutlinedButton(
+            text = label,
+            onClick = onClick,
+            size = AlohomoraButtonSize.SMALL,
+            uppercase = false,
+        )
+    }
+}
+
+private suspend fun suspendFindPairingEndpoint(
+    viewModel: DevicesViewModel,
+    serviceName: String,
+): WirelessEndpoint? = suspendCancellableCoroutine { continuation ->
+    viewModel.findPairingEndpoint(serviceName) { endpoint -> continuation.resume(endpoint) }
 }
 
 // endregion

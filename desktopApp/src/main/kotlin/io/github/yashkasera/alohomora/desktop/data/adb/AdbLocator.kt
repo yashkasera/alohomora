@@ -16,10 +16,14 @@ import java.io.File
  * client/server versions trigger `adb kill-server` churn across every tool on the machine).
  *
  * Resolution order, first hit wins:
- *  1. `alohomora.adb.path` system property / `ALOHOMORA_ADB_PATH` env var (explicit override)
- *  2. `ANDROID_HOME` / `ANDROID_SDK_ROOT` + `platform-tools/adb`
- *  3. Conventional SDK locations for the current OS
- *  4. `PATH`
+ *  1. User-configured path from Settings ([configure])
+ *  2. `alohomora.adb.path` system property / `ALOHOMORA_ADB_PATH` env var (explicit override)
+ *  3. `ANDROID_HOME` / `ANDROID_SDK_ROOT` + `platform-tools/adb`
+ *  4. Conventional SDK locations for the current OS
+ *  5. `PATH`
+ *
+ * A configured/override value may point at the `adb` binary, its `platform-tools` directory, or
+ * an SDK root — all three are tried.
  */
 internal object AdbLocator {
 
@@ -30,14 +34,33 @@ internal object AdbLocator {
     @Volatile
     private var cached: String? = null
 
+    /** User-configured override from Settings; highest priority. Null/blank means "not set". */
+    @Volatile
+    private var configuredPath: String? = null
+
+    /** Sets (or clears) the configured path and drops the cache so the next call re-resolves. */
+    fun configure(path: String?) {
+        configuredPath = path?.trim()?.takeIf { it.isNotEmpty() }
+        reset()
+    }
+
     /** Absolute path to `adb`, or null when it cannot be found. */
     fun find(): String? {
         cached?.let { return it }
-        val resolved = candidates().firstOrNull { it.isExecutableFile() }?.absolutePath
-            ?: findOnPath()
+        val resolved = resolve(configuredPath)
         cached = resolved
         return resolved
     }
+
+    /**
+     * Resolves against [configured] without touching the cache or the stored override — lets the
+     * Settings UI preview whether a path the user is typing yields a working `adb`.
+     */
+    fun resolveWith(configured: String?): String? =
+        resolve(configured?.trim()?.takeIf { it.isNotEmpty() })
+
+    private fun resolve(configured: String?): String? =
+        candidates(configured).firstOrNull { it.isExecutableFile() }?.absolutePath ?: findOnPath()
 
     /**
      * Absolute path to `adb`, or throws with a message the user can act on.
@@ -46,8 +69,8 @@ internal object AdbLocator {
      * whereas the old behaviour surfaced as every device list being mysteriously empty.
      */
     fun require(): String = find() ?: error(
-        "adb not found. Install Android platform-tools and set ANDROID_HOME, or pass " +
-            "-D$OVERRIDE_PROPERTY=/path/to/adb (env: $OVERRIDE_ENV).",
+        "adb not found. Set a custom path in Settings → ADB, install Android platform-tools and " +
+            "set ANDROID_HOME, or pass -D$OVERRIDE_PROPERTY=/path/to/adb (env: $OVERRIDE_ENV).",
     )
 
     /** Clears the cache. For tests, and for re-resolving after the user configures the SDK. */
@@ -55,15 +78,21 @@ internal object AdbLocator {
         cached = null
     }
 
-    private fun candidates(): List<File> {
-        val explicit = System.getProperty(OVERRIDE_PROPERTY) ?: System.getenv(OVERRIDE_ENV)
+    private fun candidates(configured: String?): List<File> {
+        val explicit = configured
+            ?: System.getProperty(OVERRIDE_PROPERTY)
+            ?: System.getenv(OVERRIDE_ENV)
         val sdkRoots = listOfNotNull(
             System.getenv("ANDROID_HOME"),
             System.getenv("ANDROID_SDK_ROOT"),
         ) + conventionalSdkRoots()
 
         return buildList {
-            explicit?.takeIf { it.isNotBlank() }?.let { add(File(it)) }
+            explicit?.takeIf { it.isNotBlank() }?.let { path ->
+                add(File(path))
+                add(File(path, executableName))
+                add(File(path, "platform-tools/$executableName"))
+            }
             sdkRoots.forEach { root -> add(File(root, "platform-tools/$executableName")) }
         }
     }
