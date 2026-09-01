@@ -26,6 +26,7 @@ okhttp = "5.3.2"
 binaryCompatibilityValidator = "0.18.1"
 opentelemetry = "1.51.0"
 mcp = "0.15.0"
+zxing = "3.5.3"
 
 # Android instrumentation testing only. androidx-compose-ui must track whatever
 # compose-multiplatform resolves to on Android — CMP 1.11.1's androidRuntimeElements point at
@@ -46,6 +47,10 @@ ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.re
 # Declared explicitly (not just pulled in transitively by ktor-client-okhttp) because
 # :alohomora exposes okhttp3.Interceptor in its public API via TraceInterceptor.
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+
+# QR encoding for Wireless-debugging "Pair with QR code" (desktop only). Only the encoder core
+# is needed — the matrix is drawn directly in a Compose Canvas, no image codec.
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }

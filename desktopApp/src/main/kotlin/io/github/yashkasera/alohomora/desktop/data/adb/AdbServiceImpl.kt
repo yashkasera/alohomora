@@ -38,6 +38,19 @@ internal class AdbServiceImpl(
         }
     }
 
+    override suspend fun pair(host: String, port: Int, code: String): AdbCommandResult {
+        return withContext(Dispatchers.IO) {
+            // Code as its own arg: omitting it makes `adb pair` block waiting for interactive input.
+            runner.run(listOf("pair", "$host:$port", code))
+        }
+    }
+
+    override suspend fun listMdnsServices(): AdbCommandResult {
+        return withContext(Dispatchers.IO) {
+            runner.run(listOf("mdns", "services"))
+        }
+    }
+
     override suspend fun restartServer(): AdbCommandResult {
         return withContext(Dispatchers.IO) {
             val kill = runner.run(listOf("kill-server"))

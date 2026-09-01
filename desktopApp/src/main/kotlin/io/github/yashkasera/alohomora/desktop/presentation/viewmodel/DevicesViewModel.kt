@@ -5,6 +5,8 @@ import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkEntry
 import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkHistoryStore
 import io.github.yashkasera.alohomora.desktop.domain.model.CommandResult
 import io.github.yashkasera.alohomora.desktop.domain.model.Device
+import io.github.yashkasera.alohomora.desktop.domain.model.WirelessDiscovery
+import io.github.yashkasera.alohomora.desktop.domain.model.WirelessEndpoint
 import io.github.yashkasera.alohomora.desktop.domain.repository.AdbRepository
 import io.github.yashkasera.alohomora.desktop.domain.usecase.DeactivateDeviceUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.InstallApkUseCase
@@ -115,6 +117,32 @@ class DevicesViewModel(
             val error = repository.disconnectHost(host, port)
             onError(error)
         }
+    }
+
+    fun pairDevice(host: String, port: Int, code: String, onResult: (String?) -> Unit = {}) {
+        scope.launch {
+            // Code masked in the log — it is a one-time secret shown on the device.
+            logAdbCommand(null, "adb pair $host:$port ******")
+            onResult(repository.pairDevice(host, port, code))
+        }
+    }
+
+    fun connectWireless(host: String, port: Int, onError: (String?) -> Unit = {}) {
+        scope.launch {
+            logAdbCommand(null, "adb connect $host:$port")
+            onError(repository.connectWireless(host, port))
+        }
+    }
+
+    fun discoverWirelessEndpoints(onResult: (WirelessDiscovery) -> Unit = {}) {
+        scope.launch {
+            logAdbCommand(null, "adb mdns services")
+            onResult(repository.discoverWirelessEndpoints())
+        }
+    }
+
+    fun findPairingEndpoint(serviceName: String, onResult: (WirelessEndpoint?) -> Unit = {}) {
+        scope.launch { onResult(repository.findPairingEndpoint(serviceName)) }
     }
 
     fun restartAdb(onError: (String?) -> Unit = {}) {

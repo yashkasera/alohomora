@@ -15,6 +15,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.application
+import io.github.yashkasera.alohomora.desktop.data.adb.AdbLocator
+import io.github.yashkasera.alohomora.desktop.data.adb.DesktopAdbPrefs
 import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopEventPrefs
 import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopMcpPrefs
 import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopScreenshotPrefs
@@ -44,6 +46,9 @@ data class DeviceWindowSession(
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
+    // Apply the saved custom adb path before any device work so resolution honours it from the
+    // first poll. Blank means "auto-detect".
+    AdbLocator.configure(DesktopAdbPrefs.loadPath().ifBlank { null })
     val initialMode = DesktopThemePrefs.loadMode()
     val initialThemeId = DesktopThemePrefs.loadThemeId()
     val initialIsDark = when (initialMode) {
@@ -90,6 +95,10 @@ fun main() {
         var mcpWriteEnabled by remember { mutableStateOf(DesktopMcpPrefs.loadWriteEnabled()) }
         var screenshotDir by remember { mutableStateOf(DesktopScreenshotPrefs.loadDefaultDir()) }
         var screenshotShowToast by remember { mutableStateOf(DesktopScreenshotPrefs.loadShowToast()) }
+        var adbPath by remember { mutableStateOf(DesktopAdbPrefs.loadPath()) }
+        // Previews what the current path resolves to (custom value, else auto-detected) for the
+        // Settings status line — no side effects, unlike the live AdbLocator.configure below.
+        val adbResolvedPath = remember(adbPath) { AdbLocator.resolveWith(adbPath.ifBlank { null }) }
         val mcpServer = remember {
             AlohomoraMcpServer(
                 registry = mcpRegistry,
@@ -158,6 +167,14 @@ fun main() {
                         screenshotShowToast = show
                         DesktopScreenshotPrefs.saveShowToast(show)
                     },
+                    adbPath = adbPath,
+                    adbResolvedPath = adbResolvedPath,
+                    onAdbPathChange = { path ->
+                        adbPath = path
+                        DesktopAdbPrefs.savePath(path)
+                        AdbLocator.configure(path.ifBlank { null })
+                        sharedComposition.devicesViewModel.refreshDevices()
+                    },
                     onClearTrustTokens = { DesktopTrustPrefs.clearAll() },
                     onClearMutedEvents = { DesktopEventPrefs.clearAll() },
                     onResetPreferences = {
@@ -166,6 +183,8 @@ fun main() {
                         DesktopEventPrefs.clearAll()
                         DesktopMcpPrefs.clear()
                         DesktopScreenshotPrefs.clear()
+                        DesktopAdbPrefs.clear()
+                        AdbLocator.configure(null)
                         themeMode = ThemeMode.SYSTEM
                         themeId = "default"
                         mcpEnabled = false
@@ -173,6 +192,7 @@ fun main() {
                         mcpWriteEnabled = false
                         screenshotDir = ""
                         screenshotShowToast = true
+                        adbPath = ""
                     },
                     mcpEnabled = mcpEnabled,
                     mcpPort = mcpPort,

@@ -36,6 +36,8 @@ class AdbLocatorTest {
         } else {
             System.setProperty("alohomora.adb.path", previousProperty!!)
         }
+        // Clear any Settings override a test set, so it can't leak into the next one.
+        AdbLocator.configure(null)
         AdbLocator.reset()
         tempDir.deleteRecursively()
     }
@@ -113,6 +115,44 @@ class AdbLocatorTest {
         assertEquals(adb.absolutePath, AdbLocator.find())
 
         AdbLocator.reset()
+        assertTrue(AdbLocator.find() != adb.absolutePath || adb.exists())
+    }
+
+    @Test
+    fun `configured path from settings takes priority`() {
+        val adb = fakeAdb()
+        AdbLocator.configure(adb.absolutePath)
+
+        assertEquals(adb.absolutePath, AdbLocator.find())
+    }
+
+    @Test
+    fun `resolveWith accepts a platform-tools directory`() {
+        val platformTools = File(tempDir, "platform-tools").apply { mkdirs() }
+        val adb = File(platformTools, "adb").apply {
+            writeText("#!/bin/sh\nexit 0\n")
+            setExecutable(true)
+        }
+
+        assertEquals(adb.absolutePath, AdbLocator.resolveWith(platformTools.absolutePath))
+    }
+
+    @Test
+    fun `resolveWith accepts an sdk root`() {
+        val platformTools = File(tempDir, "sdk/platform-tools").apply { mkdirs() }
+        val adb = File(platformTools, "adb").apply {
+            writeText("#!/bin/sh\nexit 0\n")
+            setExecutable(true)
+        }
+
+        assertEquals(adb.absolutePath, AdbLocator.resolveWith(File(tempDir, "sdk").absolutePath))
+    }
+
+    @Test
+    fun `resolveWith is side-effect-free and does not populate the cache`() {
+        val adb = fakeAdb()
+        assertEquals(adb.absolutePath, AdbLocator.resolveWith(adb.absolutePath))
+        // find() still resolves independently (no override set), so the preview did not leak.
         assertTrue(AdbLocator.find() != adb.absolutePath || adb.exists())
     }
 }

@@ -53,6 +53,7 @@ import io.github.yashkasera.alohomora.desktop.mcp.McpClient
 import io.github.yashkasera.alohomora.desktop.mcp.McpClientConfig
 import io.github.yashkasera.alohomora.desktop.mcp.McpServerStatus
 import io.github.yashkasera.alohomora.desktop.util.pickDirectory
+import io.github.yashkasera.alohomora.desktop.util.pickLoadPath
 import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
@@ -63,6 +64,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraSwitch
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraToggleItem
+import io.github.yashkasera.alohomora.ui.icons.Android
 import io.github.yashkasera.alohomora.ui.icons.Check
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Database
@@ -88,6 +90,9 @@ fun SettingsDialog(
     screenshotShowToast: Boolean,
     onScreenshotDirChange: (String) -> Unit,
     onScreenshotShowToastChange: (Boolean) -> Unit,
+    adbPath: String,
+    adbResolvedPath: String?,
+    onAdbPathChange: (String) -> Unit,
     onClearTrustTokens: () -> Unit,
     onClearMutedEvents: () -> Unit,
     onResetPreferences: () -> Unit,
@@ -216,6 +221,12 @@ fun SettingsDialog(
                                 screenshotShowToast = screenshotShowToast,
                                 onScreenshotDirChange = onScreenshotDirChange,
                                 onScreenshotShowToastChange = onScreenshotShowToastChange,
+                            )
+
+                            SettingsSection.ADB -> AdbSection(
+                                adbPath = adbPath,
+                                resolvedPath = adbResolvedPath,
+                                onAdbPathChange = onAdbPathChange,
                             )
 
                             SettingsSection.MCP -> McpServerSection(
@@ -411,8 +422,121 @@ private fun LabeledCopyBlock(label: String, content: String) {
 private enum class SettingsSection(val label: String, val icon: ImageVector) {
     APPEARANCE("Appearance", Icons.SlidersHorizontal),
     GENERAL("General", Icons.Settings),
+    ADB("ADB", Icons.Android),
     MCP("MCP server", Icons.Server),
     DATA("Data", Icons.Database),
+}
+
+private const val PLATFORM_TOOLS_URL = "https://developer.android.com/tools/releases/platform-tools"
+
+@Composable
+private fun AdbSection(
+    adbPath: String,
+    resolvedPath: String?,
+    onAdbPathChange: (String) -> Unit,
+) {
+    Text(
+        text = "Alohomora uses the Android Debug Bridge (adb) to talk to devices. It is found " +
+            "automatically from ANDROID_HOME, the usual SDK locations, and your PATH. Set a path " +
+            "here if it can't be found — common for the installed app, which has no shell PATH.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+
+    // Status: reflects the live path being previewed (custom value, else auto-detected).
+    val found = resolvedPath != null
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+    ) {
+        Icon(
+            imageVector = if (found) Icons.Check else Icons.X,
+            contentDescription = null,
+            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+            tint = if (found) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+        )
+        Text(
+            text = if (found) "adb found" else "adb not found",
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (found) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+        )
+    }
+    if (resolvedPath != null) {
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
+        Text(
+            text = resolvedPath,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+
+    Text(
+        text = "Custom adb path",
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
+    Text(
+        text = "Point at the adb binary, its platform-tools folder, or an SDK root.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AlohomoraTextField(
+            value = adbPath,
+            onValueChange = onAdbPathChange,
+            placeholder = "Auto-detect",
+            singleLine = true,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+        AlohomoraTextButton(
+            text = "Browse",
+            onClick = {
+                val picked = pickLoadPath("Select the adb executable")
+                if (picked != null) onAdbPathChange(picked)
+            },
+        )
+        if (adbPath.isNotBlank()) {
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.xs))
+            AlohomoraTextButton(
+                text = "Clear",
+                onClick = { onAdbPathChange("") },
+                contentColor = MaterialTheme.colorScheme.error,
+            )
+        }
+    }
+
+    if (!found) {
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xl))
+        AlohomoraHorizontalDivider()
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xl))
+
+        Text(
+            text = "Install adb",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+        Text(
+            text = "1. Download the Android SDK Platform-Tools for your OS.\n" +
+                "2. Unzip it somewhere permanent (e.g. your home folder).\n" +
+                "3. Set the path above to the unzipped platform-tools folder (or the adb binary " +
+                "inside it) — or add it to your PATH / set ANDROID_HOME and reopen the app.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+        LabeledCopyBlock(label = "Download", content = PLATFORM_TOOLS_URL)
+    }
 }
 
 @Composable
