@@ -77,7 +77,7 @@ class CacheScreenTest {
 
         compose.launchConsole(Routes.Cache)
 
-        compose.onNode(hasText("Keys Found", substring = true) and inFooter())
+        compose.onNode(hasText("keys (", substring = true) and inFooter())
             .assertIsDisplayed()
     }
 
@@ -90,7 +90,7 @@ class CacheScreenTest {
         compose.waitForIdle()
 
         // Absolute totals are not assertable — the host app may have its own preference files —
-        // so this pins the filtered half of "N of M Keys Found", which the fixture does control.
+        // so this pins the filtered half of "N of M keys (size)", which the fixture does control.
         compose.onNode(hasText("1 of ", substring = true) and inFooter())
             .assertIsDisplayed()
     }
