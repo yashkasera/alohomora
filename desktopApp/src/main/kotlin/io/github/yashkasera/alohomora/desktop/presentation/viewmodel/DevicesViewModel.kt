@@ -587,6 +587,14 @@ class DevicesViewModel(
                 deviceId, listOf("shell", "settings", "get", "global", "always_finish_activities"),
             ).stdout.trim() == "1"
 
+            // A plugged-in-type bitmask (1 AC | 2 USB | 4 wireless | 8 dock), not a boolean —
+            // any non-zero value means the screen stays awake on some charger.
+            val stayAwake = (
+                repository.runCommandBlocking(
+                    deviceId, listOf("shell", "settings", "get", "global", "stay_on_while_plugged_in"),
+                ).stdout.trim().toIntOrNull() ?: 0
+                ) != 0
+
             val fontScale = repository.runCommandBlocking(
                 deviceId, listOf("shell", "settings", "get", "system", "font_scale"),
             ).stdout.trim().toFloatOrNull() ?: 1.0f
@@ -597,6 +605,7 @@ class DevicesViewModel(
                 animationsDisabled = animationsDisabled,
                 darkMode = darkMode,
                 dontKeepActivities = dontKeep,
+                stayAwake = stayAwake,
                 fontScale = fontScale,
                 isLoading = false,
             )
@@ -676,6 +685,21 @@ class DevicesViewModel(
             runLoggedBlocking(
                 deviceId,
                 listOf("shell", "settings", "put", "global", "always_finish_activities", newVal),
+            )
+        }
+    }
+
+    fun toggleStayAwake(deviceId: String?) {
+        if (deviceId.isNullOrBlank()) return
+        scope.launch {
+            val current = _developerOptionsState.value.stayAwake == true
+            _developerOptionsState.value =
+                _developerOptionsState.value.copy(stayAwake = !current)
+            // 7 = AC | USB | wireless — what the device's own Developer Options checkbox sets.
+            val newVal = if (current) "0" else "7"
+            runLoggedBlocking(
+                deviceId,
+                listOf("shell", "settings", "put", "global", "stay_on_while_plugged_in", newVal),
             )
         }
     }

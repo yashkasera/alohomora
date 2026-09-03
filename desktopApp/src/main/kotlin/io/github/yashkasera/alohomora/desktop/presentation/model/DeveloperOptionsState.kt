@@ -6,6 +6,7 @@ data class DeveloperOptionsState(
     val animationsDisabled: Boolean? = null,
     val darkMode: DarkModeOption? = null,
     val dontKeepActivities: Boolean? = null,
+    val stayAwake: Boolean? = null,
     val fontScale: Float? = null,
     val isLoading: Boolean = false,
 )
