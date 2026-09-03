@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -25,7 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.graphics.shapes.RoundedPolygon
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.InternalPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
@@ -52,6 +55,7 @@ internal data class OverviewModule(
     val title: String,
     val subtitle: String,
     val icon: ImageVector,
+    val iconBg: RoundedPolygon,
     val isInverse: Boolean,
     val route: Routes,
 )
@@ -78,6 +82,7 @@ private fun CustomScreenPlugin.toOverviewModule() = OverviewModule(
     isInverse = false,
     route = Routes.Extension(extensionId = id),
     icon = icon ?: Icons.Layers,
+    iconBg = MaterialShapes.PuffyDiamond
 )
 
 /**
@@ -100,12 +105,14 @@ internal val builtInModules = listOf(
         title = "Traffic",
         subtitle = "LIVE STREAM",
         icon = Icons.Route,
+        iconBg = MaterialShapes.Ghostish,
         isInverse = true,
         route = Routes.Traffic,
     ),
     OverviewModule(
         title = "Traces",
         subtitle = "SPANS & LATENCY",
+        iconBg = MaterialShapes.Clover4Leaf,
         icon = Icons.Waypoints,
         isInverse = false,
         route = Routes.Traces,
@@ -113,6 +120,7 @@ internal val builtInModules = listOf(
     OverviewModule(
         title = "Database",
         subtitle = "INSPECTOR",
+        iconBg = MaterialShapes.Gem,
         icon = Icons.Database,
         isInverse = false,
         route = Routes.Database,
@@ -120,6 +128,7 @@ internal val builtInModules = listOf(
     OverviewModule(
         title = "Errors",
         subtitle = "CRITICAL LOGS",
+        iconBg = MaterialShapes.Cookie9Sided,
         icon = Icons.AlertTriangle,
         isInverse = false,
         route = Routes.Error,
@@ -127,6 +136,7 @@ internal val builtInModules = listOf(
     OverviewModule(
         title = "Cache",
         subtitle = "KEY-VALUE STORE",
+        iconBg = MaterialShapes.PuffyDiamond,
         icon = Icons.Key,
         isInverse = false,
         route = Routes.Cache,
@@ -134,6 +144,7 @@ internal val builtInModules = listOf(
     OverviewModule(
         title = "Events",
         subtitle = "SYSTEM TRIGGERS",
+        iconBg = MaterialShapes.Clover4Leaf,
         icon = Icons.Activity,
         isInverse = true,
         route = Routes.Events,
@@ -141,6 +152,7 @@ internal val builtInModules = listOf(
     OverviewModule(
         title = "Feature Flags",
         subtitle = "FLAGS & CONFIG",
+        iconBg = MaterialShapes.Bun,
         icon = Icons.ToggleLeft,
         isInverse = false,
         route = Routes.FeatureFlags,
@@ -148,6 +160,7 @@ internal val builtInModules = listOf(
     OverviewModule(
         title = "Config",
         subtitle = "BUILD SETTINGS",
+        iconBg = MaterialShapes.Pill,
         icon = Icons.SlidersHorizontal,
         isInverse = false,
         route = Routes.Config,
@@ -155,6 +168,7 @@ internal val builtInModules = listOf(
     OverviewModule(
         title = "Git History",
         subtitle = "COMMIT HISTORY",
+        iconBg = MaterialShapes.Clover4Leaf,
         icon = Icons.GitGraph,
         isInverse = false,
         route = Routes.GitHistory,
@@ -200,7 +214,7 @@ internal fun OverviewScreen(
             state = lazyGridState,
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                OverviewHeader()
+                OverviewHeader(config = AlohomoraImpl.config)
             }
             item(span = { GridItemSpan(maxLineSpan) }) {
                 SectionHeader("SERVER STATUS")

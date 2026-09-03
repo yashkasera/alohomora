@@ -17,11 +17,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.AlohomoraImpl
+import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
+import io.github.yashkasera.alohomora.data.model.GitHistoryCommit
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.icons.AlohomoraFull
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
+import kotlin.time.Clock
 
 /**
  * Scrolls away with the grid rather than pinning as a top bar — the hero status card carries all
@@ -31,7 +34,10 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
  * so config is null in the library's own device tests.
  */
 @Composable
-internal fun OverviewHeader(modifier: Modifier = Modifier) {
+internal fun OverviewHeader(
+    modifier: Modifier = Modifier,
+    config: AlohomoraConfig? = null,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -42,7 +48,7 @@ internal fun OverviewHeader(modifier: Modifier = Modifier) {
             modifier = Modifier.width(180.dp),
             contentDescription = null,
         )
-        AlohomoraImpl.config?.let { config ->
+        config?.let { config ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -77,7 +83,34 @@ private fun OverviewHeaderPreview() {
             Column(modifier = Modifier.padding(MaterialTheme.dimens.margin.xl)) {
                 // Config is process-global, so the preview shows whatever the host provides —
                 // typically the config-null variant (wordmark only) in the library itself.
-                OverviewHeader()
+                OverviewHeader(
+                    config = object : AlohomoraConfig {
+                        override val packageName: String
+                            get() = ""
+                        override val versionName: String
+                            get() = "1.0.0"
+                        override val versionCode: Int
+                            get() = 1000
+                        override val variantName: String
+                            get() = ""
+                        override val flavorName: String?
+                            get() = ""
+                        override val buildType: String?
+                            get() = ""
+                        override val branch: String
+                            get() = ""
+                        override val commitSha: String
+                            get() = ""
+                        override val isDirty: Boolean
+                            get() = false
+                        override val buildTimestampUtc: Long
+                            get() = Clock.System.now().epochSeconds
+                        override val slackWebhookUrl: String?
+                            get() = ""
+                        override val commits: List<GitHistoryCommit>
+                            get() = emptyList()
+                    }
+                )
             }
         }
     }

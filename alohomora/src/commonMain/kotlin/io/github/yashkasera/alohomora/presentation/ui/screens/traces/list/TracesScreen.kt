@@ -15,10 +15,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -174,7 +176,7 @@ private fun TraceRowItem(trace: TraceSummary, modifier: Modifier = Modifier, onC
             Box(
                 modifier = Modifier
                     .size(MaterialTheme.dimens.icon.xl)
-                    .background(iconTint.copy(alpha = 0.12f), CircleShape),
+                    .background(iconTint.copy(alpha = 0.12f), MaterialShapes.Clover4Leaf.toShape()),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(

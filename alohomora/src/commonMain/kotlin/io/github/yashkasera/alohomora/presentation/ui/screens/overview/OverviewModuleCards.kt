@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -165,7 +164,7 @@ private fun FeaturedModuleCard(
                         .size(MaterialTheme.dimens.margin.huge)
                         .background(
                             contentColor.copy(alpha = 0.12f),
-                            MaterialShapes.Cookie6Sided.toShape(),
+                            overviewModule.iconBg.toShape(),
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -242,7 +241,7 @@ private fun StandardModuleCard(
                 Box(
                     modifier = Modifier
                         .size(MaterialTheme.dimens.icon.xl)
-                        .background(iconTint.copy(alpha = 0.12f), CircleShape),
+                        .background(iconTint.copy(alpha = 0.12f), overviewModule.iconBg.toShape()),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -293,6 +292,7 @@ private fun ModuleCardsPreview() {
                         icon = Icons.Route,
                         isInverse = true,
                         route = Routes.Traffic,
+                        iconBg = MaterialShapes.Ghostish
                     ),
                     onNavigate = {},
                     count = 128,
@@ -304,6 +304,7 @@ private fun ModuleCardsPreview() {
                         icon = Icons.Activity,
                         isInverse = true,
                         route = Routes.Events,
+                        iconBg = MaterialShapes.VerySunny
                     ),
                     onNavigate = {},
                     // A zero count hides the badge.
