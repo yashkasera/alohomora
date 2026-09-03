@@ -7,7 +7,6 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags.ReplaySheet
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags.Traffic
@@ -57,19 +56,15 @@ class ReplayE2ETest : ShowcaseE2ETest() {
         openCapturedPostsRequest()
 
         compose.onNodeWithTag(TrafficDetails.REPLAY).performClick()
-        compose.awaitText(REPLAY_SHEET_TITLE)
+        compose.awaitTag(ReplaySheet.ROOT)
 
-        // Send sits below a 220dp body editor, so on a phone it starts off-screen. Scroll the
-        // sheet's own container to it rather than calling `performScrollTo` on the button:
-        // the sheet is a ModalBottomSheet, whose drag semantics sit between the button and the
-        // `verticalScroll` Column, and `performScrollTo` resolves the wrong ancestor.
-        compose.onNodeWithTag(ReplaySheet.ROOT)
-            .performScrollToNode(hasTestTag(ReplaySheet.SEND))
+        // Send lives in the replay screen's sticky bottom bar, so it is always on screen — no
+        // scrolling required.
         compose.onNodeWithTag(ReplaySheet.SEND).performClick()
 
-        // The sheet closing is the success signal, and the strongest one available until the
-        // `replayOf` stamp is fixed: `TrafficDetailsViewModel.replay` keeps the sheet open on
-        // `ReplayOutcome.Failed` so the user's edits survive the mistake, so a closed sheet means
+        // The editor leaving composition is the success signal, and the strongest one available
+        // until the `replayOf` stamp is fixed: `ReplayViewModel` keeps the screen open on
+        // `ReplayOutcome.Failed` so the user's edits survive the mistake, so a closed editor means
         // the request really went out through the app's own client and came back.
         compose.awaitNoTag(ReplaySheet.ROOT, NETWORK_TIMEOUT_MILLIS)
     }
@@ -98,9 +93,5 @@ class ReplayE2ETest : ShowcaseE2ETest() {
         // there are two identical successful fetches and `onNode` would fail on the ambiguity.
         compose.onAllNodes(row).onFirst().performClick()
         compose.awaitTag(TrafficDetails.ROOT)
-    }
-
-    private companion object {
-        const val REPLAY_SHEET_TITLE = "Replay request"
     }
 }

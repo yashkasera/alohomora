@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -172,6 +174,7 @@ private fun FeatureFlagsList(flags: List<FeatureFlag>) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FeatureFlagItem(
     flag: FeatureFlag,
@@ -253,9 +256,12 @@ private fun FeatureFlagItem(
                 val hasChips = flag.type != null || flag.source != null
                 if (hasChips) {
                     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-                    Row(
+                    // FlowRow, not Row: a long source name ("Firebase Remote Config") must drop to
+                    // its own line as an intact chip rather than squeeze and ellipsize beside the
+                    // type chip.
+                    FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
                     ) {
                         flag.type?.let { type -> AlohomoraChip(label = type) }
                         flag.source?.let { source -> AlohomoraChip(label = source) }

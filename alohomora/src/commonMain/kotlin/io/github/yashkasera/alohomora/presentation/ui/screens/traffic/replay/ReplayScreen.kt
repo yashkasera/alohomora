@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,12 +26,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,11 +43,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.replay.ReplayBlockedReason
+import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -59,6 +65,7 @@ import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.Repeat
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
@@ -112,35 +119,20 @@ private fun ReplayScreenContent(
                         Icon(Icons.ArrowLeft, contentDescription = "back")
                     }
                 },
-                actions = {
-                    if (!state.isLoading && state.blockedReason == null) {
-                        AlohomoraFilledButton(
-                            text = if (state.isReplaying) "Sending…" else "Send",
-                            onClick = onSend,
-                            enabled = !state.isReplaying
-                                && state.url.isNotBlank()
-                                && state.method.isNotBlank(),
-                            leadingIcon = if (state.isReplaying) {
-                                {
-                                    AlohomoraCircularProgressIndicator(
-                                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
-                                        strokeWidth = MaterialTheme.dimens.stroke.medium,
-                                    )
-                                }
-                            } else {
-                                {
-                                    Icon(
-                                        Icons.Play,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
-                                    )
-                                }
-                            },
-                        )
-                        Spacer(Modifier.width(MaterialTheme.dimens.margin.sm))
-                    }
-                },
             )
+        },
+        bottomBar = {
+            // `sourceTrace != null` keeps Send off the "Traffic entry not found" state, where the
+            // old top-bar button still rendered with nothing to send.
+            if (!state.isLoading && state.blockedReason == null && state.sourceTrace != null) {
+                SendBar(
+                    isReplaying = state.isReplaying,
+                    enabled = !state.isReplaying
+                        && state.url.isNotBlank()
+                        && state.method.isNotBlank(),
+                    onSend = onSend,
+                )
+            }
         },
     ) { padding ->
         when {
@@ -180,6 +172,54 @@ private fun ReplayScreenContent(
     }
 }
 
+/**
+ * Sticky bottom Send bar. A `bottomBar` rather than a content overlay so the Scaffold reserves its
+ * height — the field-heavy editor can never scroll beneath it — and `imePadding` keeps it riding
+ * above the keyboard.
+ */
+@Composable
+private fun SendBar(
+    isReplaying: Boolean,
+    enabled: Boolean,
+    onSend: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .navigationBarsPadding()
+            .imePadding()
+            .padding(horizontal = MaterialTheme.dimens.margin.lg)
+            .padding(vertical = MaterialTheme.dimens.margin.md),
+    ) {
+        AlohomoraFilledButton(
+            text = if (isReplaying) "Sending…" else "Send",
+            onClick = onSend,
+            enabled = enabled,
+            size = AlohomoraButtonSize.LARGE,
+            leadingIcon = if (isReplaying) {
+                {
+                    AlohomoraCircularProgressIndicator(
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                        strokeWidth = MaterialTheme.dimens.stroke.medium,
+                    )
+                }
+            } else {
+                {
+                    Icon(
+                        Icons.Play,
+                        contentDescription = null,
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                    )
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(AlohomoraTestTags.ReplaySheet.SEND),
+        )
+    }
+}
+
 @Composable
 private fun BlockedContent(
     reason: ReplayBlockedReason,
@@ -202,7 +242,7 @@ private fun BlockedContent(
                 Box(
                     modifier = Modifier
                         .size(MaterialTheme.dimens.icon.xl)
-                        .clip(CircleShape)
+                        .clip(MaterialShapes.Cookie9Sided.toShape())
                         .background(MaterialTheme.colorScheme.error),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -253,6 +293,7 @@ private fun EditorContent(
 
     Column(
         modifier = modifier
+            .testTag(AlohomoraTestTags.ReplaySheet.ROOT)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = MaterialTheme.dimens.margin.lg),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
@@ -293,39 +334,28 @@ private fun EditorContent(
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
-                    state.sourceTrace?.let { trace ->
-                        trace.host?.let { host ->
-                            AlohomoraChip(
-                                label = host,
-                                uppercase = false,
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
                 }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    AlohomoraTextField(
-                        value = state.method,
-                        onValueChange = onMethodChange,
-                        label = "Method",
-                        singleLine = true,
-                        enabled = !state.isReplaying,
-                        modifier = Modifier.width(110.dp),
-                    )
-                    AlohomoraTextField(
-                        value = state.url,
-                        onValueChange = onUrlChange,
-                        label = "URL",
-                        singleLine = true,
-                        enabled = !state.isReplaying,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+                AlohomoraTextField(
+                    value = state.method,
+                    onValueChange = onMethodChange,
+                    label = "Method",
+                    singleLine = true,
+                    enabled = !state.isReplaying,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(AlohomoraTestTags.ReplaySheet.METHOD),
+                )
+                AlohomoraTextField(
+                    value = state.url,
+                    onValueChange = onUrlChange,
+                    label = "URL",
+                    singleLine = false,
+                    enabled = !state.isReplaying,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(AlohomoraTestTags.ReplaySheet.URL),
+                )
             }
         }
 
@@ -339,7 +369,7 @@ private fun EditorContent(
             enabled = !state.isReplaying,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 80.dp),
+                .testTag(AlohomoraTestTags.ReplaySheet.HEADERS),
         )
 
         // Body section
@@ -373,13 +403,15 @@ private fun EditorContent(
         }
 
         when (bodyMode) {
+            // Only one body editor composes at a time, so the shared BODY tag is unambiguous.
             BodyMode.JSON -> JsonEditor(
                 state = jsonBodyState,
                 readOnly = state.isReplaying,
                 minLines = 8,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp),
+                    .height(280.dp)
+                    .testTag(AlohomoraTestTags.ReplaySheet.BODY),
             )
 
             BodyMode.TEXT -> AlohomoraTextField(
@@ -393,7 +425,8 @@ private fun EditorContent(
                 enabled = !state.isReplaying,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 160.dp),
+                    .heightIn(min = 160.dp)
+                    .testTag(AlohomoraTestTags.ReplaySheet.BODY),
             )
         }
 
@@ -409,6 +442,7 @@ private fun EditorContent(
                     containerColor = MaterialTheme.colorScheme.errorContainer,
                     contentColor = MaterialTheme.colorScheme.onErrorContainer,
                 ),
+                modifier = Modifier.testTag(AlohomoraTestTags.ReplaySheet.ERROR),
             ) {
                 Row(
                     modifier = Modifier.padding(MaterialTheme.dimens.margin.lg),
@@ -428,8 +462,8 @@ private fun EditorContent(
             }
         }
 
-        // Bottom spacer for scroll room
-        Spacer(Modifier.height(MaterialTheme.dimens.margin.huge))
+        // The bottomBar reserves its own height, so only a modest trailing gap is needed.
+        Spacer(Modifier.height(MaterialTheme.dimens.margin.lg))
     }
 }
 
@@ -490,6 +524,30 @@ private fun ReplayErrorPreview() {
                 headers = "",
                 body = "",
                 replayError = "Connection refused: host unreachable",
+            ),
+            onBackClick = {},
+            onMethodChange = {},
+            onUrlChange = {},
+            onHeadersChange = {},
+            onBodyChange = {},
+            onSend = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ReplaySendingPreview() {
+    AppTheme {
+        ReplayScreenContent(
+            state = ReplayState(
+                isLoading = false,
+                sourceTrace = previewTrace,
+                method = "POST",
+                url = "https://api.example.com/v2/users/profile",
+                headers = "Accept: application/json",
+                body = "{}",
+                isReplaying = true,
             ),
             onBackClick = {},
             onMethodChange = {},
