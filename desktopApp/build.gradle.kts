@@ -85,7 +85,7 @@ compose.desktop {
         )
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Pkg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Alohomora"
             packageVersion = desktopVersion
 
@@ -100,7 +100,6 @@ compose.desktop {
                 bundleID = "io.github.yashkasera.alohomora.AlohomoraApp"
             }
         }
-
         buildTypes.release.proguard {
             configurationFiles.from(project.file("proguard-rules.pro"))
         }
