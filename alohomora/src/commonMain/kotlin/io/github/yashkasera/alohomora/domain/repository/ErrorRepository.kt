@@ -8,4 +8,6 @@ internal interface ErrorRepository : Repository<Error, Long> {
     suspend fun delete(error: Error)
 
     fun observeUnviewed(limit: Int = 50): Flow<List<Error>>
+
+    fun count(query: String = ""): Flow<Long>
 }

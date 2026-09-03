@@ -9,6 +9,7 @@ import io.github.yashkasera.alohomora.devtools.DevToolsDefaults
 import io.github.yashkasera.alohomora.devtools.DevToolsRuntime
 import io.github.yashkasera.alohomora.devtools.NetworkRuleEngine
 import io.github.yashkasera.alohomora.domain.repository.ErrorRepository
+import io.github.yashkasera.alohomora.domain.repository.EventsRepository
 import io.github.yashkasera.alohomora.domain.repository.TrafficRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +28,9 @@ internal data class OverviewState(
     val rememberDevice: Boolean = false,
     val attentionItems: List<AttentionItem> = emptyList(),
     val activeMockRuleCount: Int = 0,
+    val trafficCount: Long = 0L,
+    val errorCount: Long = 0L,
+    val eventCount: Long = 0L,
 )
 
 internal sealed class OverviewEvent {
@@ -40,6 +44,7 @@ internal class OverviewViewModel(
     private val devToolsRuntime: DevToolsRuntime,
     private val errorRepository: ErrorRepository,
     private val trafficRepository: TrafficRepository,
+    private val eventsRepository: EventsRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(OverviewState())
@@ -77,6 +82,21 @@ internal class OverviewViewModel(
         viewModelScope.launch {
             NetworkRuleEngine.activeRuleCount.collect { count ->
                 _state.value = _state.value.copy(activeMockRuleCount = count)
+            }
+        }
+        viewModelScope.launch {
+            combine(
+                trafficRepository.count(),
+                errorRepository.count(),
+                eventsRepository.count(),
+            ) { traffic, errors, events ->
+                Triple(traffic, errors, events)
+            }.collect { (traffic, errors, events) ->
+                _state.value = _state.value.copy(
+                    trafficCount = traffic,
+                    errorCount = errors,
+                    eventCount = events,
+                )
             }
         }
     }

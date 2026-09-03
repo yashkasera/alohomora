@@ -106,9 +106,13 @@ Semantic status colours come from the extension `MaterialTheme.alohomoraColors`:
 |--------------------------------|--------------------------------------|
 | `accent`                       | brand/interactive accent             |
 | `success` / `successContainer` | success state + its low-opacity fill |
-| `warning`                      | warning state                        |
+| `warning` / `warningContainer` | warning state + its low-opacity fill |
 | `info`                         | informational state                  |
 | `fatal`                        | fatal error / crash accent           |
+
+`warningContainer` defaults to `warning` at 12% alpha (the `successContainer` recipe), so content
+on it keeps the `onSurface`/`onSurfaceVariant` contract — never pair a solid `warning` fill with
+`inverseOnSurface` text.
 
 Also on the theme object: `id`, `displayName`, `isDark`, `materialColorScheme`.
 
@@ -304,7 +308,11 @@ Pair with `Modifier`-side `fabClearanceItem()` (below) so the last list row isn'
 - `MethodBadge(method)` — `AlohomoraMethodBadge.kt`. HTTP-method badge.
 - `ConnectionStatusDot(state)` — `ConnectionStatusDot.kt`. Animated status dot
   (`ConnectionDotState.{Connected, Disconnected, Reconnecting}`).
-- `NeedsAttentionPager(items, …)` — `NeedsAttentionPager.kt`. Error/failed-traffic pager.
+- `NeedsAttentionPager(items, …)` — `NeedsAttentionPager.kt`. Error/failed-traffic peek-scroll
+  pager: solid `errorContainer`/`warningContainer` cards, `MaterialShapes` icon badges, page
+  indicator below.
+- `AlohomoraPageIndicator(pageCount, currentPage)` — `AlohomoraPageIndicator.kt`. Width-morphing
+  page dots (active page stretches into a pill). Renders nothing for a single page.
 
 ### List helpers — `ScrollToTop.kt`, `FabClearance.kt`
 

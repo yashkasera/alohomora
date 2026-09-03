@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -67,6 +68,7 @@ fun AlohomoraCard(
     enabled: Boolean = true,
     shape: Shape = AlohomoraCardDefaults.shape,
     colors: CardColors = AlohomoraCardDefaults.colors(),
+    interactionSource: MutableInteractionSource? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Card(
@@ -75,6 +77,7 @@ fun AlohomoraCard(
         enabled = enabled,
         shape = shape,
         colors = colors,
+        interactionSource = interactionSource,
         content = content,
     )
 }

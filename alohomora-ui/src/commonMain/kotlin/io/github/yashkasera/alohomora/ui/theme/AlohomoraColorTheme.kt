@@ -18,6 +18,9 @@ data class AlohomoraColorTheme(
     val success: Color,
     val successContainer: Color,
     val warning: Color,
+    // Same recipe as successContainer: a 12% tint of the status colour, laid over surface, so
+    // content on it keeps the onSurface/onSurfaceVariant contract in every theme.
+    val warningContainer: Color = warning.copy(alpha = 0.12f),
     val info: Color,
     val fatal: Color,
 )

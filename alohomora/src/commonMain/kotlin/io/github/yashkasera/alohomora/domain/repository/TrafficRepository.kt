@@ -20,4 +20,6 @@ internal interface TrafficRepository : Repository<TrafficEntry, String> {
     fun observeReplayOf(sourceId: String): Flow<TrafficEntry?>
 
     fun observeUnviewedFailed(limit: Int = 50): Flow<List<TrafficEntry>>
+
+    fun count(): Flow<Long>
 }
