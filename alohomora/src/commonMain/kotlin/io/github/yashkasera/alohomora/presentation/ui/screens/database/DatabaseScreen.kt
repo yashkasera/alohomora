@@ -1,7 +1,6 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.database
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,18 +13,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,17 +34,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DatabaseInfo
 import io.github.yashkasera.alohomora.common.TableData
 import io.github.yashkasera.alohomora.common.TableSchema
+import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTable
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
@@ -53,7 +55,10 @@ import io.github.yashkasera.alohomora.ui.components.TableColumn
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
 import io.github.yashkasera.alohomora.ui.icons.Check
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
+import io.github.yashkasera.alohomora.ui.icons.Database
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Key
+import io.github.yashkasera.alohomora.ui.icons.Layers
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
@@ -96,7 +101,6 @@ internal fun DatabaseScreen(
         ) {
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
-            // Database Selector - Compact
             DatabaseSelector(
                 selectedDatabase = state.selectedDatabase,
                 onClick = { viewModel.toggleDatabaseSelector(true) },
@@ -104,7 +108,6 @@ internal fun DatabaseScreen(
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
-            // Tables Section - Compact
             TablesSection(
                 tables = state.tables,
                 selectedTable = state.selectedTable,
@@ -137,55 +140,64 @@ internal fun DatabaseScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun DatabaseSelector(
     selectedDatabase: DatabaseInfo?,
     onClick: () -> Unit,
 ) {
-    Column {
-        Text(
-            text = "DATABASE",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.tertiary,
-        )
-
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
-
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.surfaceContainerHigh,
+                MaterialTheme.shapes.large,
+            )
+            .clickable(onClick = onClick)
+            .testTag(AlohomoraTestTags.Database.SELECTOR)
+            .padding(
+                horizontal = MaterialTheme.dimens.margin.md,
+                vertical = MaterialTheme.dimens.margin.sm,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
+    ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    width = MaterialTheme.dimens.stroke.small,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    shape = MaterialTheme.shapes.extraSmall,
-                )
-                .clickable(onClick = onClick)
-                .testTag(AlohomoraTestTags.Database.SELECTOR)
-                .padding(
-                    horizontal = MaterialTheme.dimens.margin.md,
-                    vertical = MaterialTheme.dimens.margin.sm,
+                .size(MaterialTheme.dimens.icon.xl)
+                .background(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    MaterialShapes.Cookie6Sided.toShape(),
                 ),
+            contentAlignment = Alignment.Center,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = selectedDatabase?.name ?: "Select Database",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontStyle = FontStyle.Italic,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Icon(
-                    imageVector = Icons.ChevronDown,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
-                )
-            }
+            Icon(
+                imageVector = Icons.Database,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+            )
         }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "DATABASE",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+            Text(
+                text = selectedDatabase?.name ?: "Select a database",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Icon(
+            imageVector = Icons.ChevronDown,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+        )
     }
 }
 
@@ -258,49 +270,25 @@ private fun TabsWithContent(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Tabs - Compact
-        Row(
+        AlohomoraPrimaryTabRow(
+            selectedTabIndex = pagerState.currentPage,
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag(AlohomoraTestTags.Database.TABS),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xxl),
         ) {
             tabs.forEachIndexed { index, tab ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .testTag(AlohomoraTestTags.Database.tab(tab))
-                        .clickable {
-                            scope.launch { pagerState.animateScrollToPage(index) }
-                        },
-                ) {
-                    Text(
-                        text = tab,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (pagerState.currentPage == index) {
-                            MaterialTheme.colorScheme.onBackground
-                        } else {
-                            MaterialTheme.colorScheme.tertiary
-                        },
-                    )
-                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
-                    if (pagerState.currentPage == index) {
-                        Box(
-                            modifier = Modifier
-                                .width(MaterialTheme.dimens.margin.xxl)
-                                .height(MaterialTheme.dimens.stroke.medium)
-                                .background(MaterialTheme.colorScheme.onBackground),
-                        )
-                    }
-                }
+                AlohomoraTab(
+                    selected = pagerState.currentPage == index,
+                    onClick = {
+                        scope.launch { pagerState.animateScrollToPage(index) }
+                    },
+                    text = tab,
+                    modifier = Modifier.testTag(AlohomoraTestTags.Database.tab(tab)),
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-
-        AlohomoraHorizontalDivider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
-
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
         HorizontalPager(
             state = pagerState,
@@ -336,7 +324,11 @@ private fun BrowseTabContent(tableData: TableData?) {
                 .testTag(AlohomoraTestTags.Database.BROWSE),
             contentAlignment = Alignment.Center,
         ) {
-            Text("No data available", style = MaterialTheme.typography.bodyMedium)
+            EmptyState(
+                icon = Icons.Database,
+                title = "No data",
+                subtitle = "Select a table to browse its rows.",
+            )
         }
     }
 }
@@ -350,62 +342,49 @@ private fun QueryTabContent(
     queryStatus: QueryStatus?,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // Query Input - Compact
-        Box(
+        // Query editor
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.35f)
-                .border(
-                    width = MaterialTheme.dimens.stroke.small,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
-                    shape = MaterialTheme.shapes.extraSmall,
+                .background(
+                    MaterialTheme.colorScheme.surfaceContainerLow,
+                    MaterialTheme.shapes.large,
                 )
-                .padding(MaterialTheme.dimens.margin.sm),
+                .padding(MaterialTheme.dimens.margin.md),
         ) {
-            Column {
-                AlohomoraTextField(
-                    value = queryText,
-                    onValueChange = onQueryTextChanged,
-                    modifier = Modifier.fillMaxWidth().weight(1f)
-                        .testTag(AlohomoraTestTags.Database.QUERY_EDITOR),
-                    textStyle = MaterialTheme.typography.bodySmall.copy(
-                    ),
-                    singleLine = false,
-                    containerColor = Color.Transparent,
-                    borderColor = Color.Transparent,
-                    focusedBorderColor = Color.Transparent,
+            AlohomoraTextField(
+                value = queryText,
+                onValueChange = onQueryTextChanged,
+                placeholder = "SELECT * FROM …",
+                modifier = Modifier.fillMaxWidth().weight(1f)
+                    .testTag(AlohomoraTestTags.Database.QUERY_EDITOR),
+                textStyle = MaterialTheme.typography.bodySmall,
+                singleLine = false,
+                containerColor = Color.Transparent,
+                borderColor = Color.Transparent,
+                focusedBorderColor = Color.Transparent,
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AlohomoraChip(label = "SQLite")
+
+                AlohomoraFilledButton(
+                    text = "Run",
+                    onClick = onRunQuery,
+                    modifier = Modifier.testTag(AlohomoraTestTags.Database.QUERY_RUN),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Play,
+                            contentDescription = null,
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                        )
+                    },
                 )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "SQLite",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
-
-                    AlohomoraFilledButton(
-                        onClick = onRunQuery,
-                        modifier = Modifier.testTag(AlohomoraTestTags.Database.QUERY_RUN),
-                        containerColor = MaterialTheme.colorScheme.inverseSurface,
-                        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-                        shape = MaterialTheme.shapes.extraSmall,
-                        text = "Run",
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Play,
-                                contentDescription = null,
-                                modifier = Modifier.size(MaterialTheme.dimens.icon.xs),
-                            )
-                            Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.xs))
-                            Text("RUN", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                }
             }
         }
 
@@ -422,46 +401,12 @@ private fun QueryTabContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Results",
+                    text = "RESULTS",
                     style = MaterialTheme.typography.labelSmall,
-                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.tertiary,
                 )
 
-                queryStatus?.let { status ->
-                    Surface(
-                        modifier = Modifier.testTag(AlohomoraTestTags.Database.QUERY_STATUS),
-                        color = if (status.success) {
-                            MaterialTheme.alohomoraColors.successContainer
-                        } else {
-                            MaterialTheme.colorScheme.errorContainer
-                        },
-                        shape = MaterialTheme.shapes.small,
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(
-                                horizontal = MaterialTheme.dimens.margin.sm,
-                                vertical = MaterialTheme.dimens.margin.xs,
-                            ),
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
-                        ) {
-                            Icon(
-                                imageVector = if (status.success) Icons.Check else Icons.X,
-                                contentDescription = null,
-                                modifier = Modifier.size(MaterialTheme.dimens.icon.xs),
-                                tint = if (status.success) {
-                                    MaterialTheme.alohomoraColors.success
-                                } else {
-                                    MaterialTheme.colorScheme.error
-                                },
-                            )
-                            Text(
-                                text = "${status.executionTimeMs}ms",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.tertiary,
-                            )
-                        }
-                    }
-                }
+                queryStatus?.let { status -> QueryStatusChip(status) }
             }
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
@@ -485,6 +430,38 @@ private fun QueryTabContent(
 }
 
 @Composable
+private fun QueryStatusChip(status: QueryStatus) {
+    val accent = if (status.success) {
+        MaterialTheme.alohomoraColors.success
+    } else {
+        MaterialTheme.colorScheme.error
+    }
+    Row(
+        modifier = Modifier
+            .testTag(AlohomoraTestTags.Database.QUERY_STATUS)
+            .background(accent.copy(alpha = 0.12f), MaterialTheme.shapes.small)
+            .padding(
+                horizontal = MaterialTheme.dimens.margin.sm,
+                vertical = MaterialTheme.dimens.margin.xs,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = if (status.success) Icons.Check else Icons.X,
+            contentDescription = if (status.success) "Success" else "Failed",
+            modifier = Modifier.size(MaterialTheme.dimens.icon.xs),
+            tint = accent,
+        )
+        Text(
+            text = "${status.executionTimeMs}ms",
+            style = MaterialTheme.typography.labelSmall,
+            color = accent,
+        )
+    }
+}
+
+@Composable
 private fun SchemaTabContent(tableSchema: TableSchema?) {
     if (tableSchema != null) {
         Column(
@@ -493,7 +470,6 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
                 .verticalScroll(rememberScrollState())
                 .testTag(AlohomoraTestTags.Database.SCHEMA),
         ) {
-            // Columns Section - Compact
             Text(
                 text = "COLUMNS",
                 style = MaterialTheme.typography.labelSmall,
@@ -502,43 +478,51 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
 
-            // Table-style layout for columns
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(
-                        width = MaterialTheme.dimens.stroke.small,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
-                    ),
+                    .background(
+                        MaterialTheme.colorScheme.surfaceContainerLow,
+                        MaterialTheme.shapes.large,
+                    )
+                    .padding(vertical = MaterialTheme.dimens.margin.xs),
             ) {
                 tableSchema.columns.forEachIndexed { index, column ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(
-                                if (index % 2 == 0) Color.Transparent
-                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                            )
-                            .padding(horizontal = MaterialTheme.dimens.margin.sm, vertical = 6.dp),
+                            .padding(
+                                horizontal = MaterialTheme.dimens.margin.md,
+                                vertical = MaterialTheme.dimens.margin.sm,
+                            ),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(
-                            text = column.name,
-                            style = MaterialTheme.typography.bodySmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                        Row(
                             modifier = Modifier.weight(1f),
-                        )
-                        Text(
-                            text = column.type,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.tertiary,
-                        )
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                        ) {
+                            if (column.name == tableSchema.primaryKey) {
+                                Icon(
+                                    imageVector = Icons.Key,
+                                    contentDescription = "Primary key",
+                                    tint = MaterialTheme.alohomoraColors.accent,
+                                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                                )
+                            }
+                            Text(
+                                text = column.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        AlohomoraChip(label = column.type)
                     }
                     if (index < tableSchema.columns.size - 1) {
                         AlohomoraHorizontalDivider(
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                         )
                     }
                 }
@@ -546,7 +530,6 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
-            // Primary Key - Compact
             if (tableSchema.primaryKey != null) {
                 Text(
                     text = "PRIMARY KEY",
@@ -562,7 +545,6 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
             }
 
-            // Indexes - Compact
             if (tableSchema.indexes.isNotEmpty()) {
                 Text(
                     text = "INDEXES",
@@ -589,7 +571,11 @@ private fun SchemaTabContent(tableSchema: TableSchema?) {
                 .testTag(AlohomoraTestTags.Database.SCHEMA),
             contentAlignment = Alignment.Center,
         ) {
-            Text("No schema available", style = MaterialTheme.typography.bodyMedium)
+            EmptyState(
+                icon = Icons.Layers,
+                title = "No schema available",
+                subtitle = "Select a table to inspect its columns.",
+            )
         }
     }
 }
@@ -607,7 +593,7 @@ private fun DataTableViewer(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun DatabaseSelectorBottomSheet(
     databases: List<DatabaseInfo>,
@@ -626,47 +612,77 @@ private fun DatabaseSelectorBottomSheet(
                 .testTag(AlohomoraTestTags.Database.SELECTOR_SHEET),
         ) {
             Text(
-                text = "Select Database",
+                text = "Select database",
                 style = MaterialTheme.typography.titleMedium,
-                fontStyle = FontStyle.Italic,
             )
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
             databases.forEach { database ->
-                Column(
+                val isSelected = database == selectedDatabase
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(AlohomoraTestTags.Database.database(database.name))
-                        .clickable { onDatabaseSelected(database) }
                         .background(
-                            if (database == selectedDatabase) {
-                                MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.3f)
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
                             } else {
                                 Color.Transparent
                             },
+                            MaterialTheme.shapes.medium,
                         )
-                        .padding(horizontal = MaterialTheme.dimens.margin.md, vertical = 10.dp),
+                        .clickable { onDatabaseSelected(database) }
+                        .testTag(AlohomoraTestTags.Database.database(database.name))
+                        .padding(
+                            horizontal = MaterialTheme.dimens.margin.md,
+                            vertical = MaterialTheme.dimens.margin.sm,
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
                 ) {
-                    Text(
-                        text = database.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = database.path,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(MaterialTheme.dimens.icon.xl)
+                            .background(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                MaterialShapes.Cookie6Sided.toShape(),
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Database,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = database.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = database.path,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Check,
+                            contentDescription = "Selected",
+                            tint = MaterialTheme.alohomoraColors.accent,
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                        )
+                    }
                 }
 
                 if (database != databases.last()) {
-                    AlohomoraHorizontalDivider(
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f),
-                    )
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
                 }
             }
 

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,10 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Span
@@ -136,23 +135,29 @@ internal fun TraceDetailsScreen(
             if (state.showWaterfall) {
                 WaterfallMode(state = state, viewModel = viewModel)
             } else {
-                LazyColumn(
-                    state = lazyListState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag(AlohomoraTestTags.TraceDetails.SPAN_LIST),
-                ) {
-                    items(state.rows, key = { it.span.spanId }) { row ->
-                        TraceSpanRow(
-                            row = row,
-                            window = state.window,
-                            isSelected = row.span.spanId == state.selectedSpanId,
-                            onToggleCollapse = { viewModel.toggleCollapse(row.span.spanId) },
-                            onSelect = { viewModel.selectSpan(row.span.spanId) },
-                        )
-                        AlohomoraHorizontalDivider()
+                // The lane scales with the actual viewport, so rotating to landscape buys track
+                // resolution instead of leaving a 72dp sliver beside a huge name column.
+                BoxWithConstraints(Modifier.fillMaxSize()) {
+                    val laneWidth = traceSpanLaneWidth(maxWidth)
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag(AlohomoraTestTags.TraceDetails.SPAN_LIST),
+                    ) {
+                        items(state.rows, key = { it.span.spanId }) { row ->
+                            TraceSpanRow(
+                                row = row,
+                                window = state.window,
+                                isSelected = row.span.spanId == state.selectedSpanId,
+                                onToggleCollapse = { viewModel.toggleCollapse(row.span.spanId) },
+                                onSelect = { viewModel.selectSpan(row.span.spanId) },
+                                laneWidth = laneWidth,
+                            )
+                            AlohomoraHorizontalDivider()
+                        }
+                        fabClearanceItem()
                     }
-                    fabClearanceItem()
                 }
             }
         }
@@ -229,7 +234,6 @@ private fun TraceHeader(state: TraceDetailsState) {
  */
 @Composable
 private fun WaterfallMode(state: TraceDetailsState, viewModel: TraceDetailsViewModel) {
-    val viewportWidth = LocalWindowInfo.current.containerSize.width
     Column(Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.padding(
@@ -247,24 +251,32 @@ private fun WaterfallMode(state: TraceDetailsState, viewModel: TraceDetailsViewM
                 )
             }
         }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag(AlohomoraTestTags.TraceDetails.WATERFALL)
-                .horizontalScroll(rememberScrollState()),
-        ) {
-            TraceWaterfall(
-                rows = state.rows,
-                window = state.window,
-                selectedSpanId = state.selectedSpanId,
-                // A wider name column than the desktop's 0.4: at this width a truncated span name is
-                // useless, and the horizontal scroll means the track is not competing for the space.
-                nameFraction = 0.45f,
-                onNameFractionChange = {},
-                onToggleCollapse = viewModel::toggleCollapse,
-                onSelectSpan = viewModel::selectSpan,
-                modifier = Modifier.width((viewportWidth * state.zoom).dp),
-            )
+        // BoxWithConstraints, not LocalWindowInfo: `containerSize` is in *pixels*, and feeding it
+        // to `.dp` sized the waterfall by density rather than by the space it actually has — wrong
+        // on every screen and wrong again after rotation. `maxWidth` is the real available width
+        // in dp, so 1x always fills the viewport exactly and zoom multiplies from there.
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val waterfallWidth = maxWidth * state.zoom
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(AlohomoraTestTags.TraceDetails.WATERFALL)
+                    .horizontalScroll(rememberScrollState()),
+            ) {
+                TraceWaterfall(
+                    rows = state.rows,
+                    window = state.window,
+                    selectedSpanId = state.selectedSpanId,
+                    // A wider name column than the desktop's 0.4: at this width a truncated span
+                    // name is useless, and the horizontal scroll means the track is not competing
+                    // for the space.
+                    nameFraction = 0.45f,
+                    onNameFractionChange = {},
+                    onToggleCollapse = viewModel::toggleCollapse,
+                    onSelectSpan = viewModel::selectSpan,
+                    modifier = Modifier.width(waterfallWidth),
+                )
+            }
         }
     }
 }

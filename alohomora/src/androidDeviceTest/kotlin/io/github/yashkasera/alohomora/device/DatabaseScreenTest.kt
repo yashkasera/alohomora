@@ -88,12 +88,12 @@ class DatabaseScreenTest {
     fun tabsSwitchTheContentBelowThem() {
         openFixtureDatabase()
 
-        // QUERY is the landing tab, not BROWSE — `DatabaseState.currentTab` defaults to 1.
-        compose.onNodeWithTag(Database.QUERY_RESULT).assertIsDisplayed()
-
-        compose.onNodeWithTag(Database.tab("BROWSE")).performClick()
-        compose.awaitTag(Database.BROWSE)
+        // BROWSE is the landing tab — the inspector opens on the data itself.
         compose.onNodeWithTag(Database.BROWSE).assertIsDisplayed()
+
+        compose.onNodeWithTag(Database.tab("QUERY")).performClick()
+        compose.awaitTag(Database.QUERY_RESULT)
+        compose.onNodeWithTag(Database.QUERY_RESULT).assertIsDisplayed()
 
         compose.onNodeWithTag(Database.tab("SCHEMA")).performClick()
         compose.awaitTag(Database.SCHEMA)
@@ -145,6 +145,9 @@ class DatabaseScreenTest {
     }
 
     private fun runQuery(sql: String) {
+        // BROWSE is the landing tab, so the editor only composes once QUERY is opened.
+        compose.onNodeWithTag(Database.tab("QUERY")).performClick()
+        compose.awaitTag(Database.QUERY_EDITOR)
         compose.onTextFieldIn(Database.QUERY_EDITOR).performTextInput(sql)
         compose.waitForIdle()
         compose.onNodeWithTag(Database.QUERY_RUN).performClick()
