@@ -149,19 +149,19 @@ jobs:
           fetch-depth: 0
 
       - name: Download DMG artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: Alohomora-${{ inputs.version }}.dmg
           path: dmg
 
       - name: Download PKG artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: Alohomora-${{ inputs.version }}.pkg
           path: pkg
 
       - name: Download XCFramework artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: AlohomoraKit.xcframework.zip
           path: xcframework
