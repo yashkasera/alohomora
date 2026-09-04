@@ -77,19 +77,7 @@ internal fun ConfigScreen(
 
             AlohomoraImpl.config?.let {
                 ConfigSection(title = "ENVIRONMENT") {
-                    EnvironmentDetails(
-                        environment = buildString {
-                            if (it.flavorName.isNullOrBlank().not()) {
-                                append("${it.flavorName?.lowercase()}")
-                                append(
-                                    it.variantName.lowercase()
-                                        .replaceFirstChar { variant -> variant.uppercase() },
-                                )
-                            } else {
-                                append(it.variantName)
-                            }
-                        },
-                    )
+                    EnvironmentDetails(environment = it.variantName)
                 }
             }
 
@@ -142,6 +130,27 @@ private fun BuildInfoGrid(buildConfig: BuildMetadata?) {
                 label = "Build Variant",
                 value = buildConfig?.variantName,
             )
+
+            // Only meaningful once product flavors are in play; on a flavorless build the build
+            // type equals the variant name and this row would just repeat it.
+            if (!buildConfig?.flavorName.isNullOrBlank()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    InfoItem(
+                        label = "Flavor",
+                        value = buildConfig?.flavorName,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.lg))
+                    InfoItem(
+                        label = "Build Type",
+                        value = buildConfig?.buildType,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

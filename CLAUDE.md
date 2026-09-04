@@ -94,13 +94,22 @@ metadata into a generated `AlohomoraBuildGenerationInfo.kt`. Plugin extension:
 
 ```kotlin
 alohomora {
-    enabledVariants = setOf("debug")
+    enabledBuildTypes = setOf("debug")   // generated for every <flavor>Debug variant
+    enabledFlavors = emptySet()          // empty = all flavors; narrow with e.g. setOf("free")
+    enabledVariants = emptySet()         // optional: pin exact variant names, OR'd with the above
     maxCommits = 50
     slackWebhookUrl = "..."
     versionName = project.version.toString()
     versionCode = 1
 }
 ```
+
+Enabling is gated by `AlohomoraExtension.enables(variant)`: a variant is generated for when its
+name is in `enabledVariants` **or** its `buildType` is in `enabledBuildTypes` and its `flavorName`
+passes `enabledFlavors` (empty = any). The buildType/flavor path exists because product flavors name
+the variant `<flavor><BuildType>` (e.g. `freeDebug`), so the old `enabledVariants = setOf("debug")`
+matched nothing once a flavor was added. `flavorName`/`buildType` themselves have always been
+captured from the variant and flow through `AlohomoraConfig` → `BuildMetadataPayload` → the consoles.
 
 **Only AGP's public `com.android.build.api.*` surface may be used here.** This repo pins
 `android.newDsl=false` (gradle.properties), so the legacy `com.android.build.gradle.BaseExtension`

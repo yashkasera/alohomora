@@ -92,7 +92,7 @@ dependencies {
 }
 
 alohomora {
-    enabledVariants = setOf("debug")
+    enabledBuildTypes = setOf("debug")
     maxCommits = 50
     slackWebhookUrl = providers.gradleProperty("SLACK_TOKEN").orNull
     versionName = project.version.toString()
