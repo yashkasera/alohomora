@@ -35,7 +35,7 @@ class AlohomoraPlugin : Plugin<Project> {
             project.extensions.getByType(AndroidComponentsExtension::class.java)
 
         androidComponents.onVariants { variant ->
-            if (!extension.enabledVariants.contains(variant.name)) {
+            if (!extension.enables(variant)) {
                 println("Skipping Alohomora for ${variant.name}")
                 configureReleaseVerification(project, androidComponents, variant)
                 return@onVariants
@@ -115,6 +115,21 @@ class AlohomoraPlugin : Plugin<Project> {
                 GenerateDevIconTask::outputDir,
             )
         }
+    }
+
+    /**
+     * A variant is generated for when it is named explicitly in [AlohomoraExtension.enabledVariants],
+     * or its build type is in [AlohomoraExtension.enabledBuildTypes] and its flavor passes
+     * [AlohomoraExtension.enabledFlavors] (empty = any flavor). The two paths are OR'd so an explicit
+     * `enabledVariants` entry still wins even if its build type is not listed.
+     */
+    private fun AlohomoraExtension.enables(
+        variant: com.android.build.api.variant.Variant,
+    ): Boolean {
+        if (variant.name in enabledVariants) return true
+        val buildTypeAllowed = variant.buildType?.let { it in enabledBuildTypes } ?: false
+        val flavorAllowed = enabledFlavors.isEmpty() || variant.flavorName in enabledFlavors
+        return buildTypeAllowed && flavorAllowed
     }
 
     private fun readAppLabel(project: Project): String? {

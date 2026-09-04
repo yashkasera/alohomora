@@ -8,6 +8,8 @@ internal data class BuildMetadata(
     val variantName: String,
     val versionName: String,
     val versionCode: Int,
+    val flavorName: String? = null,
+    val buildType: String? = null,
 )
 
 internal fun AlohomoraConfig?.toBuildMetadata(): BuildMetadata {
@@ -19,5 +21,7 @@ internal fun AlohomoraConfig?.toBuildMetadata(): BuildMetadata {
         variantName = this?.variantName ?: "unknown",
         versionName = this?.versionName ?: "unknown",
         versionCode = this?.versionCode ?: -1,
+        flavorName = this?.flavorName,
+        buildType = this?.buildType,
     )
 }
