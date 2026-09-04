@@ -92,7 +92,9 @@ class AppDatabaseE2ETest : ShowcaseE2ETest() {
     fun aQueryConfirmsTheRefreshWrotePostRows() {
         openPostsDatabase()
 
-        // QUERY is the landing tab, not BROWSE — `DatabaseState.currentTab` defaults to 1.
+        // BROWSE is the landing tab, so the query editor only composes once QUERY is opened.
+        compose.onNodeWithTag(Database.tab("QUERY")).performClick()
+        compose.awaitTag(Database.QUERY_EDITOR)
         compose.onTextFieldIn(Database.QUERY_EDITOR)
             .performTextInput("SELECT '$MARKER' AS marker FROM $TABLE LIMIT 1")
         compose.waitForIdle()
