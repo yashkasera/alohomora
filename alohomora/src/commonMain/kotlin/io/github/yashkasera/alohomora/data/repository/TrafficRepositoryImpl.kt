@@ -36,4 +36,6 @@ internal class TrafficRepositoryImpl(private val dao: TrafficDao) : TrafficRepos
 
     override fun observeUnviewedFailed(limit: Int): Flow<List<TrafficEntry>> =
         dao.observeUnviewedFailed(limit)
+
+    override fun count(): Flow<Long> = dao.count()
 }

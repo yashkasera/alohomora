@@ -337,6 +337,17 @@ fun AdbToolsPanel(
                     enabled = isDeviceSelected && devOptions.dontKeepActivities != null,
                     onCheckedChange = { devicesViewModel.toggleDontKeepActivities(selectedDeviceId) },
                 )
+                ToggleRow(
+                    label = "Stay awake",
+                    subtitle = when (devOptions.stayAwake) {
+                        true -> "Screen stays on while charging"
+                        false -> "Disabled"
+                        null -> "Unknown"
+                    },
+                    checked = devOptions.stayAwake == true,
+                    enabled = isDeviceSelected && devOptions.stayAwake != null,
+                    onCheckedChange = { devicesViewModel.toggleStayAwake(selectedDeviceId) },
+                )
                 DarkModeRow(
                     current = devOptions.darkMode,
                     enabled = isDeviceSelected && devOptions.darkMode != null,

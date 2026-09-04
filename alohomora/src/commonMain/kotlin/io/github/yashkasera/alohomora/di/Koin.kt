@@ -93,7 +93,7 @@ internal val appModule = module {
         SlackShareService(httpClient = get())
     }
 
-    viewModel { OverviewViewModel(get(), get(), get()) }
+    viewModel { OverviewViewModel(get(), get(), get(), get()) }
     viewModel { TrafficViewModel(get()) }
     viewModel { (traceId: String) ->
         TrafficDetailsViewModel(traceId, get(), get(), get(), get(), get())

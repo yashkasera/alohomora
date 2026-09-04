@@ -18,11 +18,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -180,10 +181,11 @@ private fun FeatureFlagRow(
         isFalse -> MaterialTheme.colorScheme.error
         else -> MaterialTheme.colorScheme.secondary
     }
+
     val flagIcon = when {
-        isTrue -> Icons.ToggleRight
-        isFalse -> Icons.ToggleLeft
-        else -> Icons.SlidersHorizontal
+        isTrue -> Icons.ToggleRight to MaterialShapes.Bun
+        isFalse -> Icons.ToggleLeft to MaterialShapes.Pill
+        else -> Icons.SlidersHorizontal to MaterialShapes.Cookie9Sided
     }
 
     AlohomoraCard(
@@ -205,11 +207,11 @@ private fun FeatureFlagRow(
             Box(
                 modifier = Modifier
                     .size(MaterialTheme.dimens.icon.xl)
-                    .background(iconTint.copy(alpha = 0.12f), CircleShape),
+                    .background(iconTint.copy(alpha = 0.12f), flagIcon.second.toShape()),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = flagIcon,
+                    imageVector = flagIcon.first,
                     contentDescription = null,
                     tint = iconTint,
                     modifier = Modifier.size(MaterialTheme.dimens.icon.lg),

@@ -59,7 +59,7 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraCardDef
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraCardsKt {
 	public static final fun AlohomoraCard (Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/CardColors;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
-	public static final fun AlohomoraCard (Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZLandroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/CardColors;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AlohomoraCard (Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZLandroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/CardColors;Landroidx/compose/foundation/interaction/MutableInteractionSource;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
 	public static final fun AlohomoraOutlinedCard (Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/CardColors;Landroidx/compose/foundation/BorderStroke;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
 	public static final fun rememberViewedStateColors-zf8z9n0 (ZJJJJLandroidx/compose/runtime/Composer;II)Lio/github/yashkasera/alohomora/ui/components/ViewedStateColors;
 }
@@ -113,6 +113,17 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraIconBut
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraMethodBadgeKt {
 	public static final fun MethodBadge (Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/AlohomoraPageIndicatorDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/AlohomoraPageIndicatorDefaults;
+	public final fun getActiveWidth-D9Ej5fM ()F
+	public final fun getDotSize-D9Ej5fM ()F
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/AlohomoraPageIndicatorKt {
+	public static final fun AlohomoraPageIndicator-jA1GFJw (IILandroidx/compose/ui/Modifier;JJLandroidx/compose/runtime/Composer;II)V
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraProgressIndicatorsKt {
@@ -191,9 +202,9 @@ public final class io/github/yashkasera/alohomora/ui/components/ComposableSingle
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraCardsKt {
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraCardsKt;
 	public fun <init> ()V
-	public final fun getLambda$-1338726007$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
 	public final fun getLambda$1302105031$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$157435874$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1724948746$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
 	public final fun getLambda$1830434654$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
 	public final fun getLambda$242702173$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
 }
@@ -233,6 +244,13 @@ public final class io/github/yashkasera/alohomora/ui/components/ComposableSingle
 	public fun <init> ()V
 	public final fun getLambda$-1408335975$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$-206861922$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraPageIndicatorKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraPageIndicatorKt;
+	public fun <init> ()V
+	public final fun getLambda$-1899568883$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1635714856$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraProgressIndicatorsKt {
@@ -301,6 +319,13 @@ public final class io/github/yashkasera/alohomora/ui/components/ComposableSingle
 	public fun <init> ()V
 	public final fun getLambda$-1148362628$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
 	public final fun getLambda$-625056305$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$NeedsAttentionPagerKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$NeedsAttentionPagerKt;
+	public fun <init> ()V
+	public final fun getLambda$-166447736$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-987062483$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/ConfirmationConfig {
@@ -913,9 +938,11 @@ public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$T
 
 public final class io/github/yashkasera/alohomora/ui/theme/AlohomoraColorTheme {
 	public static final field $stable I
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZLandroidx/compose/material3/ColorScheme;JJJJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZLandroidx/compose/material3/ColorScheme;JJJJJJJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZLandroidx/compose/material3/ColorScheme;JJJJJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component10-0d7_KjU ()J
+	public final fun component11-0d7_KjU ()J
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Z
 	public final fun component4 ()Landroidx/compose/material3/ColorScheme;
@@ -924,8 +951,8 @@ public final class io/github/yashkasera/alohomora/ui/theme/AlohomoraColorTheme {
 	public final fun component7-0d7_KjU ()J
 	public final fun component8-0d7_KjU ()J
 	public final fun component9-0d7_KjU ()J
-	public final fun copy-aS1i2DI (Ljava/lang/String;Ljava/lang/String;ZLandroidx/compose/material3/ColorScheme;JJJJJJ)Lio/github/yashkasera/alohomora/ui/theme/AlohomoraColorTheme;
-	public static synthetic fun copy-aS1i2DI$default (Lio/github/yashkasera/alohomora/ui/theme/AlohomoraColorTheme;Ljava/lang/String;Ljava/lang/String;ZLandroidx/compose/material3/ColorScheme;JJJJJJILjava/lang/Object;)Lio/github/yashkasera/alohomora/ui/theme/AlohomoraColorTheme;
+	public final fun copy-1xVfEso (Ljava/lang/String;Ljava/lang/String;ZLandroidx/compose/material3/ColorScheme;JJJJJJJ)Lio/github/yashkasera/alohomora/ui/theme/AlohomoraColorTheme;
+	public static synthetic fun copy-1xVfEso$default (Lio/github/yashkasera/alohomora/ui/theme/AlohomoraColorTheme;Ljava/lang/String;Ljava/lang/String;ZLandroidx/compose/material3/ColorScheme;JJJJJJJILjava/lang/Object;)Lio/github/yashkasera/alohomora/ui/theme/AlohomoraColorTheme;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAccent-0d7_KjU ()J
 	public final fun getDisplayName ()Ljava/lang/String;
@@ -936,6 +963,7 @@ public final class io/github/yashkasera/alohomora/ui/theme/AlohomoraColorTheme {
 	public final fun getSuccess-0d7_KjU ()J
 	public final fun getSuccessContainer-0d7_KjU ()J
 	public final fun getWarning-0d7_KjU ()J
+	public final fun getWarningContainer-0d7_KjU ()J
 	public fun hashCode ()I
 	public final fun isDark ()Z
 	public fun toString ()Ljava/lang/String;

@@ -20,7 +20,7 @@ internal data class DatabaseState(
     val selectedDatabase: DatabaseInfo? = null,
     val tables: List<String> = emptyList(),
     val selectedTable: String? = null,
-    val currentTab: Int = 1, // 0: Browse, 1: Query, 2: Schema
+    val currentTab: Int = 0, // 0: Browse, 1: Query, 2: Schema
     val queryText: String = "",
     val queryResults: TableData? = null,
     val queryStatus: QueryStatus? = null,
@@ -49,7 +49,7 @@ internal class DatabaseViewModel(
     private val selectedDatabase = MutableStateFlow<DatabaseInfo?>(null)
     private val tables = MutableStateFlow<List<String>>(emptyList())
     private val selectedTable = MutableStateFlow<String?>(null)
-    private val currentTab = MutableStateFlow(1)
+    private val currentTab = MutableStateFlow(0)
     private val queryText = MutableStateFlow("")
     private val queryResults = MutableStateFlow<TableData?>(null)
     private val queryStatus = MutableStateFlow<QueryStatus?>(null)

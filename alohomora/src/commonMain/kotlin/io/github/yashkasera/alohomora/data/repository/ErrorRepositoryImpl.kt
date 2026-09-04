@@ -27,4 +27,7 @@ internal class ErrorRepositoryImpl(private val db: AlohomoraDb) : ErrorRepositor
 
     override fun observeUnviewed(limit: Int): Flow<List<Error>> =
         db.errorDao().observeUnviewed(limit)
+
+    override fun count(query: String): Flow<Long> =
+        db.errorDao().count(query)
 }

@@ -34,7 +34,6 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -80,17 +79,17 @@ fun AlohomoraTable(
             )
             .clip(MaterialTheme.shapes.small),
     ) {
-        val density = LocalDensity.current
-        val availableWidthPx = with(density) { maxWidth.toPx() }
-        val totalBasePx = baseWidths.sumOf { it }
-        val columnWidthsDp = if (totalBasePx < availableWidthPx && baseWidths.isNotEmpty()) {
-            val scale = availableWidthPx / totalBasePx
-            baseWidths.map { with(density) { (it * scale).toInt().toDp() } }
+        val totalBaseDp = baseWidths.sum().toFloat()
+        val availableDp = maxWidth.value
+        val fitsViewport = baseWidths.isNotEmpty() && totalBaseDp <= availableDp
+        val columnWidthsDp = if (fitsViewport) {
+            val scale = availableDp / totalBaseDp
+            baseWidths.map { (it * scale).dp }
         } else {
             baseWidths.map { it.dp }
         }
 
-        val scrollModifier = if (totalBasePx >= availableWidthPx) {
+        val scrollModifier = if (!fitsViewport) {
             Modifier.horizontalScroll(horizontalScrollState)
         } else {
             Modifier.fillMaxWidth()
@@ -108,7 +107,7 @@ fun AlohomoraTable(
                     },
                     columnWidths = columnWidthsDp,
                     isHeader = true,
-                    fillWidth = totalBasePx < availableWidthPx,
+                    fillWidth = fitsViewport,
                 )
 
                 rows.forEachIndexed { rowIndex, rowData ->
@@ -152,7 +151,7 @@ fun AlohomoraTable(
                                 editingCell = null
                             }
                         },
-                        fillWidth = totalBasePx < availableWidthPx,
+                        fillWidth = fitsViewport,
                     )
                 }
             }
@@ -370,7 +369,7 @@ private fun calculateColumnWidths(
         var maxDataWidth = 0
         rows.forEach { row ->
             val value = row[column.name] ?: ""
-            val estimatedWidth = (value.length * 7).coerceAtMost(150) + 24
+            val estimatedWidth = (value.length * 7).coerceAtMost(256) + 24
             maxDataWidth = maxOf(maxDataWidth, estimatedWidth)
         }
         maxDataWidth
@@ -378,7 +377,7 @@ private fun calculateColumnWidths(
 
     return baseWidths.mapIndexed { index, baseWidth ->
         val dataWidth = dataWidths[index]
-        maxOf(baseWidth, dataWidth).coerceIn(60, 200)
+        maxOf(baseWidth, dataWidth).coerceIn(60, 280)
     }
 }
 

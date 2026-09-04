@@ -90,8 +90,9 @@ class RecordApiTest {
 
         compose.launchConsole(Routes.Events)
 
-        // The properties toggle defaults to on, so the encoded JSON renders in the row as-is.
-        compose.awaitText("\"step\":\"cart\"")
+        // The properties toggle defaults to on, so the row renders the properties through
+        // `prettyProperties()` — indented JSON with a space after the colon.
+        compose.awaitText("\"step\": \"cart\"")
     }
 
     @Test

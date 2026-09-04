@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,10 +21,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -170,6 +174,7 @@ private fun FeatureFlagsList(flags: List<FeatureFlag>) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FeatureFlagItem(
     flag: FeatureFlag,
@@ -183,9 +188,9 @@ private fun FeatureFlagItem(
         else -> MaterialTheme.colorScheme.secondary
     }
     val flagIcon = when {
-        isTrue -> Icons.ToggleRight
-        isFalse -> Icons.ToggleLeft
-        else -> Icons.SlidersHorizontal
+        isTrue -> Icons.ToggleRight to MaterialShapes.Bun
+        isFalse -> Icons.ToggleLeft to MaterialShapes.Pill
+        else -> Icons.SlidersHorizontal to MaterialShapes.Cookie9Sided
     }
 
     AlohomoraCard(
@@ -202,11 +207,11 @@ private fun FeatureFlagItem(
             Box(
                 modifier = Modifier
                     .size(MaterialTheme.dimens.icon.xl)
-                    .background(iconTint.copy(alpha = 0.12f), CircleShape),
+                    .background(iconTint.copy(alpha = 0.12f), flagIcon.second.toShape()),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = flagIcon,
+                    imageVector = flagIcon.first,
                     contentDescription = null,
                     tint = iconTint,
                     modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
@@ -251,9 +256,12 @@ private fun FeatureFlagItem(
                 val hasChips = flag.type != null || flag.source != null
                 if (hasChips) {
                     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-                    Row(
+                    // FlowRow, not Row: a long source name ("Firebase Remote Config") must drop to
+                    // its own line as an intact chip rather than squeeze and ellipsize beside the
+                    // type chip.
+                    FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
                     ) {
                         flag.type?.let { type -> AlohomoraChip(label = type) }
                         flag.source?.let { source -> AlohomoraChip(label = source) }

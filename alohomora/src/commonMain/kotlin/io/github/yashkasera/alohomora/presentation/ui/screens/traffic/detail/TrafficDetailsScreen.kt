@@ -9,8 +9,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -28,6 +32,7 @@ import io.github.yashkasera.alohomora.presentation.ui.components.ShareBottomShee
 import io.github.yashkasera.alohomora.presentation.ui.components.SlackShareBottomSheet
 import io.github.yashkasera.alohomora.presentation.ui.components.SlackShareOption
 import io.github.yashkasera.alohomora.presentation.ui.components.rememberClipboardCopy
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
@@ -42,7 +47,7 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun TrafficDetailsScreen(
     trafficId: String,

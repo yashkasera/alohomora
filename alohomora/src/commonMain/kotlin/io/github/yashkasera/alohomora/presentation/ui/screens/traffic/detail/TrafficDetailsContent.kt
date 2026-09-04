@@ -1,5 +1,12 @@
 package io.github.yashkasera.alohomora.presentation.ui.screens.traffic.detail
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,10 +41,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -54,6 +64,7 @@ import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -190,7 +201,7 @@ private fun OverviewTab(entry: TrafficEntry) {
 
     InfoRowsSection(trace = entry)
 
-    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.huge))
+    Spacer(modifier = Modifier.height(ToolbarClearance))
 }
 
 @Composable
@@ -308,7 +319,7 @@ private fun RequestTab(trace: TrafficEntry, onCopy: (String) -> Unit) {
             )
         }
 
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.huge))
+        Spacer(modifier = Modifier.height(ToolbarClearance))
     }
 }
 
@@ -322,7 +333,11 @@ private fun ResponseTab(
     val responseFormat = detectFormatFromContentType(trace.responseContentType)
 
     Column(
-        modifier = Modifier.padding(MaterialTheme.dimens.margin.md),
+        modifier = Modifier
+            .padding(MaterialTheme.dimens.margin.md)
+            // JsonTreeView exposes no contentPadding, so the clearance for the floating toolbar
+            // has to shrink the scroll viewport instead of padding the last row.
+            .padding(bottom = ToolbarClearance),
     ) {
         ResponseMetadata(
             statusCode = trace.status ?: 0,
@@ -333,6 +348,10 @@ private fun ResponseTab(
             val formattedHeaders = formatHeaders(headers)
             val headerCount = headers.values.sumOf { it.size }
             var expanded by remember { mutableStateOf(false) }
+            val chevronRotation by animateFloatAsState(
+                targetValue = if (expanded) 180f else 0f,
+                animationSpec = spring(),
+            )
             Row(
                 modifier = Modifier.fillMaxWidth()
                     .padding(vertical = MaterialTheme.dimens.margin.lg)
@@ -349,16 +368,24 @@ private fun ResponseTab(
                 Icon(
                     imageVector = Icons.ChevronDown,
                     contentDescription = "Expand",
-                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                    modifier = Modifier
+                        .size(MaterialTheme.dimens.icon.lg)
+                        .rotate(chevronRotation),
                 )
             }
-            if (expanded) {
-                AlohomoraCodeBlock(
-                    isScrollable = false,
-                    accentBorder = !trace.isSuccessful(),
-                    content = formattedHeaders.joinToString("\n"),
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xl))
+            AnimatedVisibility(
+                visible = expanded,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                Column {
+                    AlohomoraCodeBlock(
+                        isScrollable = false,
+                        accentBorder = !trace.isSuccessful(),
+                        content = formattedHeaders.joinToString("\n"),
+                    )
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xl))
+                }
             }
         }
 
@@ -384,12 +411,19 @@ private fun HeroStatsSection(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
-        Row(verticalAlignment = Alignment.Bottom) {
+        Box(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.medium)
+                .background(statusContainerColor(statusCode))
+                .padding(
+                    horizontal = MaterialTheme.dimens.margin.md,
+                    vertical = MaterialTheme.dimens.margin.xs,
+                ),
+        ) {
             Text(
                 text = HttpStatusCode.fromValue(statusCode).toString(),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.sm),
+                style = MaterialTheme.typography.displaySmall,
+                color = statusColor(statusCode),
             )
         }
 
@@ -559,7 +593,7 @@ private fun ResponseMetadata(
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.extraSmall)
-                    .background(MaterialTheme.colorScheme.primary)
+                    .background(statusContainerColor(statusCode))
                     .padding(
                         horizontal = MaterialTheme.dimens.margin.md,
                         vertical = MaterialTheme.dimens.margin.xs,
@@ -568,7 +602,7 @@ private fun ResponseMetadata(
                 Text(
                     text = HttpStatusCode.fromValue(statusCode).toString(),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = statusColor(statusCode),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -588,6 +622,24 @@ private fun ResponseMetadata(
         )
     }
 }
+
+/** Scroll room so the floating toolbar never obscures a tab's last row (~64dp pill + 16dp offset). */
+private val ToolbarClearance = 96.dp
+
+/** Status-class colour: the status is the one number every open of this screen is looking for. */
+@Composable
+private fun statusColor(statusCode: Int): Color = when (statusCode) {
+    in 200..299 -> MaterialTheme.alohomoraColors.success
+    in 300..399 -> MaterialTheme.alohomoraColors.info
+    in 400..499 -> MaterialTheme.alohomoraColors.warning
+    in 500..599 -> MaterialTheme.colorScheme.error
+    else -> MaterialTheme.colorScheme.onSurfaceVariant
+}
+
+/** The 12% tint recipe `successContainer`/`warningContainer` use, applied per status class. */
+@Composable
+private fun statusContainerColor(statusCode: Int): Color =
+    statusColor(statusCode).copy(alpha = 0.12f)
 
 /**
  * Formats bytes to human-readable format (B, KB, MB, GB)
@@ -670,6 +722,20 @@ private fun HeroStatsSectionPreview() {
                     responseSize = 4096,
                     requestSize = 256,
                     format = "application/json",
+                )
+                HeroStatsSection(
+                    statusCode = 404,
+                    latencyMs = 89,
+                    responseSize = 512,
+                    requestSize = 128,
+                    format = "application/json",
+                )
+                HeroStatsSection(
+                    statusCode = 503,
+                    latencyMs = 30_042,
+                    responseSize = 0,
+                    requestSize = 256,
+                    format = "*",
                 )
             }
         }

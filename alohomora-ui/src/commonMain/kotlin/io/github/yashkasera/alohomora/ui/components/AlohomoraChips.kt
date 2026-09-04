@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
@@ -115,6 +116,12 @@ fun AlohomoraChip(
         text = text,
         style = MaterialTheme.typography.labelSmall,
         color = contentColor,
+        // A chip is a single-line token. Without this, a chip squeezed for width wraps its label
+        // across lines and renders as a tall broken box; a caller with genuinely long labels
+        // should lay chips out in a FlowRow so each keeps its intrinsic width.
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Ellipsis,
         modifier = modifier
             .clip(shape)
             .background(color = containerColor)

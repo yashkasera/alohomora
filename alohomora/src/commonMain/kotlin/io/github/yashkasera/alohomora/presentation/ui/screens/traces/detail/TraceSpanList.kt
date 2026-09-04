@@ -44,14 +44,24 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 private val IndentPerDepth = 10.dp
 
 /**
- * Width of the mini bar lane.
+ * Minimum width of the mini bar lane.
  *
- * Fixed and narrow on purpose. A full waterfall does not fit a phone — with a 40% name column you get
+ * Narrow on purpose in portrait. A full waterfall does not fit a phone — with a 40% name column you get
  * roughly 220dp of track, a 5-deep span loses its name entirely to indentation, and there is no hover to
  * recover it. This lane keeps the one thing the waterfall actually provides — *where* in the trace a span
  * sat and *how much* of it it occupied — without needing a legible time axis.
+ *
+ * A floor rather than a fixed width: in landscape a 72dp lane next to a ~700dp name column wasted the
+ * one dimension rotation buys, so the lane scales with the viewport via [traceSpanLaneWidth].
  */
-private val BarLaneWidth = 72.dp
+private val MinBarLaneWidth = 72.dp
+
+/** Fraction of the viewport the lane takes once wider than the [MinBarLaneWidth] floor allows. */
+private const val BAR_LANE_FRACTION = 0.22f
+
+/** Lane width for the current viewport: a fifth-ish of the width, never below [MinBarLaneWidth]. */
+internal fun traceSpanLaneWidth(viewportWidth: Dp): Dp =
+    maxOf(MinBarLaneWidth, viewportWidth * BAR_LANE_FRACTION)
 
 /**
  * Corner radius of a span bar, in [Dp] because it is fed to a draw call rather than a `shape =` slot.
@@ -74,6 +84,7 @@ internal fun TraceSpanRow(
     isSelected: Boolean,
     onToggleCollapse: () -> Unit,
     onSelect: () -> Unit,
+    laneWidth: Dp = MinBarLaneWidth,
 ) {
     val span = row.span
     val isError = span.isError()
@@ -165,7 +176,7 @@ internal fun TraceSpanRow(
 
         Box(
             modifier = Modifier
-                .width(BarLaneWidth)
+                .width(laneWidth)
                 .height(MaterialTheme.dimens.margin.lg)
                 .drawBehind {
                     // Lane guide, so an empty stretch still reads as "early in the trace" rather than

@@ -43,6 +43,9 @@ internal interface TrafficDao {
     @Query("SELECT * FROM TrafficEntry ORDER BY time DESC LIMIT :limit")
     fun observeLatest(limit: Int): Flow<List<TrafficEntry>>
 
+    @Query("SELECT COUNT(*) FROM TrafficEntry")
+    fun count(): Flow<Long>
+
     @Query("Update TrafficEntry SET isViewed = 1 WHERE id = :id")
     suspend fun markAsViewed(id: String)
 
