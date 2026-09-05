@@ -109,6 +109,7 @@ fun main() {
         }
         val mcpStatus by mcpServer.status.collectAsState()
         val pendingMcpConfirmation by mcpConfirmation.pending.collectAsState()
+        val configRepoUi by sharedComposition.configRepoViewModel.uiState.collectAsState()
 
         LaunchedEffect(Unit) {
             combine(
@@ -210,6 +211,14 @@ fun main() {
                         mcpWriteEnabled = enabled
                         DesktopMcpPrefs.saveWriteEnabled(enabled)
                     },
+                    configRepo = configRepoUi,
+                    onConfigRepoUrlChange = sharedComposition.configRepoViewModel::onUrlChange,
+                    onConfigRepoConnect = sharedComposition.configRepoViewModel::connect,
+                    onConfigRepoInitialize = sharedComposition.configRepoViewModel::initialize,
+                    onConfigRepoDisconnect = sharedComposition.configRepoViewModel::disconnect,
+                    onConfigRepoSync = sharedComposition.configRepoViewModel::sync,
+                    onDeveloperModeChange = sharedComposition.configRepoViewModel::setDeveloperMode,
+                    onRevealRepo = sharedComposition.configRepoViewModel::revealRepo,
                     onDismiss = { showSettings = false },
                 )
             }

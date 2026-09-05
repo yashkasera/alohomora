@@ -263,6 +263,7 @@ fun DeviceWindow(
                         trafficViewModel = session.composition.trafficViewModel,
                         networkRulesViewModel = session.composition.networkRulesViewModel,
                         journeyViewModel = session.composition.journeyViewModel,
+                        configRepoViewModel = session.composition.configRepoViewModel,
                         initialDeviceId = session.deviceId,
                         showHelp = showHelp,
                         onShowHelp = { showHelp = true },

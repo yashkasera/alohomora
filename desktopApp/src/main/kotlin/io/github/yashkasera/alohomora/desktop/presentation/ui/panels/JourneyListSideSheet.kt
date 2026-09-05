@@ -24,10 +24,13 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraFloatingActionButto
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSearchTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSingleChoiceToggleGroup
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraToggleItem
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Plus
+import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Route
+import io.github.yashkasera.alohomora.ui.icons.Share
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
@@ -41,11 +44,15 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 fun JourneyListSideSheet(
     visible: Boolean,
     state: JourneyUiState,
+    teamConnected: Boolean,
     onScopeChange: (ConfigScope) -> Unit,
     onQueryChange: (String) -> Unit,
     onOpen: (String) -> Unit,
     onNew: () -> Unit,
     onDelete: (String) -> Unit,
+    onShare: (String) -> Unit,
+    onSync: () -> Unit,
+    onOpenUrl: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlohomoraSideSheet(
@@ -73,6 +80,15 @@ fun JourneyListSideSheet(
                     selectedId = state.scope.name,
                     onSelectedIdChange = { onScopeChange(ConfigScope.valueOf(it)) },
                 )
+                if (teamConnected) {
+                    AlohomoraIconButton(onClick = onSync) {
+                        Icon(
+                            imageVector = Icons.RefreshCw,
+                            contentDescription = "Sync",
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                        )
+                    }
+                }
                 AlohomoraIconButton(onClick = onDismiss) {
                     Icon(
                         imageVector = Icons.X,
@@ -102,6 +118,35 @@ fun JourneyListSideSheet(
                     vertical = MaterialTheme.dimens.margin.md,
                 ),
         )
+
+        state.message?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = MaterialTheme.dimens.margin.xxl),
+            )
+        }
+        state.lastProposal?.let { proposal ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = MaterialTheme.dimens.margin.xxl),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            ) {
+                AlohomoraChip(label = "In review")
+                Text(
+                    text = "Shared as a ${proposal.reviewNoun}.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                proposal.reviewUrl?.let { url ->
+                    AlohomoraTextButton(text = "Open ${proposal.reviewNoun}", onClick = { onOpenUrl(url) })
+                }
+            }
+        }
 
         val journeys = state.visibleJourneys
         if (journeys.isEmpty()) {
@@ -164,6 +209,15 @@ fun JourneyListSideSheet(
                             }
                         }
                         AlohomoraChip(label = "${journey.steps.size} steps")
+                        if (teamConnected && state.scope == ConfigScope.LOCAL) {
+                            AlohomoraIconButton(onClick = { onShare(journey.id) }) {
+                                Icon(
+                                    imageVector = Icons.Share,
+                                    contentDescription = "Share with team",
+                                    modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                                )
+                            }
+                        }
                         AlohomoraIconButton(onClick = { onDelete(journey.id) }) {
                             Icon(
                                 imageVector = Icons.Trash,

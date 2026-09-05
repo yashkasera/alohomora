@@ -158,6 +158,23 @@ class JourneyViewModel(
         _uiState.update { it.copy(liveJourneyId = null, liveJourneyName = "") }
     }
 
+    /**
+     * Proposes a journey to the team: the one explicit branch + push + create-proposal action. Surfaces
+     * the returned proposal (for the In-review link) or a message on failure — e.g. no repo connected.
+     */
+    fun share(journeyId: String) {
+        val item = _uiState.value.journeys.firstOrNull { it.value.id == journeyId }?.value
+            ?: _uiState.value.editorDraft?.takeIf { it.id == journeyId }
+            ?: return
+        scope.launch {
+            runCatching { configStore.shareWithTeam(ConfigKind.Journeys, item) }
+                .onSuccess { proposal -> _uiState.update { it.copy(lastProposal = proposal, message = null) } }
+                .onFailure { e -> _uiState.update { it.copy(message = e.message ?: "Share failed") } }
+        }
+    }
+
+    fun dismissMessage() = _uiState.update { it.copy(message = null) }
+
     private fun scheduleSave(draft: JourneyDefinition) {
         saveJob?.cancel()
         saveJob = scope.launch {

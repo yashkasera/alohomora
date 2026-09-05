@@ -65,6 +65,7 @@ import kotlinx.serialization.json.Json
 
 class DesktopAppComposition(
     sharedDevicesViewModel: DevicesViewModel? = null,
+    sharedConfigRepoManager: io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoManager? = null,
 ) {
     val devicesViewModel: DevicesViewModel
     val devToolsViewModel: DevToolsViewModel
@@ -78,6 +79,13 @@ class DesktopAppComposition(
     val trafficViewModel: TrafficViewModel
     val networkRulesViewModel: NetworkRulesViewModel
     val journeyViewModel: JourneyViewModel
+    val configRepoViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.ConfigRepoViewModel
+
+    /** The config repo is one global clone, so this is app-scoped and shared across windows. */
+    val configRepoManager: io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoManager
+
+    /** True when this composition created the config-repo manager and must shut it down. */
+    private val ownsConfigRepoManager: Boolean = sharedConfigRepoManager == null
 
     /** Everything [close] has to release. Held so per-window teardown is complete. */
     /**
@@ -240,10 +248,17 @@ class DesktopAppComposition(
             repository = devToolsRepository,
             sessionStore = MockSessionStore(),
         )
+        configRepoManager = sharedConfigRepoManager
+            ?: io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoManager()
         journeyViewModel = JourneyViewModel(
-            configStore = ConfigStoreFacade(),
+            configStore = ConfigStoreFacade(teamProvider = { configRepoManager.teamStore }),
             evaluateJourney = EvaluateJourneyUseCase(devToolsRepository),
         )
+        configRepoViewModel =
+            io.github.yashkasera.alohomora.desktop.presentation.viewmodel.ConfigRepoViewModel(
+                manager = configRepoManager,
+                onChanged = { journeyViewModel.refresh() },
+            )
     }
 
     /**
@@ -267,6 +282,8 @@ class DesktopAppComposition(
         trafficViewModel.close()
         networkRulesViewModel.close()
         journeyViewModel.close()
+        configRepoViewModel.close()
+        if (ownsConfigRepoManager) configRepoManager.shutdown()
         devToolsRepository.close()
         // Only if we built it — a shared view model outlives this window.
         if (ownsDevicesViewModel) devicesViewModel.close()

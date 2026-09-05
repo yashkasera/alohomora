@@ -127,6 +127,7 @@ fun DevToolsDesktopApp(
     trafficViewModel: TrafficViewModel,
     networkRulesViewModel: NetworkRulesViewModel,
     journeyViewModel: JourneyViewModel,
+    configRepoViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.ConfigRepoViewModel,
     initialDeviceId: String? = null,
     showHelp: Boolean = false,
     onShowHelp: () -> Unit = {},
@@ -161,6 +162,7 @@ fun DevToolsDesktopApp(
     val devToolsState by devToolsViewModel.uiState.collectAsState()
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()
     val deviceError by devToolsViewModel.deviceError.collectAsState()
+    val configRepoUi by configRepoViewModel.uiState.collectAsState()
 
     var isRecording by remember { mutableStateOf(false) }
     var recordingDevicePath by remember { mutableStateOf<String?>(null) }
@@ -317,6 +319,15 @@ fun DevToolsDesktopApp(
         onOpenJourneys = {
             onDismissCommandPalette()
             onOpenJourneys()
+        },
+        developerMode = configRepoUi.developerMode,
+        onGitSync = {
+            onDismissCommandPalette()
+            configRepoViewModel.sync()
+        },
+        onRevealRepo = {
+            onDismissCommandPalette()
+            configRepoViewModel.revealRepo()
         },
         onClearErrors = { devToolsViewModel.clearErrors() },
     )
@@ -684,11 +695,17 @@ fun DevToolsDesktopApp(
             JourneyListSideSheet(
                 visible = showJourneys,
                 state = journeyUi,
+                teamConnected = configRepoUi.isConnected,
                 onScopeChange = journeyViewModel::onScopeChange,
                 onQueryChange = journeyViewModel::onQueryChange,
                 onOpen = journeyViewModel::editExisting,
                 onNew = journeyViewModel::newJourney,
                 onDelete = journeyViewModel::deleteJourney,
+                onShare = journeyViewModel::share,
+                onSync = configRepoViewModel::sync,
+                onOpenUrl = { url ->
+                    runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
+                },
                 onDismiss = { onDismissJourneys() },
             )
             JourneyEditorSideSheet(

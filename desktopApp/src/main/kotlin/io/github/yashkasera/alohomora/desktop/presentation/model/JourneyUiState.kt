@@ -4,6 +4,7 @@ import io.github.yashkasera.alohomora.common.journey.JourneyDefinition
 import io.github.yashkasera.alohomora.common.journey.JourneyReport
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigItem
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope
+import io.github.yashkasera.alohomora.desktop.domain.config.Proposal
 
 /**
  * The single immutable state for the journeys surfaces. The view model owns all mutation; composables
@@ -22,6 +23,10 @@ data class JourneyUiState(
     val liveJourneyId: String? = null,
     /** Display name of the journey being validated live, for the panel header. */
     val liveJourneyName: String = "",
+    /** The most recent successful "Share with team" result, for the In-review link. */
+    val lastProposal: Proposal? = null,
+    /** A transient message to surface (e.g. a share failure). */
+    val message: String? = null,
     val isLoading: Boolean = false,
 ) {
     /** Journeys after the search filter, ranked name-first. Case-insensitive substring. */

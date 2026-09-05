@@ -54,10 +54,15 @@ import io.github.yashkasera.alohomora.desktop.mcp.McpClientConfig
 import io.github.yashkasera.alohomora.desktop.mcp.McpServerStatus
 import io.github.yashkasera.alohomora.desktop.util.pickDirectory
 import io.github.yashkasera.alohomora.desktop.util.pickLoadPath
+import io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoStatus
+import io.github.yashkasera.alohomora.desktop.domain.config.SyncStatus
+import io.github.yashkasera.alohomora.desktop.presentation.model.ConfigRepoUiState
 import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
+import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraRadioButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSingleChoiceToggleGroup
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSwitch
@@ -68,6 +73,7 @@ import io.github.yashkasera.alohomora.ui.icons.Android
 import io.github.yashkasera.alohomora.ui.icons.Check
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Database
+import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Settings
@@ -103,6 +109,14 @@ fun SettingsDialog(
     onMcpEnabledChange: (Boolean) -> Unit,
     onMcpPortChange: (Int) -> Unit,
     onMcpWriteEnabledChange: (Boolean) -> Unit,
+    configRepo: ConfigRepoUiState,
+    onConfigRepoUrlChange: (String) -> Unit,
+    onConfigRepoConnect: () -> Unit,
+    onConfigRepoInitialize: () -> Unit,
+    onConfigRepoDisconnect: () -> Unit,
+    onConfigRepoSync: () -> Unit,
+    onDeveloperModeChange: (Boolean) -> Unit,
+    onRevealRepo: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -237,6 +251,17 @@ fun SettingsDialog(
                                 onEnabledChange = onMcpEnabledChange,
                                 onPortChange = onMcpPortChange,
                                 onWriteEnabledChange = onMcpWriteEnabledChange,
+                            )
+
+                            SettingsSection.TEAM -> TeamConfigSection(
+                                state = configRepo,
+                                onUrlChange = onConfigRepoUrlChange,
+                                onConnect = onConfigRepoConnect,
+                                onInitialize = onConfigRepoInitialize,
+                                onDisconnect = onConfigRepoDisconnect,
+                                onSync = onConfigRepoSync,
+                                onDeveloperModeChange = onDeveloperModeChange,
+                                onRevealRepo = onRevealRepo,
                             )
 
                             SettingsSection.DATA -> DataSection(
@@ -419,11 +444,124 @@ private fun LabeledCopyBlock(label: String, content: String) {
     AlohomoraCodeBlock(content = content, isScrollable = false)
 }
 
+@Composable
+private fun TeamConfigSection(
+    state: ConfigRepoUiState,
+    onUrlChange: (String) -> Unit,
+    onConnect: () -> Unit,
+    onInitialize: () -> Unit,
+    onDisconnect: () -> Unit,
+    onSync: () -> Unit,
+    onDeveloperModeChange: (Boolean) -> Unit,
+    onRevealRepo: () -> Unit,
+) {
+    val status = state.status
+    Text(
+        text = "Share journeys, mock sets, and deep links with your team through a git repository. " +
+            "Local config needs no setup; connect a repo only for shared, reviewed config.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+
+    when (status) {
+        is ConfigRepoStatus.Connected -> {
+            Text(text = "Connected", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
+            Text(
+                text = status.url,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md)) {
+                AlohomoraFilledButton(text = "Sync", onClick = onSync, enabled = !state.busy)
+                AlohomoraOutlinedButton(text = "Disconnect", onClick = onDisconnect, enabled = !state.busy)
+            }
+            val syncText = when (val s = state.syncStatus) {
+                is SyncStatus.UpToDate -> "Up to date with the team's main line."
+                is SyncStatus.Drift -> "${s.behind} behind, ${s.ahead} ahead."
+                SyncStatus.NotConnected -> ""
+            }
+            if (syncText.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                Text(
+                    text = syncText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        else -> {
+            AlohomoraTextField(
+                value = state.urlInput,
+                onValueChange = onUrlChange,
+                label = "Repository URL",
+                placeholder = "git@… or https://…",
+                enabled = !state.busy,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md)) {
+                AlohomoraFilledButton(
+                    text = "Connect",
+                    onClick = onConnect,
+                    enabled = !state.busy && state.urlInput.isNotBlank(),
+                )
+                AlohomoraOutlinedButton(
+                    text = "Initialize empty repo",
+                    onClick = onInitialize,
+                    enabled = !state.busy && state.urlInput.isNotBlank(),
+                )
+            }
+            if (status is ConfigRepoStatus.Error) {
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+                Text(
+                    text = status.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xl))
+    AlohomoraHorizontalDivider()
+    Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xl))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "Developer mode", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = "Exposes raw git controls for the config repo. Never bypasses branch protection.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        AlohomoraSwitch(checked = state.developerMode, onCheckedChange = onDeveloperModeChange)
+    }
+    if (state.developerMode && status is ConfigRepoStatus.Connected) {
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+        AlohomoraTextButton(text = "Reveal repo folder", onClick = onRevealRepo)
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
+        Text(
+            text = status.clonePath,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
 private enum class SettingsSection(val label: String, val icon: ImageVector) {
     APPEARANCE("Appearance", Icons.SlidersHorizontal),
     GENERAL("General", Icons.Settings),
     ADB("ADB", Icons.Android),
     MCP("MCP server", Icons.Server),
+    TEAM("Team config", Icons.GitGraph),
     DATA("Data", Icons.Database),
 }
 

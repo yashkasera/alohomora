@@ -52,6 +52,7 @@ import io.github.yashkasera.alohomora.ui.icons.Activity
 import io.github.yashkasera.alohomora.ui.icons.Camera
 import io.github.yashkasera.alohomora.ui.icons.CircleHelp
 import io.github.yashkasera.alohomora.ui.icons.Globe
+import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Link
 import io.github.yashkasera.alohomora.ui.icons.Play
@@ -71,6 +72,7 @@ enum class ActionCategory(val label: String) {
     GENERAL("General"),
     DEVICE("Device"),
     DATA("Data"),
+    GIT("Git"),
 }
 
 data class CommandAction(
@@ -375,6 +377,9 @@ fun buildCommandActions(
     onFocusSearch: () -> Unit,
     onOpenMockRules: () -> Unit,
     onOpenJourneys: () -> Unit,
+    developerMode: Boolean,
+    onGitSync: () -> Unit,
+    onRevealRepo: () -> Unit,
     onClearErrors: () -> Unit,
 ): List<CommandAction> {
     val mod = displayModifier()
@@ -574,5 +579,25 @@ fun buildCommandActions(
         enabled = isConnected,
         action = onClearErrors,
     )
+
+    // GIT: git/repo mechanics, shown only in developer mode (unhides guardrails, never new capability).
+    if (developerMode) {
+        actions += CommandAction(
+            id = "git_sync",
+            label = "Sync Config Repo",
+            category = ActionCategory.GIT,
+            icon = Icons.RefreshCw,
+            enabled = true,
+            action = onGitSync,
+        )
+        actions += CommandAction(
+            id = "git_reveal_repo",
+            label = "Reveal Config Repo",
+            category = ActionCategory.GIT,
+            icon = Icons.GitGraph,
+            enabled = true,
+            action = onRevealRepo,
+        )
+    }
     return actions
 }
