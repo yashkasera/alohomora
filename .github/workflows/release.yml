@@ -52,7 +52,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Build DMG and PKG
         run: ./gradlew :desktopApp:packageDmg :desktopApp:packagePkg -Palohomora.desktop.version=${{ inputs.version }}
@@ -81,7 +81,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Build release XCFramework
         run: ./gradlew :alohomora:assembleAlohomoraKitReleaseXCFramework --no-parallel -Dorg.gradle.workers.max=1
@@ -110,7 +110,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v7
