@@ -77,6 +77,8 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.PluginDataP
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.FeatureFlagsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.JourneyEditorSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.JourneyListSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.MockRulesSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceWaterfallSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TracesPanel
@@ -88,6 +90,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsVie
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.JourneyViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
@@ -106,6 +109,8 @@ private val PermanentDrawerShape = RoundedCornerShape(
     topStart = 0.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 0.dp,
 )
 
+private const val JOURNEY_EVENT_PICKER_LIMIT = 50
+
 @Composable
 fun DevToolsDesktopApp(
     modifier: Modifier = Modifier,
@@ -120,6 +125,7 @@ fun DevToolsDesktopApp(
     eventsViewModel: EventsViewModel,
     trafficViewModel: TrafficViewModel,
     networkRulesViewModel: NetworkRulesViewModel,
+    journeyViewModel: JourneyViewModel,
     initialDeviceId: String? = null,
     showHelp: Boolean = false,
     onShowHelp: () -> Unit = {},
@@ -133,6 +139,9 @@ fun DevToolsDesktopApp(
     showMockRules: Boolean = false,
     onOpenMockRules: () -> Unit = {},
     onDismissMockRules: () -> Unit = {},
+    showJourneys: Boolean = false,
+    onOpenJourneys: () -> Unit = {},
+    onDismissJourneys: () -> Unit = {},
     onShowSettings: () -> Unit = {},
     onZoomIn: () -> Unit = {},
     onZoomOut: () -> Unit = {},
@@ -172,6 +181,7 @@ fun DevToolsDesktopApp(
         selectedTraceId != null ||
         selectedEventId != null ||
         showMockRules ||
+        showJourneys ||
         showDeepLinkBuilder ||
         showCommandPalette ||
         showHelp
@@ -303,6 +313,10 @@ fun DevToolsDesktopApp(
             onDismissCommandPalette()
             onOpenMockRules()
         },
+        onOpenJourneys = {
+            onDismissCommandPalette()
+            onOpenJourneys()
+        },
         onClearErrors = { devToolsViewModel.clearErrors() },
     )
 
@@ -351,6 +365,10 @@ fun DevToolsDesktopApp(
 
                         showMockRules -> {
                             onDismissMockRules(); return@onPreviewKeyEvent true
+                        }
+
+                        showJourneys -> {
+                            onDismissJourneys(); return@onPreviewKeyEvent true
                         }
 
                         selectedTrafficForSheet != null -> {
@@ -658,6 +676,39 @@ fun DevToolsDesktopApp(
                 onExport = networkRulesViewModel::exportSession,
                 onImport = networkRulesViewModel::importFromFile,
                 onDismiss = { onDismissMockRules() },
+            )
+
+            val journeyUi by journeyViewModel.uiState.collectAsState()
+            val eventsForJourney by eventsViewModel.uiState.collectAsState()
+            JourneyListSideSheet(
+                visible = showJourneys,
+                state = journeyUi,
+                onScopeChange = journeyViewModel::onScopeChange,
+                onQueryChange = journeyViewModel::onQueryChange,
+                onOpen = journeyViewModel::editExisting,
+                onNew = journeyViewModel::newJourney,
+                onDelete = journeyViewModel::deleteJourney,
+                onDismiss = { onDismissJourneys() },
+            )
+            JourneyEditorSideSheet(
+                draft = journeyUi.editorDraft,
+                report = journeyUi.lastReport,
+                recentEvents = eventsForJourney.events.take(JOURNEY_EVENT_PICKER_LIMIT),
+                onNameChange = { name -> journeyViewModel.editDraft { it.copy(name = name) } },
+                onDescriptionChange = { desc ->
+                    journeyViewModel.editDraft { it.copy(description = desc) }
+                },
+                onToggleOrdered = { ordered ->
+                    journeyViewModel.editDraft { it.copy(ordered = ordered) }
+                },
+                onAddStepFromEvent = journeyViewModel::promoteEventToStep,
+                onRemoveStep = { stepId ->
+                    journeyViewModel.editDraft { draft ->
+                        draft.copy(steps = draft.steps.filterNot { it.id == stepId })
+                    }
+                },
+                onValidate = journeyViewModel::validate,
+                onDismiss = journeyViewModel::closeEditor,
             )
 
             TraceWaterfallSideSheet(

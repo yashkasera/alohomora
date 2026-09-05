@@ -56,6 +56,7 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Link
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
+import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Settings
@@ -373,6 +374,7 @@ fun buildCommandActions(
     onOpenDeepLinkBuilder: () -> Unit,
     onFocusSearch: () -> Unit,
     onOpenMockRules: () -> Unit,
+    onOpenJourneys: () -> Unit,
     onClearErrors: () -> Unit,
 ): List<CommandAction> {
     val mod = displayModifier()
@@ -527,6 +529,17 @@ fun buildCommandActions(
         shortcutDisplay = "$mod+Shift+M",
         enabled = isConnected,
         action = onOpenMockRules,
+    )
+
+    actions += CommandAction(
+        id = "data_event_journeys",
+        label = "Event Journeys",
+        category = ActionCategory.DATA,
+        icon = Icons.Route,
+        shortcutDisplay = "$mod+Shift+J",
+        // Journeys are LOCAL-first and need no device connection to author.
+        enabled = true,
+        action = onOpenJourneys,
     )
 
     actions += CommandAction(

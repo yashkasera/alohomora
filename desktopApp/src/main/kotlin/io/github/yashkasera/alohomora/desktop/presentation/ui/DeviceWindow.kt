@@ -60,6 +60,7 @@ fun DeviceWindow(
     var showCommandPalette by remember { mutableStateOf(false) }
     var showDeepLinkBuilder by remember { mutableStateOf(false) }
     var showMockRules by remember { mutableStateOf(false) }
+    var showJourneys by remember { mutableStateOf(false) }
     var zoomScale by remember { mutableFloatStateOf(1.0f) }
 
     val zoomIn = { zoomScale = (zoomScale + 0.1f).coerceAtMost(2.0f) }
@@ -206,6 +207,16 @@ fun DeviceWindow(
                         ),
                         onClick = { showMockRules = true },
                     )
+                    Item(
+                        "Event Journeys",
+                        shortcut = KeyShortcut(
+                            Key.J,
+                            shift = true,
+                            meta = isMacOs,
+                            ctrl = !isMacOs,
+                        ),
+                        onClick = { showJourneys = true },
+                    )
                 }
                 Menu("Help") {
                     Item(
@@ -251,6 +262,7 @@ fun DeviceWindow(
                         eventsViewModel = session.composition.eventsViewModel,
                         trafficViewModel = session.composition.trafficViewModel,
                         networkRulesViewModel = session.composition.networkRulesViewModel,
+                        journeyViewModel = session.composition.journeyViewModel,
                         initialDeviceId = session.deviceId,
                         showHelp = showHelp,
                         onShowHelp = { showHelp = true },
@@ -264,6 +276,9 @@ fun DeviceWindow(
                         showMockRules = showMockRules,
                         onOpenMockRules = { showMockRules = true },
                         onDismissMockRules = { showMockRules = false },
+                        showJourneys = showJourneys,
+                        onOpenJourneys = { showJourneys = true },
+                        onDismissJourneys = { showJourneys = false },
                         onShowSettings = onShowSettings,
                         onZoomIn = zoomIn,
                         onZoomOut = zoomOut,

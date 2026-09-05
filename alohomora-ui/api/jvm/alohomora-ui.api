@@ -396,6 +396,10 @@ public final class io/github/yashkasera/alohomora/ui/components/FabClearanceKt {
 	public static final fun fabClearanceItem (Landroidx/compose/foundation/lazy/grid/LazyGridScope;)V
 }
 
+public final class io/github/yashkasera/alohomora/ui/components/JourneyStatusGlyphKt {
+	public static final fun JourneyStatusGlyph-6a0pyJM (Lio/github/yashkasera/alohomora/common/journey/JourneyStatus;Landroidx/compose/ui/Modifier;FLandroidx/compose/runtime/Composer;II)V
+}
+
 public final class io/github/yashkasera/alohomora/ui/components/NeedsAttentionPagerKt {
 	public static final fun NeedsAttentionPager (Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
 }
