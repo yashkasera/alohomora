@@ -17,7 +17,8 @@ import io.github.yashkasera.alohomora.desktop.domain.config.SyncStatus
  */
 class ConfigStoreFacade(
     private val local: LocalConfigStore = LocalConfigStore(),
-    // private val team: GitConfigStore? = null,   // wired in Phase 2
+    /** The git-backed team store, or null until a repository is connected. */
+    private val team: GitConfigStore? = null,
 ) : ConfigStore {
 
     override suspend fun <T> list(kind: ConfigKind<T>, scope: ConfigScope): List<ConfigItem<T>> =
@@ -25,15 +26,21 @@ class ConfigStoreFacade(
             ConfigScope.LOCAL -> local.list(kind).map {
                 ConfigItem(value = it, scope = ConfigScope.LOCAL, state = ConfigState.LOCAL)
             }
-            ConfigScope.TEAM -> emptyList()
+            // Team artifacts read from the clone's main line are Live; drafts/in-review are layered on
+            // once the share flow tracks them (later slice).
+            ConfigScope.TEAM -> team?.list(kind).orEmpty().map {
+                ConfigItem(value = it, scope = ConfigScope.TEAM, state = ConfigState.LIVE)
+            }
         }
 
     override suspend fun <T> saveLocal(kind: ConfigKind<T>, item: T) = local.save(kind, item)
 
     override suspend fun <T> deleteLocal(kind: ConfigKind<T>, id: String) = local.delete(kind, id)
 
-    override suspend fun <T> shareWithTeam(kind: ConfigKind<T>, item: T): Proposal =
-        error("Team config is not connected. Connect a repository first (Phase 2).")
+    override suspend fun <T> shareWithTeam(kind: ConfigKind<T>, item: T): Proposal {
+        val team = team ?: error("Team config is not connected. Connect a repository first.")
+        return team.shareWithTeam(kind, item)
+    }
 
-    override suspend fun sync(): SyncStatus = SyncStatus.NotConnected
+    override suspend fun sync(): SyncStatus = team?.sync() ?: SyncStatus.NotConnected
 }

@@ -29,12 +29,14 @@ sealed interface ConfigKind<T> {
     val serializer: KSerializer<T>
     val idOf: (T) -> String
     val nameOf: (T) -> String
+    val descriptionOf: (T) -> String
 
     object Journeys : ConfigKind<JourneyDefinition> {
         override val dir = "journeys"
         override val serializer = JourneyDefinition.serializer()
         override val idOf = JourneyDefinition::id
         override val nameOf = JourneyDefinition::name
+        override val descriptionOf = JourneyDefinition::description
     }
     // MockSets and DeepLinks adopt this in Phase 3.
 }

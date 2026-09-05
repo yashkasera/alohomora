@@ -49,6 +49,10 @@ dependencies {
     // QR encoding for Wireless-debugging "Pair with QR code".
     implementation(libs.zxing.core)
 
+    // JGit: local clone + branch push for the version-controlled team config repo. No forge API —
+    // proposal creation is a plain git push (the generic floor); forge adapters are enhancements.
+    implementation(libs.jgit)
+
     // Ktor client — the desktop app is a TCP *client* of the in-app DevTools server over an
     // adb port forward.
     implementation(libs.ktor.client.core)

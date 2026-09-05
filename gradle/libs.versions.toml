@@ -27,6 +27,8 @@ binaryCompatibilityValidator = "0.18.1"
 opentelemetry = "1.51.0"
 mcp = "0.15.0"
 zxing = "3.5.3"
+# JGit: EDL (BSD-3-style), Apache-2.0 compatible. Backs the version-controlled config store.
+jgit = "6.7.0.202309050840-r"
 
 # Android instrumentation testing only. androidx-compose-ui must track whatever
 # compose-multiplatform resolves to on Android — CMP 1.11.1's androidRuntimeElements point at
@@ -51,6 +53,8 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 # QR encoding for Wireless-debugging "Pair with QR code" (desktop only). Only the encoder core
 # is needed — the matrix is drawn directly in a Compose Canvas, no image codec.
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+# JGit: local clone + branch push for the team config repo (desktop only).
+jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "jgit" }
 
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
