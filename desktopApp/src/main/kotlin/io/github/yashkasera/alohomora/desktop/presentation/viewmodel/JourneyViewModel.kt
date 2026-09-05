@@ -1,7 +1,9 @@
 package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
+import io.github.yashkasera.alohomora.common.journey.Assertion
 import io.github.yashkasera.alohomora.common.journey.JourneyDefinition
 import io.github.yashkasera.alohomora.common.journey.JourneyStep
+import io.github.yashkasera.alohomora.common.journey.RepeatPolicy
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigStore
@@ -19,6 +21,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -37,6 +40,7 @@ class JourneyViewModel(
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var saveJob: Job? = null
+    private var liveJob: Job? = null
 
     private val _uiState = MutableStateFlow(JourneyUiState())
     val uiState: StateFlow<JourneyUiState> = _uiState.asStateFlow()
@@ -96,6 +100,24 @@ class JourneyViewModel(
         )
     }
 
+    /** Applies a pure edit to one step of the open draft, preserving the others' order. */
+    fun editStep(stepId: String, transform: (JourneyStep) -> JourneyStep) = editDraft { draft ->
+        draft.copy(steps = draft.steps.map { if (it.id == stepId) transform(it) else it })
+    }
+
+    fun removeStep(stepId: String) = editDraft { draft ->
+        draft.copy(steps = draft.steps.filterNot { it.id == stepId })
+    }
+
+    fun setStepSelector(stepId: String, selector: Map<String, kotlinx.serialization.json.JsonElement>) =
+        editStep(stepId) { it.copy(selector = selector) }
+
+    fun setStepAssertions(stepId: String, assertions: List<Assertion>) =
+        editStep(stepId) { it.copy(assertions = assertions) }
+
+    fun setStepOnRepeat(stepId: String, policy: RepeatPolicy) =
+        editStep(stepId) { it.copy(onRepeat = policy) }
+
     fun deleteJourney(id: String) {
         scope.launch {
             configStore.deleteLocal(ConfigKind.Journeys, id)
@@ -116,6 +138,26 @@ class JourneyViewModel(
         _uiState.update { it.copy(lastReport = report) }
     }
 
+    /**
+     * Opens the full-width live validation panel, re-grading [journey] on every event that streams in.
+     * Grades the current draft when one is open, else the given journey.
+     */
+    fun startLiveValidation(journey: JourneyDefinition) {
+        liveJob?.cancel()
+        _uiState.update { it.copy(liveJourneyId = journey.id, liveJourneyName = journey.name) }
+        liveJob = scope.launch {
+            evaluateJourney.observe(journey).collect { report ->
+                _uiState.update { it.copy(lastReport = report) }
+            }
+        }
+    }
+
+    fun stopLiveValidation() {
+        liveJob?.cancel()
+        liveJob = null
+        _uiState.update { it.copy(liveJourneyId = null, liveJourneyName = "") }
+    }
+
     private fun scheduleSave(draft: JourneyDefinition) {
         saveJob?.cancel()
         saveJob = scope.launch {
@@ -129,6 +171,7 @@ class JourneyViewModel(
     private fun newStepId(): String = Uuid.random().toString()
 
     fun close() {
+        liveJob?.cancel()
         // Flush a pending debounced save so the last edit is not lost on window close.
         val draft = _uiState.value.editorDraft
         if (draft != null && saveJob?.isActive == true) {

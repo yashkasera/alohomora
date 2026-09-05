@@ -18,6 +18,10 @@ data class JourneyUiState(
     val editorDraft: JourneyDefinition? = null,
     /** The most recent validation result for [selectedId], if any. */
     val lastReport: JourneyReport? = null,
+    /** Non-null while the full-width live validation panel is open, grading this journey live. */
+    val liveJourneyId: String? = null,
+    /** Display name of the journey being validated live, for the panel header. */
+    val liveJourneyName: String = "",
     val isLoading: Boolean = false,
 ) {
     /** Journeys after the search filter, ranked name-first. Case-insensitive substring. */

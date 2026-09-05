@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,22 +22,36 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.common.Event
+import io.github.yashkasera.alohomora.common.journey.Assertion
+import io.github.yashkasera.alohomora.common.journey.AssertOp
 import io.github.yashkasera.alohomora.common.journey.JourneyDefinition
 import io.github.yashkasera.alohomora.common.journey.JourneyReport
+import io.github.yashkasera.alohomora.common.journey.JourneyStep
+import io.github.yashkasera.alohomora.common.journey.RepeatPolicy
 import io.github.yashkasera.alohomora.common.journey.StepOutcome
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EventItem
+import io.github.yashkasera.alohomora.ui.components.AlohomoraAssistChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraSingleChoiceToggleGroup
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSwitch
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
+import io.github.yashkasera.alohomora.ui.components.AlohomoraToggleItem
 import io.github.yashkasera.alohomora.ui.components.JourneyStatusGlyph
+import io.github.yashkasera.alohomora.ui.icons.ChevronDown
+import io.github.yashkasera.alohomora.ui.icons.ChevronRight
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Detail editor (~40% width), mirroring `EditMockRuleSideSheet`. Progressive disclosure that is
@@ -57,7 +72,11 @@ fun JourneyEditorSideSheet(
     onToggleOrdered: (Boolean) -> Unit,
     onAddStepFromEvent: (String) -> Unit,
     onRemoveStep: (String) -> Unit,
+    onStepSelectorChange: (String, Map<String, JsonElement>) -> Unit,
+    onStepAssertionsChange: (String, List<Assertion>) -> Unit,
+    onStepOnRepeatChange: (String, RepeatPolicy) -> Unit,
     onValidate: () -> Unit,
+    onValidateLive: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     // Keep the last non-null draft so the exit slide has something to render after draft goes null.
@@ -147,29 +166,14 @@ fun JourneyEditorSideSheet(
                     )
                 }
             } else {
-                items(current.steps, key = { it.id }) { step ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-                    ) {
-                        Text(
-                            text = step.eventName,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(1f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        if (step.selector.isNotEmpty()) AlohomoraChip(label = "selector")
-                        if (step.assertions.isNotEmpty()) AlohomoraChip(label = "${step.assertions.size} checks")
-                        AlohomoraIconButton(onClick = { onRemoveStep(step.id) }) {
-                            Icon(
-                                imageVector = Icons.Trash,
-                                contentDescription = "Remove step",
-                                modifier = Modifier.size(MaterialTheme.dimens.icon.md),
-                            )
-                        }
-                    }
+                items(current.steps, key = { "step-${it.id}" }) { step ->
+                    StepEditorRow(
+                        step = step,
+                        onRemove = { onRemoveStep(step.id) },
+                        onSelectorChange = { onStepSelectorChange(step.id, it) },
+                        onAssertionsChange = { onStepAssertionsChange(step.id, it) },
+                        onOnRepeatChange = { onStepOnRepeatChange(step.id, it) },
+                    )
                 }
             }
 
@@ -192,6 +196,7 @@ fun JourneyEditorSideSheet(
                             )
                         },
                     )
+                    AlohomoraOutlinedButton(text = "Live", onClick = onValidateLive)
                     if (report != null) {
                         JourneyStatusGlyph(status = report.status)
                         Text(
@@ -204,7 +209,7 @@ fun JourneyEditorSideSheet(
             }
 
             if (report != null) {
-                items(report.steps, key = { it.step.id }) { result ->
+                items(report.steps, key = { "result-${it.step.id}" }) { result ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
@@ -235,7 +240,9 @@ fun JourneyEditorSideSheet(
                     )
                 }
             } else {
-                items(recentEvents, key = { it.id }) { event ->
+                // Index-composite key: captured events can share an id (e.g. unpersisted), and a
+                // LazyColumn key must be unique across the whole list.
+                itemsIndexed(recentEvents, key = { index, event -> "event-$index-${event.id}" }) { _, event ->
                     EventItem(
                         event = event,
                         showProperties = false,
@@ -246,6 +253,234 @@ fun JourneyEditorSideSheet(
         }
     }
 }
+
+/**
+ * One step, with a collapsed "More" that reveals the identity/validation depth — selector (which
+ * occurrence), assertions (what to check), and repeat policy. Progressive disclosure: collapsed by
+ * default so a plain presence step stays one line, but available to every user (not developer-gated).
+ */
+@Composable
+private fun StepEditorRow(
+    step: JourneyStep,
+    onRemove: () -> Unit,
+    onSelectorChange: (Map<String, JsonElement>) -> Unit,
+    onAssertionsChange: (List<Assertion>) -> Unit,
+    onOnRepeatChange: (RepeatPolicy) -> Unit,
+) {
+    var expanded by remember(step.id) {
+        mutableStateOf(step.selector.isNotEmpty() || step.assertions.isNotEmpty())
+    }
+    AlohomoraOutlinedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(MaterialTheme.dimens.margin.md)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+            ) {
+                AlohomoraIconButton(onClick = { expanded = !expanded }) {
+                    Icon(
+                        imageVector = if (expanded) Icons.ChevronDown else Icons.ChevronRight,
+                        contentDescription = if (expanded) "Collapse" else "More",
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                    )
+                }
+                Text(
+                    text = step.eventName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (step.selector.isNotEmpty()) AlohomoraChip(label = "selector")
+                if (step.assertions.isNotEmpty()) AlohomoraChip(label = "${step.assertions.size} checks")
+                AlohomoraIconButton(onClick = onRemove) {
+                    Icon(
+                        imageVector = Icons.Trash,
+                        contentDescription = "Remove step",
+                        modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                    )
+                }
+            }
+
+            if (expanded) {
+                Column(
+                    modifier = Modifier.padding(top = MaterialTheme.dimens.margin.sm),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                ) {
+                    SelectorEditor(step.selector, onSelectorChange)
+                    AssertionEditor(step.assertions, onAssertionsChange)
+                    Text(
+                        text = "IF IT REPEATS",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    AlohomoraSingleChoiceToggleGroup(
+                        items = REPEAT_ITEMS,
+                        selectedId = step.onRepeat.name,
+                        onSelectedIdChange = { onOnRepeatChange(RepeatPolicy.valueOf(it)) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectorEditor(
+    selector: Map<String, JsonElement>,
+    onChange: (Map<String, JsonElement>) -> Unit,
+) {
+    var key by remember { mutableStateOf("") }
+    var value by remember { mutableStateOf("") }
+    Text(
+        text = "MATCH A SPECIFIC VALUE",
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    selector.forEach { (k, v) ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+        ) {
+            Text(
+                text = "$k = ${scalarText(v)}",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            AlohomoraIconButton(onClick = { onChange(selector - k) }) {
+                Icon(
+                    imageVector = Icons.X,
+                    contentDescription = "Remove",
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                )
+            }
+        }
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+    ) {
+        AlohomoraTextField(
+            value = key,
+            onValueChange = { key = it },
+            placeholder = "property",
+            modifier = Modifier.weight(1f),
+        )
+        AlohomoraTextField(
+            value = value,
+            onValueChange = { value = it },
+            placeholder = "value",
+            modifier = Modifier.weight(1f),
+        )
+        AlohomoraTextButton(
+            text = "Add",
+            enabled = key.isNotBlank(),
+            onClick = {
+                onChange(selector + (key to parseScalar(value)))
+                key = ""; value = ""
+            },
+        )
+    }
+}
+
+@Composable
+private fun AssertionEditor(
+    assertions: List<Assertion>,
+    onChange: (List<Assertion>) -> Unit,
+) {
+    var path by remember { mutableStateOf("") }
+    var op by remember { mutableStateOf(AssertOp.EQ) }
+    var value by remember { mutableStateOf("") }
+    Text(
+        text = "ADD A CHECK",
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    assertions.forEachIndexed { index, assertion ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+        ) {
+            Text(
+                text = buildString {
+                    append(assertion.path).append(' ').append(assertion.op.name)
+                    assertion.value?.let { append(' ').append(scalarText(it)) }
+                },
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            AlohomoraIconButton(onClick = { onChange(assertions.filterIndexed { i, _ -> i != index }) }) {
+                Icon(
+                    imageVector = Icons.X,
+                    contentDescription = "Remove",
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.sm),
+                )
+            }
+        }
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+    ) {
+        AlohomoraTextField(
+            value = path,
+            onValueChange = { path = it },
+            placeholder = "property",
+            modifier = Modifier.weight(1f),
+        )
+        // Tap to cycle the operator; keeps the row compact without a dropdown dependency.
+        AlohomoraAssistChip(
+            label = op.name,
+            onClick = { op = AssertOp.entries[(op.ordinal + 1) % AssertOp.entries.size] },
+        )
+        if (op != AssertOp.EXISTS) {
+            AlohomoraTextField(
+                value = value,
+                onValueChange = { value = it },
+                placeholder = "value",
+                modifier = Modifier.weight(1f),
+            )
+        }
+        AlohomoraTextButton(
+            text = "Add",
+            enabled = path.isNotBlank(),
+            onClick = {
+                val assertion = Assertion(
+                    path = path,
+                    op = op,
+                    value = if (op == AssertOp.EXISTS) null else parseScalar(value),
+                )
+                onChange(assertions + assertion)
+                path = ""; value = ""
+            },
+        )
+    }
+}
+
+/** Parses free-text input into the narrowest JSON scalar: bool, then number, else string. */
+private fun parseScalar(input: String): JsonElement = when {
+    input == "true" || input == "false" -> JsonPrimitive(input.toBoolean())
+    input.toLongOrNull() != null -> JsonPrimitive(input.toLong())
+    input.toDoubleOrNull() != null -> JsonPrimitive(input.toDouble())
+    else -> JsonPrimitive(input)
+}
+
+private fun scalarText(element: JsonElement): String =
+    (element as? JsonPrimitive)?.content ?: element.toString()
+
+private val REPEAT_ITEMS = listOf(
+    AlohomoraToggleItem(id = RepeatPolicy.IGNORE.name, label = "Ignore"),
+    AlohomoraToggleItem(id = RepeatPolicy.FLAG.name, label = "Flag"),
+    AlohomoraToggleItem(id = RepeatPolicy.FAIL.name, label = "Fail"),
+)
 
 @Composable
 private fun SectionLabel(text: String) {

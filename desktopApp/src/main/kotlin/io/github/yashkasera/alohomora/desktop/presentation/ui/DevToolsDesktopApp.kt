@@ -79,6 +79,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryP
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.JourneyEditorSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.JourneyListSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.JourneyValidationPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.MockRulesSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceWaterfallSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TracesPanel
@@ -702,13 +703,21 @@ fun DevToolsDesktopApp(
                     journeyViewModel.editDraft { it.copy(ordered = ordered) }
                 },
                 onAddStepFromEvent = journeyViewModel::promoteEventToStep,
-                onRemoveStep = { stepId ->
-                    journeyViewModel.editDraft { draft ->
-                        draft.copy(steps = draft.steps.filterNot { it.id == stepId })
-                    }
-                },
+                onRemoveStep = journeyViewModel::removeStep,
+                onStepSelectorChange = journeyViewModel::setStepSelector,
+                onStepAssertionsChange = journeyViewModel::setStepAssertions,
+                onStepOnRepeatChange = journeyViewModel::setStepOnRepeat,
                 onValidate = journeyViewModel::validate,
+                onValidateLive = {
+                    journeyUi.editorDraft?.let { journeyViewModel.startLiveValidation(it) }
+                },
                 onDismiss = journeyViewModel::closeEditor,
+            )
+            JourneyValidationPanel(
+                visible = journeyUi.liveJourneyId != null,
+                journeyName = journeyUi.liveJourneyName,
+                report = journeyUi.lastReport,
+                onClose = journeyViewModel::stopLiveValidation,
             )
 
             TraceWaterfallSideSheet(
