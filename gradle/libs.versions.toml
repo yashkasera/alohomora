@@ -135,4 +135,4 @@ kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", vers
 room = { id = "androidx.room", version.ref = "room" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
-maven-publish = { id = "com.vanniktech.maven.publish", version = "0.32.0" }
+maven-publish = { id = "com.vanniktech.maven.publish", version = "0.37.0" }
