@@ -79,6 +79,7 @@ class DesktopAppComposition(
     val trafficViewModel: TrafficViewModel
     val networkRulesViewModel: NetworkRulesViewModel
     val journeyViewModel: JourneyViewModel
+    val deepLinkCatalogViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DeepLinkCatalogViewModel
     val configRepoViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.ConfigRepoViewModel
 
     /** The config repo is one global clone, so this is app-scoped and shared across windows. */
@@ -250,10 +251,13 @@ class DesktopAppComposition(
         )
         configRepoManager = sharedConfigRepoManager
             ?: io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoManager()
+        val configStore = ConfigStoreFacade(teamProvider = { configRepoManager.teamStore })
         journeyViewModel = JourneyViewModel(
-            configStore = ConfigStoreFacade(teamProvider = { configRepoManager.teamStore }),
+            configStore = configStore,
             evaluateJourney = EvaluateJourneyUseCase(devToolsRepository),
         )
+        deepLinkCatalogViewModel =
+            io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DeepLinkCatalogViewModel(configStore)
         configRepoViewModel =
             io.github.yashkasera.alohomora.desktop.presentation.viewmodel.ConfigRepoViewModel(
                 manager = configRepoManager,
@@ -282,6 +286,7 @@ class DesktopAppComposition(
         trafficViewModel.close()
         networkRulesViewModel.close()
         journeyViewModel.close()
+        deepLinkCatalogViewModel.close()
         configRepoViewModel.close()
         if (ownsConfigRepoManager) configRepoManager.shutdown()
         devToolsRepository.close()

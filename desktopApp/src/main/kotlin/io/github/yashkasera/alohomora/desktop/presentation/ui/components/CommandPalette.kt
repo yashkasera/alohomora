@@ -377,6 +377,7 @@ fun buildCommandActions(
     onFocusSearch: () -> Unit,
     onOpenMockRules: () -> Unit,
     onOpenJourneys: () -> Unit,
+    onOpenDeepLinkCatalog: () -> Unit,
     developerMode: Boolean,
     onGitSync: () -> Unit,
     onRevealRepo: () -> Unit,
@@ -545,6 +546,15 @@ fun buildCommandActions(
         // Journeys are LOCAL-first and need no device connection to author.
         enabled = true,
         action = onOpenJourneys,
+    )
+
+    actions += CommandAction(
+        id = "data_deeplink_catalog",
+        label = "Deep Link Catalog",
+        category = ActionCategory.DATA,
+        icon = Icons.Link,
+        enabled = true,
+        action = onOpenDeepLinkCatalog,
     )
 
     actions += CommandAction(

@@ -61,6 +61,7 @@ fun DeviceWindow(
     var showDeepLinkBuilder by remember { mutableStateOf(false) }
     var showMockRules by remember { mutableStateOf(false) }
     var showJourneys by remember { mutableStateOf(false) }
+    var showDeepLinkCatalog by remember { mutableStateOf(false) }
     var zoomScale by remember { mutableFloatStateOf(1.0f) }
 
     val zoomIn = { zoomScale = (zoomScale + 0.1f).coerceAtMost(2.0f) }
@@ -217,6 +218,16 @@ fun DeviceWindow(
                         ),
                         onClick = { showJourneys = true },
                     )
+                    Item(
+                        "Deep Link Catalog",
+                        shortcut = KeyShortcut(
+                            Key.L,
+                            shift = true,
+                            meta = isMacOs,
+                            ctrl = !isMacOs,
+                        ),
+                        onClick = { showDeepLinkCatalog = true },
+                    )
                 }
                 Menu("Help") {
                     Item(
@@ -264,6 +275,7 @@ fun DeviceWindow(
                         networkRulesViewModel = session.composition.networkRulesViewModel,
                         journeyViewModel = session.composition.journeyViewModel,
                         configRepoViewModel = session.composition.configRepoViewModel,
+                        deepLinkCatalogViewModel = session.composition.deepLinkCatalogViewModel,
                         initialDeviceId = session.deviceId,
                         showHelp = showHelp,
                         onShowHelp = { showHelp = true },
@@ -280,6 +292,9 @@ fun DeviceWindow(
                         showJourneys = showJourneys,
                         onOpenJourneys = { showJourneys = true },
                         onDismissJourneys = { showJourneys = false },
+                        showDeepLinkCatalog = showDeepLinkCatalog,
+                        onOpenDeepLinkCatalog = { showDeepLinkCatalog = true },
+                        onDismissDeepLinkCatalog = { showDeepLinkCatalog = false },
                         onShowSettings = onShowSettings,
                         onZoomIn = zoomIn,
                         onZoomOut = zoomOut,

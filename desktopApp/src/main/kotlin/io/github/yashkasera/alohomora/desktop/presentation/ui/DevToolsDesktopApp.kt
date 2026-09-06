@@ -69,6 +69,8 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ConfigPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DashboardContent
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DatabasePanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DeepLinkBuilderSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DeepLinkCatalogSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DeepLinkDefEditorSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventDetailsSideSheet
@@ -128,6 +130,7 @@ fun DevToolsDesktopApp(
     networkRulesViewModel: NetworkRulesViewModel,
     journeyViewModel: JourneyViewModel,
     configRepoViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.ConfigRepoViewModel,
+    deepLinkCatalogViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DeepLinkCatalogViewModel,
     initialDeviceId: String? = null,
     showHelp: Boolean = false,
     onShowHelp: () -> Unit = {},
@@ -144,6 +147,9 @@ fun DevToolsDesktopApp(
     showJourneys: Boolean = false,
     onOpenJourneys: () -> Unit = {},
     onDismissJourneys: () -> Unit = {},
+    showDeepLinkCatalog: Boolean = false,
+    onOpenDeepLinkCatalog: () -> Unit = {},
+    onDismissDeepLinkCatalog: () -> Unit = {},
     onShowSettings: () -> Unit = {},
     onZoomIn: () -> Unit = {},
     onZoomOut: () -> Unit = {},
@@ -185,6 +191,7 @@ fun DevToolsDesktopApp(
         selectedEventId != null ||
         showMockRules ||
         showJourneys ||
+        showDeepLinkCatalog ||
         showDeepLinkBuilder ||
         showCommandPalette ||
         showHelp
@@ -320,6 +327,10 @@ fun DevToolsDesktopApp(
             onDismissCommandPalette()
             onOpenJourneys()
         },
+        onOpenDeepLinkCatalog = {
+            onDismissCommandPalette()
+            onOpenDeepLinkCatalog()
+        },
         developerMode = configRepoUi.developerMode,
         onGitSync = {
             onDismissCommandPalette()
@@ -381,6 +392,10 @@ fun DevToolsDesktopApp(
 
                         showJourneys -> {
                             onDismissJourneys(); return@onPreviewKeyEvent true
+                        }
+
+                        showDeepLinkCatalog -> {
+                            onDismissDeepLinkCatalog(); return@onPreviewKeyEvent true
                         }
 
                         selectedTrafficForSheet != null -> {
@@ -735,6 +750,39 @@ fun DevToolsDesktopApp(
                 journeyName = journeyUi.liveJourneyName,
                 report = journeyUi.lastReport,
                 onClose = journeyViewModel::stopLiveValidation,
+            )
+
+            val catalogUi by deepLinkCatalogViewModel.uiState.collectAsState()
+            DeepLinkCatalogSideSheet(
+                visible = showDeepLinkCatalog,
+                state = catalogUi,
+                teamConnected = configRepoUi.isConnected,
+                onScopeChange = deepLinkCatalogViewModel::onScopeChange,
+                onQueryChange = deepLinkCatalogViewModel::onQueryChange,
+                onOpen = deepLinkCatalogViewModel::editExisting,
+                onNew = deepLinkCatalogViewModel::newDef,
+                onDelete = deepLinkCatalogViewModel::deleteDef,
+                onShare = deepLinkCatalogViewModel::share,
+                onSync = configRepoViewModel::sync,
+                onOpenUrl = { url -> runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) } },
+                onDismiss = { onDismissDeepLinkCatalog() },
+            )
+            DeepLinkDefEditorSideSheet(
+                draft = catalogUi.editorDraft,
+                validationErrors = catalogUi.validationErrors,
+                onNameChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(name = v) } },
+                onModuleChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(module = v) } },
+                onFlowChange = { v ->
+                    deepLinkCatalogViewModel.editDraft { it.copy(flow = v.ifBlank { null }) }
+                },
+                onDescriptionChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(description = v) } },
+                onUriTemplateChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(uriTemplate = v) } },
+                onParamsChange = { params -> deepLinkCatalogViewModel.editDraft { it.copy(params = params) } },
+                onExamplesChange = { examples ->
+                    deepLinkCatalogViewModel.editDraft { it.copy(examples = examples) }
+                },
+                onFire = { url -> devicesViewModel.openDeepLink(selectedDeviceId, url) },
+                onDismiss = deepLinkCatalogViewModel::closeEditor,
             )
 
             TraceWaterfallSideSheet(
