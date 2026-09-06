@@ -248,13 +248,14 @@ class DesktopAppComposition(
         tracesViewModel = TracesViewModel(repository = devToolsRepository)
         eventsViewModel = EventsViewModel(repository = devToolsRepository)
         trafficViewModel = TrafficViewModel(repository = devToolsRepository)
-        networkRulesViewModel = NetworkRulesViewModel(
-            repository = devToolsRepository,
-            sessionStore = MockSessionStore(),
-        )
         configRepoManager = sharedConfigRepoManager
             ?: io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoManager()
         configStore = ConfigStoreFacade(teamProvider = { configRepoManager.teamStore })
+        networkRulesViewModel = NetworkRulesViewModel(
+            repository = devToolsRepository,
+            sessionStore = MockSessionStore(),
+            configStore = configStore,
+        )
         journeyViewModel = JourneyViewModel(
             configStore = configStore,
             evaluateJourney = EvaluateJourneyUseCase(devToolsRepository),

@@ -39,9 +39,19 @@ import kotlinx.coroutines.launch
 class NetworkRulesViewModel(
     private val repository: DevToolsRepository,
     private val sessionStore: MockSessionStore = MockSessionStore(),
+    /** App-scoped config store for "Share with team"; null disables the affordance. */
+    private val configStore: io.github.yashkasera.alohomora.desktop.domain.config.ConfigStore? = null,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var autoSaveJob: Job? = null
+
+    private val _lastProposal =
+        MutableStateFlow<io.github.yashkasera.alohomora.desktop.domain.config.Proposal?>(null)
+    val lastProposal: StateFlow<io.github.yashkasera.alohomora.desktop.domain.config.Proposal?> =
+        _lastProposal.asStateFlow()
+
+    private val _shareMessage = MutableStateFlow<String?>(null)
+    val shareMessage: StateFlow<String?> = _shareMessage.asStateFlow()
 
     val networkRulesSupported: StateFlow<Boolean> = repository.networkRulesSupported
     val vpnThrottleSupported: StateFlow<Boolean> = repository.vpnThrottleSupported
@@ -242,6 +252,32 @@ class NetworkRulesViewModel(
 
     fun addRuleFromTraffic(traffic: TrafficEntry) {
         addRule(traffic.toMockRule())
+    }
+
+    /**
+     * Shares the current mock session with the team via the same ConfigStore path journeys and deep
+     * links use. Requires a saved session and a connected repo; surfaces the proposal or a message.
+     */
+    fun shareCurrentSession() {
+        val store = configStore ?: run {
+            _shareMessage.value = "Team config is not connected."
+            return
+        }
+        val session = _currentSession.value ?: run {
+            _shareMessage.value = "Save the session first, then share it."
+            return
+        }
+        scope.launch {
+            val toShare = session.copy(rules = _mockRules.value)
+            runCatching {
+                store.shareWithTeam(
+                    io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind.MockSets,
+                    toShare,
+                )
+            }
+                .onSuccess { proposal -> _lastProposal.value = proposal; _shareMessage.value = null }
+                .onFailure { e -> _shareMessage.value = e.message ?: "Share failed" }
+        }
     }
 
     private fun sendRules() {

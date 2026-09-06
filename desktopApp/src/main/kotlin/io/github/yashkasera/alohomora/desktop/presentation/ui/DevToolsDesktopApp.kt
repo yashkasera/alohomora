@@ -685,6 +685,8 @@ fun DevToolsDesktopApp(
             val mockRules by networkRulesViewModel.mockRules.collectAsState()
             val mockCurrentSession by networkRulesViewModel.currentSession.collectAsState()
             val mockSessions by networkRulesViewModel.sessions.collectAsState()
+            val mockProposal by networkRulesViewModel.lastProposal.collectAsState()
+            val mockShareMessage by networkRulesViewModel.shareMessage.collectAsState()
             MockRulesSideSheet(
                 visible = showMockRules,
                 rules = mockRules,
@@ -702,6 +704,13 @@ fun DevToolsDesktopApp(
                 onDetachSession = networkRulesViewModel::detachSession,
                 onExport = networkRulesViewModel::exportSession,
                 onImport = networkRulesViewModel::importFromFile,
+                teamConnected = configRepoUi.isConnected,
+                onShareSession = networkRulesViewModel::shareCurrentSession,
+                lastProposal = mockProposal,
+                shareMessage = mockShareMessage,
+                onOpenUrl = { url ->
+                    runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
+                },
                 onDismiss = { onDismissMockRules() },
             )
 
