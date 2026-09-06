@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.data.config
 
+import io.github.yashkasera.alohomora.common.deeplink.DeepLinkDef
 import io.github.yashkasera.alohomora.common.journey.JourneyDefinition
 import io.github.yashkasera.alohomora.common.journey.JourneyStep
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind
@@ -89,5 +90,17 @@ class GitConfigStoreTest {
     @Test
     fun `sync reports up to date on a fresh clone`() = runTest {
         assertEquals(SyncStatus.UpToDate::class, store.sync()::class)
+    }
+
+    @Test
+    fun `sharing a deep link commits a regenerated catalog readme`() = runTest {
+        val def = DeepLinkDef(id = "d1", name = "KYC verify", module = "kyc", uriTemplate = "app://kyc/verify")
+        val proposal = store.shareWithTeam(ConfigKind.DeepLinks, def)
+
+        // The README rides on the proposal branch; check it out to inspect.
+        Git.open(clone).use { g -> g.checkout().setName(proposal.branch).call() }
+        val readme = File(clone, "deeplinks/README.md")
+        assertTrue(readme.exists())
+        assertTrue(readme.readText().contains("KYC verify"))
     }
 }

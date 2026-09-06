@@ -46,6 +46,9 @@ class GitConfigStore(
      */
     suspend fun <T> shareWithTeam(kind: ConfigKind<T>, item: T): Proposal = withContext(Dispatchers.IO) {
         files.save(kind, item)
+        // The committed catalog is the browsable, reviewable artifact, regenerated (not hand-edited)
+        // so it only diffs when the definitions change.
+        if (kind == ConfigKind.DeepLinks) regenerateDeepLinkReadme()
         val branch = branchName(kind.nameOf(item))
         git.checkout().setCreateBranch(true).setName(branch).call()
         try {
@@ -94,6 +97,12 @@ class GitConfigStore(
     }
 
     override fun close() = git.close()
+
+    private suspend fun regenerateDeepLinkReadme() {
+        val defs = files.list(ConfigKind.DeepLinks)
+        File(repoDir, "deeplinks/README.md").apply { parentFile?.mkdirs() }
+            .writeText(DeepLinkCatalogRenderer.render(defs))
+    }
 
     private fun branchName(name: String): String {
         val user = System.getProperty("user.name")?.let { slug(it) }?.ifBlank { null } ?: "user"
