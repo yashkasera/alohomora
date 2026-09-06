@@ -103,6 +103,9 @@ class AlohomoraMcpServer(
         registerAlohomoraPrompts(server)
         if (writeEnabled()) {
             registerAlohomoraWriteTools(server, registry, confirmation)
+            if (configStore != null) {
+                registerAlohomoraJourneyWriteTools(server, registry, configStore, confirmation)
+            }
         }
         onClientConnected()
         server.onClose { onClientDisconnected() }
