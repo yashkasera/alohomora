@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.desktop.domain.config
 
 import io.github.yashkasera.alohomora.common.deeplink.DeepLinkDef
 import io.github.yashkasera.alohomora.common.journey.JourneyDefinition
+import io.github.yashkasera.alohomora.desktop.data.local.MockSession
 import kotlinx.serialization.KSerializer
 
 /**
@@ -55,7 +56,15 @@ sealed interface ConfigKind<T> {
         override val descriptionOf = DeepLinkDef::description
         override val subDirOf: (DeepLinkDef) -> String? = { it.module }
     }
-    // MockSets adopts this in a later slice.
+
+    object MockSets : ConfigKind<MockSession> {
+        override val dir = "mocks"
+        override val serializer = MockSession.serializer()
+        override val idOf = MockSession::id
+        override val nameOf = MockSession::name
+        override val descriptionOf = MockSession::description
+        override val subDirOf: (MockSession) -> String? = { null }
+    }
 }
 
 /** A stored artifact plus the scope/state metadata the UI renders (never persisted in the file body). */

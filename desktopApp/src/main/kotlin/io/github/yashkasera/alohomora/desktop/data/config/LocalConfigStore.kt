@@ -56,6 +56,11 @@ class LocalConfigStore(
         findFileById(kind, id)?.delete()
     }
 
+    /** The artifact file's last-modified time, or 0 if absent — the source of "when" for LOCAL. */
+    suspend fun <T> lastModified(kind: ConfigKind<T>, id: String): Long = withContext(Dispatchers.IO) {
+        findFileById(kind, id)?.lastModified() ?: 0L
+    }
+
     private fun <T> findFileById(kind: ConfigKind<T>, id: String): File? =
         kindFiles(kind).firstOrNull { file ->
             runCatching { kind.idOf(json.decodeFromString(kind.serializer, file.readText())) }.getOrNull() == id

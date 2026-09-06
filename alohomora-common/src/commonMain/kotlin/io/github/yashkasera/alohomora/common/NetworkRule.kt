@@ -13,6 +13,7 @@ data class ThrottleProfile(
 data class MockRule(
     val id: String,
     val name: String? = null,
+    val description: String = "",
     val enabled: Boolean = true,
     val urlPattern: String,
     val isRegex: Boolean = false,
