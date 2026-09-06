@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.data.config
 
+import io.github.yashkasera.alohomora.common.deeplink.DeepLinkDef
 import io.github.yashkasera.alohomora.common.journey.JourneyDefinition
 import io.github.yashkasera.alohomora.common.journey.JourneyStep
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind
@@ -97,6 +98,24 @@ class LocalConfigStoreTest {
     @Test
     fun `listing an absent kind dir yields empty`() = runTest {
         assertTrue(store.list(ConfigKind.Journeys).isEmpty())
+    }
+
+    @Test
+    fun `a deep link is stored under its module sub-directory`() = runTest {
+        val def = DeepLinkDef(
+            id = "d1",
+            name = "KYC verify",
+            module = "kyc",
+            uriTemplate = "fampay://kyc/verify/{userId}",
+        )
+        store.save(ConfigKind.DeepLinks, def)
+
+        assertTrue(File(baseDir, "deeplinks/kyc/kyc-verify.json").exists())
+        assertEquals(listOf(def), store.list(ConfigKind.DeepLinks))
+
+        // Identity resolves across the sub-directory on delete.
+        store.delete(ConfigKind.DeepLinks, "d1")
+        assertTrue(store.list(ConfigKind.DeepLinks).isEmpty())
     }
 
     @Test

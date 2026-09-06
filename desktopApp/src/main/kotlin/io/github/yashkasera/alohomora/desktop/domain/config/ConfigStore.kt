@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop.domain.config
 
+import io.github.yashkasera.alohomora.common.deeplink.DeepLinkDef
 import io.github.yashkasera.alohomora.common.journey.JourneyDefinition
 import kotlinx.serialization.KSerializer
 
@@ -31,14 +32,30 @@ sealed interface ConfigKind<T> {
     val nameOf: (T) -> String
     val descriptionOf: (T) -> String
 
+    /**
+     * An optional grouping sub-directory under [dir], derived from the item. Null for a flat kind;
+     * DeepLinks groups by module so a reviewer sees `deeplinks/kyc/verify.json`. The store slugs it.
+     */
+    val subDirOf: (T) -> String?
+
     object Journeys : ConfigKind<JourneyDefinition> {
         override val dir = "journeys"
         override val serializer = JourneyDefinition.serializer()
         override val idOf = JourneyDefinition::id
         override val nameOf = JourneyDefinition::name
         override val descriptionOf = JourneyDefinition::description
+        override val subDirOf: (JourneyDefinition) -> String? = { null }
     }
-    // MockSets and DeepLinks adopt this in Phase 3.
+
+    object DeepLinks : ConfigKind<DeepLinkDef> {
+        override val dir = "deeplinks"
+        override val serializer = DeepLinkDef.serializer()
+        override val idOf = DeepLinkDef::id
+        override val nameOf = DeepLinkDef::name
+        override val descriptionOf = DeepLinkDef::description
+        override val subDirOf: (DeepLinkDef) -> String? = { it.module }
+    }
+    // MockSets adopts this in a later slice.
 }
 
 /** A stored artifact plus the scope/state metadata the UI renders (never persisted in the file body). */

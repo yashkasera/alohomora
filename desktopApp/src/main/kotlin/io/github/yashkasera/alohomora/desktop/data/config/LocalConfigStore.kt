@@ -26,15 +26,25 @@ class LocalConfigStore(
 
     private fun kindDir(kind: ConfigKind<*>) = File(baseDir, kind.dir)
 
+    /** All `.json` files under the kind dir, including one grouping sub-directory level (deeplinks). */
+    private fun kindFiles(kind: ConfigKind<*>): List<File> {
+        val root = kindDir(kind)
+        if (!root.isDirectory) return emptyList()
+        return root.walkTopDown()
+            .filter { it.isFile && it.extension == "json" }
+            .sortedBy { it.path }
+            .toList()
+    }
+
     suspend fun <T> list(kind: ConfigKind<T>): List<T> = withContext(Dispatchers.IO) {
-        val dir = kindDir(kind)
-        val files = dir.listFiles { file -> file.isFile && file.extension == "json" } ?: return@withContext emptyList()
-        files.sortedBy { it.name }
-            .mapNotNull { file -> runCatching { json.decodeFromString(kind.serializer, file.readText()) }.getOrNull() }
+        kindFiles(kind).mapNotNull { file ->
+            runCatching { json.decodeFromString(kind.serializer, file.readText()) }.getOrNull()
+        }
     }
 
     suspend fun <T> save(kind: ConfigKind<T>, item: T): Unit = withContext(Dispatchers.IO) {
-        val dir = kindDir(kind).apply { mkdirs() }
+        val group = kind.subDirOf(item)?.let { slug(it) }
+        val dir = (if (group != null) File(kindDir(kind), group) else kindDir(kind)).apply { mkdirs() }
         val id = kind.idOf(item)
         // Overwrite the artifact's existing file (preserving its original slug) rather than creating a
         // second file on rename — the id is authority, the filename is cosmetic.
@@ -46,12 +56,10 @@ class LocalConfigStore(
         findFileById(kind, id)?.delete()
     }
 
-    private fun <T> findFileById(kind: ConfigKind<T>, id: String): File? {
-        val files = kindDir(kind).listFiles { file -> file.isFile && file.extension == "json" } ?: return null
-        return files.firstOrNull { file ->
+    private fun <T> findFileById(kind: ConfigKind<T>, id: String): File? =
+        kindFiles(kind).firstOrNull { file ->
             runCatching { kind.idOf(json.decodeFromString(kind.serializer, file.readText())) }.getOrNull() == id
         }
-    }
 
     /** `stem.json`, then `stem-2.json`, `stem-3.json`… until an unused path. Deterministic. */
     private fun uniqueFile(dir: File, stem: String): File {
