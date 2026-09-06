@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
@@ -111,6 +112,7 @@ fun SettingsDialog(
     onMcpWriteEnabledChange: (Boolean) -> Unit,
     configRepo: ConfigRepoUiState,
     onConfigRepoUrlChange: (String) -> Unit,
+    onConfigRepoPatChange: (String) -> Unit,
     onConfigRepoConnect: () -> Unit,
     onConfigRepoInitialize: () -> Unit,
     onConfigRepoDisconnect: () -> Unit,
@@ -256,6 +258,7 @@ fun SettingsDialog(
                             SettingsSection.TEAM -> TeamConfigSection(
                                 state = configRepo,
                                 onUrlChange = onConfigRepoUrlChange,
+                                onPatChange = onConfigRepoPatChange,
                                 onConnect = onConfigRepoConnect,
                                 onInitialize = onConfigRepoInitialize,
                                 onDisconnect = onConfigRepoDisconnect,
@@ -448,6 +451,7 @@ private fun LabeledCopyBlock(label: String, content: String) {
 private fun TeamConfigSection(
     state: ConfigRepoUiState,
     onUrlChange: (String) -> Unit,
+    onPatChange: (String) -> Unit,
     onConnect: () -> Unit,
     onInitialize: () -> Unit,
     onDisconnect: () -> Unit,
@@ -500,6 +504,16 @@ private fun TeamConfigSection(
                 label = "Repository URL",
                 placeholder = "git@… or https://…",
                 enabled = !state.busy,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
+            AlohomoraTextField(
+                value = state.patInput,
+                onValueChange = onPatChange,
+                label = "Access token (HTTPS only, optional)",
+                placeholder = "Stored in your OS keychain",
+                enabled = !state.busy,
+                visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))

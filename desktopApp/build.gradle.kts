@@ -52,6 +52,9 @@ dependencies {
     // JGit: local clone + branch push for the version-controlled team config repo. No forge API —
     // proposal creation is a plain git push (the generic floor); forge adapters are enhancements.
     implementation(libs.jgit)
+    // SSH transport for JGit (SSH-agent remotes) and the OS keychain for the HTTPS PAT.
+    implementation(libs.jgit.ssh)
+    implementation(libs.java.keyring)
 
     // Ktor client — the desktop app is a TCP *client* of the in-app DevTools server over an
     // adb port forward.

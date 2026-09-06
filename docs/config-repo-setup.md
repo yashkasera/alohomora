@@ -37,10 +37,14 @@ Settings → **Team config** → paste the repository URL → **Connect**. The a
 
 ## Authentication
 
-- **SSH** via your system agent, or **HTTPS** with cached credentials, work out of the box.
-- **HTTPS with a personal access token** stored in the OS keychain, and a one-tap OAuth device flow,
-  are planned. Until then, team mode assumes each user has normal git access to the forge (fine for
-  engineers; for non-technical users, an admin sets it up and PMs connect with a token).
+- **SSH** via your system agent (`git@host:…` URLs) works out of the box — Alohomora registers the
+  Apache MINA sshd transport and uses your `~/.ssh` keys / agent.
+- **HTTPS with a personal access token**: paste the token in Settings → Team config → Access token
+  when connecting an `https://` repo. It is stored in your **OS keychain** (macOS Keychain, Windows
+  Credential Store, or libsecret), keyed by host — never in plain preferences — and reused on later
+  launches. Leave it blank if your HTTPS credentials are already cached by git.
+- A one-tap OAuth device flow is a later milestone. For now, team mode assumes each user has normal
+  git access to the forge (an admin sets up the repo; PMs connect with a token).
 
 ## Proposal creation is forge-neutral
 

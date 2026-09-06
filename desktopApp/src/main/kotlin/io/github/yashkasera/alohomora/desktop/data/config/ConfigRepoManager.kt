@@ -48,10 +48,11 @@ class ConfigRepoManager(
     val teamStore: GitConfigStore? get() = _team.value
 
     init {
+        ConfigRepoCredentials.ensureSshRegistered()
         // Reconnect silently to a previously connected clone on the next launch.
         val url = DesktopConfigRepoPrefs.loadRepoUrl()
         if (url != null && File(clonePath, DOT_GIT).exists()) {
-            runCatching { GitConfigStore.open(clonePath, url, author) }
+            runCatching { GitConfigStore.open(clonePath, url, author, ConfigRepoCredentials.providerFor(url)) }
                 .onSuccess {
                     _team.value = it
                     _status.value = ConfigRepoStatus.Connected(url, clonePath.path)
@@ -59,15 +60,20 @@ class ConfigRepoManager(
         }
     }
 
-    /** Clones [url] into the clone path (or opens it if already cloned) and makes it the team store. */
-    suspend fun connect(url: String): Result<Unit> = withContext(Dispatchers.IO) {
+    /**
+     * Clones [url] into the clone path (or opens it if already cloned) and makes it the team store.
+     * A non-blank [token] is stored in the OS keychain for the URL's host (HTTPS auth).
+     */
+    suspend fun connect(url: String, token: String? = null): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             closeTeam()
+            saveToken(url, token)
+            val credentials = ConfigRepoCredentials.providerFor(url)
             val store = if (File(clonePath, DOT_GIT).exists()) {
-                GitConfigStore.open(clonePath, url, author)
+                GitConfigStore.open(clonePath, url, author, credentials)
             } else {
                 clonePath.parentFile?.mkdirs()
-                GitConfigStore.clone(url, clonePath, author)
+                GitConfigStore.clone(url, clonePath, author, credentials)
             }
             _team.value = store
             DesktopConfigRepoPrefs.saveRepoUrl(url)
@@ -77,9 +83,11 @@ class ConfigRepoManager(
     }
 
     /** Scaffolds the config structure into an empty remote and connects to it. */
-    suspend fun initialize(url: String): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun initialize(url: String, token: String? = null): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             closeTeam()
+            saveToken(url, token)
+            val credentials = ConfigRepoCredentials.providerFor(url)
             clonePath.mkdirs()
             Git.init().setInitialBranch(MAIN).setDirectory(clonePath).call().use { git ->
                 File(clonePath, "config.json").writeText(SCAFFOLD_CONFIG)
@@ -91,13 +99,23 @@ class ConfigRepoManager(
                 git.add().addFilepattern(".").call()
                 git.commit().setMessage("Initialize Alohomora config").setAuthor(author).call()
                 git.remoteAdd().setName(ORIGIN).setUri(URIish(url)).call()
-                git.push().setRemote(ORIGIN).setRefSpecs(RefSpec("refs/heads/$MAIN:refs/heads/$MAIN")).call()
+                git.push()
+                    .setRemote(ORIGIN)
+                    .setRefSpecs(RefSpec("refs/heads/$MAIN:refs/heads/$MAIN"))
+                    .also { if (credentials != null) it.setCredentialsProvider(credentials) }
+                    .call()
             }
-            _team.value = GitConfigStore.open(clonePath, url, author)
+            _team.value = GitConfigStore.open(clonePath, url, author, credentials)
             DesktopConfigRepoPrefs.saveRepoUrl(url)
             _status.value = ConfigRepoStatus.Connected(url, clonePath.path)
         }.onFailure { _status.value = ConfigRepoStatus.Error(it.message ?: "Initialize failed") }
             .map {}
+    }
+
+    private fun saveToken(url: String, token: String?) {
+        if (token.isNullOrBlank()) return
+        val host = ConfigRepoCredentials.hostOf(url) ?: return
+        ConfigRepoCredentials.savePat(host, token)
     }
 
     suspend fun sync(): SyncStatus {

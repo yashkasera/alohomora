@@ -26,20 +26,21 @@ class ConfigRepoViewModel(
 ) {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val _urlInput = MutableStateFlow(DesktopConfigRepoPrefs.loadRepoUrl().orEmpty())
+    private val _patInput = MutableStateFlow("")
     private val _busy = MutableStateFlow(false)
 
     val uiState: StateFlow<ConfigRepoUiState> = combine(
-        manager.status,
-        manager.developerMode,
-        manager.syncStatus,
+        combine(manager.status, manager.developerMode, manager.syncStatus) { s, d, sync -> Triple(s, d, sync) },
         _urlInput,
+        _patInput,
         _busy,
-    ) { status, developerMode, syncStatus, url, busy ->
+    ) { (status, developerMode, syncStatus), url, pat, busy ->
         ConfigRepoUiState(
             status = status,
             developerMode = developerMode,
             syncStatus = syncStatus,
             urlInput = url,
+            patInput = pat,
             busy = busy,
         )
     }.stateIn(scope, SharingStarted.Eagerly, ConfigRepoUiState())
@@ -48,11 +49,16 @@ class ConfigRepoViewModel(
         _urlInput.value = url
     }
 
+    fun onPatChange(pat: String) {
+        _patInput.value = pat
+    }
+
     fun connect() = run {
         val url = _urlInput.value.trim().ifBlank { return@run }
         scope.launch {
             _busy.value = true
-            manager.connect(url)
+            manager.connect(url, _patInput.value.trim().ifBlank { null })
+            _patInput.value = ""
             _busy.value = false
             onChanged()
         }
@@ -62,7 +68,8 @@ class ConfigRepoViewModel(
         val url = _urlInput.value.trim().ifBlank { return@run }
         scope.launch {
             _busy.value = true
-            manager.initialize(url)
+            manager.initialize(url, _patInput.value.trim().ifBlank { null })
+            _patInput.value = ""
             _busy.value = false
             onChanged()
         }

@@ -9,6 +9,8 @@ data class ConfigRepoUiState(
     val developerMode: Boolean = false,
     val syncStatus: SyncStatus = SyncStatus.NotConnected,
     val urlInput: String = "",
+    /** HTTPS personal access token input; saved to the OS keychain on connect, never displayed back. */
+    val patInput: String = "",
     /** A connect/initialize/sync operation is in flight. */
     val busy: Boolean = false,
 ) {

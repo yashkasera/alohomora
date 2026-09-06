@@ -214,6 +214,7 @@ fun main() {
                     },
                     configRepo = configRepoUi,
                     onConfigRepoUrlChange = sharedComposition.configRepoViewModel::onUrlChange,
+                    onConfigRepoPatChange = sharedComposition.configRepoViewModel::onPatChange,
                     onConfigRepoConnect = sharedComposition.configRepoViewModel::connect,
                     onConfigRepoInitialize = sharedComposition.configRepoViewModel::initialize,
                     onConfigRepoDisconnect = sharedComposition.configRepoViewModel::disconnect,
