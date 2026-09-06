@@ -103,6 +103,7 @@ fun main() {
             AlohomoraMcpServer(
                 registry = mcpRegistry,
                 serverVersion = DesktopBuildConfig.version,
+                configStore = sharedComposition.configStore,
                 writeEnabled = { mcpWriteEnabled },
                 confirmation = mcpConfirmation,
             )

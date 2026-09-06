@@ -85,6 +85,9 @@ class DesktopAppComposition(
     /** The config repo is one global clone, so this is app-scoped and shared across windows. */
     val configRepoManager: io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoManager
 
+    /** App-scoped config store (LOCAL + the shared team clone), exposed for the MCP server. */
+    val configStore: io.github.yashkasera.alohomora.desktop.domain.config.ConfigStore
+
     /** True when this composition created the config-repo manager and must shut it down. */
     private val ownsConfigRepoManager: Boolean = sharedConfigRepoManager == null
 
@@ -251,7 +254,7 @@ class DesktopAppComposition(
         )
         configRepoManager = sharedConfigRepoManager
             ?: io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoManager()
-        val configStore = ConfigStoreFacade(teamProvider = { configRepoManager.teamStore })
+        configStore = ConfigStoreFacade(teamProvider = { configRepoManager.teamStore })
         journeyViewModel = JourneyViewModel(
             configStore = configStore,
             evaluateJourney = EvaluateJourneyUseCase(devToolsRepository),

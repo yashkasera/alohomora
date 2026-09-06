@@ -739,7 +739,7 @@ private fun headersContain(headers: Map<String, List<String>>?, q: String): Bool
  * that omitted `deviceId` against several open windows is told what to do rather than handed an empty
  * read.
  */
-private inline fun withRepo(
+internal inline fun withRepo(
     registry: DeviceSessionRegistry,
     request: CallToolRequest,
     block: (DevToolsRepository) -> CallToolResult,
