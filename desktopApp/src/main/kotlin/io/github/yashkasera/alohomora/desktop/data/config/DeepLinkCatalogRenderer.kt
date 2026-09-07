@@ -46,7 +46,8 @@ object DeepLinkCatalogRenderer {
             appendLine("| --- | --- | --- | --- | --- |")
             def.params.forEach { p ->
                 appendLine(
-                    "| ${p.name} | ${p.type} | ${p.required} | ${p.allowedValues.joinToString(", ")} | ${p.description} |",
+                    "| ${cell(p.name)} | ${p.type} | ${p.required} | " +
+                        "${cell(p.allowedValues.joinToString(", "))} | ${cell(p.description)} |",
                 )
             }
         }
@@ -60,4 +61,8 @@ object DeepLinkCatalogRenderer {
 
     private fun location(def: DeepLinkDef): String =
         listOfNotNull(def.module, def.flow).joinToString("/")
+
+    /** Escapes a Markdown table cell: pipes would start a new column, newlines would break the row. */
+    private fun cell(value: String): String =
+        value.replace("\\", "\\\\").replace("|", "\\|").replace("\n", " ").replace("\r", " ")
 }

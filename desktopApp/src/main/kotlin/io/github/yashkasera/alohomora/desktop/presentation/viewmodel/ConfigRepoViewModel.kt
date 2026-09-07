@@ -57,20 +57,27 @@ class ConfigRepoViewModel(
         val url = _urlInput.value.trim().ifBlank { return@run }
         scope.launch {
             _busy.value = true
-            manager.connect(url, _patInput.value.trim().ifBlank { null })
-            _patInput.value = ""
-            _busy.value = false
+            try {
+                manager.connect(url, _patInput.value.trim().ifBlank { null })
+                _patInput.value = ""
+            } finally {
+                _busy.value = false
+            }
             onChanged()
         }
     }
 
-    fun initialize() = run {
-        val url = _urlInput.value.trim().ifBlank { return@run }
+    fun initialize() {
+        // A blank URL is valid: the manager creates a local-only repo. Do not early-return on blank.
+        val url = _urlInput.value.trim()
         scope.launch {
             _busy.value = true
-            manager.initialize(url, _patInput.value.trim().ifBlank { null })
-            _patInput.value = ""
-            _busy.value = false
+            try {
+                manager.initialize(url, _patInput.value.trim().ifBlank { null })
+                _patInput.value = ""
+            } finally {
+                _busy.value = false
+            }
             onChanged()
         }
     }
@@ -78,8 +85,12 @@ class ConfigRepoViewModel(
     fun sync() {
         scope.launch {
             _busy.value = true
-            manager.sync()
-            _busy.value = false
+            // A JGit transport error must not leave _busy stuck true and freeze the Team Config buttons.
+            try {
+                manager.sync()
+            } finally {
+                _busy.value = false
+            }
             onChanged()
         }
     }

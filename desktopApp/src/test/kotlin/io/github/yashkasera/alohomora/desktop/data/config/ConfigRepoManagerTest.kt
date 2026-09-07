@@ -57,6 +57,19 @@ class ConfigRepoManagerTest {
     }
 
     @Test
+    fun `initialize with a blank url creates a local-only repo`() = runBlocking {
+        val manager = ConfigRepoManager(clonePath = File(root, "local-only"))
+        val result = manager.initialize("")
+
+        assertTrue(result.isSuccess)
+        assertTrue(manager.status.value is ConfigRepoStatus.Connected)
+        assertNotNull(manager.teamStore)
+        assertTrue(File(root, "local-only/.git").exists())
+        assertTrue(File(root, "local-only/config.json").exists())
+        manager.shutdown()
+    }
+
+    @Test
     fun `connect clones an initialized repo and share pushes a proposal`() = runBlocking {
         ConfigRepoManager(clonePath = File(root, "init-clone")).apply {
             initialize(bare.absolutePath)

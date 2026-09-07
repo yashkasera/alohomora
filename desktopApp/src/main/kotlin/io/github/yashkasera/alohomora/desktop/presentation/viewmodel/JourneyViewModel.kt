@@ -115,6 +115,9 @@ class JourneyViewModel(
         val next = transform(current)
         _uiState.update { it.copy(editorDraft = next) }
         scheduleSave(next)
+        // If the live panel is grading this journey, re-run against the edited definition — otherwise it
+        // keeps grading the snapshot captured when Live was clicked.
+        if (_uiState.value.liveJourneyId == next.id) startLiveValidation(next)
     }
 
     fun promoteEventToStep(eventName: String) = editDraft { draft ->

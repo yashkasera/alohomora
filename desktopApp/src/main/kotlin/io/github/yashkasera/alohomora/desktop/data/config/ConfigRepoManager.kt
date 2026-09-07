@@ -3,10 +3,14 @@ package io.github.yashkasera.alohomora.desktop.data.config
 import io.github.yashkasera.alohomora.desktop.data.devtools.DesktopConfigRepoPrefs
 import io.github.yashkasera.alohomora.desktop.domain.config.SyncStatus
 import java.io.File
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.PersonIdent
@@ -47,16 +51,22 @@ class ConfigRepoManager(
     /** The current team store, read by the facade's provider. */
     val teamStore: GitConfigStore? get() = _team.value
 
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
     init {
-        ConfigRepoCredentials.ensureSshRegistered()
-        // Reconnect silently to a previously connected clone on the next launch.
+        // Reconnect silently to a previously connected clone on the next launch — but off the main
+        // thread: this is constructed inside a Compose remember{}, and Git.open() is blocking disk I/O.
         val url = DesktopConfigRepoPrefs.loadRepoUrl()
-        if (url != null && File(clonePath, DOT_GIT).exists()) {
-            runCatching { GitConfigStore.open(clonePath, url, author, ConfigRepoCredentials.providerFor(url)) }
-                .onSuccess {
+        scope.launch {
+            ConfigRepoCredentials.ensureSshRegistered()
+            if (url != null && File(clonePath, DOT_GIT).exists()) {
+                runCatching {
+                    GitConfigStore.open(clonePath, url, author, ConfigRepoCredentials.providerFor(url))
+                }.onSuccess {
                     _team.value = it
                     _status.value = ConfigRepoStatus.Connected(url, clonePath.path)
                 }
+            }
         }
     }
 
@@ -140,9 +150,15 @@ class ConfigRepoManager(
     }
 
     suspend fun sync(): SyncStatus {
-        val result = _team.value?.sync() ?: SyncStatus.NotConnected
-        _syncStatus.value = result
-        return result
+        val team = _team.value ?: run {
+            _syncStatus.value = SyncStatus.NotConnected
+            return SyncStatus.NotConnected
+        }
+        // A fetch can fail (transport/auth); surface it as an Error status rather than throwing.
+        return runCatching { team.sync() }
+            .onSuccess { _syncStatus.value = it }
+            .onFailure { _status.value = ConfigRepoStatus.Error(it.message ?: "Sync failed") }
+            .getOrDefault(_syncStatus.value)
     }
 
     fun disconnect() {
@@ -161,7 +177,10 @@ class ConfigRepoManager(
     /** The working-tree directory, for "reveal in terminal" / open-in-file-manager. */
     fun repoDir(): File = clonePath
 
-    fun shutdown() = closeTeam()
+    fun shutdown() {
+        scope.cancel()
+        closeTeam()
+    }
 
     private fun closeTeam() {
         _team.value?.close()

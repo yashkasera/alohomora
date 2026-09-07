@@ -29,6 +29,25 @@ class JourneyViewModelTest {
     }
 
     @Test
+    fun `live validation re-grades the edited definition, not the snapshot at click time`() = kotlinx.coroutines.runBlocking {
+        vm.newJourney()
+        vm.editDraft { it.copy(steps = listOf(JourneyStep(id = "s1", eventName = "a"))) }
+        val journey = vm.uiState.value.editorDraft!!
+        vm.startLiveValidation(journey)
+
+        // Add a second step while Live is running; the report must reflect two steps, not one.
+        vm.editDraft { it.copy(steps = it.steps + JourneyStep(id = "s2", eventName = "b")) }
+
+        var steps = 0
+        repeat(40) {
+            steps = vm.uiState.value.lastReport?.steps?.size ?: 0
+            if (steps == 2) return@repeat
+            kotlinx.coroutines.delay(25)
+        }
+        kotlin.test.assertEquals(2, steps)
+    }
+
+    @Test
     fun `opening a new journey clears a prior report and marks it new`() {
         vm.newJourney()
         vm.editDraft { it.copy(steps = listOf(JourneyStep(id = "s1", eventName = "a"))) }

@@ -7,7 +7,8 @@ import io.github.yashkasera.alohomora.desktop.domain.config.Proposal
 import io.github.yashkasera.alohomora.desktop.domain.config.SyncStatus
 import java.io.Closeable
 import java.io.File
-import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.eclipse.jgit.api.Git
@@ -45,13 +46,15 @@ class GitConfigStore(
      * [mainBranch]. Direct-to-main is never generated here; protection is server-side.
      */
     suspend fun <T> shareWithTeam(kind: ConfigKind<T>, item: T): Proposal = withContext(Dispatchers.IO) {
-        files.save(kind, item)
-        // The committed catalog is the browsable, reviewable artifact, regenerated (not hand-edited)
-        // so it only diffs when the definitions change.
-        if (kind == ConfigKind.DeepLinks) regenerateDeepLinkReadme()
         val branch = branchName(kind.nameOf(item))
-        git.checkout().setCreateBranch(true).setName(branch).call()
         try {
+            // Check out the branch BEFORE writing files, so a failed checkout (e.g. the branch already
+            // exists) never strands dirty files on main, and the finally below always returns to main.
+            git.checkout().setCreateBranch(true).setName(branch).call()
+            files.save(kind, item)
+            // The committed catalog is the browsable, reviewable artifact, regenerated (not hand-edited)
+            // so it only diffs when the definitions change.
+            if (kind == ConfigKind.DeepLinks) regenerateDeepLinkReadme()
             git.add().addFilepattern(kind.dir).call()
             git.commit()
                 .setMessage(commitMessage(kind.nameOf(item), kind.descriptionOf(item)))
@@ -106,7 +109,10 @@ class GitConfigStore(
 
     private fun branchName(name: String): String {
         val user = System.getProperty("user.name")?.let { slug(it) }?.ifBlank { null } ?: "user"
-        return "proposal/${slug(name)}-$user-${LocalDate.now()}"
+        // Include the time so re-sharing the same artifact the same day gets a fresh branch rather than
+        // failing with RefAlreadyExistsException.
+        val stamp = LocalDateTime.now().format(BRANCH_STAMP)
+        return "proposal/${slug(name)}-$user-$stamp"
     }
 
     private fun commitMessage(name: String, description: String): String =
@@ -114,6 +120,7 @@ class GitConfigStore(
 
     companion object {
         private const val ORIGIN = "origin"
+        private val BRANCH_STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")
 
         /** Opens an existing clone. */
         fun open(

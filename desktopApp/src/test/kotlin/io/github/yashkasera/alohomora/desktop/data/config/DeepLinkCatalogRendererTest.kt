@@ -47,4 +47,30 @@ class DeepLinkCatalogRendererTest {
         val md = DeepLinkCatalogRenderer.render(listOf(kyc, cards))
         assertTrue(md.indexOf("## cards") < md.indexOf("## kyc"))
     }
+
+    @Test
+    fun `pipes in param fields are escaped so the table survives`() {
+        val def = DeepLinkDef(
+            id = "d3",
+            name = "Filter",
+            module = "search",
+            uriTemplate = "app://search?q={q}",
+            params = listOf(
+                DeepLinkParam(
+                    name = "q",
+                    type = ParamType.ENUM,
+                    allowedValues = listOf("a|b"),
+                    description = "one | two",
+                ),
+            ),
+        )
+        val md = DeepLinkCatalogRenderer.render(listOf(def))
+        assertTrue(md.contains("a\\|b"), "allowedValues pipe not escaped")
+        assertTrue(md.contains("one \\| two"), "description pipe not escaped")
+        // The param row keeps exactly 6 column delimiters (unescaped pipes = total minus escaped).
+        val paramRow = md.lineSequence().first { it.startsWith("| q ") }
+        val totalPipes = paramRow.count { it == '|' }
+        val escapedPipes = paramRow.split("\\|").size - 1
+        assertEquals(6, totalPipes - escapedPipes)
+    }
 }

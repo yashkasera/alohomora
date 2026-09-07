@@ -93,6 +93,19 @@ class GitConfigStoreTest {
     }
 
     @Test
+    fun `share returns to main and leaves it clean when the push fails`() = runTest {
+        // Break the remote so the push inside share fails after the branch/commit steps.
+        bare.deleteRecursively()
+
+        val failed = runCatching { store.shareWithTeam(ConfigKind.Journeys, journey()) }.isFailure
+        assertTrue(failed, "expected the push to fail")
+
+        Git.open(clone).use { g -> assertEquals("main", g.repository.branch) }
+        // The proposed file was written on the branch, never stranded on main.
+        assertTrue(store.list(ConfigKind.Journeys).isEmpty())
+    }
+
+    @Test
     fun `sharing a deep link commits a regenerated catalog readme`() = runTest {
         val def = DeepLinkDef(id = "d1", name = "KYC verify", module = "kyc", uriTemplate = "app://kyc/verify")
         val proposal = store.shareWithTeam(ConfigKind.DeepLinks, def)
