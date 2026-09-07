@@ -68,6 +68,34 @@ class DeepLinkCatalogViewModel(
         _uiState.update { it.copy(editorDraft = draft, selectedId = draft.id, validationErrors = emptyList()) }
     }
 
+    /**
+     * Promotes a concrete URL (from the deep-link runner) into a catalogued definition: the URL becomes
+     * the template and the first example, name/module are guessed from the path, and the editor opens so
+     * the user can refine it (add typed params) and then Share it with the team.
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    fun createFromUrl(url: String) {
+        val trimmed = url.trim()
+        if (trimmed.isEmpty()) return
+        val afterScheme = trimmed.substringAfter("://", trimmed)
+        val pathPart = afterScheme.substringBefore('?').trimEnd('/')
+        val segments = pathPart.split('/').filter { it.isNotBlank() }
+        val def = DeepLinkDef(
+            id = Uuid.random().toString(),
+            name = segments.lastOrNull() ?: "deep link",
+            module = segments.firstOrNull() ?: "general",
+            uriTemplate = trimmed,
+            examples = listOf(trimmed),
+        )
+        _uiState.update {
+            it.copy(scope = ConfigScope.LOCAL, editorDraft = def, selectedId = def.id, validationErrors = emptyList())
+        }
+        scope.launch {
+            configStore.saveLocal(ConfigKind.DeepLinks, def)
+            refresh()
+        }
+    }
+
     fun editExisting(id: String) {
         val existing = _uiState.value.defs.firstOrNull { it.value.id == id }?.value ?: return
         _uiState.update {

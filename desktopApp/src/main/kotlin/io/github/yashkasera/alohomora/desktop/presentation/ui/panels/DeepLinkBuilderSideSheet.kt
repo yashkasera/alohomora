@@ -65,6 +65,7 @@ fun DeepLinkBuilderSideSheet(
     onRemoveHistoryEntry: (String) -> Unit,
     onClearHistory: () -> Unit,
     onOpenCatalog: () -> Unit = {},
+    onSaveToCatalog: (String) -> Unit = {},
     onDismiss: () -> Unit,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -168,6 +169,7 @@ fun DeepLinkBuilderSideSheet(
                 onPathChange = { path = it },
                 onFragmentChange = { fragment = it },
                 onOpen = onOpen,
+                onSaveToCatalog = onSaveToCatalog,
                 onReset = {
                     scheme = "https"
                     customScheme = ""
@@ -209,6 +211,7 @@ private fun BuilderTab(
     onPathChange: (String) -> Unit,
     onFragmentChange: (String) -> Unit,
     onOpen: (String) -> Unit,
+    onSaveToCatalog: (String) -> Unit,
     onReset: () -> Unit,
 ) {
     Column(
@@ -364,6 +367,12 @@ private fun BuilderTab(
                 enabled = composedUrl.isNotBlank(),
                 modifier = Modifier.weight(1f),
                 size = AlohomoraButtonSize.MEDIUM,
+                uppercase = false,
+            )
+            AlohomoraOutlinedButton(
+                text = "Save to catalog",
+                onClick = { onSaveToCatalog(composedUrl) },
+                enabled = composedUrl.isNotBlank(),
                 uppercase = false,
             )
             AlohomoraOutlinedButton(

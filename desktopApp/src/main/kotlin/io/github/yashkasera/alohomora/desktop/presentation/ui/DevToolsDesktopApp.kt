@@ -833,6 +833,11 @@ fun DevToolsDesktopApp(
                     onDismissDeepLinkBuilder()
                     onOpenDeepLinkCatalog()
                 },
+                onSaveToCatalog = { url ->
+                    deepLinkCatalogViewModel.createFromUrl(url)
+                    onDismissDeepLinkBuilder()
+                    onOpenDeepLinkCatalog()
+                },
                 onDismiss = { onDismissDeepLinkBuilder() },
             )
         }
