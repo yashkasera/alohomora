@@ -68,6 +68,28 @@ fun registerAlohomoraPrompts(server: Server) {
     }
 
     server.addPrompt(
+        name = "verify_flow",
+        description = "Check whether the connected device actually walked an expected journey.",
+        arguments = emptyList(),
+    ) { _ ->
+        promptResult(
+            "Verify an event journey on the connected device.",
+            """
+            Verify an expected flow against what the device actually did, using Alohomora's MCP tools.
+
+            1. Call `list_journeys` to see the saved journeys and their ids.
+            2. Pick the journey the user means (ask if ambiguous), then call `verify_journey` with its
+               id to grade it against the captured events.
+            3. Read the report: status is PASSED, FAILED, or NOT_EXERCISED. Treat NOT_EXERCISED as "the
+               flow never ran" — never a pass.
+            4. For a FAILED report, name the first failing step and its outcome (MISSING / OUT_OF_ORDER
+               / ASSERTION_FAILED / REPEAT_VIOLATION), and use the tagged timeline to explain what
+               happened instead. Propose the single next step to investigate.
+            """.trimIndent(),
+        )
+    }
+
+    server.addPrompt(
         name = "explain_screen",
         description = "Describe what a screen actually does on the network and in events.",
         arguments = listOf(

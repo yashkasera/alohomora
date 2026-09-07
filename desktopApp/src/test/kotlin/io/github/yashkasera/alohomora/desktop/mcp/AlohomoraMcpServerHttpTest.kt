@@ -103,7 +103,10 @@ class AlohomoraMcpServerHttpTest {
 
     @Test
     fun `the canned prompts are listed`() = withServer(writeEnabled = false) { client ->
-        assertEquals(setOf("triage", "debug_request", "explain_screen"), client.promptNames())
+        assertEquals(
+            setOf("triage", "debug_request", "verify_flow", "explain_screen"),
+            client.promptNames(),
+        )
     }
 
     @Test

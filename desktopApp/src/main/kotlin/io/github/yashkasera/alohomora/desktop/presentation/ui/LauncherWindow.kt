@@ -309,7 +309,10 @@ private fun LauncherContent(
                             val isLocalHost = host == "127.0.0.1" || host == "localhost"
 
                             val composition =
-                                DesktopAppComposition(sharedDevicesViewModel = devicesViewModel)
+                                DesktopAppComposition(
+                                    sharedDevicesViewModel = devicesViewModel,
+                                    sharedConfigRepoManager = sharedDevicesComposition.configRepoManager,
+                                )
 
                             fun openSession(target1: DeviceUi, tunnel: DevToolsTarget) {
                                 composition.devToolsViewModel.switchDevice(tunnel, target1.id)

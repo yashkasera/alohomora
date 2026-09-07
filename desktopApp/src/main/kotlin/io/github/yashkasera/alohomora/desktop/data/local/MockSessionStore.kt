@@ -1,100 +1,60 @@
 package io.github.yashkasera.alohomora.desktop.data.local
 
 import io.github.yashkasera.alohomora.common.MockRule
-import java.io.File
+import io.github.yashkasera.alohomora.desktop.data.config.LocalConfigStore
+import io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind
+import java.util.prefs.Preferences
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 
-class MockSessionStore {
+/**
+ * Persists mock sets as versioned config artifacts through [LocalConfigStore] (`mocks/{slug}.json`),
+ * so they share the LOCAL/TEAM store and byte-stable output with journeys and deep links. The former
+ * `index.json` is retired: identity is the artifact's id, "when" comes from the file's modification
+ * time, and the personal "last active" pointer lives in a pref rather than a versioned file.
+ *
+ * This is only the persistence backend. [NetworkRulesViewModel] remains the single writer and the
+ * runtime source of truth, so the MCP mock tools that route through it never desync.
+ */
+class MockSessionStore(
+    private val local: LocalConfigStore = LocalConfigStore(),
+) {
+    private val prefs = Preferences.userRoot()
+        .node("io/github/yashkasera/alohomora/desktop/mocks")
 
-    private val json = Json {
-        prettyPrint = true
-        prettyPrintIndent = "  "
-        ignoreUnknownKeys = true
-    }
-
-    private val baseDir: File by lazy {
-        val home = System.getProperty("user.home")
-        File(home, ".alohomora/mock-sessions")
-    }
-
-    private fun indexFile() = File(baseDir, "index.json")
-    private fun sessionFile(id: String) = File(baseDir, "$id.json")
-
-    suspend fun listSessions(): List<MockSessionSummary> = withContext(Dispatchers.IO) {
-        readIndex().sessions
-    }
-
-    suspend fun loadSession(id: String): MockSession? = withContext(Dispatchers.IO) {
-        val file = sessionFile(id)
-        if (!file.exists()) return@withContext null
-        runCatching { json.decodeFromString<MockSession>(file.readText()) }.getOrNull()
-    }
-
-    suspend fun saveSession(session: MockSession): Unit = withContext(Dispatchers.IO) {
-        baseDir.mkdirs()
-        sessionFile(session.id).writeText(json.encodeToString(MockSession.serializer(), session))
-        val index = readIndex()
-        val summary = MockSessionSummary(
-            id = session.id,
-            name = session.name,
-            ruleCount = session.rules.size,
-            updatedAt = session.updatedAt,
-        )
-        val updated = index.copy(
-            sessions = index.sessions.filter { it.id != session.id } + summary,
-        )
-        writeIndex(updated)
-    }
-
-    suspend fun deleteSession(id: String): Unit = withContext(Dispatchers.IO) {
-        sessionFile(id).delete()
-        val index = readIndex()
-        val updated = index.copy(
-            sessions = index.sessions.filter { it.id != id },
-            lastActiveSessionId = if (index.lastActiveSessionId == id) null
-            else index.lastActiveSessionId,
-        )
-        writeIndex(updated)
-    }
-
-    suspend fun setLastActive(id: String?): Unit = withContext(Dispatchers.IO) {
-        val index = readIndex()
-        if (index.lastActiveSessionId != id) {
-            writeIndex(index.copy(lastActiveSessionId = id))
+    suspend fun listSessions(): List<MockSessionSummary> =
+        local.list(ConfigKind.MockSets).map { session ->
+            MockSessionSummary(
+                id = session.id,
+                name = session.name,
+                ruleCount = session.rules.size,
+                updatedAt = local.lastModified(ConfigKind.MockSets, session.id),
+            )
         }
+
+    suspend fun loadSession(id: String): MockSession? =
+        local.list(ConfigKind.MockSets).firstOrNull { it.id == id }
+
+    suspend fun saveSession(session: MockSession) = local.save(ConfigKind.MockSets, session)
+
+    suspend fun deleteSession(id: String) {
+        local.delete(ConfigKind.MockSets, id)
+        if (loadLastActiveId() == id) setLastActive(null)
     }
 
-    suspend fun loadLastActive(): MockSession? = withContext(Dispatchers.IO) {
-        val index = readIndex()
-        val id = index.lastActiveSessionId ?: return@withContext null
-        loadSession(id)
+    fun setLastActive(id: String?) {
+        if (id.isNullOrBlank()) prefs.remove(KEY_LAST_ACTIVE) else prefs.put(KEY_LAST_ACTIVE, id)
     }
+
+    suspend fun loadLastActive(): MockSession? = loadLastActiveId()?.let { loadSession(it) }
 
     @OptIn(ExperimentalUuidApi::class)
-    fun newSession(name: String, rules: List<MockRule>): MockSession {
-        val now = System.currentTimeMillis()
-        return MockSession(
-            id = Uuid.random().toString(),
-            name = name,
-            rules = rules,
-            createdAt = now,
-            updatedAt = now,
-        )
-    }
+    fun newSession(name: String, rules: List<MockRule>): MockSession =
+        MockSession(id = Uuid.random().toString(), name = name, rules = rules)
 
-    private fun readIndex(): MockSessionIndex {
-        val file = indexFile()
-        if (!file.exists()) return MockSessionIndex()
-        return runCatching { json.decodeFromString<MockSessionIndex>(file.readText()) }
-            .getOrDefault(MockSessionIndex())
-    }
+    private fun loadLastActiveId(): String? = prefs.get(KEY_LAST_ACTIVE, null)?.ifBlank { null }
 
-    private fun writeIndex(index: MockSessionIndex) {
-        baseDir.mkdirs()
-        indexFile().writeText(json.encodeToString(MockSessionIndex.serializer(), index))
+    private companion object {
+        const val KEY_LAST_ACTIVE = "last_active"
     }
 }

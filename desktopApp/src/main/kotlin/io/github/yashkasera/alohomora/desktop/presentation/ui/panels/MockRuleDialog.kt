@@ -45,6 +45,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFloatingActionButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
@@ -53,10 +54,10 @@ import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.components.jsoneditor.JsonEditor
 import io.github.yashkasera.alohomora.ui.components.jsoneditor.JsonEditorState
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
-import io.github.yashkasera.alohomora.ui.icons.Download
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Plus
 import io.github.yashkasera.alohomora.ui.icons.Save
+import io.github.yashkasera.alohomora.ui.icons.Share
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.Upload
 import io.github.yashkasera.alohomora.ui.icons.X
@@ -78,8 +79,14 @@ fun MockRulesSideSheet(
     onSaveAsSession: (String) -> Unit,
     onDeleteSession: (String) -> Unit,
     onDetachSession: () -> Unit,
-    onExport: (String) -> Unit,
     onImport: (String) -> String?,
+    teamConnected: Boolean = false,
+    teamSessions: List<MockSessionSummary> = emptyList(),
+    onShareSession: () -> Unit = {},
+    onLoadTeamSession: (String) -> Unit = {},
+    lastProposal: io.github.yashkasera.alohomora.desktop.domain.config.Proposal? = null,
+    shareMessage: String? = null,
+    onOpenUrl: (String) -> Unit = {},
     onDismiss: () -> Unit,
 ) {
     var editingRule by remember { mutableStateOf<MockRule?>(null) }
@@ -223,6 +230,38 @@ fun MockRulesSideSheet(
                                 },
                             )
                         }
+                        if (teamSessions.isNotEmpty()) {
+                            AlohomoraHorizontalDivider()
+                            AlohomoraDropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "TEAM",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                },
+                                onClick = {},
+                                enabled = false,
+                            )
+                            teamSessions.forEach { summary ->
+                                AlohomoraDropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(summary.name)
+                                            Text(
+                                                "${summary.ruleCount} rules · team",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        showSessionDropdown = false
+                                        onLoadTeamSession(summary.id)
+                                    },
+                                )
+                            }
+                        }
                         if (currentSession != null) {
                             AlohomoraHorizontalDivider()
                             AlohomoraDropdownMenuItem(
@@ -261,32 +300,24 @@ fun MockRulesSideSheet(
                                 contentDescription = if (currentSession != null) "Save" else "Save as",
                             )
                         }
-                        AlohomoraIconButton(
-                            onClick = {
-                                val path = io.github.yashkasera.alohomora.desktop.util.pickSavePath(
-                                    defaultName = (currentSession?.name
-                                        ?: "mock-rules") + ".alohomora-mocks.json",
-                                    dialogTitle = "Export mock rules",
-                                    extension = ".json",
-                                )
-                                if (path != null) onExport(path)
-                            },
-                        ) {
-                            Icon(Icons.Download, contentDescription = "Export")
+                    }
+                    if (rules.isNotEmpty()) {
+                        AlohomoraIconButton(onClick = onShareSession) {
+                            Icon(Icons.Share, contentDescription = "Share with team")
                         }
                     }
                     AlohomoraIconButton(
                         onClick = {
                             val path = io.github.yashkasera.alohomora.desktop.util.pickLoadPath(
-                                dialogTitle = "Import mock rules",
-                                ".json", ".har",
+                                dialogTitle = "Import HAR",
+                                ".har",
                             )
                             if (path != null) {
                                 importError = onImport(path)
                             }
                         },
                     ) {
-                        Icon(Icons.Upload, contentDescription = "Import")
+                        Icon(Icons.Upload, contentDescription = "Import HAR")
                     }
                 }
             }
@@ -298,6 +329,38 @@ fun MockRulesSideSheet(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.sm),
                 )
+            }
+
+            shareMessage?.let { message ->
+                Text(
+                    message,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.sm),
+                )
+            }
+            lastProposal?.let { proposal ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = MaterialTheme.dimens.margin.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+                ) {
+                    AlohomoraChip(label = "In review")
+                    Text(
+                        "Shared as a ${proposal.reviewNoun}.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    proposal.reviewUrl?.let { url ->
+                        AlohomoraTextButton(
+                            text = "Open ${proposal.reviewNoun}",
+                            onClick = { onOpenUrl(url) },
+                        )
+                    }
+                }
             }
 
             AlohomoraHorizontalDivider()

@@ -69,6 +69,8 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ConfigPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DashboardContent
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DatabasePanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DeepLinkBuilderSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DeepLinkCatalogSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DeepLinkDefEditorSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventDetailsSideSheet
@@ -77,6 +79,9 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.PluginDataP
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.FeatureFlagsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.JourneyEditorSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.JourneyListSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.JourneyValidationPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.MockRulesSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceWaterfallSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TracesPanel
@@ -88,6 +93,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsVie
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.JourneyViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
@@ -106,6 +112,8 @@ private val PermanentDrawerShape = RoundedCornerShape(
     topStart = 0.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 0.dp,
 )
 
+private const val JOURNEY_EVENT_PICKER_LIMIT = 50
+
 @Composable
 fun DevToolsDesktopApp(
     modifier: Modifier = Modifier,
@@ -120,6 +128,9 @@ fun DevToolsDesktopApp(
     eventsViewModel: EventsViewModel,
     trafficViewModel: TrafficViewModel,
     networkRulesViewModel: NetworkRulesViewModel,
+    journeyViewModel: JourneyViewModel,
+    configRepoViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.ConfigRepoViewModel,
+    deepLinkCatalogViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DeepLinkCatalogViewModel,
     initialDeviceId: String? = null,
     showHelp: Boolean = false,
     onShowHelp: () -> Unit = {},
@@ -133,6 +144,12 @@ fun DevToolsDesktopApp(
     showMockRules: Boolean = false,
     onOpenMockRules: () -> Unit = {},
     onDismissMockRules: () -> Unit = {},
+    showJourneys: Boolean = false,
+    onOpenJourneys: () -> Unit = {},
+    onDismissJourneys: () -> Unit = {},
+    showDeepLinkCatalog: Boolean = false,
+    onOpenDeepLinkCatalog: () -> Unit = {},
+    onDismissDeepLinkCatalog: () -> Unit = {},
     onShowSettings: () -> Unit = {},
     onZoomIn: () -> Unit = {},
     onZoomOut: () -> Unit = {},
@@ -151,6 +168,7 @@ fun DevToolsDesktopApp(
     val devToolsState by devToolsViewModel.uiState.collectAsState()
     val buildInfo by devToolsViewModel.buildInfo.collectAsState()
     val deviceError by devToolsViewModel.deviceError.collectAsState()
+    val configRepoUi by configRepoViewModel.uiState.collectAsState()
 
     var isRecording by remember { mutableStateOf(false) }
     var recordingDevicePath by remember { mutableStateOf<String?>(null) }
@@ -172,6 +190,8 @@ fun DevToolsDesktopApp(
         selectedTraceId != null ||
         selectedEventId != null ||
         showMockRules ||
+        showJourneys ||
+        showDeepLinkCatalog ||
         showDeepLinkBuilder ||
         showCommandPalette ||
         showHelp
@@ -303,6 +323,23 @@ fun DevToolsDesktopApp(
             onDismissCommandPalette()
             onOpenMockRules()
         },
+        onOpenJourneys = {
+            onDismissCommandPalette()
+            onOpenJourneys()
+        },
+        onOpenDeepLinkCatalog = {
+            onDismissCommandPalette()
+            onOpenDeepLinkCatalog()
+        },
+        developerMode = configRepoUi.developerMode,
+        onGitSync = {
+            onDismissCommandPalette()
+            configRepoViewModel.sync()
+        },
+        onRevealRepo = {
+            onDismissCommandPalette()
+            configRepoViewModel.revealRepo()
+        },
         onClearErrors = { devToolsViewModel.clearErrors() },
     )
 
@@ -351,6 +388,14 @@ fun DevToolsDesktopApp(
 
                         showMockRules -> {
                             onDismissMockRules(); return@onPreviewKeyEvent true
+                        }
+
+                        showJourneys -> {
+                            onDismissJourneys(); return@onPreviewKeyEvent true
+                        }
+
+                        showDeepLinkCatalog -> {
+                            onDismissDeepLinkCatalog(); return@onPreviewKeyEvent true
                         }
 
                         selectedTrafficForSheet != null -> {
@@ -566,6 +611,7 @@ fun DevToolsDesktopApp(
                             DesktopSection.Events -> EventsPanel(
                                 eventsViewModel = eventsViewModel,
                                 searchFocusTrigger = searchFocusTrigger,
+                                onOpenJourneys = onOpenJourneys,
                             )
 
                             DesktopSection.Cache -> CachePanel(
@@ -640,6 +686,12 @@ fun DevToolsDesktopApp(
             val mockRules by networkRulesViewModel.mockRules.collectAsState()
             val mockCurrentSession by networkRulesViewModel.currentSession.collectAsState()
             val mockSessions by networkRulesViewModel.sessions.collectAsState()
+            val mockProposal by networkRulesViewModel.lastProposal.collectAsState()
+            val mockShareMessage by networkRulesViewModel.shareMessage.collectAsState()
+            val mockTeamSessions by networkRulesViewModel.teamSessions.collectAsState()
+            LaunchedEffect(showMockRules, configRepoUi.isConnected) {
+                if (showMockRules) networkRulesViewModel.refreshTeam()
+            }
             MockRulesSideSheet(
                 visible = showMockRules,
                 rules = mockRules,
@@ -655,9 +707,98 @@ fun DevToolsDesktopApp(
                 onSaveAsSession = networkRulesViewModel::saveAsNewSession,
                 onDeleteSession = networkRulesViewModel::deleteSession,
                 onDetachSession = networkRulesViewModel::detachSession,
-                onExport = networkRulesViewModel::exportSession,
-                onImport = networkRulesViewModel::importFromFile,
+                onImport = networkRulesViewModel::importHarFile,
+                teamConnected = configRepoUi.isConnected,
+                teamSessions = mockTeamSessions,
+                onShareSession = networkRulesViewModel::shareCurrentSession,
+                onLoadTeamSession = networkRulesViewModel::loadTeamSession,
+                lastProposal = mockProposal,
+                shareMessage = mockShareMessage,
+                onOpenUrl = { url ->
+                    runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
+                },
                 onDismiss = { onDismissMockRules() },
+            )
+
+            val journeyUi by journeyViewModel.uiState.collectAsState()
+            val eventsForJourney by eventsViewModel.uiState.collectAsState()
+            JourneyListSideSheet(
+                visible = showJourneys,
+                state = journeyUi,
+                teamConnected = configRepoUi.isConnected,
+                onScopeChange = journeyViewModel::onScopeChange,
+                onQueryChange = journeyViewModel::onQueryChange,
+                onOpen = journeyViewModel::editExisting,
+                onNew = journeyViewModel::newJourney,
+                onDelete = journeyViewModel::deleteJourney,
+                onShare = journeyViewModel::share,
+                onSync = configRepoViewModel::sync,
+                onOpenUrl = { url ->
+                    runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
+                },
+                onDismiss = { onDismissJourneys() },
+            )
+            JourneyEditorSideSheet(
+                draft = journeyUi.editorDraft,
+                isNew = journeyUi.editorIsNew,
+                report = journeyUi.lastReport,
+                recentEvents = eventsForJourney.events.take(JOURNEY_EVENT_PICKER_LIMIT),
+                onNameChange = { name -> journeyViewModel.editDraft { it.copy(name = name) } },
+                onDescriptionChange = { desc ->
+                    journeyViewModel.editDraft { it.copy(description = desc) }
+                },
+                onToggleOrdered = { ordered ->
+                    journeyViewModel.editDraft { it.copy(ordered = ordered) }
+                },
+                onAddStepFromEvent = journeyViewModel::promoteEventToStep,
+                onRemoveStep = journeyViewModel::removeStep,
+                onStepSelectorChange = journeyViewModel::setStepSelector,
+                onStepAssertionsChange = journeyViewModel::setStepAssertions,
+                onStepOnRepeatChange = journeyViewModel::setStepOnRepeat,
+                onValidate = journeyViewModel::validate,
+                onValidateLive = {
+                    journeyUi.editorDraft?.let { journeyViewModel.startLiveValidation(it) }
+                },
+                onDismiss = journeyViewModel::closeEditor,
+            )
+            JourneyValidationPanel(
+                visible = journeyUi.liveJourneyId != null,
+                journeyName = journeyUi.liveJourneyName,
+                report = journeyUi.lastReport,
+                onClose = journeyViewModel::stopLiveValidation,
+            )
+
+            val catalogUi by deepLinkCatalogViewModel.uiState.collectAsState()
+            DeepLinkCatalogSideSheet(
+                visible = showDeepLinkCatalog,
+                state = catalogUi,
+                teamConnected = configRepoUi.isConnected,
+                onScopeChange = deepLinkCatalogViewModel::onScopeChange,
+                onQueryChange = deepLinkCatalogViewModel::onQueryChange,
+                onOpen = deepLinkCatalogViewModel::editExisting,
+                onNew = deepLinkCatalogViewModel::newDef,
+                onDelete = deepLinkCatalogViewModel::deleteDef,
+                onShare = deepLinkCatalogViewModel::share,
+                onSync = configRepoViewModel::sync,
+                onOpenUrl = { url -> runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) } },
+                onDismiss = { onDismissDeepLinkCatalog() },
+            )
+            DeepLinkDefEditorSideSheet(
+                draft = catalogUi.editorDraft,
+                validationErrors = catalogUi.validationErrors,
+                onNameChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(name = v) } },
+                onModuleChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(module = v) } },
+                onFlowChange = { v ->
+                    deepLinkCatalogViewModel.editDraft { it.copy(flow = v.ifBlank { null }) }
+                },
+                onDescriptionChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(description = v) } },
+                onUriTemplateChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(uriTemplate = v) } },
+                onParamsChange = { params -> deepLinkCatalogViewModel.editDraft { it.copy(params = params) } },
+                onExamplesChange = { examples ->
+                    deepLinkCatalogViewModel.editDraft { it.copy(examples = examples) }
+                },
+                onFire = { url -> devicesViewModel.openDeepLink(selectedDeviceId, url) },
+                onDismiss = deepLinkCatalogViewModel::closeEditor,
             )
 
             TraceWaterfallSideSheet(
@@ -687,6 +828,15 @@ fun DevToolsDesktopApp(
                 },
                 onRemoveHistoryEntry = devicesViewModel::removeDeepLinkEntry,
                 onClearHistory = devicesViewModel::clearDeepLinkHistory,
+                onOpenCatalog = {
+                    onDismissDeepLinkBuilder()
+                    onOpenDeepLinkCatalog()
+                },
+                onSaveToCatalog = { url ->
+                    deepLinkCatalogViewModel.createFromUrl(url)
+                    onDismissDeepLinkBuilder()
+                    onOpenDeepLinkCatalog()
+                },
                 onDismiss = { onDismissDeepLinkBuilder() },
             )
         }

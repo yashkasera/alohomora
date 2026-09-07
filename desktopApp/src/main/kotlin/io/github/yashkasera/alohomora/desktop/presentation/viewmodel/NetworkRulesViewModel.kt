@@ -5,15 +5,11 @@ import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.common.VpnThrottleState
-import io.github.yashkasera.alohomora.desktop.data.local.MockExportEnvelope
 import io.github.yashkasera.alohomora.desktop.data.local.MockSession
 import io.github.yashkasera.alohomora.desktop.data.local.MockSessionStore
 import io.github.yashkasera.alohomora.desktop.data.local.MockSessionSummary
-import io.github.yashkasera.alohomora.desktop.data.local.exportJson
 import io.github.yashkasera.alohomora.desktop.data.local.importHar
-import io.github.yashkasera.alohomora.desktop.data.local.toExportEnvelope
 import io.github.yashkasera.alohomora.desktop.data.local.toMockRule
-import io.github.yashkasera.alohomora.desktop.data.local.toSession
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
 import java.io.File
@@ -39,9 +35,19 @@ import kotlinx.coroutines.launch
 class NetworkRulesViewModel(
     private val repository: DevToolsRepository,
     private val sessionStore: MockSessionStore = MockSessionStore(),
+    /** App-scoped config store for "Share with team"; null disables the affordance. */
+    private val configStore: io.github.yashkasera.alohomora.desktop.domain.config.ConfigStore? = null,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var autoSaveJob: Job? = null
+
+    private val _lastProposal =
+        MutableStateFlow<io.github.yashkasera.alohomora.desktop.domain.config.Proposal?>(null)
+    val lastProposal: StateFlow<io.github.yashkasera.alohomora.desktop.domain.config.Proposal?> =
+        _lastProposal.asStateFlow()
+
+    private val _shareMessage = MutableStateFlow<String?>(null)
+    val shareMessage: StateFlow<String?> = _shareMessage.asStateFlow()
 
     val networkRulesSupported: StateFlow<Boolean> = repository.networkRulesSupported
     val vpnThrottleSupported: StateFlow<Boolean> = repository.vpnThrottleSupported
@@ -62,6 +68,10 @@ class NetworkRulesViewModel(
 
     private val _sessions = MutableStateFlow<List<MockSessionSummary>>(emptyList())
     val sessions: StateFlow<List<MockSessionSummary>> = _sessions.asStateFlow()
+
+    /** Team mock sets read from the connected config repo's main line; empty when not connected. */
+    private val _teamSessions = MutableStateFlow<List<MockSessionSummary>>(emptyList())
+    val teamSessions: StateFlow<List<MockSessionSummary>> = _teamSessions.asStateFlow()
 
     init {
         scope.launch {
@@ -194,54 +204,55 @@ class NetworkRulesViewModel(
         scope.launch { sessionStore.setLastActive(null) }
     }
 
-    fun exportSession(path: String) {
-        scope.launch {
-            val session = _currentSession.value ?: MockSession(
-                id = "",
-                name = "Exported rules",
-                rules = _mockRules.value,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
-            )
-            val envelope = session.toExportEnvelope()
-            val json = exportJson.encodeToString(MockExportEnvelope.serializer(), envelope)
-            File(path).writeText(json)
-        }
-    }
-
-    fun importFromFile(path: String): String? {
+    /**
+     * Imports mock rules from a HAR 1.2 capture — the one file ingestion config-as-code can't replace
+     * (team distribution is Share; local persistence is the store). Returns an error string, or null on
+     * success.
+     */
+    fun importHarFile(path: String): String? {
         val text = try {
             File(path).readText()
         } catch (e: Exception) {
             return "Failed to read file: ${e.message}"
         }
-        val rules = try {
-            val envelope = exportJson.decodeFromString(MockExportEnvelope.serializer(), text)
-            val session = envelope.toSession()
-            scope.launch {
-                sessionStore.saveSession(session)
-                sessionStore.setLastActive(session.id)
-                _currentSession.value = session
-                _mockRules.value = session.rules
-                refreshSessionList()
-                sendRules()
-            }
-            return null
-        } catch (_: Exception) {
-        }
-
         return try {
             val harRules = importHar(text)
-            if (harRules.isEmpty()) return "No 2xx responses with body found in HAR"
+            if (harRules.isEmpty()) return "No 2xx responses with a body found in the HAR file."
             harRules.forEach { addRule(it) }
             null
         } catch (e: Exception) {
-            "Unrecognised format: expected .alohomora-mocks.json or HAR 1.2"
+            "Unrecognised file: expected a HAR 1.2 export."
         }
     }
 
     fun addRuleFromTraffic(traffic: TrafficEntry) {
         addRule(traffic.toMockRule())
+    }
+
+    /**
+     * Shares the current mock session with the team via the same ConfigStore path journeys and deep
+     * links use. Requires a saved session and a connected repo; surfaces the proposal or a message.
+     */
+    fun shareCurrentSession() {
+        val store = configStore ?: run {
+            _shareMessage.value = "Team config is not connected."
+            return
+        }
+        val session = _currentSession.value ?: run {
+            _shareMessage.value = "Save the session first, then share it."
+            return
+        }
+        scope.launch {
+            val toShare = session.copy(rules = _mockRules.value)
+            runCatching {
+                store.shareWithTeam(
+                    io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind.MockSets,
+                    toShare,
+                )
+            }
+                .onSuccess { proposal -> _lastProposal.value = proposal; _shareMessage.value = null }
+                .onFailure { e -> _shareMessage.value = e.message ?: "Share failed" }
+        }
     }
 
     private fun sendRules() {
@@ -264,8 +275,42 @@ class NetworkRulesViewModel(
         }
     }
 
+    /** Loads a team mock set's rules into the working set as a local copy (the team artifact is read-only). */
+    fun loadTeamSession(id: String) {
+        val store = configStore ?: return
+        scope.launch {
+            val session = store.list(
+                io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind.MockSets,
+                io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope.TEAM,
+            ).firstOrNull { it.value.id == id }?.value ?: return@launch
+            _currentSession.value = null
+            _mockRules.value = session.rules
+            sessionStore.setLastActive(null)
+            sendRules()
+        }
+    }
+
     private suspend fun refreshSessionList() {
         _sessions.value = sessionStore.listSessions()
+        refreshTeamSessions()
+    }
+
+    /** Re-reads team mock sets — call when the sheet opens so a mid-session connect is reflected. */
+    fun refreshTeam() {
+        scope.launch { refreshTeamSessions() }
+    }
+
+    private suspend fun refreshTeamSessions() {
+        val store = configStore ?: return
+        _teamSessions.value = runCatching {
+            store.list(
+                io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind.MockSets,
+                io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope.TEAM,
+            ).map { item ->
+                val session = item.value
+                MockSessionSummary(session.id, session.name, session.rules.size, 0)
+            }
+        }.getOrDefault(emptyList())
     }
 
     fun close() {

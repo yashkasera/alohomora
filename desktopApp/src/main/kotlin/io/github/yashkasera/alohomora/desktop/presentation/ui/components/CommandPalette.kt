@@ -52,10 +52,12 @@ import io.github.yashkasera.alohomora.ui.icons.Activity
 import io.github.yashkasera.alohomora.ui.icons.Camera
 import io.github.yashkasera.alohomora.ui.icons.CircleHelp
 import io.github.yashkasera.alohomora.ui.icons.Globe
+import io.github.yashkasera.alohomora.ui.icons.GitGraph
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Link
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
+import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.Server
 import io.github.yashkasera.alohomora.ui.icons.Settings
@@ -70,6 +72,7 @@ enum class ActionCategory(val label: String) {
     GENERAL("General"),
     DEVICE("Device"),
     DATA("Data"),
+    GIT("Git"),
 }
 
 data class CommandAction(
@@ -373,6 +376,11 @@ fun buildCommandActions(
     onOpenDeepLinkBuilder: () -> Unit,
     onFocusSearch: () -> Unit,
     onOpenMockRules: () -> Unit,
+    onOpenJourneys: () -> Unit,
+    onOpenDeepLinkCatalog: () -> Unit,
+    developerMode: Boolean,
+    onGitSync: () -> Unit,
+    onRevealRepo: () -> Unit,
     onClearErrors: () -> Unit,
 ): List<CommandAction> {
     val mod = displayModifier()
@@ -530,6 +538,26 @@ fun buildCommandActions(
     )
 
     actions += CommandAction(
+        id = "data_event_journeys",
+        label = "Event Journeys",
+        category = ActionCategory.DATA,
+        icon = Icons.Route,
+        shortcutDisplay = "$mod+Shift+J",
+        // Journeys are LOCAL-first and need no device connection to author.
+        enabled = true,
+        action = onOpenJourneys,
+    )
+
+    actions += CommandAction(
+        id = "data_deeplink_catalog",
+        label = "Deep Link Catalog",
+        category = ActionCategory.DATA,
+        icon = Icons.Link,
+        enabled = true,
+        action = onOpenDeepLinkCatalog,
+    )
+
+    actions += CommandAction(
         id = "data_clear_traffic",
         label = "Clear Traffic",
         category = ActionCategory.DATA,
@@ -561,5 +589,25 @@ fun buildCommandActions(
         enabled = isConnected,
         action = onClearErrors,
     )
+
+    // GIT: git/repo mechanics, shown only in developer mode (unhides guardrails, never new capability).
+    if (developerMode) {
+        actions += CommandAction(
+            id = "git_sync",
+            label = "Sync Config Repo",
+            category = ActionCategory.GIT,
+            icon = Icons.RefreshCw,
+            enabled = true,
+            action = onGitSync,
+        )
+        actions += CommandAction(
+            id = "git_reveal_repo",
+            label = "Reveal Config Repo",
+            category = ActionCategory.GIT,
+            icon = Icons.GitGraph,
+            enabled = true,
+            action = onRevealRepo,
+        )
+    }
     return actions
 }

@@ -1,17 +1,20 @@
 package io.github.yashkasera.alohomora.desktop.app
 
 import io.github.yashkasera.alohomora.desktop.data.adb.AdbRepositoryImpl
+import io.github.yashkasera.alohomora.desktop.data.config.ConfigStoreFacade
 import io.github.yashkasera.alohomora.desktop.data.devtools.DevToolsRemoteDataSource
 import io.github.yashkasera.alohomora.desktop.data.devtools.DevToolsRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.local.BuildMetadataStore
 import io.github.yashkasera.alohomora.desktop.data.local.CacheRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.local.CacheStore
+import io.github.yashkasera.alohomora.desktop.data.local.DatabaseRepositoryImpl
 import io.github.yashkasera.alohomora.desktop.data.local.DatabaseSnapshotStore
 import io.github.yashkasera.alohomora.desktop.data.local.ErrorStore
 import io.github.yashkasera.alohomora.desktop.data.local.EventStore
 import io.github.yashkasera.alohomora.desktop.data.local.FeatureFlagStore
-import io.github.yashkasera.alohomora.desktop.data.local.PluginDataStore
 import io.github.yashkasera.alohomora.desktop.data.local.GitHistoryStore
+import io.github.yashkasera.alohomora.desktop.data.local.MockSessionStore
+import io.github.yashkasera.alohomora.desktop.data.local.PluginDataStore
 import io.github.yashkasera.alohomora.desktop.data.local.ReplayStore
 import io.github.yashkasera.alohomora.desktop.data.local.SpanStore
 import io.github.yashkasera.alohomora.desktop.data.local.TrafficStore
@@ -21,6 +24,7 @@ import io.github.yashkasera.alohomora.desktop.domain.usecase.ClearLogcatUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.ConnectDevToolsUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.DeactivateDeviceUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.DisconnectDevToolsUseCase
+import io.github.yashkasera.alohomora.desktop.domain.usecase.EvaluateJourneyUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.InstallApkUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.ObserveLogcatUseCase
 import io.github.yashkasera.alohomora.desktop.domain.usecase.RefreshDevicesUseCase
@@ -44,6 +48,8 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseVie
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.EventsViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel
+import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.JourneyViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.LogcatViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.PluginDataViewModel
@@ -59,18 +65,31 @@ import kotlinx.serialization.json.Json
 
 class DesktopAppComposition(
     sharedDevicesViewModel: DevicesViewModel? = null,
+    sharedConfigRepoManager: io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoManager? = null,
 ) {
     val devicesViewModel: DevicesViewModel
     val devToolsViewModel: DevToolsViewModel
     val logcatViewModel: LogcatViewModel
     val databaseViewModel: DatabaseViewModel
     val cacheViewModel: CacheViewModel
-    val featureFlagsViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel
+    val featureFlagsViewModel: FeatureFlagViewModel
     val pluginDataViewModel: PluginDataViewModel
     val tracesViewModel: TracesViewModel
     val eventsViewModel: EventsViewModel
     val trafficViewModel: TrafficViewModel
     val networkRulesViewModel: NetworkRulesViewModel
+    val journeyViewModel: JourneyViewModel
+    val deepLinkCatalogViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DeepLinkCatalogViewModel
+    val configRepoViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.ConfigRepoViewModel
+
+    /** The config repo is one global clone, so this is app-scoped and shared across windows. */
+    val configRepoManager: io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoManager
+
+    /** App-scoped config store (LOCAL + the shared team clone), exposed for the MCP server. */
+    val configStore: io.github.yashkasera.alohomora.desktop.domain.config.ConfigStore
+
+    /** True when this composition created the config-repo manager and must shut it down. */
+    private val ownsConfigRepoManager: Boolean = sharedConfigRepoManager == null
 
     /** Everything [close] has to release. Held so per-window teardown is complete. */
     /**
@@ -125,7 +144,7 @@ class DesktopAppComposition(
         val adbRepository = if (ownsDevicesViewModel) AdbRepositoryImpl() else null
         val logcatRepository = LogcatRepositoryImpl()
         val databaseRepository =
-            io.github.yashkasera.alohomora.desktop.data.local.DatabaseRepositoryImpl(
+            DatabaseRepositoryImpl(
                 databaseSnapshotStore,
             )
         val cacheRepository = CacheRepositoryImpl(cacheStore)
@@ -224,17 +243,30 @@ class DesktopAppComposition(
         )
 
         featureFlagsViewModel =
-            io.github.yashkasera.alohomora.desktop.presentation.viewmodel.FeatureFlagViewModel(
-                repository = devToolsRepository,
-            )
+            FeatureFlagViewModel(repository = devToolsRepository)
         pluginDataViewModel = PluginDataViewModel(repository = devToolsRepository)
         tracesViewModel = TracesViewModel(repository = devToolsRepository)
         eventsViewModel = EventsViewModel(repository = devToolsRepository)
         trafficViewModel = TrafficViewModel(repository = devToolsRepository)
+        configRepoManager = sharedConfigRepoManager
+            ?: io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoManager()
+        configStore = ConfigStoreFacade(teamProvider = { configRepoManager.teamStore })
         networkRulesViewModel = NetworkRulesViewModel(
             repository = devToolsRepository,
-            sessionStore = io.github.yashkasera.alohomora.desktop.data.local.MockSessionStore(),
+            sessionStore = MockSessionStore(),
+            configStore = configStore,
         )
+        journeyViewModel = JourneyViewModel(
+            configStore = configStore,
+            evaluateJourney = EvaluateJourneyUseCase(devToolsRepository),
+        )
+        deepLinkCatalogViewModel =
+            io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DeepLinkCatalogViewModel(configStore)
+        configRepoViewModel =
+            io.github.yashkasera.alohomora.desktop.presentation.viewmodel.ConfigRepoViewModel(
+                manager = configRepoManager,
+                onChanged = { journeyViewModel.refresh() },
+            )
     }
 
     /**
@@ -257,6 +289,10 @@ class DesktopAppComposition(
         eventsViewModel.close()
         trafficViewModel.close()
         networkRulesViewModel.close()
+        journeyViewModel.close()
+        deepLinkCatalogViewModel.close()
+        configRepoViewModel.close()
+        if (ownsConfigRepoManager) configRepoManager.shutdown()
         devToolsRepository.close()
         // Only if we built it — a shared view model outlives this window.
         if (ownsDevicesViewModel) devicesViewModel.close()

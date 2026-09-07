@@ -34,6 +34,8 @@ sealed interface McpServerStatus {
 class AlohomoraMcpServer(
     private val registry: DeviceSessionRegistry,
     private val serverVersion: String,
+    /** App-scoped config store for the journey/deep-link tools; null disables those tools. */
+    private val configStore: io.github.yashkasera.alohomora.desktop.domain.config.ConfigStore? = null,
     /** Read at each session create, so flipping the Settings toggle affects the next connection. */
     private val writeEnabled: () -> Boolean = { false },
     /** Gates the one destructive write tool behind a desktop Allow/Deny dialog. */
@@ -97,9 +99,13 @@ class AlohomoraMcpServer(
             ),
         )
         registerAlohomoraTools(server, registry, serverVersion)
+        if (configStore != null) registerAlohomoraJourneyTools(server, registry, configStore)
         registerAlohomoraPrompts(server)
         if (writeEnabled()) {
             registerAlohomoraWriteTools(server, registry, confirmation)
+            if (configStore != null) {
+                registerAlohomoraJourneyWriteTools(server, registry, configStore, confirmation)
+            }
         }
         onClientConnected()
         server.onClose { onClientDisconnected() }

@@ -175,4 +175,14 @@ dependencies {
     add("kspIosArm64", libs.androidx.room.compiler)
 }
 
+// AGP's Android Lint model + analysis tasks read KSP-generated sources (Room) but do not declare the
+// task dependency, which Gradle 9's stricter validation fails with "uses this output of task
+// ':alohomora:kspAndroidHostTest' without declaring a dependency". Wire each lint task to the Android
+// KSP tasks by name so the generated sources exist first. Remove once AGP declares this itself.
+tasks.matching {
+    it.name.startsWith("lintAnalyze") || (it.name.startsWith("generate") && it.name.endsWith("LintModel"))
+}.configureEach {
+    dependsOn(tasks.matching { it.name.startsWith("kspAndroid") })
+}
+
 // Repository + POM configuration comes from the `alohomora.publish` convention plugin.

@@ -64,6 +64,8 @@ fun DeepLinkBuilderSideSheet(
     onOpen: (String) -> Unit,
     onRemoveHistoryEntry: (String) -> Unit,
     onClearHistory: () -> Unit,
+    onOpenCatalog: () -> Unit = {},
+    onSaveToCatalog: (String) -> Unit = {},
     onDismiss: () -> Unit,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -125,8 +127,12 @@ fun DeepLinkBuilderSideSheet(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
-                AlohomoraIconButton(onClick = onDismiss) {
-                    Icon(Icons.X, contentDescription = "Close")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // The team-shared, typed catalog lives in its own surface; link to it from here.
+                    AlohomoraTextButton(text = "Catalog", onClick = onOpenCatalog)
+                    AlohomoraIconButton(onClick = onDismiss) {
+                        Icon(Icons.X, contentDescription = "Close")
+                    }
                 }
             }
             AlohomoraPrimaryTabRow(
@@ -163,6 +169,7 @@ fun DeepLinkBuilderSideSheet(
                 onPathChange = { path = it },
                 onFragmentChange = { fragment = it },
                 onOpen = onOpen,
+                onSaveToCatalog = onSaveToCatalog,
                 onReset = {
                     scheme = "https"
                     customScheme = ""
@@ -204,6 +211,7 @@ private fun BuilderTab(
     onPathChange: (String) -> Unit,
     onFragmentChange: (String) -> Unit,
     onOpen: (String) -> Unit,
+    onSaveToCatalog: (String) -> Unit,
     onReset: () -> Unit,
 ) {
     Column(
@@ -359,6 +367,12 @@ private fun BuilderTab(
                 enabled = composedUrl.isNotBlank(),
                 modifier = Modifier.weight(1f),
                 size = AlohomoraButtonSize.MEDIUM,
+                uppercase = false,
+            )
+            AlohomoraOutlinedButton(
+                text = "Save to catalog",
+                onClick = { onSaveToCatalog(composedUrl) },
+                enabled = composedUrl.isNotBlank(),
                 uppercase = false,
             )
             AlohomoraOutlinedButton(
