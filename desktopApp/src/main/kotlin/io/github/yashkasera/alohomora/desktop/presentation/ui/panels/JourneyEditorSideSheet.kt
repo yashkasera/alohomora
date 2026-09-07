@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -33,6 +34,8 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.components.Alohomo
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EventItem
 import io.github.yashkasera.alohomora.ui.components.AlohomoraAssistChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenu
+import io.github.yashkasera.alohomora.ui.components.AlohomoraDropdownMenuItem
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
@@ -65,6 +68,7 @@ import kotlinx.serialization.json.JsonPrimitive
 @Composable
 fun JourneyEditorSideSheet(
     draft: JourneyDefinition?,
+    isNew: Boolean,
     report: JourneyReport?,
     recentEvents: List<Event>,
     onNameChange: (String) -> Unit,
@@ -100,7 +104,7 @@ fun JourneyEditorSideSheet(
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
             ) {
                 Text(
-                    text = "Edit journey",
+                    text = if (isNew) "New journey" else "Edit journey",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                 )
@@ -157,6 +161,7 @@ fun JourneyEditorSideSheet(
             }
 
             item { SectionLabel("Steps") }
+            item { AddStepByNameRow(onAdd = onAddStepFromEvent) }
             if (current.steps.isEmpty()) {
                 item {
                     Text(
@@ -188,6 +193,7 @@ fun JourneyEditorSideSheet(
                     AlohomoraFilledButton(
                         text = "Validate",
                         onClick = onValidate,
+                        enabled = current.steps.isNotEmpty(),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Play,
@@ -196,7 +202,11 @@ fun JourneyEditorSideSheet(
                             )
                         },
                     )
-                    AlohomoraOutlinedButton(text = "Live", onClick = onValidateLive)
+                    AlohomoraOutlinedButton(
+                        text = "Live",
+                        onClick = onValidateLive,
+                        enabled = current.steps.isNotEmpty(),
+                    )
                     if (report != null) {
                         JourneyStatusGlyph(status = report.status)
                         Text(
@@ -408,7 +418,7 @@ private fun AssertionEditor(
         ) {
             Text(
                 text = buildString {
-                    append(assertion.path).append(' ').append(assertion.op.name)
+                    append(assertion.path).append(' ').append(assertion.op.symbol())
                     assertion.value?.let { append(' ').append(scalarText(it)) }
                 },
                 style = MaterialTheme.typography.bodySmall,
@@ -436,11 +446,28 @@ private fun AssertionEditor(
             placeholder = "property",
             modifier = Modifier.weight(1f),
         )
-        // Tap to cycle the operator; keeps the row compact without a dropdown dependency.
-        AlohomoraAssistChip(
-            label = op.name,
-            onClick = { op = AssertOp.entries[(op.ordinal + 1) % AssertOp.entries.size] },
-        )
+        var opMenuOpen by remember { mutableStateOf(false) }
+        Box {
+            AlohomoraAssistChip(
+                label = op.symbol(),
+                uppercase = false,
+                onClick = { opMenuOpen = true },
+            )
+            AlohomoraDropdownMenu(
+                expanded = opMenuOpen,
+                onDismissRequest = { opMenuOpen = false },
+            ) {
+                AssertOp.entries.forEach { candidate ->
+                    AlohomoraDropdownMenuItem(
+                        text = { Text("${candidate.symbol()}  ${candidate.description()}") },
+                        onClick = {
+                            op = candidate
+                            opMenuOpen = false
+                        },
+                    )
+                }
+            }
+        }
         if (op != AssertOp.EXISTS) {
             AlohomoraTextField(
                 value = value,
@@ -465,6 +492,26 @@ private fun AssertionEditor(
     }
 }
 
+/** A compact operator glyph for the chip: `=`, `≠`, `<`, `>`, and words for the non-arithmetic ops. */
+private fun AssertOp.symbol(): String = when (this) {
+    AssertOp.EQ -> "="
+    AssertOp.NEQ -> "≠"
+    AssertOp.LT -> "<"
+    AssertOp.GT -> ">"
+    AssertOp.EXISTS -> "exists"
+    AssertOp.CONTAINS -> "contains"
+}
+
+/** The readable operator name for the dropdown row. */
+private fun AssertOp.description(): String = when (this) {
+    AssertOp.EQ -> "equals"
+    AssertOp.NEQ -> "not equal"
+    AssertOp.LT -> "less than"
+    AssertOp.GT -> "greater than"
+    AssertOp.EXISTS -> "exists"
+    AssertOp.CONTAINS -> "contains"
+}
+
 /** Parses free-text input into the narrowest JSON scalar: bool, then number, else string. */
 private fun parseScalar(input: String): JsonElement = when {
     input == "true" || input == "false" -> JsonPrimitive(input.toBoolean())
@@ -481,6 +528,35 @@ private val REPEAT_ITEMS = listOf(
     AlohomoraToggleItem(id = RepeatPolicy.FLAG.name, label = "Flag"),
     AlohomoraToggleItem(id = RepeatPolicy.FAIL.name, label = "Fail"),
 )
+
+/**
+ * Add a step by typing an event name directly, for events not (yet) in the recording — so a journey
+ * can assert an event *should* fire even before it has been seen. Complements the recording picker.
+ */
+@Composable
+private fun AddStepByNameRow(onAdd: (String) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+    ) {
+        AlohomoraTextField(
+            value = name,
+            onValueChange = { name = it },
+            placeholder = "Event name, e.g. checkout_started",
+            modifier = Modifier.weight(1f),
+        )
+        AlohomoraTextButton(
+            text = "Add step",
+            enabled = name.isNotBlank(),
+            onClick = {
+                onAdd(name.trim())
+                name = ""
+            },
+        )
+    }
+}
 
 @Composable
 private fun SectionLabel(text: String) {

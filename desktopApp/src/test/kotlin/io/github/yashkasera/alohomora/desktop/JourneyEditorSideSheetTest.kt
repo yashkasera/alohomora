@@ -41,6 +41,7 @@ class JourneyEditorSideSheetTest {
             AppTheme {
                 JourneyEditorSideSheet(
                     draft = draft,
+                    isNew = false,
                     report = report,
                     recentEvents = events,
                     onNameChange = {},

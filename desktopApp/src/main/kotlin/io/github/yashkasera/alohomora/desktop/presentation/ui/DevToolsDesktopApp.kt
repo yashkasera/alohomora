@@ -611,6 +611,7 @@ fun DevToolsDesktopApp(
                             DesktopSection.Events -> EventsPanel(
                                 eventsViewModel = eventsViewModel,
                                 searchFocusTrigger = searchFocusTrigger,
+                                onOpenJourneys = onOpenJourneys,
                             )
 
                             DesktopSection.Cache -> CachePanel(
@@ -734,6 +735,7 @@ fun DevToolsDesktopApp(
             )
             JourneyEditorSideSheet(
                 draft = journeyUi.editorDraft,
+                isNew = journeyUi.editorIsNew,
                 report = journeyUi.lastReport,
                 recentEvents = eventsForJourney.events.take(JOURNEY_EVENT_PICKER_LIMIT),
                 onNameChange = { name -> journeyViewModel.editDraft { it.copy(name = name) } },

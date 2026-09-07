@@ -73,12 +73,35 @@ class JourneyViewModel(
             name = "New journey",
             steps = emptyList(),
         )
-        _uiState.update { it.copy(editorDraft = draft, selectedId = draft.id) }
+        // Opening a fresh journey must not inherit a prior journey's report or live run.
+        liveJob?.cancel()
+        liveJob = null
+        _uiState.update {
+            it.copy(
+                editorDraft = draft,
+                selectedId = draft.id,
+                editorIsNew = true,
+                lastReport = null,
+                liveJourneyId = null,
+                liveJourneyName = "",
+            )
+        }
     }
 
     fun editExisting(id: String) {
         val existing = _uiState.value.journeys.firstOrNull { it.value.id == id }?.value ?: return
-        _uiState.update { it.copy(editorDraft = existing, selectedId = id) }
+        liveJob?.cancel()
+        liveJob = null
+        _uiState.update {
+            it.copy(
+                editorDraft = existing,
+                selectedId = id,
+                editorIsNew = false,
+                lastReport = null,
+                liveJourneyId = null,
+                liveJourneyName = "",
+            )
+        }
     }
 
     fun closeEditor() = _uiState.update { it.copy(editorDraft = null) }

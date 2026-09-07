@@ -43,6 +43,7 @@ import io.github.yashkasera.alohomora.ui.icons.ChartLine
 import io.github.yashkasera.alohomora.ui.icons.EyeOff
 import io.github.yashkasera.alohomora.ui.icons.Filter
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.Route
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
@@ -51,6 +52,7 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 fun EventsPanel(
     eventsViewModel: EventsViewModel,
     searchFocusTrigger: Long = 0L,
+    onOpenJourneys: () -> Unit = {},
 ) {
     val state by eventsViewModel.uiState.collectAsState()
     val showProperties by eventsViewModel.showProperties.collectAsState()
@@ -81,6 +83,13 @@ fun EventsPanel(
                             checked = showProperties,
                             onCheckedChange = { eventsViewModel.toggleShowProperties() },
                         )
+
+                        AlohomoraIconButton(onClick = onOpenJourneys) {
+                            Icon(
+                                imageVector = Icons.Route,
+                                contentDescription = "Event journeys",
+                            )
+                        }
 
                         AlohomoraIconButton(onClick = { showClearConfirmation = true }) {
                             Icon(

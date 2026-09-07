@@ -17,6 +17,8 @@ data class JourneyUiState(
     val selectedId: String? = null,
     /** The journey open in the editor, or null when the editor is closed. Not yet persisted. */
     val editorDraft: JourneyDefinition? = null,
+    /** True when the open editor is a freshly created journey (drives the "New" vs "Edit" title). */
+    val editorIsNew: Boolean = false,
     /** The most recent validation result for [selectedId], if any. */
     val lastReport: JourneyReport? = null,
     /** Non-null while the full-width live validation panel is open, grading this journey live. */
