@@ -13,7 +13,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.KeyShortcut
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpSize
@@ -28,6 +31,8 @@ import io.github.yashkasera.alohomora.desktop.app.isMacOs
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.domain.service.UpdateInfo
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SideSheetHostState
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SideSheetId
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.UpdateBanner
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
@@ -56,12 +61,7 @@ fun DeviceWindow(
         placement = WindowPlacement.Maximized,
         size = DpSize(1080.dp, 600.dp),
     )
-    var showHelp by remember { mutableStateOf(false) }
-    var showCommandPalette by remember { mutableStateOf(false) }
-    var showDeepLinkBuilder by remember { mutableStateOf(false) }
-    var showMockRules by remember { mutableStateOf(false) }
-    var showJourneys by remember { mutableStateOf(false) }
-    var showDeepLinkCatalog by remember { mutableStateOf(false) }
+    val sideSheetHost = remember { SideSheetHostState() }
     var zoomScale by remember { mutableFloatStateOf(1.0f) }
 
     val zoomIn = { zoomScale = (zoomScale + 0.1f).coerceAtMost(2.0f) }
@@ -99,6 +99,16 @@ fun DeviceWindow(
     Window(
         title = "Alohomora - ${session.deviceId}$zoomSuffix",
         state = state,
+        // Escape is handled at the window level so it fires no matter where focus sits — a panel's
+        // search field, a sheet's editor, or nothing. A focus-scoped handler only worked while the
+        // root Box held focus, which is why Escape used to close sheets on the Dashboard alone.
+        onPreviewKeyEvent = { event ->
+            if (event.type == KeyEventType.KeyDown && event.key == Key.Escape) {
+                sideSheetHost.dismissTop()
+            } else {
+                false
+            }
+        },
         onCloseRequest = {
             session.composition.devToolsViewModel.disconnect()
             session.composition.close()
@@ -196,7 +206,7 @@ fun DeviceWindow(
                     Item(
                         "Deep Link Builder",
                         shortcut = KeyShortcut(Key.L, meta = isMacOs, ctrl = !isMacOs),
-                        onClick = { showDeepLinkBuilder = true },
+                        onClick = { sideSheetHost.open(SideSheetId.DeepLinkBuilder) },
                     )
                     Item(
                         "Mock Rules",
@@ -206,7 +216,7 @@ fun DeviceWindow(
                             meta = isMacOs,
                             ctrl = !isMacOs,
                         ),
-                        onClick = { showMockRules = true },
+                        onClick = { sideSheetHost.open(SideSheetId.MockRules) },
                     )
                     Item(
                         "Event Journeys",
@@ -216,7 +226,7 @@ fun DeviceWindow(
                             meta = isMacOs,
                             ctrl = !isMacOs,
                         ),
-                        onClick = { showJourneys = true },
+                        onClick = { sideSheetHost.open(SideSheetId.Journeys) },
                     )
                     Item(
                         "Deep Link Catalog",
@@ -226,14 +236,14 @@ fun DeviceWindow(
                             meta = isMacOs,
                             ctrl = !isMacOs,
                         ),
-                        onClick = { showDeepLinkCatalog = true },
+                        onClick = { sideSheetHost.open(SideSheetId.DeepLinkCatalog) },
                     )
                 }
                 Menu("Help") {
                     Item(
                         "Command Palette",
                         shortcut = KeyShortcut(Key.K, meta = isMacOs, ctrl = !isMacOs),
-                        onClick = { showCommandPalette = true },
+                        onClick = { sideSheetHost.open(SideSheetId.CommandPalette) },
                     )
                     Item(
                         "Keyboard Shortcuts",
@@ -242,7 +252,7 @@ fun DeviceWindow(
                             meta = isMacOs,
                             ctrl = !isMacOs,
                         ),
-                        onClick = { showHelp = true },
+                        onClick = { sideSheetHost.open(SideSheetId.Help) },
                     )
                     Item(
                         "About Alohomora",
@@ -277,24 +287,7 @@ fun DeviceWindow(
                         configRepoViewModel = session.composition.configRepoViewModel,
                         deepLinkCatalogViewModel = session.composition.deepLinkCatalogViewModel,
                         initialDeviceId = session.deviceId,
-                        showHelp = showHelp,
-                        onShowHelp = { showHelp = true },
-                        onDismissHelp = { showHelp = false },
-                        showCommandPalette = showCommandPalette,
-                        onOpenCommandPalette = { showCommandPalette = true },
-                        onDismissCommandPalette = { showCommandPalette = false },
-                        showDeepLinkBuilder = showDeepLinkBuilder,
-                        onOpenDeepLinkBuilder = { showDeepLinkBuilder = true },
-                        onDismissDeepLinkBuilder = { showDeepLinkBuilder = false },
-                        showMockRules = showMockRules,
-                        onOpenMockRules = { showMockRules = true },
-                        onDismissMockRules = { showMockRules = false },
-                        showJourneys = showJourneys,
-                        onOpenJourneys = { showJourneys = true },
-                        onDismissJourneys = { showJourneys = false },
-                        showDeepLinkCatalog = showDeepLinkCatalog,
-                        onOpenDeepLinkCatalog = { showDeepLinkCatalog = true },
-                        onDismissDeepLinkCatalog = { showDeepLinkCatalog = false },
+                        sideSheetHost = sideSheetHost,
                         onShowSettings = onShowSettings,
                         onZoomIn = zoomIn,
                         onZoomOut = zoomOut,

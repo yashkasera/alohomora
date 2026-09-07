@@ -39,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -61,7 +60,11 @@ import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.CommandPalette
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.HelpDialog
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalSideSheetHost
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.OtpPromptDialog
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.RegisterSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SideSheetHostState
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SideSheetId
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.buildCommandActions
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.AdbToolsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.CachePanel
@@ -132,24 +135,7 @@ fun DevToolsDesktopApp(
     configRepoViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.ConfigRepoViewModel,
     deepLinkCatalogViewModel: io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DeepLinkCatalogViewModel,
     initialDeviceId: String? = null,
-    showHelp: Boolean = false,
-    onShowHelp: () -> Unit = {},
-    onDismissHelp: () -> Unit = {},
-    showCommandPalette: Boolean = false,
-    onOpenCommandPalette: () -> Unit = {},
-    onDismissCommandPalette: () -> Unit = {},
-    showDeepLinkBuilder: Boolean = false,
-    onOpenDeepLinkBuilder: () -> Unit = {},
-    onDismissDeepLinkBuilder: () -> Unit = {},
-    showMockRules: Boolean = false,
-    onOpenMockRules: () -> Unit = {},
-    onDismissMockRules: () -> Unit = {},
-    showJourneys: Boolean = false,
-    onOpenJourneys: () -> Unit = {},
-    onDismissJourneys: () -> Unit = {},
-    showDeepLinkCatalog: Boolean = false,
-    onOpenDeepLinkCatalog: () -> Unit = {},
-    onDismissDeepLinkCatalog: () -> Unit = {},
+    sideSheetHost: SideSheetHostState,
     onShowSettings: () -> Unit = {},
     onZoomIn: () -> Unit = {},
     onZoomOut: () -> Unit = {},
@@ -185,16 +171,7 @@ fun DevToolsDesktopApp(
     var isModifierPhysicallyDown by remember { mutableStateOf(false) }
     var showModifierBadges by remember { mutableStateOf(false) }
 
-    val anySideSheetOpen = selectedTrafficForSheet != null ||
-        selectedErrorForSheet != null ||
-        selectedTraceId != null ||
-        selectedEventId != null ||
-        showMockRules ||
-        showJourneys ||
-        showDeepLinkCatalog ||
-        showDeepLinkBuilder ||
-        showCommandPalette ||
-        showHelp
+    val anySideSheetOpen = sideSheetHost.isAnyOpen
 
     LaunchedEffect(isModifierPhysicallyDown, anySideSheetOpen) {
         if (isModifierPhysicallyDown && !anySideSheetOpen) {
@@ -258,12 +235,12 @@ fun DevToolsDesktopApp(
         selectedDeviceId = selectedDeviceId,
         isAndroid = isAndroid,
         onShowSettings = {
-            onDismissCommandPalette()
+            sideSheetHost.close(SideSheetId.CommandPalette)
             onShowSettings()
         },
         onShowHelp = {
-            onDismissCommandPalette()
-            onShowHelp()
+            sideSheetHost.close(SideSheetId.CommandPalette)
+            sideSheetHost.open(SideSheetId.Help)
         },
         onZoomIn = onZoomIn,
         onZoomOut = onZoomOut,
@@ -312,32 +289,32 @@ fun DevToolsDesktopApp(
             devicesViewModel.runCommand(selectedDeviceId, "logcat -c")
         },
         onOpenDeepLinkBuilder = {
-            onDismissCommandPalette()
-            onOpenDeepLinkBuilder()
+            sideSheetHost.close(SideSheetId.CommandPalette)
+            sideSheetHost.open(SideSheetId.DeepLinkBuilder)
         },
         onFocusSearch = {
-            onDismissCommandPalette()
+            sideSheetHost.close(SideSheetId.CommandPalette)
             searchFocusTrigger = System.nanoTime()
         },
         onOpenMockRules = {
-            onDismissCommandPalette()
-            onOpenMockRules()
+            sideSheetHost.close(SideSheetId.CommandPalette)
+            sideSheetHost.open(SideSheetId.MockRules)
         },
         onOpenJourneys = {
-            onDismissCommandPalette()
-            onOpenJourneys()
+            sideSheetHost.close(SideSheetId.CommandPalette)
+            sideSheetHost.open(SideSheetId.Journeys)
         },
         onOpenDeepLinkCatalog = {
-            onDismissCommandPalette()
-            onOpenDeepLinkCatalog()
+            sideSheetHost.close(SideSheetId.CommandPalette)
+            sideSheetHost.open(SideSheetId.DeepLinkCatalog)
         },
         developerMode = configRepoUi.developerMode,
         onGitSync = {
-            onDismissCommandPalette()
+            sideSheetHost.close(SideSheetId.CommandPalette)
             configRepoViewModel.sync()
         },
         onRevealRepo = {
-            onDismissCommandPalette()
+            sideSheetHost.close(SideSheetId.CommandPalette)
             configRepoViewModel.revealRepo()
         },
         onClearErrors = { devToolsViewModel.clearErrors() },
@@ -356,6 +333,7 @@ fun DevToolsDesktopApp(
                 copySnackbarState.showSnackbar(message)
             }
         },
+        LocalSideSheetHost provides sideSheetHost,
     ) {
     Box(
         modifier = modifier
@@ -372,50 +350,8 @@ fun DevToolsDesktopApp(
 
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
 
-                if (event.key == Key.Escape) {
-                    when {
-                        showCommandPalette -> {
-                            onDismissCommandPalette(); return@onPreviewKeyEvent true
-                        }
-
-                        showHelp -> {
-                            onDismissHelp(); return@onPreviewKeyEvent true
-                        }
-
-                        showDeepLinkBuilder -> {
-                            onDismissDeepLinkBuilder(); return@onPreviewKeyEvent true
-                        }
-
-                        showMockRules -> {
-                            onDismissMockRules(); return@onPreviewKeyEvent true
-                        }
-
-                        showJourneys -> {
-                            onDismissJourneys(); return@onPreviewKeyEvent true
-                        }
-
-                        showDeepLinkCatalog -> {
-                            onDismissDeepLinkCatalog(); return@onPreviewKeyEvent true
-                        }
-
-                        selectedTrafficForSheet != null -> {
-                            selectedTrafficForSheet = null; return@onPreviewKeyEvent true
-                        }
-
-                        selectedErrorForSheet != null -> {
-                            selectedErrorForSheet = null; return@onPreviewKeyEvent true
-                        }
-
-                        selectedTraceId != null -> {
-                            tracesViewModel.closeTrace(); return@onPreviewKeyEvent true
-                        }
-
-                        selectedEventId != null -> {
-                            eventsViewModel.closeEvent(); return@onPreviewKeyEvent true
-                        }
-                    }
-                    return@onPreviewKeyEvent false
-                }
+                // Escape is handled at the window level (see DeviceWindow) so it works regardless of
+                // which panel or sheet holds focus.
 
                 val navIndex = event.matchesNavigation()
                 if (navIndex >= 0 && navIndex < visibleSections.size) {
@@ -460,12 +396,12 @@ fun DevToolsDesktopApp(
                 }
 
                 if (event.isDeepLinkShortcut() && isAndroid && !selectedDeviceId.isNullOrBlank()) {
-                    onOpenDeepLinkBuilder()
+                    sideSheetHost.open(SideSheetId.DeepLinkBuilder)
                     return@onPreviewKeyEvent true
                 }
 
                 if (event.isMockRulesShortcut() && isConnected) {
-                    onOpenMockRules()
+                    sideSheetHost.open(SideSheetId.MockRules)
                     return@onPreviewKeyEvent true
                 }
 
@@ -501,7 +437,7 @@ fun DevToolsDesktopApp(
                                 activeSection = it
                                 searchFocusTrigger = System.nanoTime()
                             },
-                            onOpenCommandPalette = onOpenCommandPalette,
+                            onOpenCommandPalette = { sideSheetHost.open(SideSheetId.CommandPalette) },
                             isModifierHeld = showModifierBadges,
                             visibleSections = visibleSections,
                         )
@@ -574,7 +510,7 @@ fun DevToolsDesktopApp(
                                 onEventViewClick = {},
                                 onTrafficClick = { activeSection = DesktopSection.Traffic },
                                 onEventsClick = { activeSection = DesktopSection.Events },
-                                onOpenDeepLinkBuilder = { onOpenDeepLinkBuilder() },
+                                onOpenDeepLinkBuilder = { sideSheetHost.open(SideSheetId.DeepLinkBuilder) },
                             )
 
                             DesktopSection.Logcat -> LogcatPanel(
@@ -598,7 +534,7 @@ fun DevToolsDesktopApp(
                                 trafficViewModel = trafficViewModel,
                                 networkRulesViewModel = networkRulesViewModel,
                                 onLogClick = { selectedTrafficForSheet = it },
-                                onOpenMockRules = { onOpenMockRules() },
+                                onOpenMockRules = { sideSheetHost.open(SideSheetId.MockRules) },
                                 searchFocusTrigger = searchFocusTrigger,
                             )
 
@@ -611,7 +547,7 @@ fun DevToolsDesktopApp(
                             DesktopSection.Events -> EventsPanel(
                                 eventsViewModel = eventsViewModel,
                                 searchFocusTrigger = searchFocusTrigger,
-                                onOpenJourneys = onOpenJourneys,
+                                onOpenJourneys = { sideSheetHost.open(SideSheetId.Journeys) },
                             )
 
                             DesktopSection.Cache -> CachePanel(
@@ -679,7 +615,7 @@ fun DevToolsDesktopApp(
                 traffic = selectedTrafficForSheet,
                 devToolsViewModel = devToolsViewModel,
                 networkRulesViewModel = networkRulesViewModel,
-                onOpenMockRules = { onOpenMockRules() },
+                onOpenMockRules = { sideSheetHost.open(SideSheetId.MockRules) },
                 onDismiss = { selectedTrafficForSheet = null },
             )
 
@@ -689,11 +625,12 @@ fun DevToolsDesktopApp(
             val mockProposal by networkRulesViewModel.lastProposal.collectAsState()
             val mockShareMessage by networkRulesViewModel.shareMessage.collectAsState()
             val mockTeamSessions by networkRulesViewModel.teamSessions.collectAsState()
-            LaunchedEffect(showMockRules, configRepoUi.isConnected) {
-                if (showMockRules) networkRulesViewModel.refreshTeam()
+            val mockRulesVisible = sideSheetHost.isOpen(SideSheetId.MockRules)
+            LaunchedEffect(mockRulesVisible, configRepoUi.isConnected) {
+                if (mockRulesVisible) networkRulesViewModel.refreshTeam()
             }
             MockRulesSideSheet(
-                visible = showMockRules,
+                visible = mockRulesVisible,
                 rules = mockRules,
                 currentSession = mockCurrentSession,
                 sessions = mockSessions,
@@ -717,13 +654,13 @@ fun DevToolsDesktopApp(
                 onOpenUrl = { url ->
                     runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
                 },
-                onDismiss = { onDismissMockRules() },
+                onDismiss = { sideSheetHost.close(SideSheetId.MockRules) },
             )
 
             val journeyUi by journeyViewModel.uiState.collectAsState()
             val eventsForJourney by eventsViewModel.uiState.collectAsState()
             JourneyListSideSheet(
-                visible = showJourneys,
+                visible = sideSheetHost.isOpen(SideSheetId.Journeys),
                 state = journeyUi,
                 teamConnected = configRepoUi.isConnected,
                 onScopeChange = journeyViewModel::onScopeChange,
@@ -736,7 +673,7 @@ fun DevToolsDesktopApp(
                 onOpenUrl = { url ->
                     runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
                 },
-                onDismiss = { onDismissJourneys() },
+                onDismiss = { sideSheetHost.close(SideSheetId.Journeys) },
             )
             JourneyEditorSideSheet(
                 draft = journeyUi.editorDraft,
@@ -770,7 +707,7 @@ fun DevToolsDesktopApp(
 
             val catalogUi by deepLinkCatalogViewModel.uiState.collectAsState()
             DeepLinkCatalogSideSheet(
-                visible = showDeepLinkCatalog,
+                visible = sideSheetHost.isOpen(SideSheetId.DeepLinkCatalog),
                 state = catalogUi,
                 teamConnected = configRepoUi.isConnected,
                 onScopeChange = deepLinkCatalogViewModel::onScopeChange,
@@ -781,7 +718,7 @@ fun DevToolsDesktopApp(
                 onShare = deepLinkCatalogViewModel::share,
                 onSync = configRepoViewModel::sync,
                 onOpenUrl = { url -> runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) } },
-                onDismiss = { onDismissDeepLinkCatalog() },
+                onDismiss = { sideSheetHost.close(SideSheetId.DeepLinkCatalog) },
             )
             DeepLinkDefEditorSideSheet(
                 draft = catalogUi.editorDraft,
@@ -820,7 +757,7 @@ fun DevToolsDesktopApp(
 
             val deepLinkHistory by devicesViewModel.deepLinkHistory.collectAsState()
             DeepLinkBuilderSideSheet(
-                visible = showDeepLinkBuilder,
+                visible = sideSheetHost.isOpen(SideSheetId.DeepLinkBuilder),
                 initialUrl = "",
                 history = deepLinkHistory,
                 onOpen = { url ->
@@ -829,15 +766,15 @@ fun DevToolsDesktopApp(
                 onRemoveHistoryEntry = devicesViewModel::removeDeepLinkEntry,
                 onClearHistory = devicesViewModel::clearDeepLinkHistory,
                 onOpenCatalog = {
-                    onDismissDeepLinkBuilder()
-                    onOpenDeepLinkCatalog()
+                    sideSheetHost.close(SideSheetId.DeepLinkBuilder)
+                    sideSheetHost.open(SideSheetId.DeepLinkCatalog)
                 },
                 onSaveToCatalog = { url ->
                     deepLinkCatalogViewModel.createFromUrl(url)
-                    onDismissDeepLinkBuilder()
-                    onOpenDeepLinkCatalog()
+                    sideSheetHost.close(SideSheetId.DeepLinkBuilder)
+                    sideSheetHost.open(SideSheetId.DeepLinkCatalog)
                 },
-                onDismiss = { onDismissDeepLinkBuilder() },
+                onDismiss = { sideSheetHost.close(SideSheetId.DeepLinkBuilder) },
             )
         }
 
@@ -846,18 +783,26 @@ fun DevToolsDesktopApp(
             modifier = Modifier.align(Alignment.BottomCenter),
         )
 
-        if (showCommandPalette) {
+        RegisterSideSheet(
+            visible = sideSheetHost.isOpen(SideSheetId.CommandPalette),
+            onDismiss = { sideSheetHost.close(SideSheetId.CommandPalette) },
+        )
+        if (sideSheetHost.isOpen(SideSheetId.CommandPalette)) {
             CommandPalette(
                 actions = commandActions,
-                onDismiss = onDismissCommandPalette,
+                onDismiss = { sideSheetHost.close(SideSheetId.CommandPalette) },
             )
         }
 
-        if (showHelp) {
+        RegisterSideSheet(
+            visible = sideSheetHost.isOpen(SideSheetId.Help),
+            onDismiss = { sideSheetHost.close(SideSheetId.Help) },
+        )
+        if (sideSheetHost.isOpen(SideSheetId.Help)) {
             HelpDialog(
                 visibleSections = visibleSections,
                 actions = commandActions,
-                onDismiss = onDismissHelp,
+                onDismiss = { sideSheetHost.close(SideSheetId.Help) },
             )
         }
     }
