@@ -54,7 +54,6 @@ import io.github.yashkasera.alohomora.ui.components.fabClearanceItem
 import io.github.yashkasera.alohomora.ui.components.jsoneditor.JsonEditor
 import io.github.yashkasera.alohomora.ui.components.jsoneditor.JsonEditorState
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
-import io.github.yashkasera.alohomora.ui.icons.Download
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Plus
 import io.github.yashkasera.alohomora.ui.icons.Save
@@ -80,7 +79,6 @@ fun MockRulesSideSheet(
     onSaveAsSession: (String) -> Unit,
     onDeleteSession: (String) -> Unit,
     onDetachSession: () -> Unit,
-    onExport: (String) -> Unit,
     onImport: (String) -> String?,
     teamConnected: Boolean = false,
     teamSessions: List<MockSessionSummary> = emptyList(),
@@ -302,19 +300,6 @@ fun MockRulesSideSheet(
                                 contentDescription = if (currentSession != null) "Save" else "Save as",
                             )
                         }
-                        AlohomoraIconButton(
-                            onClick = {
-                                val path = io.github.yashkasera.alohomora.desktop.util.pickSavePath(
-                                    defaultName = (currentSession?.name
-                                        ?: "mock-rules") + ".alohomora-mocks.json",
-                                    dialogTitle = "Export mock rules",
-                                    extension = ".json",
-                                )
-                                if (path != null) onExport(path)
-                            },
-                        ) {
-                            Icon(Icons.Download, contentDescription = "Export")
-                        }
                     }
                     if (rules.isNotEmpty()) {
                         AlohomoraIconButton(onClick = onShareSession) {
@@ -324,15 +309,15 @@ fun MockRulesSideSheet(
                     AlohomoraIconButton(
                         onClick = {
                             val path = io.github.yashkasera.alohomora.desktop.util.pickLoadPath(
-                                dialogTitle = "Import mock rules",
-                                ".json", ".har",
+                                dialogTitle = "Import HAR",
+                                ".har",
                             )
                             if (path != null) {
                                 importError = onImport(path)
                             }
                         },
                     ) {
-                        Icon(Icons.Upload, contentDescription = "Import")
+                        Icon(Icons.Upload, contentDescription = "Import HAR")
                     }
                 }
             }

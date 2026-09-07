@@ -8,6 +8,14 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+/** Shared pretty JSON config for file exports (traffic export envelopes). */
+internal val exportJson = Json {
+    prettyPrint = true
+    prettyPrintIndent = "  "
+    ignoreUnknownKeys = true
+    encodeDefaults = true
+}
+
 enum class TrafficExportFormat(
     val label: String,
     val extension: String,

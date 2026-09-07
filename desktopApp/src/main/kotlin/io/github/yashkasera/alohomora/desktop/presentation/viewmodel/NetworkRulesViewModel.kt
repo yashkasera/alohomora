@@ -5,15 +5,11 @@ import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.common.VpnThrottleState
-import io.github.yashkasera.alohomora.desktop.data.local.MockExportEnvelope
 import io.github.yashkasera.alohomora.desktop.data.local.MockSession
 import io.github.yashkasera.alohomora.desktop.data.local.MockSessionStore
 import io.github.yashkasera.alohomora.desktop.data.local.MockSessionSummary
-import io.github.yashkasera.alohomora.desktop.data.local.exportJson
 import io.github.yashkasera.alohomora.desktop.data.local.importHar
-import io.github.yashkasera.alohomora.desktop.data.local.toExportEnvelope
 import io.github.yashkasera.alohomora.desktop.data.local.toMockRule
-import io.github.yashkasera.alohomora.desktop.data.local.toSession
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
 import java.io.File
@@ -208,49 +204,24 @@ class NetworkRulesViewModel(
         scope.launch { sessionStore.setLastActive(null) }
     }
 
-    fun exportSession(path: String) {
-        scope.launch {
-            val session = _currentSession.value ?: MockSession(
-                id = "",
-                name = "Exported rules",
-                rules = _mockRules.value,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
-            )
-            val envelope = session.toExportEnvelope()
-            val json = exportJson.encodeToString(MockExportEnvelope.serializer(), envelope)
-            File(path).writeText(json)
-        }
-    }
-
-    fun importFromFile(path: String): String? {
+    /**
+     * Imports mock rules from a HAR 1.2 capture — the one file ingestion config-as-code can't replace
+     * (team distribution is Share; local persistence is the store). Returns an error string, or null on
+     * success.
+     */
+    fun importHarFile(path: String): String? {
         val text = try {
             File(path).readText()
         } catch (e: Exception) {
             return "Failed to read file: ${e.message}"
         }
-        val rules = try {
-            val envelope = exportJson.decodeFromString(MockExportEnvelope.serializer(), text)
-            val session = envelope.toSession()
-            scope.launch {
-                sessionStore.saveSession(session)
-                sessionStore.setLastActive(session.id)
-                _currentSession.value = session
-                _mockRules.value = session.rules
-                refreshSessionList()
-                sendRules()
-            }
-            return null
-        } catch (_: Exception) {
-        }
-
         return try {
             val harRules = importHar(text)
-            if (harRules.isEmpty()) return "No 2xx responses with body found in HAR"
+            if (harRules.isEmpty()) return "No 2xx responses with a body found in the HAR file."
             harRules.forEach { addRule(it) }
             null
         } catch (e: Exception) {
-            "Unrecognised format: expected .alohomora-mocks.json or HAR 1.2"
+            "Unrecognised file: expected a HAR 1.2 export."
         }
     }
 
