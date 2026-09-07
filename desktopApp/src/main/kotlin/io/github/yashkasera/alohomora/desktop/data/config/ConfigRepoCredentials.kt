@@ -54,6 +54,14 @@ object ConfigRepoCredentials {
         if (!url.startsWith("http", ignoreCase = true)) return null
         val host = hostOf(url) ?: return null
         val token = loadPat(host) ?: return null
-        return UsernamePasswordCredentialsProvider(token, "")
+        return providerForToken(token)
     }
+
+    /**
+     * Basic-auth for a PAT: the token as the **password** with a placeholder username. Token-as-password
+     * is accepted by GitHub, GitLab, and Bitbucket; token-as-username works only on GitHub, so this is
+     * the cross-forge form.
+     */
+    fun providerForToken(token: String): CredentialsProvider =
+        UsernamePasswordCredentialsProvider("oauth2", token)
 }

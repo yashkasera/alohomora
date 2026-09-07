@@ -216,7 +216,7 @@ fun DeepLinkCatalogSideSheet(
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
-                        if (teamConnected && state.scope == ConfigScope.LOCAL) {
+                        if (state.scope == ConfigScope.LOCAL) {
                             AlohomoraIconButton(onClick = { onShare(def.id) }) {
                                 Icon(
                                     imageVector = Icons.Share,

@@ -68,7 +68,7 @@ class ConfigRepoManager(
         runCatching {
             closeTeam()
             saveToken(url, token)
-            val credentials = ConfigRepoCredentials.providerFor(url)
+            val credentials = credentialsFor(url, token)
             val store = if (File(clonePath, DOT_GIT).exists()) {
                 GitConfigStore.open(clonePath, url, author, credentials)
             } else {
@@ -82,12 +82,15 @@ class ConfigRepoManager(
             .map {}
     }
 
-    /** Scaffolds the config structure into an empty remote and connects to it. */
+    /**
+     * Scaffolds the config structure and connects to it. With a [url] it also wires the remote and
+     * pushes `main`; blank creates a **local-only** repo (start now, add a remote and share later).
+     */
     suspend fun initialize(url: String, token: String? = null): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             closeTeam()
             saveToken(url, token)
-            val credentials = ConfigRepoCredentials.providerFor(url)
+            val credentials = credentialsFor(url, token)
             clonePath.mkdirs()
             Git.init().setInitialBranch(MAIN).setDirectory(clonePath).call().use { git ->
                 File(clonePath, "config.json").writeText(SCAFFOLD_CONFIG)
@@ -98,16 +101,18 @@ class ConfigRepoManager(
                 File(clonePath, "README.md").writeText(SCAFFOLD_README)
                 git.add().addFilepattern(".").call()
                 git.commit().setMessage("Initialize Alohomora config").setAuthor(author).call()
-                git.remoteAdd().setName(ORIGIN).setUri(URIish(url)).call()
-                git.push()
-                    .setRemote(ORIGIN)
-                    .setRefSpecs(RefSpec("refs/heads/$MAIN:refs/heads/$MAIN"))
-                    .also { if (credentials != null) it.setCredentialsProvider(credentials) }
-                    .call()
+                if (url.isNotBlank()) {
+                    git.remoteAdd().setName(ORIGIN).setUri(URIish(url)).call()
+                    git.push()
+                        .setRemote(ORIGIN)
+                        .setRefSpecs(RefSpec("refs/heads/$MAIN:refs/heads/$MAIN"))
+                        .also { if (credentials != null) it.setCredentialsProvider(credentials) }
+                        .call()
+                }
             }
             _team.value = GitConfigStore.open(clonePath, url, author, credentials)
-            DesktopConfigRepoPrefs.saveRepoUrl(url)
-            _status.value = ConfigRepoStatus.Connected(url, clonePath.path)
+            if (url.isNotBlank()) DesktopConfigRepoPrefs.saveRepoUrl(url)
+            _status.value = ConfigRepoStatus.Connected(url.ifBlank { "(local only)" }, clonePath.path)
         }.onFailure { _status.value = ConfigRepoStatus.Error(it.message ?: "Initialize failed") }
             .map {}
     }
@@ -116,6 +121,22 @@ class ConfigRepoManager(
         if (token.isNullOrBlank()) return
         val host = ConfigRepoCredentials.hostOf(url) ?: return
         ConfigRepoCredentials.savePat(host, token)
+    }
+
+    /**
+     * Credentials for [url], preferring the just-typed [token] over the keychain so a working connect
+     * never depends on the keychain round-trip (which is best-effort and may be unavailable). SSH URLs
+     * return null and authenticate through the registered ssh session factory / agent.
+     */
+    private fun credentialsFor(
+        url: String,
+        token: String?,
+    ): org.eclipse.jgit.transport.CredentialsProvider? {
+        if (!url.startsWith("http", ignoreCase = true)) return null
+        val effective = token?.takeIf { it.isNotBlank() }
+            ?: ConfigRepoCredentials.hostOf(url)?.let { ConfigRepoCredentials.loadPat(it) }
+            ?: return null
+        return ConfigRepoCredentials.providerForToken(effective)
     }
 
     suspend fun sync(): SyncStatus {

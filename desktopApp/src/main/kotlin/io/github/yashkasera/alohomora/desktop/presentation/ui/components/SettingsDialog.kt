@@ -526,9 +526,17 @@ private fun TeamConfigSection(
                 AlohomoraOutlinedButton(
                     text = "Initialize empty repo",
                     onClick = onInitialize,
-                    enabled = !state.busy && state.urlInput.isNotBlank(),
+                    // No URL required: initialize a local-only repo now, add a remote later.
+                    enabled = !state.busy,
                 )
             }
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
+            Text(
+                text = "Connect clones an existing repo. Initialize scaffolds a new one — with a URL it " +
+                    "pushes to that empty remote, or leave the URL blank to start local-only.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             if (status is ConfigRepoStatus.Error) {
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                 Text(

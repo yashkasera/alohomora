@@ -209,7 +209,7 @@ fun JourneyListSideSheet(
                             }
                         }
                         AlohomoraChip(label = "${journey.steps.size} steps")
-                        if (teamConnected && state.scope == ConfigScope.LOCAL) {
+                        if (state.scope == ConfigScope.LOCAL) {
                             AlohomoraIconButton(onClick = { onShare(journey.id) }) {
                                 Icon(
                                     imageVector = Icons.Share,

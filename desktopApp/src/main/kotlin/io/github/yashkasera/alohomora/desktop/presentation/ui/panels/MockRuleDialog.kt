@@ -282,7 +282,7 @@ fun MockRulesSideSheet(
                             Icon(Icons.Download, contentDescription = "Export")
                         }
                     }
-                    if (teamConnected && currentSession != null) {
+                    if (currentSession != null) {
                         AlohomoraIconButton(onClick = onShareSession) {
                             Icon(Icons.Share, contentDescription = "Share with team")
                         }
