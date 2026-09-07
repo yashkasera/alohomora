@@ -73,6 +73,10 @@ class NetworkRulesViewModel(
     private val _sessions = MutableStateFlow<List<MockSessionSummary>>(emptyList())
     val sessions: StateFlow<List<MockSessionSummary>> = _sessions.asStateFlow()
 
+    /** Team mock sets read from the connected config repo's main line; empty when not connected. */
+    private val _teamSessions = MutableStateFlow<List<MockSessionSummary>>(emptyList())
+    val teamSessions: StateFlow<List<MockSessionSummary>> = _teamSessions.asStateFlow()
+
     init {
         scope.launch {
             val lastActive = sessionStore.loadLastActive()
@@ -300,8 +304,42 @@ class NetworkRulesViewModel(
         }
     }
 
+    /** Loads a team mock set's rules into the working set as a local copy (the team artifact is read-only). */
+    fun loadTeamSession(id: String) {
+        val store = configStore ?: return
+        scope.launch {
+            val session = store.list(
+                io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind.MockSets,
+                io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope.TEAM,
+            ).firstOrNull { it.value.id == id }?.value ?: return@launch
+            _currentSession.value = null
+            _mockRules.value = session.rules
+            sessionStore.setLastActive(null)
+            sendRules()
+        }
+    }
+
     private suspend fun refreshSessionList() {
         _sessions.value = sessionStore.listSessions()
+        refreshTeamSessions()
+    }
+
+    /** Re-reads team mock sets — call when the sheet opens so a mid-session connect is reflected. */
+    fun refreshTeam() {
+        scope.launch { refreshTeamSessions() }
+    }
+
+    private suspend fun refreshTeamSessions() {
+        val store = configStore ?: return
+        _teamSessions.value = runCatching {
+            store.list(
+                io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind.MockSets,
+                io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope.TEAM,
+            ).map { item ->
+                val session = item.value
+                MockSessionSummary(session.id, session.name, session.rules.size, 0)
+            }
+        }.getOrDefault(emptyList())
     }
 
     fun close() {

@@ -688,6 +688,10 @@ fun DevToolsDesktopApp(
             val mockSessions by networkRulesViewModel.sessions.collectAsState()
             val mockProposal by networkRulesViewModel.lastProposal.collectAsState()
             val mockShareMessage by networkRulesViewModel.shareMessage.collectAsState()
+            val mockTeamSessions by networkRulesViewModel.teamSessions.collectAsState()
+            LaunchedEffect(showMockRules, configRepoUi.isConnected) {
+                if (showMockRules) networkRulesViewModel.refreshTeam()
+            }
             MockRulesSideSheet(
                 visible = showMockRules,
                 rules = mockRules,
@@ -706,7 +710,9 @@ fun DevToolsDesktopApp(
                 onExport = networkRulesViewModel::exportSession,
                 onImport = networkRulesViewModel::importFromFile,
                 teamConnected = configRepoUi.isConnected,
+                teamSessions = mockTeamSessions,
                 onShareSession = networkRulesViewModel::shareCurrentSession,
+                onLoadTeamSession = networkRulesViewModel::loadTeamSession,
                 lastProposal = mockProposal,
                 shareMessage = mockShareMessage,
                 onOpenUrl = { url ->
@@ -823,6 +829,10 @@ fun DevToolsDesktopApp(
                 },
                 onRemoveHistoryEntry = devicesViewModel::removeDeepLinkEntry,
                 onClearHistory = devicesViewModel::clearDeepLinkHistory,
+                onOpenCatalog = {
+                    onDismissDeepLinkBuilder()
+                    onOpenDeepLinkCatalog()
+                },
                 onDismiss = { onDismissDeepLinkBuilder() },
             )
         }

@@ -83,7 +83,9 @@ fun MockRulesSideSheet(
     onExport: (String) -> Unit,
     onImport: (String) -> String?,
     teamConnected: Boolean = false,
+    teamSessions: List<MockSessionSummary> = emptyList(),
     onShareSession: () -> Unit = {},
+    onLoadTeamSession: (String) -> Unit = {},
     lastProposal: io.github.yashkasera.alohomora.desktop.domain.config.Proposal? = null,
     shareMessage: String? = null,
     onOpenUrl: (String) -> Unit = {},
@@ -230,6 +232,38 @@ fun MockRulesSideSheet(
                                 },
                             )
                         }
+                        if (teamSessions.isNotEmpty()) {
+                            AlohomoraHorizontalDivider()
+                            AlohomoraDropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "TEAM",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                },
+                                onClick = {},
+                                enabled = false,
+                            )
+                            teamSessions.forEach { summary ->
+                                AlohomoraDropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(summary.name)
+                                            Text(
+                                                "${summary.ruleCount} rules · team",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        showSessionDropdown = false
+                                        onLoadTeamSession(summary.id)
+                                    },
+                                )
+                            }
+                        }
                         if (currentSession != null) {
                             AlohomoraHorizontalDivider()
                             AlohomoraDropdownMenuItem(
@@ -282,7 +316,7 @@ fun MockRulesSideSheet(
                             Icon(Icons.Download, contentDescription = "Export")
                         }
                     }
-                    if (currentSession != null) {
+                    if (rules.isNotEmpty()) {
                         AlohomoraIconButton(onClick = onShareSession) {
                             Icon(Icons.Share, contentDescription = "Share with team")
                         }
