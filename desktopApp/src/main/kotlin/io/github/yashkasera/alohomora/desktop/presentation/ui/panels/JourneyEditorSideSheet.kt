@@ -531,7 +531,7 @@ private fun AddStepByNameRow(onAdd: (String) -> Unit) {
             placeholder = "Event name, e.g. checkout_started",
             modifier = Modifier.weight(1f),
         )
-        AlohomoraTextButton(
+        AlohomoraOutlinedButton(
             text = "Add step",
             enabled = name.isNotBlank(),
             onClick = {

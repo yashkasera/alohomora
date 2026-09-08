@@ -59,7 +59,6 @@ import io.github.yashkasera.alohomora.ui.icons.Plus
 import io.github.yashkasera.alohomora.ui.icons.Save
 import io.github.yashkasera.alohomora.ui.icons.Share
 import io.github.yashkasera.alohomora.ui.icons.Trash
-import io.github.yashkasera.alohomora.ui.icons.Upload
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
@@ -79,8 +78,6 @@ fun MockRulesSideSheet(
     onSaveAsSession: (String) -> Unit,
     onDeleteSession: (String) -> Unit,
     onDetachSession: () -> Unit,
-    onImport: (String) -> String?,
-    teamConnected: Boolean = false,
     teamSessions: List<MockSessionSummary> = emptyList(),
     onShareSession: () -> Unit = {},
     onLoadTeamSession: (String) -> Unit = {},
@@ -140,7 +137,7 @@ fun MockRulesSideSheet(
                     else -> ToggleableState.Off
                 }
 
-                AlohomoraOutlinedButton(
+                AlohomoraTextButton(
                     text = "Enable Mocking",
                     leadingIcon = {
                         AlohomoraTriStateCheckbox(
@@ -305,19 +302,6 @@ fun MockRulesSideSheet(
                         AlohomoraIconButton(onClick = onShareSession) {
                             Icon(Icons.Share, contentDescription = "Share with team")
                         }
-                    }
-                    AlohomoraIconButton(
-                        onClick = {
-                            val path = io.github.yashkasera.alohomora.desktop.util.pickLoadPath(
-                                dialogTitle = "Import HAR",
-                                ".har",
-                            )
-                            if (path != null) {
-                                importError = onImport(path)
-                            }
-                        },
-                    ) {
-                        Icon(Icons.Upload, contentDescription = "Import HAR")
                     }
                 }
             }

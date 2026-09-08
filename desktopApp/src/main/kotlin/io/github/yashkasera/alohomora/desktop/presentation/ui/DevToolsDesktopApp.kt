@@ -160,8 +160,6 @@ fun DevToolsDesktopApp(
             null,
         )
     }
-    val selectedTraceId by tracesViewModel.selectedTraceId.collectAsState()
-    val selectedEventId by eventsViewModel.selectedEventId.collectAsState()
     var selectedDeviceId by remember(initialDeviceId) { mutableStateOf(initialDeviceId) }
     var isModifierPhysicallyDown by remember { mutableStateOf(false) }
     var showModifierBadges by remember { mutableStateOf(false) }
@@ -656,8 +654,6 @@ fun DevToolsDesktopApp(
                     onSaveAsSession = networkRulesViewModel::saveAsNewSession,
                     onDeleteSession = networkRulesViewModel::deleteSession,
                     onDetachSession = networkRulesViewModel::detachSession,
-                    onImport = networkRulesViewModel::importHarFile,
-                    teamConnected = configRepoUi.isConnected,
                     teamSessions = mockTeamSessions,
                     onShareSession = networkRulesViewModel::shareCurrentSession,
                     onLoadTeamSession = networkRulesViewModel::loadTeamSession,
