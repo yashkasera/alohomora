@@ -712,6 +712,7 @@ fun DevToolsDesktopApp(
                 teamConnected = configRepoUi.isConnected,
                 onScopeChange = deepLinkCatalogViewModel::onScopeChange,
                 onQueryChange = deepLinkCatalogViewModel::onQueryChange,
+                onModuleFilterChange = deepLinkCatalogViewModel::onModuleFilterChange,
                 onOpen = deepLinkCatalogViewModel::editExisting,
                 onNew = deepLinkCatalogViewModel::newDef,
                 onDelete = deepLinkCatalogViewModel::deleteDef,
@@ -722,6 +723,7 @@ fun DevToolsDesktopApp(
             )
             DeepLinkDefEditorSideSheet(
                 draft = catalogUi.editorDraft,
+                fieldErrors = catalogUi.fieldErrors,
                 validationErrors = catalogUi.validationErrors,
                 onNameChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(name = v) } },
                 onModuleChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(module = v) } },

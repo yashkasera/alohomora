@@ -47,4 +47,23 @@ class DeepLinkCatalogUiStateTest {
     fun `a non matching query returns nothing`() {
         assertTrue(state.copy(query = "zzz").visibleDefs.isEmpty())
     }
+
+    @Test
+    fun `module names and counts cover every module`() {
+        assertEquals(listOf("cards", "kyc"), state.moduleNames)
+        assertEquals(mapOf("cards" to 2, "kyc" to 1), state.moduleCounts)
+    }
+
+    @Test
+    fun `module groups partition the visible defs by module`() {
+        val groups = state.moduleGroups
+        assertEquals(listOf("cards", "kyc"), groups.map { it.module })
+        assertEquals(listOf("d3", "d2"), groups.first().defs.map { it.value.id })
+    }
+
+    @Test
+    fun `a module filter narrows to that module`() {
+        val ids = state.copy(moduleFilter = "cards").visibleDefs.map { it.value.id }
+        assertEquals(listOf("d3", "d2"), ids)
+    }
 }
