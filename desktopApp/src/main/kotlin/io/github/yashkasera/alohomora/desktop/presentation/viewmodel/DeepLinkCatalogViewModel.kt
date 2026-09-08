@@ -1,7 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
 import io.github.yashkasera.alohomora.common.deeplink.DeepLinkDef
-import io.github.yashkasera.alohomora.common.deeplink.validateExamples
+import io.github.yashkasera.alohomora.common.deeplink.validateStructure
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigStore
@@ -53,19 +53,33 @@ class DeepLinkCatalogViewModel(
         refresh()
     }
 
-    fun onQueryChange(query: String) = _uiState.update { it.copy(query = query) }
+    /** Query and the module jump-chip are two modes of narrowing; typing clears any chip. */
+    fun onQueryChange(query: String) = _uiState.update { it.copy(query = query, moduleFilter = null) }
+
+    /** Selecting a module chip clears the query; passing null returns to "All". */
+    fun onModuleFilterChange(module: String?) =
+        _uiState.update { it.copy(moduleFilter = module, query = "") }
 
     fun select(id: String?) = _uiState.update { it.copy(selectedId = id) }
 
     @OptIn(ExperimentalUuidApi::class)
     fun newDef() {
+        // Seeded empty on purpose: the draft opens invalid, so required fields are flagged and it
+        // cannot persist until the user fills name/module/template.
         val draft = DeepLinkDef(
             id = Uuid.random().toString(),
-            name = "New deep link",
-            module = "general",
+            name = "",
+            module = "",
             uriTemplate = "",
         )
-        _uiState.update { it.copy(editorDraft = draft, selectedId = draft.id, validationErrors = emptyList()) }
+        _uiState.update {
+            it.copy(
+                editorDraft = draft,
+                selectedId = draft.id,
+                fieldErrors = draft.validateStructure(),
+                validationErrors = emptyList(),
+            )
+        }
     }
 
     /**
@@ -82,24 +96,36 @@ class DeepLinkCatalogViewModel(
         val segments = pathPart.split('/').filter { it.isNotBlank() }
         val def = DeepLinkDef(
             id = Uuid.random().toString(),
-            name = segments.lastOrNull() ?: "deep link",
-            module = segments.firstOrNull() ?: "general",
+            name = segments.lastOrNull() ?: "",
+            module = segments.firstOrNull() ?: "",
             uriTemplate = trimmed,
             examples = listOf(trimmed),
         )
+        val errors = def.validateStructure()
         _uiState.update {
-            it.copy(scope = ConfigScope.LOCAL, editorDraft = def, selectedId = def.id, validationErrors = emptyList())
+            it.copy(
+                scope = ConfigScope.LOCAL,
+                editorDraft = def,
+                selectedId = def.id,
+                fieldErrors = errors,
+                validationErrors = errors.warnings,
+            )
         }
-        scope.launch {
-            configStore.saveLocal(ConfigKind.DeepLinks, def)
-            refresh()
+        // Only persist a well-formed guess; a bare/path-less URL opens the editor for the user to
+        // complete name/module rather than silently seeding the catalog.
+        if (errors.isValid) {
+            scope.launch {
+                configStore.saveLocal(ConfigKind.DeepLinks, def)
+                refresh()
+            }
         }
     }
 
     fun editExisting(id: String) {
         val existing = _uiState.value.defs.firstOrNull { it.value.id == id }?.value ?: return
+        val errors = existing.validateStructure()
         _uiState.update {
-            it.copy(editorDraft = existing, selectedId = id, validationErrors = existing.validateExamples())
+            it.copy(editorDraft = existing, selectedId = id, fieldErrors = errors, validationErrors = errors.warnings)
         }
     }
 
@@ -108,8 +134,10 @@ class DeepLinkCatalogViewModel(
     fun editDraft(transform: (DeepLinkDef) -> DeepLinkDef) {
         val current = _uiState.value.editorDraft ?: return
         val next = transform(current)
-        _uiState.update { it.copy(editorDraft = next, validationErrors = next.validateExamples()) }
-        scheduleSave(next)
+        val errors = next.validateStructure()
+        _uiState.update { it.copy(editorDraft = next, fieldErrors = errors, validationErrors = errors.warnings) }
+        // Gate the write on validity: an invalid draft stays in memory, disk keeps the last good copy.
+        if (errors.isValid) scheduleSave(next) else saveJob?.cancel()
     }
 
     fun deleteDef(id: String) {
@@ -129,6 +157,10 @@ class DeepLinkCatalogViewModel(
         val item = _uiState.value.defs.firstOrNull { it.value.id == id }?.value
             ?: _uiState.value.editorDraft?.takeIf { it.id == id }
             ?: return
+        if (!item.validateStructure().isValid) {
+            _uiState.update { it.copy(message = "Fix the deep link before sharing it.") }
+            return
+        }
         scope.launch {
             runCatching { configStore.shareWithTeam(ConfigKind.DeepLinks, item) }
                 .onSuccess { proposal -> _uiState.update { it.copy(lastProposal = proposal, message = null) } }
@@ -147,7 +179,7 @@ class DeepLinkCatalogViewModel(
 
     fun close() {
         val draft = _uiState.value.editorDraft
-        if (draft != null && saveJob?.isActive == true) {
+        if (draft != null && saveJob?.isActive == true && draft.validateStructure().isValid) {
             saveJob?.cancel()
             runBlocking { configStore.saveLocal(ConfigKind.DeepLinks, draft) }
         }

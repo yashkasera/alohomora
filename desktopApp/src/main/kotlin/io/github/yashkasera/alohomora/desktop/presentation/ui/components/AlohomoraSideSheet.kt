@@ -22,6 +22,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -54,6 +58,13 @@ fun AlohomoraSideSheet(
     floatingActionButton: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val host = LocalSideSheetHost.current
+    val token = remember { Any() }
+    val latestDismiss by rememberUpdatedState(onDismiss)
+    DisposableEffect(host, visible) {
+        if (visible) host.register(token) { latestDismiss() } else host.unregister(token)
+        onDispose { host.unregister(token) }
+    }
 
     AnimatedVisibility(
         visible,

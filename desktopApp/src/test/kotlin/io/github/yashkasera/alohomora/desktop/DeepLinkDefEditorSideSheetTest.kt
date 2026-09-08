@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.runComposeUiTest
 import io.github.yashkasera.alohomora.common.deeplink.DeepLinkDef
+import io.github.yashkasera.alohomora.common.deeplink.DeepLinkFieldErrors
 import io.github.yashkasera.alohomora.common.deeplink.DeepLinkParam
 import io.github.yashkasera.alohomora.common.deeplink.ParamType
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.DeepLinkDefEditorSideSheet
@@ -37,6 +38,7 @@ class DeepLinkDefEditorSideSheetTest {
             AppTheme {
                 DeepLinkDefEditorSideSheet(
                     draft = draft,
+                    fieldErrors = DeepLinkFieldErrors(),
                     validationErrors = emptyList(),
                     onNameChange = {},
                     onModuleChange = {},

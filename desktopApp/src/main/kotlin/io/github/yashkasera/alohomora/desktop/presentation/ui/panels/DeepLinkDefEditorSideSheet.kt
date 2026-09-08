@@ -22,14 +22,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.common.deeplink.DeepLinkDef
+import io.github.yashkasera.alohomora.common.deeplink.DeepLinkFieldErrors
 import io.github.yashkasera.alohomora.common.deeplink.DeepLinkParam
 import io.github.yashkasera.alohomora.common.deeplink.ParamType
 import io.github.yashkasera.alohomora.common.deeplink.buildUri
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.ui.components.AlohomoraAssistChip
+import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
+import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraSwitch
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
@@ -37,6 +41,7 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.icons.X
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 /**
@@ -49,6 +54,7 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 @Composable
 fun DeepLinkDefEditorSideSheet(
     draft: DeepLinkDef?,
+    fieldErrors: DeepLinkFieldErrors,
     validationErrors: List<String>,
     onNameChange: (String) -> Unit,
     onModuleChange: (String) -> Unit,
@@ -84,6 +90,20 @@ fun DeepLinkDefEditorSideSheet(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                 )
+                if (fieldErrors.isValid) {
+                    AlohomoraChip(
+                        label = "Saved",
+                        containerColor = MaterialTheme.alohomoraColors.successContainer,
+                        contentColor = MaterialTheme.alohomoraColors.success,
+                    )
+                } else {
+                    val n = fieldErrors.blockingCount
+                    AlohomoraChip(
+                        label = "$n issue${if (n == 1) "" else "s"}",
+                        containerColor = MaterialTheme.alohomoraColors.warningContainer,
+                        contentColor = MaterialTheme.alohomoraColors.warning,
+                    )
+                }
                 AlohomoraIconButton(onClick = onDismiss) {
                     Icon(
                         imageVector = Icons.X,
@@ -103,14 +123,23 @@ fun DeepLinkDefEditorSideSheet(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
         ) {
             item {
-                AlohomoraTextField(current.name, onNameChange, label = "Name", modifier = Modifier.fillMaxWidth())
+                AlohomoraTextField(
+                    current.name,
+                    onNameChange,
+                    label = "Name *",
+                    isError = fieldErrors.name != null,
+                    supportingText = fieldErrors.name,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md)) {
                     AlohomoraTextField(
                         current.module,
                         onModuleChange,
-                        label = "Module",
+                        label = "Module *",
+                        isError = fieldErrors.module != null,
+                        supportingText = fieldErrors.module,
                         modifier = Modifier.weight(1f),
                     )
                     AlohomoraTextField(
@@ -134,8 +163,10 @@ fun DeepLinkDefEditorSideSheet(
                 AlohomoraTextField(
                     current.uriTemplate,
                     onUriTemplateChange,
-                    label = "URI template",
+                    label = "URI template *",
                     placeholder = "app://module/path/{param}",
+                    isError = fieldErrors.uriTemplate != null,
+                    supportingText = fieldErrors.uriTemplate,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -144,6 +175,7 @@ fun DeepLinkDefEditorSideSheet(
             itemsIndexed(current.params, key = { i, _ -> "param-$i" }) { index, param ->
                 ParamRow(
                     param = param,
+                    error = fieldErrors.params[index],
                     onChange = { updated ->
                         onParamsChange(current.params.toMutableList().also { it[index] = updated })
                     },
@@ -151,8 +183,9 @@ fun DeepLinkDefEditorSideSheet(
                 )
             }
             item {
-                AlohomoraTextButton(
+                AlohomoraOutlinedButton(
                     text = "Add parameter",
+                    size = AlohomoraButtonSize.SMALL,
                     onClick = {
                         onParamsChange(current.params + DeepLinkParam(name = "", type = ParamType.STRING))
                     },
@@ -192,13 +225,14 @@ fun DeepLinkDefEditorSideSheet(
             }
 
             if (validationErrors.isNotEmpty()) {
+                item { SectionLabel("Warnings") }
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs)) {
-                        validationErrors.forEach { error ->
+                        validationErrors.forEach { warning ->
                             Text(
-                                text = error,
+                                text = warning,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.error,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -214,6 +248,7 @@ fun DeepLinkDefEditorSideSheet(
 @Composable
 private fun ParamRow(
     param: DeepLinkParam,
+    error: String?,
     onChange: (DeepLinkParam) -> Unit,
     onRemove: () -> Unit,
 ) {
@@ -227,6 +262,8 @@ private fun ParamRow(
                 value = param.name,
                 onValueChange = { onChange(param.copy(name = it)) },
                 placeholder = "name",
+                isError = error != null,
+                supportingText = error,
                 modifier = Modifier.weight(1f),
             )
             AlohomoraAssistChip(
