@@ -1,5 +1,10 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,6 +49,7 @@ import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Search
 import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import io.github.yashkasera.alohomora.desktop.presentation.ui.theme.AlohomoraMotion
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 private val SidebarTopInsetMac = 40.dp
@@ -151,7 +157,13 @@ fun ColumnScope.Sidebar(
                     )
                 },
                 badge = {
-                    if (isModifierHeld && index < 9) {
+                    // The shortcut number pops in when the modifier is held and eases back out on
+                    // release — a full-expressive scale spring rather than the old instant appear.
+                    AnimatedVisibility(
+                        visible = isModifierHeld && index < 9,
+                        enter = scaleIn(AlohomoraMotion.selectionIndicator) + fadeIn(),
+                        exit = scaleOut(AlohomoraMotion.selectionIndicator) + fadeOut(),
+                    ) {
                         Text(
                             text = "${index + 1}",
                             style = MaterialTheme.typography.labelSmall,

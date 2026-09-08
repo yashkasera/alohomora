@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -29,6 +30,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.desktop.presentation.ui.theme.AlohomoraMotion
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
@@ -66,10 +68,22 @@ fun AlohomoraSideSheet(
         onDispose { host.unregister(token) }
     }
 
+    // Corner morph lives outside both AnimatedVisibility blocks so it survives the visible→false
+    // transition and can actually animate: it settles at the wider `extraLarge` (28.dp) while closed
+    // and eases to the resting `large` (16.dp) as the sheet arrives — the "arriving large" expressive
+    // read. Driven off `visible` with a spatial spring; the two literals mirror the shapes scale
+    // (large / extraLarge), kept local here because this is a desktop-only surface.
+    val startCorner by animateDpAsState(
+        targetValue = if (visible) 16.dp else 28.dp,
+        animationSpec = AlohomoraMotion.shapeMorph,
+        label = "sideSheetCorner",
+    )
+
+    // Scrim animates on the effects spec — alpha must not overshoot.
     AnimatedVisibility(
         visible,
-        enter = fadeIn(),
-        exit = fadeOut(),
+        enter = fadeIn(AlohomoraMotion.scrimFade),
+        exit = fadeOut(AlohomoraMotion.scrimFade),
     ) {
         Box(
             modifier = Modifier
@@ -82,10 +96,12 @@ fun AlohomoraSideSheet(
                 ),
         )
     }
+    // Surface slides on the spatial spring (the expressive settle) with a light effects fade so the
+    // edge does not hard-pop. Exit uses the faster spec to keep the host's pop-vs-visible window tight.
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn() + slideInHorizontally { it },
-        exit = fadeOut() + slideOutHorizontally { it },
+        enter = fadeIn(AlohomoraMotion.scrimFade) + slideInHorizontally(AlohomoraMotion.sheetEnter) { it },
+        exit = fadeOut(AlohomoraMotion.scrimFade) + slideOutHorizontally(AlohomoraMotion.sheetExit) { it },
     ) {
         Row(
             modifier = modifier.fillMaxSize(),
@@ -96,8 +112,8 @@ fun AlohomoraSideSheet(
                     .fillMaxWidth(widthFraction)
                     .fillMaxHeight(),
                 shape = RoundedCornerShape(
-                    topStart = 16.dp,
-                    bottomStart = 16.dp,
+                    topStart = startCorner,
+                    bottomStart = startCorner,
                 ),
                 color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 4.dp,

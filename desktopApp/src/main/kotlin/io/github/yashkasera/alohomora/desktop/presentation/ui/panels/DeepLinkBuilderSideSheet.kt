@@ -1,5 +1,11 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,6 +49,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
+import io.github.yashkasera.alohomora.desktop.presentation.ui.theme.AlohomoraMotion
 import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.Clock
@@ -150,7 +157,23 @@ fun DeepLinkBuilderSideSheet(
             }
         },
     ) {
-        when (selectedTab) {
+        // Tabs slide in the direction of travel (History is to the right of Builder), springing on
+        // the shared spatial spec instead of the old instant swap. Specs hoisted here because the
+        // transitionSpec lambda is not composable.
+        val tabFade = AlohomoraMotion.scrimFade
+        val tabEnter = AlohomoraMotion.sectionEnter
+        val tabExit = AlohomoraMotion.sectionExit
+        AnimatedContent(
+            targetState = selectedTab,
+            transitionSpec = {
+                val forward = targetState > initialState
+                val dir = if (forward) 1 else -1
+                (fadeIn(tabFade) + slideInHorizontally(tabEnter) { dir * it / 12 }) togetherWith
+                    (fadeOut(tabFade) + slideOutHorizontally(tabExit) { -dir * it / 12 })
+            },
+            label = "deeplink-builder-tab",
+        ) { tab ->
+        when (tab) {
             0 -> BuilderTab(
                 scheme = scheme,
                 customScheme = customScheme,
@@ -188,6 +211,7 @@ fun DeepLinkBuilderSideSheet(
                 onRemove = onRemoveHistoryEntry,
                 onClearAll = onClearHistory,
             )
+        }
         }
     }
 }

@@ -16,9 +16,12 @@ values are the exception, not the default.
 1. **Wrap, don't re-skin.** Use `Alohomora*` wrappers, not raw `androidx.compose.material3.*`. The
    wrappers carry the console's defaults (emphasis is `onBackground`/`background`, not `primary`);
    raw M3 renders in `primary` and drifts.
-2. **Hierarchy by size, colour and tracking — never weight.** Only one `*-Regular` face ships per
-   family. Asking for `FontWeight.Medium`/`Bold` gets a synthetic stroke-widen that differs per
-   platform. Lean on the type scale, `onSurface` vs `onSurfaceVariant`, and the serif display face.
+2. **Hierarchy by size, colour and tracking — weight only via an Emphasized role.** The base roles
+   ship a single `Regular` face, so a hand-set `FontWeight.Medium`/`Bold` on a base style gets a
+   synthetic stroke-widen that differs per platform — don't. For real weight, use the M3 *Emphasized*
+   roles (`titleMediumEmphasized`, `labelLargeEmphasized`, …): Newsreader and JetBrains Mono bundle a
+   genuine Medium face behind those. Instrument Serif (display/headline) has no bold face, so its
+   Emphasized roles stay Regular — there, still lean on size and colour.
 3. **Tokens everywhere.** Spacing, radius, stroke and colour come from `MaterialTheme.dimens`,
    `MaterialTheme.shapes`, `MaterialTheme.colorScheme` and `MaterialTheme.alohomoraColors`. A
    literal
@@ -84,16 +87,17 @@ scale can't express.
 
 ### Typography — `MaterialTheme.typography`
 
-Three bundled families, one `Regular` face each. Emphasis roles render identically to their base
-(the console has one weight — reach for a larger size or a stronger colour role instead).
+Three bundled families. Base roles use a `Regular` face; the *Emphasized* roles carry real weight
+where a bold face exists.
 
-| M3 roles                | Family             |
-|-------------------------|--------------------|
-| `display*`, `headline*` | Instrument Serif   |
-| `title*`                | Newsreader (serif) |
-| `body*`, `label*`       | JetBrains Mono     |
+| M3 roles                | Family             | Base    | Emphasized |
+|-------------------------|--------------------|---------|------------|
+| `display*`, `headline*` | Instrument Serif   | Regular | Regular (no bold face) |
+| `title*`                | Newsreader (serif) | Regular | **Medium** |
+| `body*`, `label*`       | JetBrains Mono     | Regular | **Medium** |
 
-`labelLarge` is tracked to `0.5.sp` to match its label siblings once its faux-Medium weight is gone.
+Emphasis is opt-in: reach for a `*Emphasized` role to step up, otherwise size and colour carry
+hierarchy. `labelLarge`/`labelLargeEmphasized` are tracked to `0.5.sp` to match their label siblings.
 
 ### Colours
 
@@ -236,11 +240,38 @@ AlohomoraPrimaryTabRow(selectedTabIndex = index) {
 AlohomoraHorizontalDivider()   // defaults to outlineVariant, 1.dp — matches M3 DividerDefaults
 ```
 
-### Progress — `AlohomoraProgressIndicators.kt`
+### Progress — `AlohomoraProgressIndicators.kt`, `AlohomoraLoadingIndicator.kt`
 
 ```kotlin
 AlohomoraCircularProgressIndicator()   // defaults color = onBackground (NOT M3's primary)
+
+AlohomoraLoadingIndicator()            // M3 Expressive morphing loader (indeterminate)
+AlohomoraLoadingIndicator { progress } // determinate — a () -> Float fraction
 ```
+
+`AlohomoraLoadingIndicator` is the Expressive morphing-shape loader. Prefer it where the extra
+expressiveness reads as intentional — connection states, prominent panel loads; keep the plain
+circular one for tight inline spots (a spinner inside a button) where a morphing shape would be noise.
+
+### Expressive action groups — `AlohomoraButtonGroup.kt`, `AlohomoraSplitButton.kt`
+
+```kotlin
+AlohomoraButtonGroup {                        // connected, press-morphing cluster (M3 Expressive)
+    clickableItem({ copy() }, "Copy", { Icon(Icons.Copy, null) })   // composable is positional
+    clickableItem({ share() }, "Share", { Icon(Icons.Share, null) })
+}
+
+AlohomoraSplitButton(                          // primary action welded to a "more" toggle
+    onClick = ::replay,
+    checked = menuOpen, onCheckedChange = { menuOpen = it },
+    leadingContent = { Text("Replay") },       // trailing chevron flips on checked by default
+)
+```
+
+Use `AlohomoraButtonGroup` for actions that read as one control (a side-sheet header cluster, a
+toolbar segment) — reach for `AlohomoraSingleChoiceToggleGroup` instead when it's a single-select
+filter. Use `AlohomoraSplitButton` for a primary action plus a menu of variants ("replay" /
+"replay with edits", "save" / "save as").
 
 ### Selection controls — `AlohomoraSelectionControls.kt`
 
@@ -338,6 +369,9 @@ Reach for the wrapper. Raw M3 renders in the wrong emphasis colour and skips the
 | `Card` / `OutlinedCard`                | `AlohomoraCard` / `AlohomoraOutlinedCard`             |
 | `HorizontalDivider`                    | `AlohomoraHorizontalDivider`                          |
 | `CircularProgressIndicator`            | `AlohomoraCircularProgressIndicator`                  |
+| `LoadingIndicator`                     | `AlohomoraLoadingIndicator`                           |
+| `ButtonGroup`                          | `AlohomoraButtonGroup`                                |
+| `SplitButtonLayout`                    | `AlohomoraSplitButton`                                |
 | `Checkbox` / `TriStateCheckbox`        | `AlohomoraCheckbox` / `AlohomoraTriStateCheckbox`     |
 | `Switch` / `RadioButton`               | `AlohomoraSwitch` / `AlohomoraRadioButton`            |
 | `AlertDialog`                          | `AlohomoraAlertDialog`                                |
