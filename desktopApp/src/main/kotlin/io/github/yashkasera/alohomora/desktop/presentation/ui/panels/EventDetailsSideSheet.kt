@@ -19,11 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.prettyProperties
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheetHeader
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValueRow
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
@@ -98,48 +98,28 @@ fun EventDetailsSideSheet(
         widthFraction = EVENT_SHEET_WIDTH_FRACTION,
         header = {
             event?.let { selected ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = MaterialTheme.dimens.margin.xl,
-                            vertical = MaterialTheme.dimens.margin.md,
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = selected.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = DateUtils.format(selected.time, DateUtils.Format.ISO_DATE_TIME),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    AlohomoraIconButton(
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(shareText))
-                            copyFeedback("Copied to clipboard")
-                        },
-                    ) {
-                        Icon(imageVector = Icons.Copy, contentDescription = "Copy event")
-                    }
-                    // Hidden rather than disabled when unconfigured: an action that cannot work should
-                    // not be offered, the same rule replay follows.
-                    if (isSlackConfigured) {
-                        AlohomoraIconButton(onClick = { showSlackShareDialog = true }) {
-                            Icon(imageVector = Icons.Slack, contentDescription = "Share to Slack")
+                AlohomoraSideSheetHeader(
+                    title = selected.name,
+                    subtitle = DateUtils.format(selected.time, DateUtils.Format.ISO_DATE_TIME),
+                    onClose = onDismiss,
+                    actions = {
+                        AlohomoraIconButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(shareText))
+                                copyFeedback("Copied to clipboard")
+                            },
+                        ) {
+                            Icon(imageVector = Icons.Copy, contentDescription = "Copy event")
                         }
-                    }
-                    AlohomoraIconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.X, contentDescription = "Close")
-                    }
-                }
+                        // Hidden rather than disabled when unconfigured: an action that cannot work
+                        // should not be offered, the same rule replay follows.
+                        if (isSlackConfigured) {
+                            AlohomoraIconButton(onClick = { showSlackShareDialog = true }) {
+                                Icon(imageVector = Icons.Slack, contentDescription = "Share to Slack")
+                            }
+                        }
+                    },
+                )
             }
         },
     ) {

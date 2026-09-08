@@ -13,25 +13,32 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.presentation.ui.theme.AlohomoraMotion
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 /**
@@ -69,12 +76,12 @@ fun AlohomoraSideSheet(
     }
 
     // Corner morph lives outside both AnimatedVisibility blocks so it survives the visible→false
-    // transition and can actually animate: it settles at the wider `extraLarge` (28.dp) while closed
-    // and eases to the resting `large` (16.dp) as the sheet arrives — the "arriving large" expressive
-    // read. Driven off `visible` with a spatial spring; the two literals mirror the shapes scale
-    // (large / extraLarge), kept local here because this is a desktop-only surface.
+    // transition and can actually animate: it settles wider while closed and eases to the resting
+    // `large` (16.dp) as the sheet arrives. The surface is detached from the window edges by a small
+    // margin (below), so all four corners round rather than just the inner two. Driven off `visible`
+    // with a spatial spring; kept local as this is a desktop surface.
     val startCorner by animateDpAsState(
-        targetValue = if (visible) 16.dp else 28.dp,
+        targetValue = if (visible) 16.dp else 40.dp,
         animationSpec = AlohomoraMotion.shapeMorph,
         label = "sideSheetCorner",
     )
@@ -110,10 +117,17 @@ fun AlohomoraSideSheet(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth(widthFraction)
-                    .fillMaxHeight(),
+                    .fillMaxHeight()
+                    .padding(
+                        end = MaterialTheme.dimens.margin.md,
+                        top = MaterialTheme.dimens.margin.md,
+                        bottom = MaterialTheme.dimens.margin.md,
+                    ),
                 shape = RoundedCornerShape(
                     topStart = startCorner,
                     bottomStart = startCorner,
+                    topEnd = startCorner,
+                    bottomEnd = startCorner
                 ),
                 color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 4.dp,
@@ -121,9 +135,9 @@ fun AlohomoraSideSheet(
             ) {
                 Box {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.primary) {
-                            header()
-                        }
+                        // Header renders in neutral content colours (see AlohomoraSideSheetHeader),
+                        // matching the M3 side-sheet spec — no primary tint on the whole header.
+                        header()
                         AlohomoraHorizontalDivider()
                         content()
                     }
@@ -138,6 +152,75 @@ fun AlohomoraSideSheet(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * The standard M3 side-sheet header: an optional leading back arrow, a headline (with optional
+ * subtitle), a trailing actions cluster, and a trailing close.
+ *
+ * Neutral by design — headline in `onSurface`, glyphs in the icon button's default content colour —
+ * so it reads like the Material side-sheet spec rather than a primary-tinted banner. Pass [onBack]
+ * only on a sheet that has somewhere to go back *to* (a detail opened from a master list); standalone
+ * detail sheets leave it null and show just the headline and close. Extra header actions go in
+ * [actions], laid out between the headline and the close.
+ */
+@Composable
+fun AlohomoraSideSheetHeader(
+    title: String,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    onBack: (() -> Unit)? = null,
+    actions: @Composable RowScope.() -> Unit = {},
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                start = if (onBack != null) MaterialTheme.dimens.margin.sm else MaterialTheme.dimens.margin.xl,
+                end = MaterialTheme.dimens.margin.sm,
+                top = MaterialTheme.dimens.margin.md,
+                bottom = MaterialTheme.dimens.margin.md,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+    ) {
+        onBack?.let { back ->
+            AlohomoraIconButton(onClick = back) {
+                Icon(
+                    imageVector = Icons.ArrowLeft,
+                    contentDescription = "Back",
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+                )
+            }
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            subtitle?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        actions()
+        AlohomoraIconButton(onClick = onClose) {
+            Icon(
+                imageVector = Icons.X,
+                contentDescription = "Close",
+                modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+            )
         }
     }
 }

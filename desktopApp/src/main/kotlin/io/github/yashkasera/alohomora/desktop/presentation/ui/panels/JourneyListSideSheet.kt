@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope
 import io.github.yashkasera.alohomora.desktop.presentation.model.JourneyUiState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheetHeader
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFloatingActionButton
@@ -60,43 +61,26 @@ fun JourneyListSideSheet(
         onDismiss = onDismiss,
         widthFraction = 0.5f,
         header = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.dimens.margin.xxl,
-                        vertical = MaterialTheme.dimens.margin.lg,
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-            ) {
-                Text(
-                    text = "Event journeys",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                AlohomoraSingleChoiceToggleGroup(
-                    items = SCOPE_ITEMS,
-                    selectedId = state.scope.name,
-                    onSelectedIdChange = { onScopeChange(ConfigScope.valueOf(it)) },
-                )
-                if (teamConnected) {
-                    AlohomoraIconButton(onClick = onSync) {
-                        Icon(
-                            imageVector = Icons.RefreshCw,
-                            contentDescription = "Sync",
-                            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
-                        )
-                    }
-                }
-                AlohomoraIconButton(onClick = onDismiss) {
-                    Icon(
-                        imageVector = Icons.X,
-                        contentDescription = "Close",
-                        modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+            AlohomoraSideSheetHeader(
+                title = "Event journeys",
+                onClose = onDismiss,
+                actions = {
+                    AlohomoraSingleChoiceToggleGroup(
+                        items = SCOPE_ITEMS,
+                        selectedId = state.scope.name,
+                        onSelectedIdChange = { onScopeChange(ConfigScope.valueOf(it)) },
                     )
-                }
-            }
+                    if (teamConnected) {
+                        AlohomoraIconButton(onClick = onSync) {
+                            Icon(
+                                imageVector = Icons.RefreshCw,
+                                contentDescription = "Sync",
+                                modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                            )
+                        }
+                    }
+                },
+            )
         },
         floatingActionButton = {
             AlohomoraFloatingActionButton(onClick = onNew) {

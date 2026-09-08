@@ -27,6 +27,7 @@ import io.github.yashkasera.alohomora.common.deeplink.DeepLinkParam
 import io.github.yashkasera.alohomora.common.deeplink.ParamType
 import io.github.yashkasera.alohomora.common.deeplink.buildUri
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheetHeader
 import io.github.yashkasera.alohomora.ui.components.AlohomoraAssistChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -75,43 +76,28 @@ fun DeepLinkDefEditorSideSheet(
         onDismiss = onDismiss,
         widthFraction = 0.4f,
         header = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.dimens.margin.xxl,
-                        vertical = MaterialTheme.dimens.margin.lg,
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-            ) {
-                Text(
-                    text = "Edit deep link",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                if (fieldErrors.isValid) {
-                    AlohomoraChip(
-                        label = "Saved",
-                        containerColor = MaterialTheme.alohomoraColors.successContainer,
-                        contentColor = MaterialTheme.alohomoraColors.success,
-                    )
-                } else {
-                    val n = fieldErrors.blockingCount
-                    AlohomoraChip(
-                        label = "$n issue${if (n == 1) "" else "s"}",
-                        containerColor = MaterialTheme.alohomoraColors.warningContainer,
-                        contentColor = MaterialTheme.alohomoraColors.warning,
-                    )
-                }
-                AlohomoraIconButton(onClick = onDismiss) {
-                    Icon(
-                        imageVector = Icons.X,
-                        contentDescription = "Close",
-                        modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
-                    )
-                }
-            }
+            AlohomoraSideSheetHeader(
+                title = "Edit deep link",
+                onClose = onDismiss,
+                // Back returns to the deep link catalog, which stays open beneath this detail.
+                onBack = onDismiss,
+                actions = {
+                    if (fieldErrors.isValid) {
+                        AlohomoraChip(
+                            label = "Saved",
+                            containerColor = MaterialTheme.alohomoraColors.successContainer,
+                            contentColor = MaterialTheme.alohomoraColors.success,
+                        )
+                    } else {
+                        val n = fieldErrors.blockingCount
+                        AlohomoraChip(
+                            label = "$n issue${if (n == 1) "" else "s"}",
+                            containerColor = MaterialTheme.alohomoraColors.warningContainer,
+                            contentColor = MaterialTheme.alohomoraColors.warning,
+                        )
+                    }
+                },
+            )
         },
     ) {
         LazyColumn(

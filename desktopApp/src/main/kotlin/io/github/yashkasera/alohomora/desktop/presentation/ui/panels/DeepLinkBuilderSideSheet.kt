@@ -49,6 +49,7 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheetHeader
 import io.github.yashkasera.alohomora.desktop.presentation.ui.theme.AlohomoraMotion
 import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
@@ -119,29 +120,14 @@ fun DeepLinkBuilderSideSheet(
         onDismiss = onDismiss,
         widthFraction = 0.4f,
         header = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.dimens.margin.xl,
-                        vertical = MaterialTheme.dimens.margin.md,
-                    ),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    "Deep Links",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            AlohomoraSideSheetHeader(
+                title = "Deep Links",
+                onClose = onDismiss,
+                actions = {
                     // The team-shared, typed catalog lives in its own surface; link to it from here.
                     AlohomoraTextButton(text = "Catalog", onClick = onOpenCatalog)
-                    AlohomoraIconButton(onClick = onDismiss) {
-                        Icon(Icons.X, contentDescription = "Close")
-                    }
-                }
-            }
+                },
+            )
             AlohomoraPrimaryTabRow(
                 selectedTabIndex = selectedTab,
                 modifier = Modifier.fillMaxWidth(),
