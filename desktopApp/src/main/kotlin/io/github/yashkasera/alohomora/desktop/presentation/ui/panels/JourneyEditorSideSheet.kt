@@ -31,6 +31,7 @@ import io.github.yashkasera.alohomora.common.journey.JourneyStep
 import io.github.yashkasera.alohomora.common.journey.RepeatPolicy
 import io.github.yashkasera.alohomora.common.journey.StepOutcome
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheetHeader
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.EventItem
 import io.github.yashkasera.alohomora.ui.components.AlohomoraAssistChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -93,29 +94,12 @@ fun JourneyEditorSideSheet(
         onDismiss = onDismiss,
         widthFraction = 0.4f,
         header = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.dimens.margin.xxl,
-                        vertical = MaterialTheme.dimens.margin.lg,
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-            ) {
-                Text(
-                    text = if (isNew) "New journey" else "Edit journey",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                AlohomoraIconButton(onClick = onDismiss) {
-                    Icon(
-                        imageVector = Icons.X,
-                        contentDescription = "Close",
-                        modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
-                    )
-                }
-            }
+            AlohomoraSideSheetHeader(
+                title = if (isNew) "New journey" else "Edit journey",
+                onClose = onDismiss,
+                // Back returns to the journey list, which stays open beneath this detail.
+                onBack = onDismiss,
+            )
         },
     ) {
         LazyColumn(
@@ -547,7 +531,7 @@ private fun AddStepByNameRow(onAdd: (String) -> Unit) {
             placeholder = "Event name, e.g. checkout_started",
             modifier = Modifier.weight(1f),
         )
-        AlohomoraTextButton(
+        AlohomoraOutlinedButton(
             text = "Add step",
             enabled = name.isNotBlank(),
             onClick = {

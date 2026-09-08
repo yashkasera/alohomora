@@ -40,6 +40,7 @@ import io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope
 import io.github.yashkasera.alohomora.desktop.presentation.model.CatalogModuleGroup
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeepLinkCatalogUiState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheetHeader
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFloatingActionButton
@@ -56,7 +57,6 @@ import io.github.yashkasera.alohomora.ui.icons.Plus
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
 import io.github.yashkasera.alohomora.ui.icons.Share
 import io.github.yashkasera.alohomora.ui.icons.Trash
-import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 /**
@@ -85,43 +85,26 @@ fun DeepLinkCatalogSideSheet(
         onDismiss = onDismiss,
         widthFraction = 0.5f,
         header = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.dimens.margin.xxl,
-                        vertical = MaterialTheme.dimens.margin.lg,
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md),
-            ) {
-                Text(
-                    text = "Deep link catalog",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                AlohomoraSingleChoiceToggleGroup(
-                    items = SCOPE_ITEMS,
-                    selectedId = state.scope.name,
-                    onSelectedIdChange = { onScopeChange(ConfigScope.valueOf(it)) },
-                )
-                if (teamConnected) {
-                    AlohomoraIconButton(onClick = onSync) {
-                        Icon(
-                            imageVector = Icons.RefreshCw,
-                            contentDescription = "Sync",
-                            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
-                        )
-                    }
-                }
-                AlohomoraIconButton(onClick = onDismiss) {
-                    Icon(
-                        imageVector = Icons.X,
-                        contentDescription = "Close",
-                        modifier = Modifier.size(MaterialTheme.dimens.icon.lg),
+            AlohomoraSideSheetHeader(
+                title = "Deep link catalog",
+                onClose = onDismiss,
+                actions = {
+                    AlohomoraSingleChoiceToggleGroup(
+                        items = SCOPE_ITEMS,
+                        selectedId = state.scope.name,
+                        onSelectedIdChange = { onScopeChange(ConfigScope.valueOf(it)) },
                     )
-                }
-            }
+                    if (teamConnected) {
+                        AlohomoraIconButton(onClick = onSync) {
+                            Icon(
+                                imageVector = Icons.RefreshCw,
+                                contentDescription = "Sync",
+                                modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                            )
+                        }
+                    }
+                },
+            )
         },
         floatingActionButton = {
             AlohomoraFloatingActionButton(onClick = onNew) {

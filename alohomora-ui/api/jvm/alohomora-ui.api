@@ -30,6 +30,10 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraButtonD
 	public final fun textStyle (Lio/github/yashkasera/alohomora/ui/components/AlohomoraButtonSize;Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
 }
 
+public final class io/github/yashkasera/alohomora/ui/components/AlohomoraButtonGroupKt {
+	public static final fun AlohomoraButtonGroup (Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+}
+
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraButtonSize : java/lang/Enum {
 	public static final field LARGE Lio/github/yashkasera/alohomora/ui/components/AlohomoraButtonSize;
 	public static final field MEDIUM Lio/github/yashkasera/alohomora/ui/components/AlohomoraButtonSize;
@@ -111,6 +115,11 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraIconBut
 	public static fun values ()[Lio/github/yashkasera/alohomora/ui/components/AlohomoraIconButtonStyle;
 }
 
+public final class io/github/yashkasera/alohomora/ui/components/AlohomoraLoadingIndicatorKt {
+	public static final fun AlohomoraLoadingIndicator-FNF3uiM (Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V
+	public static final fun AlohomoraLoadingIndicator-iJQMabo (Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V
+}
+
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraMethodBadgeKt {
 	public static final fun MethodBadge (Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
 }
@@ -135,6 +144,10 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraSelecti
 	public static final fun AlohomoraRadioButton (ZLkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZLandroidx/compose/runtime/Composer;II)V
 	public static final fun AlohomoraSwitch (ZLkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZLandroidx/compose/runtime/Composer;II)V
 	public static final fun AlohomoraTriStateCheckbox (Landroidx/compose/ui/state/ToggleableState;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZLandroidx/compose/runtime/Composer;II)V
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/AlohomoraSplitButtonKt {
+	public static final fun AlohomoraSplitButton (Lkotlin/jvm/functions/Function0;ZLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/AlohomoraStepMatchRowKt {
@@ -195,6 +208,17 @@ public final class io/github/yashkasera/alohomora/ui/components/AlohomoraTopBarK
 	public static final fun AlohomoraTopBar (Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/lang/String;Lio/github/yashkasera/alohomora/ui/components/TopBarLayout;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
 }
 
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraButtonGroupKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraButtonGroupKt;
+	public fun <init> ()V
+	public final fun getLambda$-1336663239$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-412840902$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-46327794$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-790270598$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1389326850$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1616882803$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraButtonsKt {
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraButtonsKt;
 	public fun <init> ()V
@@ -243,6 +267,13 @@ public final class io/github/yashkasera/alohomora/ui/components/ComposableSingle
 	public final fun getLambda$49998765$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 }
 
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraLoadingIndicatorKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraLoadingIndicatorKt;
+	public fun <init> ()V
+	public final fun getLambda$-2003730328$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-557475187$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraMethodBadgeKt {
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraMethodBadgeKt;
 	public fun <init> ()V
@@ -269,6 +300,14 @@ public final class io/github/yashkasera/alohomora/ui/components/ComposableSingle
 	public fun <init> ()V
 	public final fun getLambda$-575251511$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$1142961892$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraSplitButtonKt {
+	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraSplitButtonKt;
+	public fun <init> ()V
+	public final fun getLambda$-1735906480$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-230305016$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-72695883$io_github_yashkasera_alohomora_ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class io/github/yashkasera/alohomora/ui/components/ComposableSingletons$AlohomoraTabsKt {
@@ -1084,6 +1123,10 @@ public final class io/github/yashkasera/alohomora/ui/theme/AlohomoraThemes {
 public final class io/github/yashkasera/alohomora/ui/theme/DimensKt {
 	public static final fun getDimens (Landroidx/compose/material3/MaterialTheme;Landroidx/compose/runtime/Composer;I)Lio/github/yashkasera/alohomora/ui/theme/AlohomoraDimens;
 	public static final fun getLocalAlohomoraDimens ()Landroidx/compose/runtime/ProvidableCompositionLocal;
+}
+
+public final class io/github/yashkasera/alohomora/ui/theme/ShapeKt {
+	public static final fun getAlohomoraDrawerShape ()Landroidx/compose/ui/graphics/Shape;
 }
 
 public final class io/github/yashkasera/alohomora/ui/theme/ThemeKt {

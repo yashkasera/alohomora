@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -105,6 +106,7 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Key
 import io.github.yashkasera.alohomora.ui.icons.Link
 import io.github.yashkasera.alohomora.ui.icons.RefreshCw
+import io.github.yashkasera.alohomora.desktop.presentation.ui.theme.AlohomoraMotion
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import java.awt.Dimension
@@ -704,12 +706,21 @@ private fun DeviceListCard(
         animationSpec = spring(),
         label = "device-card-border-color",
     )
+    // Corner morph on selection: settles from the resting `medium` (12.dp) to `large` (16.dp) on the
+    // spatial spring, matching the side-sheet "arriving large" language.
+    val cardCorner by animateDpAsState(
+        targetValue = if (selected) 16.dp else 12.dp,
+        animationSpec = AlohomoraMotion.shapeMorph,
+        label = "device-card-corner",
+    )
+    val cardShape = RoundedCornerShape(cardCorner)
 
     AlohomoraCard(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .border(borderWidth, borderColor, AlohomoraCardDefaults.shape),
+            .border(borderWidth, borderColor, cardShape),
+        shape = cardShape,
         colors = AlohomoraCardDefaults.colors(containerColor = containerColor),
     ) {
         Row(

@@ -1,5 +1,12 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,6 +50,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.desktop.presentation.ui.theme.AlohomoraMotion
 import io.github.yashkasera.alohomora.desktop.app.displayModifier
 import io.github.yashkasera.alohomora.desktop.app.navigationShortcutDigit
 import io.github.yashkasera.alohomora.desktop.presentation.ui.DesktopSection
@@ -118,10 +126,20 @@ fun CommandPalette(
         focusRequester.requestFocus()
     }
 
+    // Entrance: the palette is composed only while open (no exit to animate), so a transition state
+    // flipped true on first frame springs the surface up and fades the scrim in rather than popping.
+    val appear = remember { MutableTransitionState(false) }
+    appear.targetState = true
+    val scrimAlpha by animateFloatAsState(
+        targetValue = if (appear.targetState) 0.6f else 0f,
+        animationSpec = AlohomoraMotion.scrimFade,
+        label = "commandPaletteScrim",
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f))
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = scrimAlpha))
             .focusable()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -136,6 +154,13 @@ fun CommandPalette(
                 MaterialTheme.colorScheme.surfaceContainerHighest,
             ),
         )
+        AnimatedVisibility(
+            visibleState = appear,
+            enter = fadeIn(AlohomoraMotion.scrimFade) +
+                scaleIn(AlohomoraMotion.selectionIndicator, initialScale = 0.92f) +
+                slideInVertically(AlohomoraMotion.sheetEnter) { it / 8 },
+            exit = fadeOut(AlohomoraMotion.scrimFade),
+        ) {
         Surface(
             modifier = Modifier
                 .padding(bottom = 48.dp)
@@ -274,6 +299,7 @@ fun CommandPalette(
                         .focusRequester(focusRequester),
                 )
             }
+        }
         }
     }
 }

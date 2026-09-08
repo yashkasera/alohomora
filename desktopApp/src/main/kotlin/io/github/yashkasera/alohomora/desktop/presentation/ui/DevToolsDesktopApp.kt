@@ -2,7 +2,6 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -10,7 +9,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -19,12 +17,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -40,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,8 +55,8 @@ import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.CommandPalette
-import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.HelpDialog
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalSideSheetHost
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.OtpPromptDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.RegisterSideSheet
@@ -78,18 +75,19 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorDetail
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ErrorsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.EventsPanel
-import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.PluginDataPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.FeatureFlagsPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.GitHistoryPanel
-import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.JourneyEditorSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.JourneyListSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.JourneyValidationPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.LogcatPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.MockRulesSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.PluginDataPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TraceWaterfallSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TracesPanel
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TrafficDetailsSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.TrafficPanel
+import io.github.yashkasera.alohomora.desktop.presentation.ui.theme.AlohomoraMotion
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.CacheViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DatabaseViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsViewModel
@@ -102,7 +100,8 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRule
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TracesViewModel
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.TrafficViewModel
 import io.github.yashkasera.alohomora.desktop.util.pickSavePath
-import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
+import io.github.yashkasera.alohomora.ui.components.AlohomoraLoadingIndicator
+import io.github.yashkasera.alohomora.ui.theme.AlohomoraDrawerShape
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import java.io.File
 import kotlin.time.Duration.Companion.milliseconds
@@ -110,10 +109,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val SWITCHING_SCRIM_ALPHA = 0.40f
-
-private val PermanentDrawerShape = RoundedCornerShape(
-    topStart = 0.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 0.dp,
-)
 
 private const val JOURNEY_EVENT_PICKER_LIMIT = 50
 
@@ -165,8 +160,6 @@ fun DevToolsDesktopApp(
             null,
         )
     }
-    val selectedTraceId by tracesViewModel.selectedTraceId.collectAsState()
-    val selectedEventId by eventsViewModel.selectedEventId.collectAsState()
     var selectedDeviceId by remember(initialDeviceId) { mutableStateOf(initialDeviceId) }
     var isModifierPhysicallyDown by remember { mutableStateOf(false) }
     var showModifierBadges by remember { mutableStateOf(false) }
@@ -335,479 +328,510 @@ fun DevToolsDesktopApp(
         },
         LocalSideSheetHost provides sideSheetHost,
     ) {
-    Box(
-        modifier = modifier
-            .focusRequester(rootFocus)
-            .focusable()
-            .onPreviewKeyEvent { event ->
-                if (event.isModifierKeyOnly()) {
-                    isModifierPhysicallyDown = event.type == KeyEventType.KeyDown
-                    return@onPreviewKeyEvent false
-                }
-                if (isModifierPhysicallyDown) {
-                    isModifierPhysicallyDown = false
-                }
-
-                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-
-                // Escape is handled at the window level (see DeviceWindow) so it works regardless of
-                // which panel or sheet holds focus.
-
-                val navIndex = event.matchesNavigation()
-                if (navIndex >= 0 && navIndex < visibleSections.size) {
-                    activeSection = visibleSections[navIndex]
-                    searchFocusTrigger = System.nanoTime()
-                    return@onPreviewKeyEvent true
-                }
-
-                if (event.isFocusSearchShortcut()) {
-                    searchFocusTrigger = System.nanoTime()
-                    return@onPreviewKeyEvent true
-                }
-
-                if (event.isClearShortcut()) {
-                    when (activeSection) {
-                        DesktopSection.Traffic -> trafficViewModel.clearTraffic()
-                        DesktopSection.Traces -> tracesViewModel.clearTraces()
-                        DesktopSection.Events -> eventsViewModel.clearEvents()
-                        DesktopSection.Errors -> devToolsViewModel.clearErrors()
-                        DesktopSection.Logcat -> logcatViewModel.clear()
-                        else -> {}
-                    }
-                    return@onPreviewKeyEvent true
-                }
-
-                if (event.isScreenshotShortcut() && isAndroid && !selectedDeviceId.isNullOrBlank()) {
-                    val timestamp = System.currentTimeMillis()
-                    val defaultName = "alohomora_screenshot_${timestamp}.png"
-                    val localPath = if (screenshotDir.isNotEmpty()) {
-                        "$screenshotDir/$defaultName"
-                    } else {
-                        pickSavePath(defaultName, "Save Screenshot", ".png")
-                    }
-                    if (localPath != null) {
-                        devicesViewModel.takeScreenshot(
-                            selectedDeviceId,
-                            localPath,
-                            screenshotShowToast,
-                        )
-                    }
-                    return@onPreviewKeyEvent true
-                }
-
-                if (event.isDeepLinkShortcut() && isAndroid && !selectedDeviceId.isNullOrBlank()) {
-                    sideSheetHost.open(SideSheetId.DeepLinkBuilder)
-                    return@onPreviewKeyEvent true
-                }
-
-                if (event.isMockRulesShortcut() && isConnected) {
-                    sideSheetHost.open(SideSheetId.MockRules)
-                    return@onPreviewKeyEvent true
-                }
-
-                if (event.isTogglePropertiesShortcut() && activeSection == DesktopSection.Events) {
-                    eventsViewModel.toggleShowProperties()
-                    return@onPreviewKeyEvent true
-                }
-
-                false
-            },
-    ) {
         Box(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
-                .fillMaxSize(),
-        ) {
-            PermanentNavigationDrawer(
-                drawerContent = {
-                    PermanentDrawerSheet(
-                        modifier = Modifier.fillMaxWidth(0.2f),
-                        windowInsets = WindowInsets.safeContent,
-                        drawerShape = PermanentDrawerShape,
-                    ) {
-                        Sidebar(
-                            connection = devToolsState.connection,
-                            activeSection = activeSection,
-                            devices = devices,
-                            selectedDeviceId = selectedDeviceId,
-                            appName = buildInfo?.appName,
-                            onDisconnect = onDisconnectWindow,
-                            onReconnect = { devToolsViewModel.reconnect() },
-                            onSectionClick = {
-                                activeSection = it
-                                searchFocusTrigger = System.nanoTime()
-                            },
-                            onOpenCommandPalette = { sideSheetHost.open(SideSheetId.CommandPalette) },
-                            isModifierHeld = showModifierBadges,
-                            visibleSections = visibleSections,
-                        )
+            modifier = modifier
+                .focusRequester(rootFocus)
+                .focusable()
+                .onPreviewKeyEvent { event ->
+                    if (event.isModifierKeyOnly()) {
+                        isModifierPhysicallyDown = event.type == KeyEventType.KeyDown
+                        return@onPreviewKeyEvent false
                     }
+                    if (isModifierPhysicallyDown) {
+                        isModifierPhysicallyDown = false
+                    }
+
+                    if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+
+                    // Escape is handled at the window level (see DeviceWindow) so it works regardless of
+                    // which panel or sheet holds focus.
+
+                    val navIndex = event.matchesNavigation()
+                    if (navIndex >= 0 && navIndex < visibleSections.size) {
+                        activeSection = visibleSections[navIndex]
+                        searchFocusTrigger = System.nanoTime()
+                        return@onPreviewKeyEvent true
+                    }
+
+                    if (event.isFocusSearchShortcut()) {
+                        searchFocusTrigger = System.nanoTime()
+                        return@onPreviewKeyEvent true
+                    }
+
+                    if (event.isClearShortcut()) {
+                        when (activeSection) {
+                            DesktopSection.Traffic -> trafficViewModel.clearTraffic()
+                            DesktopSection.Traces -> tracesViewModel.clearTraces()
+                            DesktopSection.Events -> eventsViewModel.clearEvents()
+                            DesktopSection.Errors -> devToolsViewModel.clearErrors()
+                            DesktopSection.Logcat -> logcatViewModel.clear()
+                            else -> {}
+                        }
+                        return@onPreviewKeyEvent true
+                    }
+
+                    if (event.isScreenshotShortcut() && isAndroid && !selectedDeviceId.isNullOrBlank()) {
+                        val timestamp = System.currentTimeMillis()
+                        val defaultName = "alohomora_screenshot_${timestamp}.png"
+                        val localPath = if (screenshotDir.isNotEmpty()) {
+                            "$screenshotDir/$defaultName"
+                        } else {
+                            pickSavePath(defaultName, "Save Screenshot", ".png")
+                        }
+                        if (localPath != null) {
+                            devicesViewModel.takeScreenshot(
+                                selectedDeviceId,
+                                localPath,
+                                screenshotShowToast,
+                            )
+                        }
+                        return@onPreviewKeyEvent true
+                    }
+
+                    if (event.isDeepLinkShortcut() && isAndroid && !selectedDeviceId.isNullOrBlank()) {
+                        sideSheetHost.open(SideSheetId.DeepLinkBuilder)
+                        return@onPreviewKeyEvent true
+                    }
+
+                    if (event.isMockRulesShortcut() && isConnected) {
+                        sideSheetHost.open(SideSheetId.MockRules)
+                        return@onPreviewKeyEvent true
+                    }
+
+                    if (event.isTogglePropertiesShortcut() && activeSection == DesktopSection.Events) {
+                        eventsViewModel.toggleShowProperties()
+                        return@onPreviewKeyEvent true
+                    }
+
+                    false
                 },
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .fillMaxSize(),
             ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (!hasConnectedDevice) {
-                        Scaffold(
-                            snackbarHost = { SnackbarHost(hostState = devicesViewModel.snackbarHostState) },
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                PermanentNavigationDrawer(
+                    drawerContent = {
+                        PermanentDrawerSheet(
+                            modifier = Modifier.fillMaxWidth(0.2f),
+                            windowInsets = WindowInsets.safeContent,
+                            drawerShape = AlohomoraDrawerShape,
                         ) {
-                            NoDevicePanel(onRefresh = { devicesViewModel.refreshDevices() })
+                            Sidebar(
+                                connection = devToolsState.connection,
+                                activeSection = activeSection,
+                                devices = devices,
+                                selectedDeviceId = selectedDeviceId,
+                                appName = buildInfo?.appName,
+                                onDisconnect = onDisconnectWindow,
+                                onReconnect = { devToolsViewModel.reconnect() },
+                                onSectionClick = {
+                                    activeSection = it
+                                    searchFocusTrigger = System.nanoTime()
+                                },
+                                onOpenCommandPalette = { sideSheetHost.open(SideSheetId.CommandPalette) },
+                                isModifierHeld = showModifierBadges,
+                                visibleSections = visibleSections,
+                            )
                         }
-                    } else {
-                        AnimatedContent(
-                            targetState = activeSection,
-                            transitionSpec = {
-                                fadeIn(tween(200)) togetherWith fadeOut(tween(200))
-                            },
-                        ) { section ->
-                        when (section) {
-                            DesktopSection.Dashboard -> DashboardContent(
-                                devToolsViewModel = devToolsViewModel,
-                                devicesViewModel = devicesViewModel,
-                                selectedDevice = selectedDevice,
-                                isRecording = isRecording,
-                                onTakeScreenshot = screenshot@{
-                                    val timestamp = System.currentTimeMillis()
-                                    val defaultName = "alohomora_screenshot_${timestamp}.png"
-                                    val localPath = if (screenshotDir.isNotEmpty()) {
-                                        "$screenshotDir/$defaultName"
-                                    } else {
-                                        pickSavePath(defaultName, "Save Screenshot", ".png")
-                                            ?: return@screenshot
-                                    }
-                                    devicesViewModel.takeScreenshot(
-                                        selectedDeviceId,
-                                        localPath,
-                                        screenshotShowToast,
+                    },
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (!hasConnectedDevice) {
+                            Scaffold(
+                                snackbarHost = { SnackbarHost(hostState = devicesViewModel.snackbarHostState) },
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                            ) {
+                                NoDevicePanel(onRefresh = { devicesViewModel.refreshDevices() })
+                            }
+                        } else {
+                            // Motion specs are read here (a @Composable scope) and captured; the
+                            // transitionSpec lambda below is not composable and cannot read them itself.
+                            val sectionFade = AlohomoraMotion.scrimFade
+                            val sectionEnterSlide = AlohomoraMotion.sectionEnter
+                            val sectionExitSlide = AlohomoraMotion.sectionExit
+                            AnimatedContent(
+                                targetState = activeSection,
+                                transitionSpec = {
+                                    // Expressive spatial swap: incoming panel eases in from a few px right
+                                    // on the spatial spring, outgoing leaves left on the faster spec, both
+                                    // cross-fading on the effects spec. Small travel (it/24) so content
+                                    // settles rather than shoves.
+                                    (fadeIn(sectionFade)
+                                        togetherWith
+                                        fadeOut(sectionFade))
+                                },
+                            ) { section ->
+                                when (section) {
+                                    DesktopSection.Dashboard -> DashboardContent(
+                                        devToolsViewModel = devToolsViewModel,
+                                        devicesViewModel = devicesViewModel,
+                                        selectedDevice = selectedDevice,
+                                        isRecording = isRecording,
+                                        onTakeScreenshot = screenshot@{
+                                            val timestamp = System.currentTimeMillis()
+                                            val defaultName =
+                                                "alohomora_screenshot_${timestamp}.png"
+                                            val localPath = if (screenshotDir.isNotEmpty()) {
+                                                "$screenshotDir/$defaultName"
+                                            } else {
+                                                pickSavePath(defaultName, "Save Screenshot", ".png")
+                                                    ?: return@screenshot
+                                            }
+                                            devicesViewModel.takeScreenshot(
+                                                selectedDeviceId,
+                                                localPath,
+                                                screenshotShowToast,
+                                            )
+                                        },
+                                        onRecordScreen = record@{
+                                            if (!isRecording) {
+                                                val timestamp = System.currentTimeMillis()
+                                                val defaultName =
+                                                    "alohomora_record_${timestamp}.mp4"
+                                                val localPath =
+                                                    pickSavePath(
+                                                        defaultName,
+                                                        "Save Recording",
+                                                        ".mp4",
+                                                    )
+                                                        ?: return@record
+                                                val devicePath = "/sdcard/${File(localPath).name}"
+                                                recordingDevicePath = devicePath
+                                                recordingLocalPath = localPath
+                                                isRecording = true
+                                                devicesViewModel.startScreenRecord(
+                                                    selectedDeviceId,
+                                                    devicePath,
+                                                )
+                                            } else {
+                                                devicesViewModel.stopScreenRecord(
+                                                    selectedDeviceId,
+                                                    recordingDevicePath,
+                                                    recordingLocalPath,
+                                                )
+                                                isRecording = false
+                                                recordingDevicePath = null
+                                                recordingLocalPath = null
+                                            }
+                                        },
+                                        onTrafficItemClick = { selectedTrafficForSheet = it },
+                                        onEventViewClick = {},
+                                        onTrafficClick = { activeSection = DesktopSection.Traffic },
+                                        onEventsClick = { activeSection = DesktopSection.Events },
+                                        onOpenDeepLinkBuilder = { sideSheetHost.open(SideSheetId.DeepLinkBuilder) },
                                     )
-                                },
-                                onRecordScreen = record@{
-                                    if (!isRecording) {
-                                        val timestamp = System.currentTimeMillis()
-                                        val defaultName = "alohomora_record_${timestamp}.mp4"
-                                        val localPath =
-                                            pickSavePath(defaultName, "Save Recording", ".mp4")
-                                                ?: return@record
-                                        val devicePath = "/sdcard/${File(localPath).name}"
-                                        recordingDevicePath = devicePath
-                                        recordingLocalPath = localPath
-                                        isRecording = true
-                                        devicesViewModel.startScreenRecord(
-                                            selectedDeviceId,
-                                            devicePath,
-                                        )
-                                    } else {
-                                        devicesViewModel.stopScreenRecord(
-                                            selectedDeviceId,
-                                            recordingDevicePath,
-                                            recordingLocalPath,
-                                        )
-                                        isRecording = false
-                                        recordingDevicePath = null
-                                        recordingLocalPath = null
-                                    }
-                                },
-                                onTrafficItemClick = { selectedTrafficForSheet = it },
-                                onEventViewClick = {},
-                                onTrafficClick = { activeSection = DesktopSection.Traffic },
-                                onEventsClick = { activeSection = DesktopSection.Events },
-                                onOpenDeepLinkBuilder = { sideSheetHost.open(SideSheetId.DeepLinkBuilder) },
-                            )
 
-                            DesktopSection.Logcat -> LogcatPanel(
-                                devicesViewModel = devicesViewModel,
-                                logcatViewModel = logcatViewModel,
-                                selectedDeviceId = selectedDeviceId,
-                                buildInfo = buildInfo,
-                                searchFocusTrigger = searchFocusTrigger,
-                            )
+                                    DesktopSection.Logcat -> LogcatPanel(
+                                        devicesViewModel = devicesViewModel,
+                                        logcatViewModel = logcatViewModel,
+                                        selectedDeviceId = selectedDeviceId,
+                                        buildInfo = buildInfo,
+                                        searchFocusTrigger = searchFocusTrigger,
+                                    )
 
-                            DesktopSection.Adb -> AdbToolsPanel(
-                                devicesViewModel = devicesViewModel,
-                                selectedDeviceId = selectedDeviceId,
-                                adbCommandHistory = adbCommandHistory,
-                                buildInfo = buildInfo,
-                                screenshotDir = screenshotDir,
-                                screenshotShowToast = screenshotShowToast,
-                            )
+                                    DesktopSection.Adb -> AdbToolsPanel(
+                                        devicesViewModel = devicesViewModel,
+                                        selectedDeviceId = selectedDeviceId,
+                                        adbCommandHistory = adbCommandHistory,
+                                        buildInfo = buildInfo,
+                                        screenshotDir = screenshotDir,
+                                        screenshotShowToast = screenshotShowToast,
+                                    )
 
-                            DesktopSection.Traffic -> TrafficPanel(
-                                trafficViewModel = trafficViewModel,
-                                networkRulesViewModel = networkRulesViewModel,
-                                onLogClick = { selectedTrafficForSheet = it },
-                                onOpenMockRules = { sideSheetHost.open(SideSheetId.MockRules) },
-                                searchFocusTrigger = searchFocusTrigger,
-                            )
+                                    DesktopSection.Traffic -> TrafficPanel(
+                                        trafficViewModel = trafficViewModel,
+                                        networkRulesViewModel = networkRulesViewModel,
+                                        onLogClick = { selectedTrafficForSheet = it },
+                                        onOpenMockRules = { sideSheetHost.open(SideSheetId.MockRules) },
+                                        searchFocusTrigger = searchFocusTrigger,
+                                    )
 
-                            DesktopSection.Traces -> TracesPanel(
-                                tracesViewModel = tracesViewModel,
-                                onTraceClick = tracesViewModel::openTrace,
-                                searchFocusTrigger = searchFocusTrigger,
-                            )
+                                    DesktopSection.Traces -> TracesPanel(
+                                        tracesViewModel = tracesViewModel,
+                                        onTraceClick = tracesViewModel::openTrace,
+                                        searchFocusTrigger = searchFocusTrigger,
+                                    )
 
-                            DesktopSection.Events -> EventsPanel(
-                                eventsViewModel = eventsViewModel,
-                                searchFocusTrigger = searchFocusTrigger,
-                                onOpenJourneys = { sideSheetHost.open(SideSheetId.Journeys) },
-                            )
+                                    DesktopSection.Events -> EventsPanel(
+                                        eventsViewModel = eventsViewModel,
+                                        searchFocusTrigger = searchFocusTrigger,
+                                        onOpenJourneys = { sideSheetHost.open(SideSheetId.Journeys) },
+                                    )
 
-                            DesktopSection.Cache -> CachePanel(
-                                cacheViewModel = cacheViewModel,
-                                searchFocusTrigger = searchFocusTrigger,
-                            )
+                                    DesktopSection.Cache -> CachePanel(
+                                        cacheViewModel = cacheViewModel,
+                                        searchFocusTrigger = searchFocusTrigger,
+                                    )
 
-                            DesktopSection.FeatureFlags -> FeatureFlagsPanel(
-                                featureFlagsViewModel = featureFlagsViewModel,
-                                searchFocusTrigger = searchFocusTrigger,
-                            )
+                                    DesktopSection.FeatureFlags -> FeatureFlagsPanel(
+                                        featureFlagsViewModel = featureFlagsViewModel,
+                                        searchFocusTrigger = searchFocusTrigger,
+                                    )
 
-                            DesktopSection.PluginData -> PluginDataPanel(
-                                pluginDataViewModel = pluginDataViewModel,
-                            )
+                                    DesktopSection.PluginData -> PluginDataPanel(
+                                        pluginDataViewModel = pluginDataViewModel,
+                                    )
 
-                            DesktopSection.Errors -> ErrorsPanel(
-                                devToolsViewModel = devToolsViewModel,
-                                onErrorClick = { selectedErrorForSheet = it },
-                                searchFocusTrigger = searchFocusTrigger,
-                            )
+                                    DesktopSection.Errors -> ErrorsPanel(
+                                        devToolsViewModel = devToolsViewModel,
+                                        onErrorClick = { selectedErrorForSheet = it },
+                                        searchFocusTrigger = searchFocusTrigger,
+                                    )
 
-                            DesktopSection.Config -> ConfigPanel(devToolsViewModel = devToolsViewModel)
-                            DesktopSection.GitHistory -> GitHistoryPanel(devToolsViewModel = devToolsViewModel)
-                            DesktopSection.Database -> DatabasePanel(databaseViewModel = databaseViewModel)
+                                    DesktopSection.Config -> ConfigPanel(devToolsViewModel = devToolsViewModel)
+                                    DesktopSection.GitHistory -> GitHistoryPanel(devToolsViewModel = devToolsViewModel)
+                                    DesktopSection.Database -> DatabasePanel(databaseViewModel = databaseViewModel)
+                                }
+                            }
                         }
-                        }
-                    }
 
-                    AnimatedVisibility(
-                        visible = devToolsState.connection is DevToolsConnection.Reconnecting,
-                        enter = expandVertically(),
-                        exit = shrinkVertically(),
-                        modifier = Modifier.align(Alignment.TopCenter),
-                    ) {
-                        val attempt =
-                            (devToolsState.connection as? DevToolsConnection.Reconnecting)?.attempt
-                                ?: 1
-                        ReconnectingBanner(attempt = attempt)
-                    }
-
-                    deviceError?.let { error ->
-                        DeviceErrorBanner(
-                            message = error,
-                            onDismiss = { devToolsViewModel.dismissDeviceError() },
+                        AnimatedVisibility(
+                            visible = devToolsState.connection is DevToolsConnection.Reconnecting,
+                            enter = expandVertically(),
+                            exit = shrinkVertically(),
                             modifier = Modifier.align(Alignment.TopCenter),
-                        )
-                    }
+                        ) {
+                            val attempt =
+                                (devToolsState.connection as? DevToolsConnection.Reconnecting)?.attempt
+                                    ?: 1
+                            ReconnectingBanner(attempt = attempt)
+                        }
 
-                    val connection = devToolsState.connection
-                    if (connection is DevToolsConnection.AwaitingAuth && connection.otpRequired) {
-                        OtpPromptDialog(
-                            onSubmit = { devToolsViewModel.submitOtp(it) },
-                            onCancel = { devToolsViewModel.disconnect() },
-                        )
-                    }
+                        deviceError?.let { error ->
+                            DeviceErrorBanner(
+                                message = error,
+                                onDismiss = { devToolsViewModel.dismissDeviceError() },
+                                modifier = Modifier.align(Alignment.TopCenter),
+                            )
+                        }
 
-                    if (devToolsState.switching) {
-                        SwitchingOverlay()
+                        val connection = devToolsState.connection
+                        if (connection is DevToolsConnection.AwaitingAuth && connection.otpRequired) {
+                            OtpPromptDialog(
+                                onSubmit = { devToolsViewModel.submitOtp(it) },
+                                onCancel = { devToolsViewModel.disconnect() },
+                            )
+                        }
+
+                        if (devToolsState.switching) {
+                            SwitchingOverlay()
+                        }
                     }
                 }
+
+                TrafficDetailsSideSheet(
+                    traffic = selectedTrafficForSheet,
+                    devToolsViewModel = devToolsViewModel,
+                    networkRulesViewModel = networkRulesViewModel,
+                    onOpenMockRules = { sideSheetHost.open(SideSheetId.MockRules) },
+                    onDismiss = { selectedTrafficForSheet = null },
+                )
+
+                val mockRules by networkRulesViewModel.mockRules.collectAsState()
+                val mockCurrentSession by networkRulesViewModel.currentSession.collectAsState()
+                val mockSessions by networkRulesViewModel.sessions.collectAsState()
+                val mockProposal by networkRulesViewModel.lastProposal.collectAsState()
+                val mockShareMessage by networkRulesViewModel.shareMessage.collectAsState()
+                val mockTeamSessions by networkRulesViewModel.teamSessions.collectAsState()
+                val mockRulesVisible = sideSheetHost.isOpen(SideSheetId.MockRules)
+                LaunchedEffect(mockRulesVisible, configRepoUi.isConnected) {
+                    if (mockRulesVisible) networkRulesViewModel.refreshTeam()
+                }
+                MockRulesSideSheet(
+                    visible = mockRulesVisible,
+                    rules = mockRules,
+                    currentSession = mockCurrentSession,
+                    sessions = mockSessions,
+                    onAddRule = networkRulesViewModel::addRule,
+                    onUpdateRule = networkRulesViewModel::updateRule,
+                    onDeleteRule = networkRulesViewModel::deleteRule,
+                    onToggleRule = networkRulesViewModel::toggleRule,
+                    onToggleAll = networkRulesViewModel::toggleAllRules,
+                    onLoadSession = networkRulesViewModel::loadSession,
+                    onSaveSession = networkRulesViewModel::saveCurrentSession,
+                    onSaveAsSession = networkRulesViewModel::saveAsNewSession,
+                    onDeleteSession = networkRulesViewModel::deleteSession,
+                    onDetachSession = networkRulesViewModel::detachSession,
+                    teamSessions = mockTeamSessions,
+                    onShareSession = networkRulesViewModel::shareCurrentSession,
+                    onLoadTeamSession = networkRulesViewModel::loadTeamSession,
+                    lastProposal = mockProposal,
+                    shareMessage = mockShareMessage,
+                    onOpenUrl = { url ->
+                        runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
+                    },
+                    onDismiss = { sideSheetHost.close(SideSheetId.MockRules) },
+                )
+
+                val journeyUi by journeyViewModel.uiState.collectAsState()
+                val eventsForJourney by eventsViewModel.uiState.collectAsState()
+                JourneyListSideSheet(
+                    visible = sideSheetHost.isOpen(SideSheetId.Journeys),
+                    state = journeyUi,
+                    teamConnected = configRepoUi.isConnected,
+                    onScopeChange = journeyViewModel::onScopeChange,
+                    onQueryChange = journeyViewModel::onQueryChange,
+                    onOpen = journeyViewModel::editExisting,
+                    onNew = journeyViewModel::newJourney,
+                    onDelete = journeyViewModel::deleteJourney,
+                    onShare = journeyViewModel::share,
+                    onSync = configRepoViewModel::sync,
+                    onOpenUrl = { url ->
+                        runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
+                    },
+                    onDismiss = { sideSheetHost.close(SideSheetId.Journeys) },
+                )
+                JourneyEditorSideSheet(
+                    draft = journeyUi.editorDraft,
+                    isNew = journeyUi.editorIsNew,
+                    report = journeyUi.lastReport,
+                    recentEvents = eventsForJourney.events.take(JOURNEY_EVENT_PICKER_LIMIT),
+                    onNameChange = { name -> journeyViewModel.editDraft { it.copy(name = name) } },
+                    onDescriptionChange = { desc ->
+                        journeyViewModel.editDraft { it.copy(description = desc) }
+                    },
+                    onToggleOrdered = { ordered ->
+                        journeyViewModel.editDraft { it.copy(ordered = ordered) }
+                    },
+                    onAddStepFromEvent = journeyViewModel::promoteEventToStep,
+                    onRemoveStep = journeyViewModel::removeStep,
+                    onStepSelectorChange = journeyViewModel::setStepSelector,
+                    onStepAssertionsChange = journeyViewModel::setStepAssertions,
+                    onStepOnRepeatChange = journeyViewModel::setStepOnRepeat,
+                    onValidate = journeyViewModel::validate,
+                    onValidateLive = {
+                        journeyUi.editorDraft?.let { journeyViewModel.startLiveValidation(it) }
+                    },
+                    onDismiss = journeyViewModel::closeEditor,
+                )
+                JourneyValidationPanel(
+                    visible = journeyUi.liveJourneyId != null,
+                    journeyName = journeyUi.liveJourneyName,
+                    report = journeyUi.lastReport,
+                    onClose = journeyViewModel::stopLiveValidation,
+                )
+
+                val catalogUi by deepLinkCatalogViewModel.uiState.collectAsState()
+                DeepLinkCatalogSideSheet(
+                    visible = sideSheetHost.isOpen(SideSheetId.DeepLinkCatalog),
+                    state = catalogUi,
+                    teamConnected = configRepoUi.isConnected,
+                    onScopeChange = deepLinkCatalogViewModel::onScopeChange,
+                    onQueryChange = deepLinkCatalogViewModel::onQueryChange,
+                    onModuleFilterChange = deepLinkCatalogViewModel::onModuleFilterChange,
+                    onOpen = deepLinkCatalogViewModel::editExisting,
+                    onNew = deepLinkCatalogViewModel::newDef,
+                    onDelete = deepLinkCatalogViewModel::deleteDef,
+                    onShare = deepLinkCatalogViewModel::share,
+                    onSync = configRepoViewModel::sync,
+                    onOpenUrl = { url ->
+                        runCatching {
+                            java.awt.Desktop.getDesktop().browse(java.net.URI(url))
+                        }
+                    },
+                    onDismiss = { sideSheetHost.close(SideSheetId.DeepLinkCatalog) },
+                )
+                DeepLinkDefEditorSideSheet(
+                    draft = catalogUi.editorDraft,
+                    fieldErrors = catalogUi.fieldErrors,
+                    validationErrors = catalogUi.validationErrors,
+                    onNameChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(name = v) } },
+                    onModuleChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(module = v) } },
+                    onFlowChange = { v ->
+                        deepLinkCatalogViewModel.editDraft { it.copy(flow = v.ifBlank { null }) }
+                    },
+                    onDescriptionChange = { v ->
+                        deepLinkCatalogViewModel.editDraft {
+                            it.copy(
+                                description = v,
+                            )
+                        }
+                    },
+                    onUriTemplateChange = { v ->
+                        deepLinkCatalogViewModel.editDraft {
+                            it.copy(
+                                uriTemplate = v,
+                            )
+                        }
+                    },
+                    onParamsChange = { params -> deepLinkCatalogViewModel.editDraft { it.copy(params = params) } },
+                    onExamplesChange = { examples ->
+                        deepLinkCatalogViewModel.editDraft { it.copy(examples = examples) }
+                    },
+                    onFire = { url -> devicesViewModel.openDeepLink(selectedDeviceId, url) },
+                    onDismiss = deepLinkCatalogViewModel::closeEditor,
+                )
+
+                TraceWaterfallSideSheet(
+                    tracesViewModel = tracesViewModel,
+                    onDismiss = tracesViewModel::closeTrace,
+                )
+
+                EventDetailsSideSheet(
+                    eventsViewModel = eventsViewModel,
+                    devToolsViewModel = devToolsViewModel,
+                    onDismiss = eventsViewModel::closeEvent,
+                )
+
+                ErrorDetailsSideSheet(
+                    error = selectedErrorForSheet,
+                    devToolsViewModel = devToolsViewModel,
+                    onDismiss = { selectedErrorForSheet = null },
+                )
+
+                val deepLinkHistory by devicesViewModel.deepLinkHistory.collectAsState()
+                DeepLinkBuilderSideSheet(
+                    visible = sideSheetHost.isOpen(SideSheetId.DeepLinkBuilder),
+                    initialUrl = "",
+                    history = deepLinkHistory,
+                    onOpen = { url ->
+                        devicesViewModel.openDeepLink(selectedDeviceId, url)
+                    },
+                    onRemoveHistoryEntry = devicesViewModel::removeDeepLinkEntry,
+                    onClearHistory = devicesViewModel::clearDeepLinkHistory,
+                    onOpenCatalog = {
+                        sideSheetHost.close(SideSheetId.DeepLinkBuilder)
+                        sideSheetHost.open(SideSheetId.DeepLinkCatalog)
+                    },
+                    onSaveToCatalog = { url ->
+                        deepLinkCatalogViewModel.createFromUrl(url)
+                        sideSheetHost.close(SideSheetId.DeepLinkBuilder)
+                        sideSheetHost.open(SideSheetId.DeepLinkCatalog)
+                    },
+                    onDismiss = { sideSheetHost.close(SideSheetId.DeepLinkBuilder) },
+                )
             }
 
-            TrafficDetailsSideSheet(
-                traffic = selectedTrafficForSheet,
-                devToolsViewModel = devToolsViewModel,
-                networkRulesViewModel = networkRulesViewModel,
-                onOpenMockRules = { sideSheetHost.open(SideSheetId.MockRules) },
-                onDismiss = { selectedTrafficForSheet = null },
+            SnackbarHost(
+                hostState = copySnackbarState,
+                modifier = Modifier.align(Alignment.BottomCenter),
             )
 
-            val mockRules by networkRulesViewModel.mockRules.collectAsState()
-            val mockCurrentSession by networkRulesViewModel.currentSession.collectAsState()
-            val mockSessions by networkRulesViewModel.sessions.collectAsState()
-            val mockProposal by networkRulesViewModel.lastProposal.collectAsState()
-            val mockShareMessage by networkRulesViewModel.shareMessage.collectAsState()
-            val mockTeamSessions by networkRulesViewModel.teamSessions.collectAsState()
-            val mockRulesVisible = sideSheetHost.isOpen(SideSheetId.MockRules)
-            LaunchedEffect(mockRulesVisible, configRepoUi.isConnected) {
-                if (mockRulesVisible) networkRulesViewModel.refreshTeam()
-            }
-            MockRulesSideSheet(
-                visible = mockRulesVisible,
-                rules = mockRules,
-                currentSession = mockCurrentSession,
-                sessions = mockSessions,
-                onAddRule = networkRulesViewModel::addRule,
-                onUpdateRule = networkRulesViewModel::updateRule,
-                onDeleteRule = networkRulesViewModel::deleteRule,
-                onToggleRule = networkRulesViewModel::toggleRule,
-                onToggleAll = networkRulesViewModel::toggleAllRules,
-                onLoadSession = networkRulesViewModel::loadSession,
-                onSaveSession = networkRulesViewModel::saveCurrentSession,
-                onSaveAsSession = networkRulesViewModel::saveAsNewSession,
-                onDeleteSession = networkRulesViewModel::deleteSession,
-                onDetachSession = networkRulesViewModel::detachSession,
-                onImport = networkRulesViewModel::importHarFile,
-                teamConnected = configRepoUi.isConnected,
-                teamSessions = mockTeamSessions,
-                onShareSession = networkRulesViewModel::shareCurrentSession,
-                onLoadTeamSession = networkRulesViewModel::loadTeamSession,
-                lastProposal = mockProposal,
-                shareMessage = mockShareMessage,
-                onOpenUrl = { url ->
-                    runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
-                },
-                onDismiss = { sideSheetHost.close(SideSheetId.MockRules) },
-            )
-
-            val journeyUi by journeyViewModel.uiState.collectAsState()
-            val eventsForJourney by eventsViewModel.uiState.collectAsState()
-            JourneyListSideSheet(
-                visible = sideSheetHost.isOpen(SideSheetId.Journeys),
-                state = journeyUi,
-                teamConnected = configRepoUi.isConnected,
-                onScopeChange = journeyViewModel::onScopeChange,
-                onQueryChange = journeyViewModel::onQueryChange,
-                onOpen = journeyViewModel::editExisting,
-                onNew = journeyViewModel::newJourney,
-                onDelete = journeyViewModel::deleteJourney,
-                onShare = journeyViewModel::share,
-                onSync = configRepoViewModel::sync,
-                onOpenUrl = { url ->
-                    runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) }
-                },
-                onDismiss = { sideSheetHost.close(SideSheetId.Journeys) },
-            )
-            JourneyEditorSideSheet(
-                draft = journeyUi.editorDraft,
-                isNew = journeyUi.editorIsNew,
-                report = journeyUi.lastReport,
-                recentEvents = eventsForJourney.events.take(JOURNEY_EVENT_PICKER_LIMIT),
-                onNameChange = { name -> journeyViewModel.editDraft { it.copy(name = name) } },
-                onDescriptionChange = { desc ->
-                    journeyViewModel.editDraft { it.copy(description = desc) }
-                },
-                onToggleOrdered = { ordered ->
-                    journeyViewModel.editDraft { it.copy(ordered = ordered) }
-                },
-                onAddStepFromEvent = journeyViewModel::promoteEventToStep,
-                onRemoveStep = journeyViewModel::removeStep,
-                onStepSelectorChange = journeyViewModel::setStepSelector,
-                onStepAssertionsChange = journeyViewModel::setStepAssertions,
-                onStepOnRepeatChange = journeyViewModel::setStepOnRepeat,
-                onValidate = journeyViewModel::validate,
-                onValidateLive = {
-                    journeyUi.editorDraft?.let { journeyViewModel.startLiveValidation(it) }
-                },
-                onDismiss = journeyViewModel::closeEditor,
-            )
-            JourneyValidationPanel(
-                visible = journeyUi.liveJourneyId != null,
-                journeyName = journeyUi.liveJourneyName,
-                report = journeyUi.lastReport,
-                onClose = journeyViewModel::stopLiveValidation,
-            )
-
-            val catalogUi by deepLinkCatalogViewModel.uiState.collectAsState()
-            DeepLinkCatalogSideSheet(
-                visible = sideSheetHost.isOpen(SideSheetId.DeepLinkCatalog),
-                state = catalogUi,
-                teamConnected = configRepoUi.isConnected,
-                onScopeChange = deepLinkCatalogViewModel::onScopeChange,
-                onQueryChange = deepLinkCatalogViewModel::onQueryChange,
-                onModuleFilterChange = deepLinkCatalogViewModel::onModuleFilterChange,
-                onOpen = deepLinkCatalogViewModel::editExisting,
-                onNew = deepLinkCatalogViewModel::newDef,
-                onDelete = deepLinkCatalogViewModel::deleteDef,
-                onShare = deepLinkCatalogViewModel::share,
-                onSync = configRepoViewModel::sync,
-                onOpenUrl = { url -> runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(url)) } },
-                onDismiss = { sideSheetHost.close(SideSheetId.DeepLinkCatalog) },
-            )
-            DeepLinkDefEditorSideSheet(
-                draft = catalogUi.editorDraft,
-                fieldErrors = catalogUi.fieldErrors,
-                validationErrors = catalogUi.validationErrors,
-                onNameChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(name = v) } },
-                onModuleChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(module = v) } },
-                onFlowChange = { v ->
-                    deepLinkCatalogViewModel.editDraft { it.copy(flow = v.ifBlank { null }) }
-                },
-                onDescriptionChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(description = v) } },
-                onUriTemplateChange = { v -> deepLinkCatalogViewModel.editDraft { it.copy(uriTemplate = v) } },
-                onParamsChange = { params -> deepLinkCatalogViewModel.editDraft { it.copy(params = params) } },
-                onExamplesChange = { examples ->
-                    deepLinkCatalogViewModel.editDraft { it.copy(examples = examples) }
-                },
-                onFire = { url -> devicesViewModel.openDeepLink(selectedDeviceId, url) },
-                onDismiss = deepLinkCatalogViewModel::closeEditor,
-            )
-
-            TraceWaterfallSideSheet(
-                tracesViewModel = tracesViewModel,
-                onDismiss = tracesViewModel::closeTrace,
-            )
-
-            EventDetailsSideSheet(
-                eventsViewModel = eventsViewModel,
-                devToolsViewModel = devToolsViewModel,
-                onDismiss = eventsViewModel::closeEvent,
-            )
-
-            ErrorDetailsSideSheet(
-                error = selectedErrorForSheet,
-                devToolsViewModel = devToolsViewModel,
-                onDismiss = { selectedErrorForSheet = null },
-            )
-
-            val deepLinkHistory by devicesViewModel.deepLinkHistory.collectAsState()
-            DeepLinkBuilderSideSheet(
-                visible = sideSheetHost.isOpen(SideSheetId.DeepLinkBuilder),
-                initialUrl = "",
-                history = deepLinkHistory,
-                onOpen = { url ->
-                    devicesViewModel.openDeepLink(selectedDeviceId, url)
-                },
-                onRemoveHistoryEntry = devicesViewModel::removeDeepLinkEntry,
-                onClearHistory = devicesViewModel::clearDeepLinkHistory,
-                onOpenCatalog = {
-                    sideSheetHost.close(SideSheetId.DeepLinkBuilder)
-                    sideSheetHost.open(SideSheetId.DeepLinkCatalog)
-                },
-                onSaveToCatalog = { url ->
-                    deepLinkCatalogViewModel.createFromUrl(url)
-                    sideSheetHost.close(SideSheetId.DeepLinkBuilder)
-                    sideSheetHost.open(SideSheetId.DeepLinkCatalog)
-                },
-                onDismiss = { sideSheetHost.close(SideSheetId.DeepLinkBuilder) },
-            )
-        }
-
-        SnackbarHost(
-            hostState = copySnackbarState,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
-
-        RegisterSideSheet(
-            visible = sideSheetHost.isOpen(SideSheetId.CommandPalette),
-            onDismiss = { sideSheetHost.close(SideSheetId.CommandPalette) },
-        )
-        if (sideSheetHost.isOpen(SideSheetId.CommandPalette)) {
-            CommandPalette(
-                actions = commandActions,
+            RegisterSideSheet(
+                visible = sideSheetHost.isOpen(SideSheetId.CommandPalette),
                 onDismiss = { sideSheetHost.close(SideSheetId.CommandPalette) },
             )
-        }
+            if (sideSheetHost.isOpen(SideSheetId.CommandPalette)) {
+                CommandPalette(
+                    actions = commandActions,
+                    onDismiss = { sideSheetHost.close(SideSheetId.CommandPalette) },
+                )
+            }
 
-        RegisterSideSheet(
-            visible = sideSheetHost.isOpen(SideSheetId.Help),
-            onDismiss = { sideSheetHost.close(SideSheetId.Help) },
-        )
-        if (sideSheetHost.isOpen(SideSheetId.Help)) {
-            HelpDialog(
-                visibleSections = visibleSections,
-                actions = commandActions,
+            RegisterSideSheet(
+                visible = sideSheetHost.isOpen(SideSheetId.Help),
                 onDismiss = { sideSheetHost.close(SideSheetId.Help) },
             )
+            if (sideSheetHost.isOpen(SideSheetId.Help)) {
+                HelpDialog(
+                    visibleSections = visibleSections,
+                    actions = commandActions,
+                    onDismiss = { sideSheetHost.close(SideSheetId.Help) },
+                )
+            }
         }
-    }
     }
 }
 
@@ -820,7 +844,7 @@ private fun SwitchingOverlay() {
             .clickable(indication = null, interactionSource = null) {},
         contentAlignment = Alignment.Center,
     ) {
-        AlohomoraCircularProgressIndicator()
+        AlohomoraLoadingIndicator()
     }
 }
 

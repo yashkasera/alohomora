@@ -53,7 +53,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevToolsVie
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.DevicesViewModel
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
-import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
+import io.github.yashkasera.alohomora.ui.components.AlohomoraLoadingIndicator
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
 import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
@@ -258,7 +258,7 @@ private fun MetricsStrip(dashboard: DashboardUiState) {
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                AlohomoraCircularProgressIndicator()
+                AlohomoraLoadingIndicator()
             }
         }
         return

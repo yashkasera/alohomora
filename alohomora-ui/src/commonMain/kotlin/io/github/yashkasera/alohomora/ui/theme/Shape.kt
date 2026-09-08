@@ -35,3 +35,16 @@ internal val AlohomoraShapes = Shapes(
  */
 internal val AlohomoraBottomSheetShape: Shape =
     RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+
+/**
+ * The permanent navigation drawer's shape, which the scale cannot express.
+ *
+ * A drawer flush to the window's left edge rounds its right corners only. Like
+ * [AlohomoraBottomSheetShape] it borrows its radius from the `large` role of [AlohomoraShapes] so the
+ * 16.dp stays visibly tied to the scale rather than floating as a literal at the call site.
+ *
+ * `public` rather than `internal` because the only consumer is the desktop `PermanentNavigationDrawer`
+ * in a separate module, where an `internal` symbol would be invisible. Mobile never renders it.
+ */
+val AlohomoraDrawerShape: Shape =
+    RoundedCornerShape(topStart = 0.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 0.dp)

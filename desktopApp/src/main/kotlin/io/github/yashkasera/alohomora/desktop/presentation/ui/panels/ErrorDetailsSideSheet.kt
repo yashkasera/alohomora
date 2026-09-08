@@ -3,7 +3,6 @@ package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -15,15 +14,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.exceptionTypeName
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheetHeader
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValueRow
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
@@ -35,7 +33,6 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Slack
-import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 private const val ERROR_SHEET_WIDTH_FRACTION = 0.45f
@@ -75,57 +72,31 @@ fun ErrorDetailsSideSheet(
         widthFraction = ERROR_SHEET_WIDTH_FRACTION,
         header = {
             error?.let { selected ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = MaterialTheme.dimens.margin.xl,
-                            vertical = MaterialTheme.dimens.margin.md,
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = selected.exceptionTypeName(),
-                                style = MaterialTheme.typography.titleMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f, fill = false),
-                            )
-                            AlohomoraChip(
-                                label = "FATAL",
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                            )
-                        }
-                        Text(
-                            text = DateUtils.format(selected.time, DateUtils.Format.ISO_DATE_TIME),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                AlohomoraSideSheetHeader(
+                    title = selected.exceptionTypeName(),
+                    subtitle = DateUtils.format(selected.time, DateUtils.Format.ISO_DATE_TIME),
+                    onClose = onDismiss,
+                    actions = {
+                        AlohomoraChip(
+                            label = "FATAL",
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
                         )
-                    }
-                    AlohomoraIconButton(
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(shareText))
-                            copyFeedback("Copied to clipboard")
-                        },
-                    ) {
-                        Icon(imageVector = Icons.Copy, contentDescription = "Copy error")
-                    }
-                    AlohomoraIconButton(
-                        onClick = { showSlackShareDialog = true },
-                    ) {
-                        Icon(imageVector = Icons.Slack, contentDescription = "Share to Slack")
-                    }
-                    AlohomoraIconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.X, contentDescription = "Close")
-                    }
-                }
+                        AlohomoraIconButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(shareText))
+                                copyFeedback("Copied to clipboard")
+                            },
+                        ) {
+                            Icon(imageVector = Icons.Copy, contentDescription = "Copy error")
+                        }
+                        AlohomoraIconButton(
+                            onClick = { showSlackShareDialog = true },
+                        ) {
+                            Icon(imageVector = Icons.Slack, contentDescription = "Share to Slack")
+                        }
+                    },
+                )
             }
         },
     ) {

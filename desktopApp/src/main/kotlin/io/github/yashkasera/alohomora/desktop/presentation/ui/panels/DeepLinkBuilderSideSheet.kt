@@ -1,5 +1,11 @@
 package io.github.yashkasera.alohomora.desktop.presentation.ui.panels
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,6 +49,8 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraPrimaryTabRow
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTab
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheetHeader
+import io.github.yashkasera.alohomora.desktop.presentation.ui.theme.AlohomoraMotion
 import io.github.yashkasera.alohomora.ui.components.EmptyState
 import io.github.yashkasera.alohomora.ui.icons.ChevronDown
 import io.github.yashkasera.alohomora.ui.icons.Clock
@@ -51,7 +59,6 @@ import io.github.yashkasera.alohomora.ui.icons.Link
 import io.github.yashkasera.alohomora.ui.icons.Play
 import io.github.yashkasera.alohomora.ui.icons.Plus
 import io.github.yashkasera.alohomora.ui.icons.Trash
-import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 private val TABS = listOf("Builder", "History")
@@ -112,29 +119,14 @@ fun DeepLinkBuilderSideSheet(
         onDismiss = onDismiss,
         widthFraction = 0.4f,
         header = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.dimens.margin.xl,
-                        vertical = MaterialTheme.dimens.margin.md,
-                    ),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    "Deep Links",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            AlohomoraSideSheetHeader(
+                title = "Deep Links",
+                onClose = onDismiss,
+                actions = {
                     // The team-shared, typed catalog lives in its own surface; link to it from here.
                     AlohomoraTextButton(text = "Catalog", onClick = onOpenCatalog)
-                    AlohomoraIconButton(onClick = onDismiss) {
-                        Icon(Icons.X, contentDescription = "Close")
-                    }
-                }
-            }
+                },
+            )
             AlohomoraPrimaryTabRow(
                 selectedTabIndex = selectedTab,
                 modifier = Modifier.fillMaxWidth(),
@@ -150,7 +142,23 @@ fun DeepLinkBuilderSideSheet(
             }
         },
     ) {
-        when (selectedTab) {
+        // Tabs slide in the direction of travel (History is to the right of Builder), springing on
+        // the shared spatial spec instead of the old instant swap. Specs hoisted here because the
+        // transitionSpec lambda is not composable.
+        val tabFade = AlohomoraMotion.scrimFade
+        val tabEnter = AlohomoraMotion.sectionEnter
+        val tabExit = AlohomoraMotion.sectionExit
+        AnimatedContent(
+            targetState = selectedTab,
+            transitionSpec = {
+                val forward = targetState > initialState
+                val dir = if (forward) 1 else -1
+                (fadeIn(tabFade) + slideInHorizontally(tabEnter) { dir * it / 12 }) togetherWith
+                    (fadeOut(tabFade) + slideOutHorizontally(tabExit) { -dir * it / 12 })
+            },
+            label = "deeplink-builder-tab",
+        ) { tab ->
+        when (tab) {
             0 -> BuilderTab(
                 scheme = scheme,
                 customScheme = customScheme,
@@ -188,6 +196,7 @@ fun DeepLinkBuilderSideSheet(
                 onRemove = onRemoveHistoryEntry,
                 onClearAll = onClearHistory,
             )
+        }
         }
     }
 }

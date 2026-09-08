@@ -8,22 +8,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextOverflow
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.prettyProperties
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheetHeader
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.KeyValueRow
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.LocalCopyFeedback
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SectionLabel
@@ -36,7 +34,6 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraOutlinedButton
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Slack
-import io.github.yashkasera.alohomora.ui.icons.X
 import io.github.yashkasera.alohomora.ui.theme.dimens
 
 /**
@@ -98,48 +95,28 @@ fun EventDetailsSideSheet(
         widthFraction = EVENT_SHEET_WIDTH_FRACTION,
         header = {
             event?.let { selected ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = MaterialTheme.dimens.margin.xl,
-                            vertical = MaterialTheme.dimens.margin.md,
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = selected.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = DateUtils.format(selected.time, DateUtils.Format.ISO_DATE_TIME),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    AlohomoraIconButton(
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(shareText))
-                            copyFeedback("Copied to clipboard")
-                        },
-                    ) {
-                        Icon(imageVector = Icons.Copy, contentDescription = "Copy event")
-                    }
-                    // Hidden rather than disabled when unconfigured: an action that cannot work should
-                    // not be offered, the same rule replay follows.
-                    if (isSlackConfigured) {
-                        AlohomoraIconButton(onClick = { showSlackShareDialog = true }) {
-                            Icon(imageVector = Icons.Slack, contentDescription = "Share to Slack")
+                AlohomoraSideSheetHeader(
+                    title = selected.name,
+                    subtitle = DateUtils.format(selected.time, DateUtils.Format.ISO_DATE_TIME),
+                    onClose = onDismiss,
+                    actions = {
+                        AlohomoraIconButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(shareText))
+                                copyFeedback("Copied to clipboard")
+                            },
+                        ) {
+                            Icon(imageVector = Icons.Copy, contentDescription = "Copy event")
                         }
-                    }
-                    AlohomoraIconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.X, contentDescription = "Close")
-                    }
-                }
+                        // Hidden rather than disabled when unconfigured: an action that cannot work
+                        // should not be offered, the same rule replay follows.
+                        if (isSlackConfigured) {
+                            AlohomoraIconButton(onClick = { showSlackShareDialog = true }) {
+                                Icon(imageVector = Icons.Slack, contentDescription = "Share to Slack")
+                            }
+                        }
+                    },
+                )
             }
         },
     ) {

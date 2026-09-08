@@ -1,7 +1,9 @@
 package io.github.yashkasera.alohomora.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
@@ -10,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AppTheme(
     isDarkState: MutableState<Boolean>? = null,
@@ -27,10 +30,16 @@ fun AppTheme(
         LocalAlohomoraDimens provides AlohomoraDimensInstance,
         LocalAlohomoraColors provides theme,
     ) {
+        // Full-expressive motion: bouncy spatial springs for position/size/shape, flat effects specs
+        // for colour/alpha. Every `MaterialTheme.motionScheme.*` read downstream resolves from here,
+        // so the whole console shares one motion tuning source. Plain `MaterialTheme` (not
+        // `MaterialExpressiveTheme`) on purpose — the latter flips `LocalUsingExpressiveTheme`, which
+        // would restyle default shapes/sizing across every wrapped component and its baselines.
         MaterialTheme(
             colorScheme = theme.materialColorScheme,
             typography = AlohomoraTypography(),
             shapes = AlohomoraShapes,
+            motionScheme = MotionScheme.expressive(),
             content = content,
         )
     }
