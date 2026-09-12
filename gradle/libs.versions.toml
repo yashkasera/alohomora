@@ -1,6 +1,6 @@
 [versions]
 
-kotlin = "2.4.10"
+kotlin = "2.4.20"
 compose-multiplatform = "1.11.1"
 # material3 ships on its own release train, so it cannot share compose-multiplatform's
 # version ref — but it must stay on the SAME MINOR as ui/foundation. Pairing a 1.10.x
