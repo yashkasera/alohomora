@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.common
 
 import io.github.yashkasera.alohomora.common.HeaderRedaction.REDACTED
+import kotlin.concurrent.Volatile
 
 /**
  * Redaction policy for captured HTTP headers.
@@ -26,7 +27,14 @@ object HeaderRedaction {
      *
      * Set via `Alohomora.redactHeaders(...)`. Empty by default — nothing is redacted until
      * the developer opts in.
+     *
+     * `@Volatile`: written from the configuring thread (usually app startup) but read from
+     * network interceptor threads at capture time. Without the memory barrier an interceptor
+     * could observe a stale empty set and persist a secret unredacted — the one registry here
+     * where the missing barrier has a security consequence, so it matches its `@Volatile`
+     * siblings ([NetworkRuleEngine], the capability registries).
      */
+    @Volatile
     var headersToRedact: Set<String> = emptySet()
         private set
 

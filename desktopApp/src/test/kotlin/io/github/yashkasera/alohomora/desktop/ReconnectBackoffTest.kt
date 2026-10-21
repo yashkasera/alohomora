@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.desktop
 
+import io.github.yashkasera.alohomora.desktop.data.devtools.nextReconnectAttempt
 import io.github.yashkasera.alohomora.desktop.data.devtools.reconnectDelayMillis
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import kotlin.test.Test
@@ -49,6 +50,45 @@ class ReconnectBackoffTest {
         val second = DevToolsConnection.Reconnecting("127.0.0.1", 53999, attempt = 2)
 
         assertTrue(first != second, "state must change per attempt or StateFlow will dedupe it")
+    }
+
+    /**
+     * Replays the retry loop's counter update verbatim: `attempt = nextReconnectAttempt(attempt,
+     * established)` on each drop, then `reconnectDelayMillis(attempt)` for the wait. Both are the
+     * real functions the loop calls, so this guards the composed behaviour the loop depends on.
+     */
+    private fun delaysFor(drops: List<Boolean>): List<Long> {
+        var attempt = 0
+        return drops.map { established ->
+            attempt = nextReconnectAttempt(attempt, sessionEstablished = established)
+            delayFor(attempt)
+        }
+    }
+
+    @Test
+    fun `an established session that drops resets to the quick first retry`() {
+        // The whole point of the fix: after a session that reached AUTH_SUCCESS drops, the backoff
+        // starts over at 500ms instead of resuming wherever the counter had climbed to. A
+        // never-established flaky session (established = false) keeps climbing to the 5s cap.
+        val delays = delaysFor(
+            listOf(false, false, false, false, false) + // never connected: climb to the cap
+                true, // a session that actually connected then dropped
+        )
+
+        assertEquals(listOf(500L, 1_000L, 2_000L, 4_000L, 5_000L, 500L), delays)
+    }
+
+    @Test
+    fun `an established drop resets even from the plateau, then climbs again`() {
+        // Model a long-lived session: many never-established retries park at the cap, one
+        // established drop snaps back to 500ms, and subsequent never-established drops climb anew.
+        val delays = delaysFor(
+            List(12) { false } + listOf(true, false, false),
+        )
+
+        assertEquals(5_000L, delays[11], "parked at the cap before the established drop")
+        assertEquals(500L, delays[12], "established drop resets to the quick retry")
+        assertEquals(listOf(1_000L, 2_000L), delays.subList(13, 15))
     }
 
     @Test

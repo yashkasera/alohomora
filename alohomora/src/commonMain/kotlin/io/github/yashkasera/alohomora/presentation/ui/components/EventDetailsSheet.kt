@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.prettyProperties
@@ -28,12 +27,13 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.icons.Copy
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Slack
+import io.github.yashkasera.alohomora.ui.theme.dimens
 
 /**
- * Bottom sheet that displays a telemetry event with formatted JSON properties
+ * Bottom sheet that displays an event with formatted JSON properties
  * and options to share via Slack or copy to clipboard.
  *
- * @param event The telemetry event to display
+ * @param event The event to display
  * @param isSlackConfigured Whether Slack webhook is configured
  * @param onDismiss Callback when the sheet is dismissed
  * @param onShareToSlack Callback to share the event to Slack with the recipient email
@@ -122,14 +122,14 @@ internal fun EventsDetailsSheet(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
                 AlohomoraHorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
 
                 Text(
                     text = "Properties",
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 12.dp),
+                    modifier = Modifier.padding(bottom = MaterialTheme.dimens.margin.md),
                 )
 
                 AlohomoraCodeBlock(

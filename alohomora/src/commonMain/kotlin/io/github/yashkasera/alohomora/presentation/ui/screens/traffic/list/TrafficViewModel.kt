@@ -27,7 +27,7 @@ internal data class TrafficState(
 )
 
 internal class TrafficViewModel(
-    private val traceRepository: TrafficRepository,
+    private val trafficRepository: TrafficRepository,
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")
@@ -44,7 +44,7 @@ internal class TrafficViewModel(
         initialKey = 0,
         getNextKey = { it + 1 },
         pagingSourceFactory = {
-            TrafficPagingSource(traceRepository, query.value, method.value)
+            TrafficPagingSource(trafficRepository, query.value, method.value)
         },
     ).cachedIn(viewModelScope)
 
@@ -98,7 +98,7 @@ internal class TrafficViewModel(
         viewModelScope.launch {
             isClearing.value = true
             try {
-                traceRepository.clearAll()
+                trafficRepository.clearAll()
                 pager.refresh()
             } catch (_: Exception) {
             } finally {

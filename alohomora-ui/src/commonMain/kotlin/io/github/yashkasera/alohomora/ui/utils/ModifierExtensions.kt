@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.ui.utils
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -14,26 +15,33 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.unit.sp
 import kotlin.math.sqrt
 
+/**
+ * Draws a rotated corner ribbon carrying [text] over the composable.
+ *
+ * @param color fill colour of the ribbon.
+ * @param textColor colour of the ribbon text. Callers pass the role that contrasts with [color]
+ *   (e.g. `onPrimary` for a `primary` ribbon) so the label stays legible across every theme and in
+ *   both light and dark. Falls back to the style's own colour when left [Color.Unspecified].
+ * @param style text style; defaults to the `labelSmall` typography token.
+ */
 fun Modifier.drawDiagonalLabel(
     text: String,
     color: Color,
-    style: TextStyle = TextStyle(
-        fontSize = 18.sp,
-        fontWeight = FontWeight.Normal,
-        color = Color.White,
-    ),
+    textColor: Color = Color.Unspecified,
+    style: TextStyle? = null,
     labelTextRatio: Float = 2f,
 ) = composed(
     factory = {
+        val resolvedStyle = (style ?: MaterialTheme.typography.labelSmall).let {
+            if (textColor != Color.Unspecified) it.copy(color = textColor) else it
+        }
 
         val textMeasurer = rememberTextMeasurer()
         val textLayoutResult: TextLayoutResult = remember {
-            textMeasurer.measure(text = AnnotatedString(text), style = style)
+            textMeasurer.measure(text = AnnotatedString(text), style = resolvedStyle)
         }
 
 
@@ -77,7 +85,7 @@ fun Modifier.drawDiagonalLabel(
                     drawText(
                         textMeasurer = textMeasurer,
                         text = text,
-                        style = style,
+                        style = resolvedStyle,
                         topLeft = Offset(
                             rect.left + (rectWidth - textWidth) / 2f,
                             rect.top + (rect.bottom - textHeight) / 2f,

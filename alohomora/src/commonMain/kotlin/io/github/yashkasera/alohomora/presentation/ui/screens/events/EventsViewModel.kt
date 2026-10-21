@@ -31,7 +31,7 @@ internal data class EventsState(
 )
 
 internal class EventsViewModel(
-    private val telemetryRepository: EventsRepository,
+    private val eventsRepository: EventsRepository,
 ) : ViewModel() {
 
     private val searchQuery = MutableStateFlow("")
@@ -46,7 +46,7 @@ internal class EventsViewModel(
         config = PagingConfig(pageSize = pageSize),
         initialKey = 0,
         getNextKey = { it + 1 },
-        pagingSourceFactory = { EventsPagingSource(telemetryRepository, searchQuery.value) },
+        pagingSourceFactory = { EventsPagingSource(eventsRepository, searchQuery.value) },
     ).cachedIn(viewModelScope)
 
     @Suppress("UNCHECKED_CAST")
@@ -105,7 +105,7 @@ internal class EventsViewModel(
         // Persisted, so the row stays dimmed across restarts — same contract as traces and
         // incidents. Guarded so an already-read event does not churn the DB on every reopen.
         if (!event.isViewed) {
-            viewModelScope.launch { telemetryRepository.markAsViewed(event.id) }
+            viewModelScope.launch { eventsRepository.markAsViewed(event.id) }
         }
     }
 
@@ -129,7 +129,7 @@ internal class EventsViewModel(
         viewModelScope.launch {
             isClearing.value = true
             try {
-                telemetryRepository.clearAll()
+                eventsRepository.clearAll()
                 pager.refresh()
             } catch (_: Exception) {
             } finally {

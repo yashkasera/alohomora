@@ -62,9 +62,11 @@ import io.github.yashkasera.alohomora.replay.TrafficReplayRegistry
 import io.github.yashkasera.alohomora.trace.SpanCaptureRegistry
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicLong
+import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -132,11 +134,12 @@ internal class DevToolsRuntime(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob() + exceptionHandler)
     private val sequenceCounter = AtomicLong(1)
 
-    // @Volatile: written from attachClient (IO), from DevToolsConnection.close() (the
-    // connection scope) and from stop() (whatever thread toggled the UI switch). Plain vars
-    // let two rapid connects leave an orphaned connection that stop() can no longer reach.
-    @Volatile
-    private var activeConnection: DevToolsConnection? = null
+    // AtomicReference, not @Volatile: attachClient runs per accepted socket on the multi-threaded
+    // IO pool, so a plain check-then-set (@Volatile gives visibility, not atomicity) let two rapid
+    // connects both read null and both install themselves — the first connection, with its socket
+    // and reader/writer/heartbeat coroutines, then became unreachable from stop() and leaked. The
+    // slot is claimed with a single compareAndSet(null, …) and released with compareAndSet(this, …).
+    private val activeConnection = AtomicReference<DevToolsConnection?>(null)
 
     private val databaseInspector = DevToolsDatabaseInspector(database, appDatabaseProvider)
 
@@ -200,8 +203,7 @@ internal class DevToolsRuntime(
     private fun rebindAfterForeground() {
         if (!_serverState.value.isRunning) return
         val port = listenPort ?: return
-        activeConnection?.close()
-        activeConnection = null
+        activeConnection.exchange(null)?.close()
         _serverState.value = _serverState.value.copy(hasClient = false, pendingOtp = null)
         server.stop()
         bind(port)
@@ -211,8 +213,7 @@ internal class DevToolsRuntime(
         AppLifecycle.stopObserving()
         ServerActiveNotificationHost.dismiss()
         listenPort = null
-        activeConnection?.shutDownGracefully()
-        activeConnection = null
+        activeConnection.exchange(null)?.shutDownGracefully()
         server.stop()
         _serverState.value = _serverState.value.copy(
             isRunning = false,
@@ -236,13 +237,15 @@ internal class DevToolsRuntime(
         // types the OTP, so any bound short enough to be useful would drop it mid-pairing. Current
         // clients send the probe unconditionally within milliseconds, which is also what the
         // OTP_REVEAL_GRACE_MILLIS window already assumes.
-        if (activeConnection != null) {
+        // Claim the slot atomically: creating the connection has no side effects until start(),
+        // so if the compareAndSet loses to a concurrent connect we just drop the unstarted object
+        // and close its socket — no reader/writer/heartbeat ever ran for it.
+        val connection = DevToolsConnection(socket)
+        if (!activeConnection.compareAndSet(null, connection)) {
             println("[Alohomora] DevTools already has a client; rejecting additional connection.")
             socket.close()
             return
         }
-        val connection = DevToolsConnection(socket)
-        activeConnection = connection
         _serverState.value = _serverState.value.copy(
             hasClient = true,
             lastError = null,
@@ -329,6 +332,14 @@ internal class DevToolsRuntime(
         // order and silently drop the ones that tie. Rowids are monotonic in insert order.
         private val spanAdapter = DevToolsStreamAdapter { span: Span -> span.id }
         private val trafficSignatures = linkedMapOf<String, Int>()
+
+        // Completed once sendInitialState has seeded the dedup adapters and traffic signatures.
+        // The adapter-backed stream collectors await it before subscribing, so a Room
+        // `observeLatest` emitting its current rows on subscription cannot be mistaken for "new"
+        // and streamed around the snapshot. If the snapshot never completes (it threw), the
+        // collectors stay gated until close() cancels the scope — the same lifetime they already
+        // had — rather than streaming a duplicate of the snapshot.
+        private val initialSnapshotSeeded = CompletableDeferred<Unit>()
         private val otp = (1000..9999).random().toString()
         private var isAuthenticated = false
         private val liveness = DevToolsLiveness()
@@ -362,8 +373,15 @@ internal class DevToolsRuntime(
             control.close()
             stream.close()
             socket.close()
-            if (activeConnection === this) {
-                activeConnection = null
+            // Mock rules and the throttle profile are process-global and only ever set over an
+            // active connection, so a session that is gone must not keep the app mocking responses
+            // or shaping the network with no console attached. The desktop re-pushes both on every
+            // reconnect (NetworkRulesViewModel observes Connected), so clearing here is seamless for
+            // a transient drop and correct for a real disconnect.
+            NetworkRuleEngine.clear()
+            // compareAndSet(this, null): only the connection that currently owns the slot releases
+            // it, so a reaped-then-replaced connection can't null out its successor.
+            if (activeConnection.compareAndSet(this, null)) {
                 _serverState.value = _serverState.value.copy(hasClient = false, pendingOtp = null)
             }
             // Cancelled last: cancelling the scope kills whichever loop called us, so the
@@ -384,12 +402,15 @@ internal class DevToolsRuntime(
                         }
                         ?: break
                     socket.write(DevToolsProtocol.encodeEnvelope(message))
-                    // A graceful-shutdown frame is the last thing this connection ever sends. Break
-                    // only *after* the write so the frame is on the wire before finally→close()
-                    // tears the socket down — the whole point is that the desktop reads it and stops
-                    // reconnecting. Done here, in the sole writer, rather than by close() racing the
-                    // write: two writers on one socket interleave bytes and corrupt the stream.
-                    if (message is ServerShuttingDownMessage) break
+                    // A terminal frame is the last thing this connection ever sends. Break only
+                    // *after* the write so the frame is on the wire before finally→close() tears the
+                    // socket down. Two cases: ServerShuttingDownMessage (the desktop reads it and
+                    // stops reconnecting) and AuthFailureMessage (the desktop reads it, shows
+                    // "Invalid OTP", forgets the token and stops retrying). Both are flushed here, in
+                    // the sole writer, rather than by the caller racing close() against the write —
+                    // which is exactly why a bare `send(AuthFailure); close()` used to lose the frame,
+                    // leaving the desktop to see a bare EOF and silently re-prompt with a fresh code.
+                    if (message is ServerShuttingDownMessage || message is AuthFailureMessage) break
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -531,8 +552,11 @@ internal class DevToolsRuntime(
                 }
 
                 else -> {
+                    // No close() here: it would cancel the writer before it could flush this frame
+                    // (send() only queues). The writer treats AuthFailureMessage as terminal — it
+                    // writes the frame, then its finally runs close() — so the desktop is guaranteed
+                    // to receive the rejection before the socket is torn down.
                     send(AuthFailureMessage(nextSequence(), "Invalid OTP"))
-                    close()
                 }
             }
         }
@@ -785,10 +809,13 @@ internal class DevToolsRuntime(
             errorAdapter.seed(errors)
             spanAdapter.seed(spans)
             seedTrafficSignatures(traffic)
+            // Release the stream collectors only now that the dedup state reflects the snapshot.
+            initialSnapshotSeeded.complete(Unit)
             send(InitialStateMessage(nextSequence(), payload))
         }
 
         private suspend fun streamEvents() {
+            initialSnapshotSeeded.await()
             eventsRepository.list("", 0, DevToolsDefaults.EVENT_SNAPSHOT_LIMIT).collect { events ->
                 val newItems = eventAdapter.filterNew(events)
                 newItems.forEach { item ->
@@ -803,6 +830,7 @@ internal class DevToolsRuntime(
          * and there is no follow-up request to fetch one.
          */
         private suspend fun streamErrors() {
+            initialSnapshotSeeded.await()
             database.errorDao().observeLatest(ERROR_SNAPSHOT_LIMIT)
                 .collect { errors ->
                     errorAdapter.filterNew(errors).forEach { item ->
@@ -817,6 +845,7 @@ internal class DevToolsRuntime(
          * follow-up request for an individual span.
          */
         private suspend fun streamSpans() {
+            initialSnapshotSeeded.await()
             database.spanDao().observeLatest(DevToolsDefaults.SPAN_SNAPSHOT_LIMIT)
                 .collect { spans ->
                     spanAdapter.filterNew(spans).forEach { item ->
@@ -826,6 +855,7 @@ internal class DevToolsRuntime(
         }
 
         private suspend fun streamTraffic() {
+            initialSnapshotSeeded.await()
             database.trafficDao().observeLatest(TRAFFIC_SNAPSHOT_LIMIT)
                 .collect { logs ->
                     val changedItems = changedTraffic(logs)

@@ -1160,7 +1160,7 @@ public final class io/github/yashkasera/alohomora/ui/theme/themes/SolarizedTheme
 }
 
 public final class io/github/yashkasera/alohomora/ui/utils/ModifierExtensionsKt {
-	public static final fun drawDiagonalLabel-XO-JAsU (Landroidx/compose/ui/Modifier;Ljava/lang/String;JLandroidx/compose/ui/text/TextStyle;F)Landroidx/compose/ui/Modifier;
-	public static synthetic fun drawDiagonalLabel-XO-JAsU$default (Landroidx/compose/ui/Modifier;Ljava/lang/String;JLandroidx/compose/ui/text/TextStyle;FILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+	public static final fun drawDiagonalLabel-9z6LAg8 (Landroidx/compose/ui/Modifier;Ljava/lang/String;JJLandroidx/compose/ui/text/TextStyle;F)Landroidx/compose/ui/Modifier;
+	public static synthetic fun drawDiagonalLabel-9z6LAg8$default (Landroidx/compose/ui/Modifier;Ljava/lang/String;JJLandroidx/compose/ui/text/TextStyle;FILjava/lang/Object;)Landroidx/compose/ui/Modifier;
 }
 

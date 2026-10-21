@@ -153,7 +153,13 @@ kotlin {
             binaries {
                 framework {
                     baseName = "AlohomoraKit"
-                    isStatic = true
+                    // Dynamic, not static. A static framework's archive carries the Skia/skiko
+                    // objects (SkCanvas, icu, libjpeg, libdng_sdk, …) and the consuming app links
+                    // with -all_load for its CocoaPods ObjC categories, force-loading every member
+                    // and producing ~20,700 duplicate-symbol errors. A dynamic framework links
+                    // skiko once into its dylib and is referenced (not force-loaded), so it is
+                    // embedded per-configuration (debug/beta only, excluded from release).
+                    isStatic = false
                     xcf.add(this)
                 }
             }
