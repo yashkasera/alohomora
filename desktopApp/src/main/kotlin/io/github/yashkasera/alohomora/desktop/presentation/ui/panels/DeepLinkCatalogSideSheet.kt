@@ -30,7 +30,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -41,6 +43,7 @@ import io.github.yashkasera.alohomora.desktop.presentation.model.CatalogModuleGr
 import io.github.yashkasera.alohomora.desktop.presentation.model.DeepLinkCatalogUiState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheetHeader
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ConfigShareConfirmDialog
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFloatingActionButton
@@ -80,6 +83,7 @@ fun DeepLinkCatalogSideSheet(
     onOpenUrl: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    var pendingShareId by remember { mutableStateOf<String?>(null) }
     AlohomoraSideSheet(
         visible = visible,
         onDismiss = onDismiss,
@@ -224,7 +228,7 @@ fun DeepLinkCatalogSideSheet(
                         onToggle = { expanded[group.module] = !(expanded[group.module] ?: true) },
                         showShare = state.scope == ConfigScope.LOCAL,
                         onOpen = onOpen,
-                        onShare = onShare,
+                        onShare = { pendingShareId = it },
                         onDelete = onDelete,
                     )
                 }
@@ -249,13 +253,22 @@ fun DeepLinkCatalogSideSheet(
                             breadcrumb = true,
                             showShare = state.scope == ConfigScope.LOCAL,
                             onOpen = onOpen,
-                            onShare = onShare,
+                            onShare = { pendingShareId = it },
                             onDelete = onDelete,
                         )
                     }
                 }
             }
         }
+    }
+
+    pendingShareId?.let { id ->
+        val name = state.defs.firstOrNull { it.value.id == id }?.value?.name ?: "this deep link"
+        ConfigShareConfirmDialog(
+            itemName = name,
+            onConfirm = { onShare(id); pendingShareId = null },
+            onDismiss = { pendingShareId = null },
+        )
     }
 }
 

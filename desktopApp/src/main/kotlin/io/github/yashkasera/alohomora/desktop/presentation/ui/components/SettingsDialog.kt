@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
@@ -56,8 +55,9 @@ import io.github.yashkasera.alohomora.desktop.mcp.McpServerStatus
 import io.github.yashkasera.alohomora.desktop.util.pickDirectory
 import io.github.yashkasera.alohomora.desktop.util.pickLoadPath
 import io.github.yashkasera.alohomora.desktop.data.config.ConfigRepoStatus
-import io.github.yashkasera.alohomora.desktop.domain.config.SyncStatus
 import io.github.yashkasera.alohomora.desktop.presentation.model.ConfigRepoUiState
+import io.github.yashkasera.alohomora.desktop.presentation.model.TeamConfigCopy
+import io.github.yashkasera.alohomora.desktop.presentation.ui.panels.ConfigSetupWizard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
@@ -460,9 +460,10 @@ private fun TeamConfigSection(
     onRevealRepo: () -> Unit,
 ) {
     val status = state.status
+    var showWizard by remember { mutableStateOf(false) }
     Text(
-        text = "Share journeys, mock sets, and deep links with your team through a git repository. " +
-            "Local config needs no setup; connect a repo only for shared, reviewed config.",
+        text = "Share journeys, mock sets, and deep links with your team. Your personal config always " +
+            "works with no setup — this is only for the shared ones.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -482,11 +483,7 @@ private fun TeamConfigSection(
                 AlohomoraFilledButton(text = "Sync", onClick = onSync, enabled = !state.busy)
                 AlohomoraOutlinedButton(text = "Disconnect", onClick = onDisconnect, enabled = !state.busy)
             }
-            val syncText = when (val s = state.syncStatus) {
-                is SyncStatus.UpToDate -> "Up to date with the team's main line."
-                is SyncStatus.Drift -> "${s.behind} behind, ${s.ahead} ahead."
-                SyncStatus.NotConnected -> ""
-            }
+            val syncText = TeamConfigCopy.syncSummary(state.syncStatus).orEmpty()
             if (syncText.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                 Text(
@@ -498,54 +495,31 @@ private fun TeamConfigSection(
         }
 
         else -> {
-            AlohomoraTextField(
-                value = state.urlInput,
-                onValueChange = onUrlChange,
-                label = "Repository URL",
-                placeholder = "git@… or https://…",
-                enabled = !state.busy,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
-            AlohomoraTextField(
-                value = state.patInput,
-                onValueChange = onPatChange,
-                label = "Access token (HTTPS only, optional)",
-                placeholder = "Stored in your OS keychain",
-                enabled = !state.busy,
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
-            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.md)) {
-                AlohomoraFilledButton(
-                    text = "Connect",
-                    onClick = onConnect,
-                    enabled = !state.busy && state.urlInput.isNotBlank(),
-                )
-                AlohomoraOutlinedButton(
-                    text = "Initialize empty repo",
-                    onClick = onInitialize,
-                    // No URL required: initialize a local-only repo now, add a remote later.
-                    enabled = !state.busy,
-                )
-            }
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xs))
-            Text(
-                text = "Connect clones an existing repo. Initialize scaffolds a new one — with a URL it " +
-                    "pushes to that empty remote, or leave the URL blank to start local-only.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
             if (status is ConfigRepoStatus.Error) {
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
                 Text(
-                    text = status.message,
+                    text = TeamConfigCopy.friendlyError(status.message),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                 )
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
             }
+            AlohomoraFilledButton(
+                text = "Set up Team config",
+                onClick = { showWizard = true },
+                enabled = !state.busy,
+            )
         }
+    }
+
+    if (showWizard) {
+        ConfigSetupWizard(
+            state = state,
+            onUrlChange = onUrlChange,
+            onPatChange = onPatChange,
+            onConnect = onConnect,
+            onInitialize = onInitialize,
+            onDismiss = { showWizard = false },
+        )
     }
 
     Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xl))

@@ -12,6 +12,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -19,6 +23,7 @@ import io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope
 import io.github.yashkasera.alohomora.desktop.presentation.model.JourneyUiState
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheetHeader
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ConfigShareConfirmDialog
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFloatingActionButton
@@ -55,6 +60,7 @@ fun JourneyListSideSheet(
     onOpenUrl: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    var pendingShareId by remember { mutableStateOf<String?>(null) }
     AlohomoraSideSheet(
         visible = visible,
         onDismiss = onDismiss,
@@ -193,7 +199,7 @@ fun JourneyListSideSheet(
                         }
                         AlohomoraChip(label = "${journey.steps.size} steps")
                         if (state.scope == ConfigScope.LOCAL) {
-                            AlohomoraIconButton(onClick = { onShare(journey.id) }) {
+                            AlohomoraIconButton(onClick = { pendingShareId = journey.id }) {
                                 Icon(
                                     imageVector = Icons.Share,
                                     contentDescription = "Share with team",
@@ -212,6 +218,15 @@ fun JourneyListSideSheet(
                 }
             }
         }
+    }
+
+    pendingShareId?.let { id ->
+        val name = state.journeys.firstOrNull { it.value.id == id }?.value?.name ?: "this journey"
+        ConfigShareConfirmDialog(
+            itemName = name,
+            onConfirm = { onShare(id); pendingShareId = null },
+            onDismiss = { pendingShareId = null },
+        )
     }
 }
 
