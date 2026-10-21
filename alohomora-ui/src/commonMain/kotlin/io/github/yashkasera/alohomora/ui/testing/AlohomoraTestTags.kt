@@ -77,10 +77,31 @@ object AlohomoraTestTags {
         const val ROOT = "alohomora_replay_sheet"
         const val METHOD = "alohomora_replay_sheet_method"
         const val URL = "alohomora_replay_sheet_url"
+
+        /** The raw `Name: value` header textarea, shown in Raw header mode. */
         const val HEADERS = "alohomora_replay_sheet_headers"
         const val BODY = "alohomora_replay_sheet_body"
         const val SEND = "alohomora_replay_sheet_send"
         const val ERROR = "alohomora_replay_sheet_error"
+
+        /** Switches the Headers section to structured rows / to the raw textarea. */
+        const val HEADER_MODE_ROWS = "alohomora_replay_sheet_header_mode_rows"
+        const val HEADER_MODE_RAW = "alohomora_replay_sheet_header_mode_raw"
+
+        /** Appends a blank, included header row in Rows mode. */
+        const val ADD_HEADER = "alohomora_replay_sheet_add_header"
+
+        /**
+         * Per-row header controls, keyed by the row's stable `ReplayHeaderRow.key` rather than its
+         * index so a tag survives adding and removing sibling rows.
+         */
+        fun headerName(key: Long) = "alohomora_replay_sheet_header_name_$key"
+
+        fun headerValue(key: Long) = "alohomora_replay_sheet_header_value_$key"
+
+        fun headerToggle(key: Long) = "alohomora_replay_sheet_header_toggle_$key"
+
+        fun headerRemove(key: Long) = "alohomora_replay_sheet_header_remove_$key"
     }
 
     object Traces {

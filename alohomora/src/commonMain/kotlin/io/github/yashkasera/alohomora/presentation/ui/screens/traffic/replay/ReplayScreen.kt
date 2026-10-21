@@ -40,8 +40,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +51,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.replay.ReplayBlockedReason
+import io.github.yashkasera.alohomora.replay.ReplayHeaderRow
+import io.github.yashkasera.alohomora.replay.ReplayHeaderText
+import io.github.yashkasera.alohomora.replay.buildReplayHeaderMap
+import io.github.yashkasera.alohomora.replay.toReplayHeaderRows
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
@@ -56,17 +62,23 @@ import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
+import io.github.yashkasera.alohomora.ui.components.AlohomoraTextButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTopBar
 import io.github.yashkasera.alohomora.ui.components.jsoneditor.JsonEditor
 import io.github.yashkasera.alohomora.ui.components.jsoneditor.JsonEditorState
 import io.github.yashkasera.alohomora.ui.icons.AlertTriangle
 import io.github.yashkasera.alohomora.ui.icons.ArrowLeft
+import io.github.yashkasera.alohomora.ui.icons.Check
+import io.github.yashkasera.alohomora.ui.icons.EyeOff
 import io.github.yashkasera.alohomora.ui.icons.Icons
 import io.github.yashkasera.alohomora.ui.icons.Play
+import io.github.yashkasera.alohomora.ui.icons.Plus
 import io.github.yashkasera.alohomora.ui.icons.Repeat
+import io.github.yashkasera.alohomora.ui.icons.Trash
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
+import io.github.yashkasera.alohomora.ui.theme.alohomoraColors
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -76,16 +88,30 @@ private enum class BodyMode(val label: String) {
     TEXT("Text"),
 }
 
+private enum class HeaderMode(val label: String) {
+    ROWS("Rows"),
+    RAW("Raw"),
+}
+
 @Composable
 internal fun ReplayScreen(
     trafficId: String,
     onBackClick: () -> Unit,
+    onOpenResult: (String) -> Unit,
 ) {
     val viewModel = koinViewModel<ReplayViewModel> { parametersOf(trafficId) }
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(state.replaySent) {
-        if (state.replaySent) onBackClick()
+    // No silent auto-pop. On success the screen shows an "opening result" state, then either opens
+    // the replayed entry directly (the handler stamped the `replayOf` link) or falls back to the
+    // source entry, where ReplayResultBanner still catches a slow or desktop-triggered replay.
+    LaunchedEffect(state.resultTraceId, state.replayTimedOut) {
+        val resultId = state.resultTraceId
+        if (resultId != null) {
+            onOpenResult(resultId)
+        } else if (state.replayTimedOut) {
+            onBackClick()
+        }
     }
 
     ReplayScreenContent(
@@ -127,7 +153,9 @@ private fun ReplayScreenContent(
             if (!state.isLoading && state.blockedReason == null && state.sourceTrace != null) {
                 SendBar(
                     isReplaying = state.isReplaying,
+                    isSent = state.replaySent,
                     enabled = !state.isReplaying
+                        && !state.replaySent
                         && state.url.isNotBlank()
                         && state.method.isNotBlank(),
                     onSend = onSend,
@@ -180,9 +208,11 @@ private fun ReplayScreenContent(
 @Composable
 private fun SendBar(
     isReplaying: Boolean,
+    isSent: Boolean,
     enabled: Boolean,
     onSend: () -> Unit,
 ) {
+    val busy = isReplaying || isSent
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -193,11 +223,15 @@ private fun SendBar(
             .padding(vertical = MaterialTheme.dimens.margin.md),
     ) {
         AlohomoraFilledButton(
-            text = if (isReplaying) "Sending…" else "Send",
+            text = when {
+                isSent -> "Sent — opening result…"
+                isReplaying -> "Sending…"
+                else -> "Send"
+            },
             onClick = onSend,
             enabled = enabled,
             size = AlohomoraButtonSize.LARGE,
-            leadingIcon = if (isReplaying) {
+            leadingIcon = if (busy) {
                 {
                     AlohomoraCircularProgressIndicator(
                         modifier = Modifier.size(MaterialTheme.dimens.icon.md),
@@ -295,6 +329,9 @@ private fun EditorContent(
         modifier = modifier
             .testTag(AlohomoraTestTags.ReplaySheet.ROOT)
             .verticalScroll(rememberScrollState())
+            // A focused field rises above the keyboard rather than hiding under it — the Send bar
+            // is no longer the only part that reacts to the IME.
+            .imePadding()
             .padding(horizontal = MaterialTheme.dimens.margin.lg),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.lg),
     ) {
@@ -361,15 +398,10 @@ private fun EditorContent(
 
         // Headers section
         SectionHeader(title = "Headers")
-        AlohomoraTextField(
-            value = state.headers,
-            onValueChange = onHeadersChange,
-            placeholder = "Accept: application/json",
-            singleLine = false,
+        HeadersEditor(
+            initialHeaders = state.headers,
             enabled = !state.isReplaying,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag(AlohomoraTestTags.ReplaySheet.HEADERS),
+            onHeadersChange = onHeadersChange,
         )
 
         // Body section
@@ -408,9 +440,11 @@ private fun EditorContent(
                 state = jsonBodyState,
                 readOnly = state.isReplaying,
                 minLines = 8,
+                // Grows with content so the single outer scroll owns scrolling — no fixed box
+                // trapping a second scroll inside the page.
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
+                    .heightIn(min = 240.dp)
                     .testTag(AlohomoraTestTags.ReplaySheet.BODY),
             )
 
@@ -474,6 +508,214 @@ private fun SectionHeader(title: String) {
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.tertiary,
     )
+}
+
+/**
+ * Structured header editor shared in shape with the desktop replay sheet.
+ *
+ * Owns the editable rows locally, seeded once from [initialHeaders] (already sanitised: every
+ * `[REDACTED]` and recomputed header was dropped by `toReplayRequest`). Every edit renders the rows
+ * straight back to `Name: value` text through [onHeadersChange], so the view model's `send()` keeps
+ * parsing one header string and the sanitise guarantee holds unchanged — nothing here re-introduces a
+ * dropped value. A Raw tab keeps the plain textarea as an escape hatch for pasting a bulk block.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HeadersEditor(
+    initialHeaders: String,
+    enabled: Boolean,
+    onHeadersChange: (String) -> Unit,
+) {
+    var nextKey by remember { mutableStateOf(0L) }
+    val allocKey = { nextKey++ }
+    val rows = remember {
+        ReplayHeaderText.parse(initialHeaders).toReplayHeaderRows(allocKey).toMutableStateList()
+    }
+    var headerMode by remember { mutableStateOf(HeaderMode.ROWS) }
+    var rawHeaders by remember { mutableStateOf(initialHeaders) }
+
+    fun pushRows() = onHeadersChange(ReplayHeaderText.render(buildReplayHeaderMap(rows)))
+
+    fun switchHeaderMode(target: HeaderMode) {
+        if (headerMode == target) return
+        if (target == HeaderMode.RAW) {
+            rawHeaders = ReplayHeaderText.render(buildReplayHeaderMap(rows))
+        } else {
+            val parsed = ReplayHeaderText.parse(rawHeaders).toReplayHeaderRows(allocKey)
+            rows.clear()
+            rows.addAll(parsed)
+            pushRows()
+        }
+        headerMode = target
+    }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.sm),
+    ) {
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            HeaderMode.entries.forEachIndexed { index, mode ->
+                val tag = when (mode) {
+                    HeaderMode.ROWS -> AlohomoraTestTags.ReplaySheet.HEADER_MODE_ROWS
+                    HeaderMode.RAW -> AlohomoraTestTags.ReplaySheet.HEADER_MODE_RAW
+                }
+                SegmentedButton(
+                    selected = headerMode == mode,
+                    onClick = { switchHeaderMode(mode) },
+                    enabled = enabled,
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = HeaderMode.entries.size,
+                        baseShape = MaterialTheme.shapes.small,
+                    ),
+                    modifier = Modifier.testTag(tag),
+                ) {
+                    Text(mode.label, style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        }
+
+        when (headerMode) {
+            HeaderMode.ROWS -> {
+                if (rows.isEmpty()) {
+                    Text(
+                        "No headers. Add one, or let the app supply them.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                rows.forEachIndexed { index, row ->
+                    HeaderRowEditor(
+                        row = row,
+                        enabled = enabled,
+                        onToggle = {
+                            rows[index] = row.copy(included = !row.included)
+                            pushRows()
+                        },
+                        onNameChange = {
+                            rows[index] = row.copy(name = it)
+                            pushRows()
+                        },
+                        onValueChange = {
+                            rows[index] = row.copy(value = it)
+                            pushRows()
+                        },
+                        onRemove = {
+                            rows.removeAt(index)
+                            pushRows()
+                        },
+                    )
+                }
+                AlohomoraTextButton(
+                    text = "Add header",
+                    onClick = {
+                        rows.add(ReplayHeaderRow(allocKey(), "", "", included = true))
+                    },
+                    enabled = enabled,
+                    leadingIcon = {
+                        Icon(
+                            Icons.Plus,
+                            contentDescription = null,
+                            modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                        )
+                    },
+                    modifier = Modifier.testTag(AlohomoraTestTags.ReplaySheet.ADD_HEADER),
+                )
+            }
+
+            HeaderMode.RAW -> {
+                AlohomoraTextField(
+                    value = rawHeaders,
+                    onValueChange = {
+                        rawHeaders = it
+                        onHeadersChange(it)
+                    },
+                    placeholder = "Accept: application/json",
+                    singleLine = false,
+                    enabled = enabled,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(AlohomoraTestTags.ReplaySheet.HEADERS),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * One editable header row: an include/drop toggle, a name and value field, and a remove button.
+ * Dropping a row (the eye-off state) is how the user hands a header back to the app's own client to
+ * regenerate — auth, signatures, content-length — rather than forwarding the captured value.
+ */
+@Composable
+private fun HeaderRowEditor(
+    row: ReplayHeaderRow,
+    enabled: Boolean,
+    onToggle: () -> Unit,
+    onNameChange: (String) -> Unit,
+    onValueChange: (String) -> Unit,
+    onRemove: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimens.margin.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AlohomoraIconButton(
+            onClick = onToggle,
+            enabled = enabled,
+            modifier = Modifier.testTag(AlohomoraTestTags.ReplaySheet.headerToggle(row.key)),
+        ) {
+            if (row.included) {
+                Icon(
+                    Icons.Check,
+                    contentDescription = "Included — tap to drop",
+                    tint = MaterialTheme.alohomoraColors.success,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                )
+            } else {
+                Icon(
+                    Icons.EyeOff,
+                    contentDescription = "Dropped — tap to include",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                )
+            }
+        }
+        val fieldAlpha = if (row.included) 1f else 0.5f
+        AlohomoraTextField(
+            value = row.name,
+            onValueChange = onNameChange,
+            placeholder = "Header",
+            singleLine = true,
+            enabled = enabled,
+            modifier = Modifier
+                .weight(0.42f)
+                .alpha(fieldAlpha)
+                .testTag(AlohomoraTestTags.ReplaySheet.headerName(row.key)),
+        )
+        AlohomoraTextField(
+            value = row.value,
+            onValueChange = onValueChange,
+            placeholder = "value",
+            singleLine = true,
+            enabled = enabled,
+            modifier = Modifier
+                .weight(0.58f)
+                .alpha(fieldAlpha)
+                .testTag(AlohomoraTestTags.ReplaySheet.headerValue(row.key)),
+        )
+        AlohomoraIconButton(
+            onClick = onRemove,
+            enabled = enabled,
+            modifier = Modifier.testTag(AlohomoraTestTags.ReplaySheet.headerRemove(row.key)),
+        ) {
+            Icon(
+                Icons.Trash,
+                contentDescription = "Remove header",
+                modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+            )
+        }
+    }
 }
 
 // ── Previews ────────────────────────────────────────────────────────────────

@@ -27,8 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
+import io.github.yashkasera.alohomora.replay.ReplayHeaderRow
 import io.github.yashkasera.alohomora.replay.ReplayHeaderText
 import io.github.yashkasera.alohomora.replay.ReplayRequest
+import io.github.yashkasera.alohomora.replay.buildReplayHeaderMap
+import io.github.yashkasera.alohomora.replay.toReplayHeaderRows
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
@@ -53,38 +56,6 @@ private enum class HeaderMode(val label: String) {
     ROWS("Rows"),
     RAW("Raw"),
 }
-
-/**
- * One editable header before the request goes back out. [key] is a stable identity so a row keeps its
- * text field state when siblings are added or removed; [included] `false` drops the header from the
- * replay entirely, letting the app's own client regenerate it (auth, signature, content-length).
- */
-internal data class ReplayHeaderRow(
-    val key: Long,
-    val name: String,
-    val value: String,
-    val included: Boolean,
-)
-
-/**
- * Collapses the editable rows back into the wire shape, preserving order and grouping repeated names
- * the same way [ReplayHeaderText.parse] does. Excluded rows and blank names are dropped rather than
- * sent as empty headers.
- */
-internal fun buildReplayHeaderMap(rows: List<ReplayHeaderRow>): Map<String, List<String>> {
-    val map = LinkedHashMap<String, MutableList<String>>()
-    rows.forEach { row ->
-        if (!row.included) return@forEach
-        val name = row.name.trim()
-        if (name.isEmpty()) return@forEach
-        map.getOrPut(name) { mutableListOf() }.add(row.value.trim())
-    }
-    return map
-}
-
-private fun Map<String, List<String>>.toReplayHeaderRows(nextKey: () -> Long): List<ReplayHeaderRow> =
-    entries.flatMap { (name, values) -> values.map { name to it } }
-        .map { (name, value) -> ReplayHeaderRow(nextKey(), name, value, included = true) }
 
 /**
  * Lets the user edit a captured request before the device re-sends it.

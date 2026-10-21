@@ -107,7 +107,7 @@ internal val appModule = module {
     viewModel { (errorId: Long) -> ErrorDetailsViewModel(errorId, get(), get()) }
     viewModel { TracesViewModel(get()) }
     viewModel { (traceId: String) -> TraceDetailsViewModel(traceId, get()) }
-    viewModel { (trafficId: String) -> ReplayViewModel(trafficId, get(), get()) }
+    viewModel { (trafficId: String) -> ReplayViewModel(trafficId, get(), get(), get()) }
 }
 
 

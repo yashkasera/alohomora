@@ -934,14 +934,21 @@ public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$O
 
 public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$ReplaySheet {
 	public static final field $stable I
+	public static final field ADD_HEADER Ljava/lang/String;
 	public static final field BODY Ljava/lang/String;
 	public static final field ERROR Ljava/lang/String;
 	public static final field HEADERS Ljava/lang/String;
+	public static final field HEADER_MODE_RAW Ljava/lang/String;
+	public static final field HEADER_MODE_ROWS Ljava/lang/String;
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$ReplaySheet;
 	public static final field METHOD Ljava/lang/String;
 	public static final field ROOT Ljava/lang/String;
 	public static final field SEND Ljava/lang/String;
 	public static final field URL Ljava/lang/String;
+	public final fun headerName (J)Ljava/lang/String;
+	public final fun headerRemove (J)Ljava/lang/String;
+	public final fun headerToggle (J)Ljava/lang/String;
+	public final fun headerValue (J)Ljava/lang/String;
 }
 
 public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$TraceDetails {
