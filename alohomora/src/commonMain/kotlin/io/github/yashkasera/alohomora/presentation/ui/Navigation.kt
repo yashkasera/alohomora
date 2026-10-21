@@ -77,6 +77,13 @@ internal fun AlohomoraNavHost(
             ReplayScreen(
                 trafficId = route.trafficId,
                 onBackClick = navController::navigateUp,
+                onOpenResult = { resultId ->
+                    // Replace the replay destination with the result, so Back from the result lands
+                    // on the source detail rather than re-opening the editor.
+                    navController.navigate(Routes.TrafficDetails(resultId)) {
+                        popUpTo(Routes.Replay(route.trafficId)) { inclusive = true }
+                    }
+                },
             )
         }
 
