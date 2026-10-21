@@ -12,6 +12,7 @@ import io.github.yashkasera.alohomora.desktop.data.local.importHar
 import io.github.yashkasera.alohomora.desktop.data.local.toMockRule
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
+import io.github.yashkasera.alohomora.desktop.presentation.model.TeamConfigCopy
 import java.io.File
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.ExperimentalUuidApi
@@ -235,7 +236,7 @@ class NetworkRulesViewModel(
      */
     fun shareCurrentSession() {
         val store = configStore ?: run {
-            _shareMessage.value = "Team config is not connected."
+            _shareMessage.value = TeamConfigCopy.friendlyError("not connected")
             return
         }
         val session = _currentSession.value ?: run {
@@ -251,7 +252,7 @@ class NetworkRulesViewModel(
                 )
             }
                 .onSuccess { proposal -> _lastProposal.value = proposal; _shareMessage.value = null }
-                .onFailure { e -> _shareMessage.value = e.message ?: "Share failed" }
+                .onFailure { e -> _shareMessage.value = TeamConfigCopy.friendlyError(e.message) }
         }
     }
 

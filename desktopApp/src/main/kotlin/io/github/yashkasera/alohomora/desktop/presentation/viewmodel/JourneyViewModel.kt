@@ -9,6 +9,7 @@ import io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigStore
 import io.github.yashkasera.alohomora.desktop.domain.usecase.EvaluateJourneyUseCase
 import io.github.yashkasera.alohomora.desktop.presentation.model.JourneyUiState
+import io.github.yashkasera.alohomora.desktop.presentation.model.TeamConfigCopy
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -195,7 +196,7 @@ class JourneyViewModel(
         scope.launch {
             runCatching { configStore.shareWithTeam(ConfigKind.Journeys, item) }
                 .onSuccess { proposal -> _uiState.update { it.copy(lastProposal = proposal, message = null) } }
-                .onFailure { e -> _uiState.update { it.copy(message = e.message ?: "Share failed") } }
+                .onFailure { e -> _uiState.update { it.copy(message = TeamConfigCopy.friendlyError(e.message)) } }
         }
     }
 

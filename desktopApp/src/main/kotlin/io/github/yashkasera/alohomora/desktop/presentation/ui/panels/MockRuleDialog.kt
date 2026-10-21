@@ -35,6 +35,7 @@ import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.desktop.data.local.MockSession
 import io.github.yashkasera.alohomora.desktop.data.local.MockSessionSummary
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
+import io.github.yashkasera.alohomora.desktop.presentation.ui.components.ConfigShareConfirmDialog
 import io.github.yashkasera.alohomora.ui.components.AlohomoraAlertDialog
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCheckbox
@@ -91,6 +92,15 @@ fun MockRulesSideSheet(
     var showSessionDropdown by remember { mutableStateOf(false) }
     var saveAsMode by remember { mutableStateOf(false) }
     var importError by remember { mutableStateOf<String?>(null) }
+    var confirmShare by remember { mutableStateOf(false) }
+
+    if (confirmShare) {
+        ConfigShareConfirmDialog(
+            itemName = currentSession?.name ?: "this mock set",
+            onConfirm = { onShareSession(); confirmShare = false },
+            onDismiss = { confirmShare = false },
+        )
+    }
 
     AlohomoraSideSheet(
         visible = visible,
@@ -299,7 +309,7 @@ fun MockRulesSideSheet(
                         }
                     }
                     if (rules.isNotEmpty()) {
-                        AlohomoraIconButton(onClick = onShareSession) {
+                        AlohomoraIconButton(onClick = { confirmShare = true }) {
                             Icon(Icons.Share, contentDescription = "Share with team")
                         }
                     }
