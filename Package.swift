@@ -15,13 +15,17 @@
 import PackageDescription
 
 // URL and checksum are updated automatically by the release workflow.
+//
+// The AlohomoraKit product vends both the binary XCFramework and AlohomoraKitSwift,
+// a thin source layer that `@_exported`-imports the binary and adds closure-based
+// convenience inits for the plugin handler APIs. `import AlohomoraKitSwift` gets both.
 let package = Package(
     name: "AlohomoraKit",
     platforms: [.iOS(.v15)],
     products: [
         .library(
             name: "AlohomoraKit",
-            targets: ["AlohomoraKit"]
+            targets: ["AlohomoraKit", "AlohomoraKitSwift"]
         ),
     ],
     targets: [
@@ -29,6 +33,10 @@ let package = Package(
             name: "AlohomoraKit",
             url: "https://github.com/yashkasera/Alohomora/releases/download/v1.2.0/AlohomoraKit.xcframework.zip",
             checksum: "51a3ebda9839067dd6e63df18f8fd6546e27c46e5c249a5160b17c75786ab987"
+        ),
+        .target(
+            name: "AlohomoraKitSwift",
+            dependencies: ["AlohomoraKit"]
         ),
     ]
 )
