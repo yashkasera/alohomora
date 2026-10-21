@@ -624,12 +624,18 @@ final object io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags { // io
     }
 
     final object ReplaySheet { // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet|null[0]
+        final const val ADD_HEADER // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.ADD_HEADER|{}ADD_HEADER[0]
+            final fun <get-ADD_HEADER>(): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.ADD_HEADER.<get-ADD_HEADER>|<get-ADD_HEADER>(){}[0]
         final const val BODY // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.BODY|{}BODY[0]
             final fun <get-BODY>(): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.BODY.<get-BODY>|<get-BODY>(){}[0]
         final const val ERROR // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.ERROR|{}ERROR[0]
             final fun <get-ERROR>(): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.ERROR.<get-ERROR>|<get-ERROR>(){}[0]
         final const val HEADERS // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.HEADERS|{}HEADERS[0]
             final fun <get-HEADERS>(): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.HEADERS.<get-HEADERS>|<get-HEADERS>(){}[0]
+        final const val HEADER_MODE_RAW // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.HEADER_MODE_RAW|{}HEADER_MODE_RAW[0]
+            final fun <get-HEADER_MODE_RAW>(): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.HEADER_MODE_RAW.<get-HEADER_MODE_RAW>|<get-HEADER_MODE_RAW>(){}[0]
+        final const val HEADER_MODE_ROWS // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.HEADER_MODE_ROWS|{}HEADER_MODE_ROWS[0]
+            final fun <get-HEADER_MODE_ROWS>(): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.HEADER_MODE_ROWS.<get-HEADER_MODE_ROWS>|<get-HEADER_MODE_ROWS>(){}[0]
         final const val METHOD // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.METHOD|{}METHOD[0]
             final fun <get-METHOD>(): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.METHOD.<get-METHOD>|<get-METHOD>(){}[0]
         final const val ROOT // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.ROOT|{}ROOT[0]
@@ -638,6 +644,11 @@ final object io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags { // io
             final fun <get-SEND>(): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.SEND.<get-SEND>|<get-SEND>(){}[0]
         final const val URL // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.URL|{}URL[0]
             final fun <get-URL>(): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.URL.<get-URL>|<get-URL>(){}[0]
+
+        final fun headerName(kotlin/Long): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.headerName|headerName(kotlin.Long){}[0]
+        final fun headerRemove(kotlin/Long): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.headerRemove|headerRemove(kotlin.Long){}[0]
+        final fun headerToggle(kotlin/Long): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.headerToggle|headerToggle(kotlin.Long){}[0]
+        final fun headerValue(kotlin/Long): kotlin/String // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.ReplaySheet.headerValue|headerValue(kotlin.Long){}[0]
     }
 
     final object TraceDetails { // io.github.yashkasera.alohomora.ui.testing/AlohomoraTestTags.TraceDetails|null[0]
