@@ -185,8 +185,8 @@ private fun TrafficItem(call: TrafficEntry, modifier: Modifier = Modifier, onCli
             modifier.clipToBounds()
                 .drawDiagonalLabel(
                     text = "MOCKED",
-                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
+                    textColor = MaterialTheme.colorScheme.onPrimary,
                 )
         } else modifier,
         shape = MaterialTheme.shapes.large,

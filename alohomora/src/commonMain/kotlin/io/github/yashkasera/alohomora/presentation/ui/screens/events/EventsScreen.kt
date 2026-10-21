@@ -133,7 +133,7 @@ internal fun EventsScreen(onBackClick: () -> Unit) {
             ConfirmationBottomSheet(
                 config = ConfirmationConfig(
                     title = "Clear All Events",
-                    message = "Are you sure you want to delete all telemetry events? This action cannot be undone.",
+                    message = "Are you sure you want to delete all events? This action cannot be undone.",
                     confirmButtonText = "Clear All",
                     dismissButtonText = "Cancel",
                     isDestructive = true,

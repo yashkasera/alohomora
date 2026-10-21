@@ -68,6 +68,13 @@ internal object AlohomoraImpl {
 
     private val koin get() = koinApplication?.koin
 
+    /**
+     * `@Volatile`: written once under [initLock] on the initializing call but read lock-free
+     * from the [config] getter, the [identifier] lazy, and `DevToolsRuntime.sendInitialState`
+     * on the IO pool. The barrier keeps a reader on another thread from observing a stale
+     * `null`, matching [koinApplication] above.
+     */
+    @Volatile
     internal var config: AlohomoraConfig? = null
         private set
 

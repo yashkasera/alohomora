@@ -10,6 +10,10 @@ abstract fun interface io.github.yashkasera.alohomora.devtools/DevToolsActionHan
     abstract suspend fun execute(kotlin.collections/Map<kotlin/String, kotlin/String>): kotlin.collections/Map<kotlin/String, kotlin/String> // io.github.yashkasera.alohomora.devtools/DevToolsActionHandler.execute|execute(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
 }
 
+abstract fun interface io.github.yashkasera.alohomora.plugin/NativeScreenViewControllerProvider { // io.github.yashkasera.alohomora.plugin/NativeScreenViewControllerProvider|null[0]
+    abstract fun createViewController(): platform.UIKit/UIViewController // io.github.yashkasera.alohomora.plugin/NativeScreenViewControllerProvider.createViewController|createViewController(){}[0]
+}
+
 abstract fun interface io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler { // io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler|null[0]
     abstract suspend fun onUpdate(kotlin/String) // io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler.onUpdate|onUpdate(kotlin.String){}[0]
 }
@@ -143,6 +147,29 @@ final class io.github.yashkasera.alohomora.common/SpanEvent { // io.github.yashk
     final fun toString(): kotlin/String // io.github.yashkasera.alohomora.common/SpanEvent.toString|toString(){}[0]
 }
 
+final class io.github.yashkasera.alohomora.plugin/NativeScreenPlugin : io.github.yashkasera.alohomora.plugin/CustomScreenPlugin { // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.collections/List<io.github.yashkasera.alohomora.plugin/PluginAction> = ..., kotlin.collections/List<io.github.yashkasera.alohomora.plugin/PluginDataField> = ..., io.github.yashkasera.alohomora.plugin/NativeScreenViewControllerProvider) // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;kotlin.Boolean;kotlin.Boolean;kotlin.Int;kotlin.collections.List<io.github.yashkasera.alohomora.plugin.PluginAction>;kotlin.collections.List<io.github.yashkasera.alohomora.plugin.PluginDataField>;io.github.yashkasera.alohomora.plugin.NativeScreenViewControllerProvider){}[0]
+
+    final val actions // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.actions|{}actions[0]
+        final fun <get-actions>(): kotlin.collections/List<io.github.yashkasera.alohomora.plugin/PluginAction> // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.actions.<get-actions>|<get-actions>(){}[0]
+    final val dataFields // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.dataFields|{}dataFields[0]
+        final fun <get-dataFields>(): kotlin.collections/List<io.github.yashkasera.alohomora.plugin/PluginDataField> // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.dataFields.<get-dataFields>|<get-dataFields>(){}[0]
+    final val description // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.description|{}description[0]
+        final fun <get-description>(): kotlin/String? // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.description.<get-description>|<get-description>(){}[0]
+    final val id // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.id.<get-id>|<get-id>(){}[0]
+    final val priority // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.priority|{}priority[0]
+        final fun <get-priority>(): kotlin/Int // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.priority.<get-priority>|<get-priority>(){}[0]
+    final val showInDashboard // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.showInDashboard|{}showInDashboard[0]
+        final fun <get-showInDashboard>(): kotlin/Boolean // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.showInDashboard.<get-showInDashboard>|<get-showInDashboard>(){}[0]
+    final val showInNavigation // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.showInNavigation|{}showInNavigation[0]
+        final fun <get-showInNavigation>(): kotlin/Boolean // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.showInNavigation.<get-showInNavigation>|<get-showInNavigation>(){}[0]
+    final val title // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.title|{}title[0]
+        final fun <get-title>(): kotlin/String // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.title.<get-title>|<get-title>(){}[0]
+
+    final fun Content(androidx.compose.runtime/Composer?, kotlin/Int) // io.github.yashkasera.alohomora.plugin/NativeScreenPlugin.Content|Content(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
 final class io.github.yashkasera.alohomora.plugin/PluginAction { // io.github.yashkasera.alohomora.plugin/PluginAction|null[0]
     constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin.collections/List<io.github.yashkasera.alohomora.common/ActionParameter> = ..., io.github.yashkasera.alohomora.devtools/DevToolsActionHandler) // io.github.yashkasera.alohomora.plugin/PluginAction.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;kotlin.collections.List<io.github.yashkasera.alohomora.common.ActionParameter>;io.github.yashkasera.alohomora.devtools.DevToolsActionHandler){}[0]
 
@@ -227,6 +254,20 @@ final class io.github.yashkasera.alohomora.replay/ReplayRequest { // io.github.y
     final fun toString(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayRequest.toString|toString(){}[0]
 }
 
+final class io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol : platform.Foundation/NSURLProtocol, platform.Foundation/NSURLSessionDataDelegateProtocol { // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol|null[0]
+    constructor <init>(platform.Foundation/NSURLRequest, platform.Foundation/NSCachedURLResponse?, platform.Foundation/NSURLProtocolClientProtocol?) // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.<init>|<init>(request:platform.Foundation.NSURLRequest;cachedResponse:platform.Foundation.NSCachedURLResponse?;client:platform.Foundation.NSURLProtocolClientProtocol?){}[0]
+
+    final fun startLoading() // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.startLoading|objc:startLoading[0]
+    final fun stopLoading() // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.stopLoading|objc:stopLoading[0]
+
+    final object Companion : platform.Foundation/NSURLProtocolMeta { // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.Companion|null[0]
+        final fun canInitWithRequest(platform.Foundation/NSURLRequest): kotlin/Boolean // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.Companion.canInitWithRequest|objc:canInitWithRequest:[0]
+        final fun canonicalRequestForRequest(platform.Foundation/NSURLRequest): platform.Foundation/NSURLRequest // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.Companion.canonicalRequestForRequest|objc:canonicalRequestForRequest:[0]
+        final fun register(): kotlin/Boolean // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.Companion.register|register(){}[0]
+        final fun unregister() // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.Companion.unregister|unregister(){}[0]
+    }
+}
+
 final object io.github.yashkasera.alohomora.replay/ReplayOutcomes { // io.github.yashkasera.alohomora.replay/ReplayOutcomes|null[0]
     final fun failed(kotlin/String): io.github.yashkasera.alohomora.replay/ReplayOutcome // io.github.yashkasera.alohomora.replay/ReplayOutcomes.failed|failed(kotlin.String){}[0]
     final fun sent(kotlin/String? = ...): io.github.yashkasera.alohomora.replay/ReplayOutcome // io.github.yashkasera.alohomora.replay/ReplayOutcomes.sent|sent(kotlin.String?){}[0]
@@ -275,17 +316,26 @@ final val io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_c
 final val io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_SpanEvent$stableprop // io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_SpanEvent$stableprop|#static{}io_github_yashkasera_alohomora_common_SpanEvent$stableprop[0]
 final val io.github.yashkasera.alohomora.network/AlohomoraInspector // io.github.yashkasera.alohomora.network/AlohomoraInspector|{}AlohomoraInspector[0]
     final fun <get-AlohomoraInspector>(): io.ktor.client.plugins.api/ClientPlugin<kotlin/Unit> // io.github.yashkasera.alohomora.network/AlohomoraInspector.<get-AlohomoraInspector>|<get-AlohomoraInspector>(){}[0]
+final val io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop|#static{}io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop[0]
 final val io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginAction$stableprop // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginAction$stableprop|#static{}io_github_yashkasera_alohomora_plugin_PluginAction$stableprop[0]
 final val io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop|#static{}io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop[0]
 final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop[0]
 final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayOutcome_Sent$stableprop[0]
 final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop[0]
 final val io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop|#static{}io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop[0]
+final val io.github.yashkasera.alohomora.traffic/io_github_yashkasera_alohomora_traffic_AlohomoraURLProtocol$stableprop // io.github.yashkasera.alohomora.traffic/io_github_yashkasera_alohomora_traffic_AlohomoraURLProtocol$stableprop|#static{}io_github_yashkasera_alohomora_traffic_AlohomoraURLProtocol$stableprop[0]
 final val io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop // io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop|#static{}io_github_yashkasera_alohomora_Alohomora$stableprop[0]
 
+final fun (io.github.yashkasera.alohomora/Alohomora).io.github.yashkasera.alohomora.traffic/alohomoraURLSessionConfiguration(): platform.Foundation/NSURLSessionConfiguration // io.github.yashkasera.alohomora.traffic/alohomoraURLSessionConfiguration|alohomoraURLSessionConfiguration@io.github.yashkasera.alohomora.Alohomora(){}[0]
+final fun (io.github.yashkasera.alohomora/Alohomora).io.github.yashkasera.alohomora.traffic/alohomoraURLSessionConfiguration(platform.Foundation/NSURLSessionConfiguration): platform.Foundation/NSURLSessionConfiguration // io.github.yashkasera.alohomora.traffic/alohomoraURLSessionConfiguration|alohomoraURLSessionConfiguration@io.github.yashkasera.alohomora.Alohomora(platform.Foundation.NSURLSessionConfiguration){}[0]
+final fun (io.github.yashkasera.alohomora/Alohomora).io.github.yashkasera.alohomora.traffic/installURLProtocol(platform.Foundation/NSURLSessionConfiguration): kotlin/Boolean // io.github.yashkasera.alohomora.traffic/installURLProtocol|installURLProtocol@io.github.yashkasera.alohomora.Alohomora(platform.Foundation.NSURLSessionConfiguration){}[0]
+final fun (io.github.yashkasera.alohomora/Alohomora).io.github.yashkasera.alohomora.traffic/registerURLProtocol(): kotlin/Boolean // io.github.yashkasera.alohomora.traffic/registerURLProtocol|registerURLProtocol@io.github.yashkasera.alohomora.Alohomora(){}[0]
+final fun (io.github.yashkasera.alohomora/Alohomora).io.github.yashkasera.alohomora.traffic/unregisterURLProtocol() // io.github.yashkasera.alohomora.traffic/unregisterURLProtocol|unregisterURLProtocol@io.github.yashkasera.alohomora.Alohomora(){}[0]
+final fun /MainViewController(): platform.UIKit/UIViewController // /MainViewController|MainViewController(){}[0]
 final fun io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_ActionParameter$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_ActionParameter$stableprop_getter|io_github_yashkasera_alohomora_common_ActionParameter$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_FeatureFlag$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_FeatureFlag$stableprop_getter|io_github_yashkasera_alohomora_common_FeatureFlag$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_SpanEvent$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.common/io_github_yashkasera_alohomora_common_SpanEvent$stableprop_getter|io_github_yashkasera_alohomora_common_SpanEvent$stableprop_getter(){}[0]
+final fun io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop_getter|io_github_yashkasera_alohomora_plugin_NativeScreenPlugin$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginAction$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginAction$stableprop_getter|io_github_yashkasera_alohomora_plugin_PluginAction$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.plugin/io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop_getter|io_github_yashkasera_alohomora_plugin_PluginDataField$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayOutcome_Failed$stableprop_getter(){}[0]
@@ -293,4 +343,5 @@ final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_r
 final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayOutcomes$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.replay/io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop_getter|io_github_yashkasera_alohomora_replay_ReplayRequest$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora.replay/ktorReplayHandler(io.ktor.client/HttpClient): io.github.yashkasera.alohomora.replay/TrafficReplayHandler // io.github.yashkasera.alohomora.replay/ktorReplayHandler|ktorReplayHandler(io.ktor.client.HttpClient){}[0]
+final fun io.github.yashkasera.alohomora.traffic/io_github_yashkasera_alohomora_traffic_AlohomoraURLProtocol$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora.traffic/io_github_yashkasera_alohomora_traffic_AlohomoraURLProtocol$stableprop_getter|io_github_yashkasera_alohomora_traffic_AlohomoraURLProtocol$stableprop_getter(){}[0]
 final fun io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop_getter(): kotlin/Int // io.github.yashkasera.alohomora/io_github_yashkasera_alohomora_Alohomora$stableprop_getter|io_github_yashkasera_alohomora_Alohomora$stableprop_getter(){}[0]

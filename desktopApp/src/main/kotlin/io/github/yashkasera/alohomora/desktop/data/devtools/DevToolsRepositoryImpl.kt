@@ -216,7 +216,13 @@ class DevToolsRepositoryImpl(
                         // overwritten with Reconnecting and the rejection flickered past unread.
                         if (_state.value is DevToolsConnection.Failed) return@launch
 
-                        attempt += 1
+                        // Reset the backoff after a session that actually connected, so a
+                        // long-lived session that drops retries fast (500ms) instead of resuming at
+                        // the 5s cap — the worst pacing for the case most likely to reconnect
+                        // instantly. A never-established flaky session keeps climbing to the cap.
+                        // Fatal is already excluded above, so this is the ordinary-drop case.
+                        val established = (outcome as SessionOutcome.Retryable).established
+                        attempt = nextReconnectAttempt(attempt, sessionEstablished = established)
                         _state.value = DevToolsConnection.Reconnecting(host, port, attempt)
                         // Capped backoff. The common case is a foregrounded app coming straight
                         // back, so the first retries are quick; the cap keeps a genuinely dead
@@ -245,8 +251,14 @@ class DevToolsRepositoryImpl(
 
     /** Whether the caller should reconnect, or stop and show the user why. */
     private sealed interface SessionOutcome {
-        /** An ordinary drop. Worth another attempt. */
-        data object Retryable : SessionOutcome
+        /**
+         * An ordinary drop. Worth another attempt.
+         *
+         * @param established whether this session reached AUTH_SUCCESS before dropping. A session
+         *   that got that far proved the device reachable, so the backoff resets rather than
+         *   continuing to climb — see [nextReconnectAttempt].
+         */
+        data class Retryable(val established: Boolean) : SessionOutcome
 
         /** Reconnecting cannot succeed; only a change on one side can. */
         data class Fatal(val reason: String) : SessionOutcome
@@ -273,6 +285,9 @@ class DevToolsRepositoryImpl(
         val liveness = DevToolsLiveness()
         val watchdogArmed = AtomicBoolean(false)
         var watchdogJob: Job? = null
+        // Flipped once the handshake completes. Read back into the Retryable outcome so the caller
+        // can reset the reconnect backoff for a session that was genuinely up before it dropped.
+        var established = false
         try {
             val live = when (target) {
                 is DevToolsTarget.Tcp -> remoteDataSource.connect(target.host, target.port)
@@ -283,7 +298,7 @@ class DevToolsRepositoryImpl(
             }
             socket = live
             // A newer connect may have superseded us while we were connecting.
-            if (generation != myGeneration) return SessionOutcome.Retryable
+            if (generation != myGeneration) return SessionOutcome.Retryable(established)
             connection = socket
             _state.value = DevToolsConnection.AwaitingAuth(host, port)
             _switching.value = false
@@ -319,6 +334,10 @@ class DevToolsRepositoryImpl(
                 // First PING is the only proof the device speaks the heartbeat and will keep
                 // pinging; only then may its future silence be held against it.
                 if (message is PingMessage) watchdogArmed.set(true)
+                // AUTH_SUCCESS is the one frame that proves the far side is a live device, not an
+                // iOS app suspended with its socket still bound. A session that saw it is worth a
+                // fast reconnect when it drops.
+                if (message is AuthSuccessMessage) established = true
                 handleMessage(message)
             }
             return when (val read = remoteDataSource.processConnection(socket, onMessage)) {
@@ -332,10 +351,10 @@ class DevToolsRepositoryImpl(
                 // reconnect resynchronises; only a version difference is known to be permanent.
                 is EnvelopeRead.Malformed -> {
                     println("[Alohomora] Connection dropped, malformed frame: ${read.reason}")
-                    SessionOutcome.Retryable
+                    SessionOutcome.Retryable(established)
                 }
 
-                else -> SessionOutcome.Retryable
+                else -> SessionOutcome.Retryable(established)
             }
         } catch (e: CancellationException) {
             throw e
@@ -343,7 +362,7 @@ class DevToolsRepositoryImpl(
             // Swallowed on purpose: the caller retries, and surfacing every failed attempt as
             // Failed would flicker the UI between error and reconnecting once a second.
             println("[Alohomora] Connection dropped: ${e::class.simpleName}: ${e.message}")
-            return SessionOutcome.Retryable
+            return SessionOutcome.Retryable(established)
         } finally {
             watchdogJob?.cancel()
             socket?.close()

@@ -57,13 +57,13 @@ internal fun TrafficDetailsScreen(
 ) {
     val viewModel = koinViewModel<TrafficDetailsViewModel> { parametersOf(trafficId) }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val trace = state.trace
+    val trafficEntry = state.trafficEntry
     val clipboardCopy = rememberClipboardCopy()
 
-    if (trace == null) {
+    if (trafficEntry == null) {
         Box(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = if (state.isLoading) "Loading trace..." else "Trace not found.",
+                text = if (state.isLoading) "Loading…" else "Traffic not found.",
                 color = if (state.isLoading) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
                 modifier = Modifier.align(Alignment.Center),
             )
@@ -75,8 +75,8 @@ internal fun TrafficDetailsScreen(
         snackbarHost = { SnackbarHost(clipboardCopy.snackbarHostState) },
         topBar = {
             AlohomoraTopBar(
-                title = "Traffic Log",
-                subtitle = state.trace?.path,
+                title = "Traffic",
+                subtitle = state.trafficEntry?.path,
                 navigationIcon = {
                     AlohomoraIconButton(
                         onClick = onBackClick,
@@ -137,7 +137,7 @@ internal fun TrafficDetailsScreen(
             state.replayResultTraceId?.let { resultId ->
                 ReplayResultBanner(onClick = { onOpenTraffic(resultId) })
             }
-            TrafficDetailsContent(trace = trace, onCopy = clipboardCopy.copy)
+            TrafficDetailsContent(trace = trafficEntry, onCopy = clipboardCopy.copy)
         }
     }
 
@@ -173,7 +173,7 @@ internal fun TrafficDetailsScreen(
     }
 }
 
-/** Links a trace to the response its replay produced. */
+/** Links a traffic entry to the response its replay produced. */
 @Composable
 private fun ReplayResultBanner(onClick: () -> Unit) {
     Row(

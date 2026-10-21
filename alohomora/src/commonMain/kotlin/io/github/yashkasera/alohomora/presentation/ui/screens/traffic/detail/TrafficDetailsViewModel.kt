@@ -19,8 +19,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-internal data class TraceDetailsState(
-    val trace: TrafficEntry? = null,
+internal data class TrafficDetailsState(
+    val trafficEntry: TrafficEntry? = null,
     val isLoading: Boolean = true,
     val showShareSheet: Boolean = false,
     val showSlackSheet: Boolean = false,
@@ -29,37 +29,37 @@ internal data class TraceDetailsState(
     val replayResultTraceId: String? = null,
 ) {
     val replayBlockedReason: ReplayBlockedReason?
-        get() = trace?.replayBlockedReason()
+        get() = trafficEntry?.replayBlockedReason()
 
     val canReplay: Boolean
-        get() = Alohomora.isReplaySupported && trace != null && replayBlockedReason == null
+        get() = Alohomora.isReplaySupported && trafficEntry != null && replayBlockedReason == null
 }
 
 internal class TrafficDetailsViewModel(
     private val trafficId: String,
     private val shareManager: ShareManager,
     private val slackShareService: SlackShareService,
-    getTraceDetailsUseCase: GetTrafficDetailsUseCase,
-    private val markTraceAsViewedUseCase: MarkTrafficAsViewedUseCase,
+    getTrafficDetailsUseCase: GetTrafficDetailsUseCase,
+    private val markTrafficAsViewedUseCase: MarkTrafficAsViewedUseCase,
     observeReplayResultUseCase: ObserveReplayResultUseCase,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(TraceDetailsState())
-    val state: StateFlow<TraceDetailsState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(TrafficDetailsState())
+    val state: StateFlow<TrafficDetailsState> = _state.asStateFlow()
 
     init {
         // Opening the detail screen is what "viewed" means here; the list dims the row on the
         // strength of it.
-        viewModelScope.launch { markTraceAsViewedUseCase(trafficId) }
+        viewModelScope.launch { markTrafficAsViewedUseCase(trafficId) }
 
-        getTraceDetailsUseCase(id = trafficId)
-            .onEach { trace ->
-                _state.value = _state.value.copy(trace = trace, isLoading = false)
+        getTrafficDetailsUseCase(id = trafficId)
+            .onEach { trafficEntry ->
+                _state.value = _state.value.copy(trafficEntry = trafficEntry, isLoading = false)
             }
             .launchIn(viewModelScope)
 
-        // Collected from the start rather than only after a replay: a replay of this trace from the
-        // *desktop* also lands here, and the mobile console should show the result either way.
+        // Collected from the start rather than only after a replay: a replay of this traffic from
+        // the *desktop* also lands here, and the mobile console should show the result either way.
         observeReplayResultUseCase(trafficId)
             .onEach { replay ->
                 _state.value = _state.value.copy(replayResultTraceId = replay?.id)
@@ -84,31 +84,31 @@ internal class TrafficDetailsViewModel(
     }
 
     fun shareCurlViaSystem() {
-        val trace = _state.value.trace ?: return
-        shareManager.shareText(trace.curlCommand())
+        val trafficEntry = _state.value.trafficEntry ?: return
+        shareManager.shareText(trafficEntry.curlCommand())
         hideShareSheet()
     }
 
     fun shareTextViaSystem() {
-        val trace = _state.value.trace ?: return
-        shareManager.shareText(trace.generateTransactionText())
+        val trafficEntry = _state.value.trafficEntry ?: return
+        shareManager.shareText(trafficEntry.generateTransactionText())
         hideShareSheet()
     }
 
     fun shareFileViaSystem() {
-        val trace = _state.value.trace ?: return
+        val trafficEntry = _state.value.trafficEntry ?: return
         shareManager.shareFile(
-            content = trace.generateTransactionText(),
-            filename = "request_${trace.id}.txt",
+            content = trafficEntry.generateTransactionText(),
+            filename = "request_${trafficEntry.id}.txt",
             mimeType = "text/plain",
         )
         hideShareSheet()
     }
 
     fun shareCurlToSlack(email: String) {
-        val trace = _state.value.trace ?: return
+        val trafficEntry = _state.value.trafficEntry ?: return
         viewModelScope.launch {
-            slackShareService.shareCurl(trace, email)
+            slackShareService.shareCurl(trafficEntry, email)
                 .onSuccess {
                     hideSlackSheet()
                 }
@@ -119,9 +119,9 @@ internal class TrafficDetailsViewModel(
     }
 
     fun shareTextToSlack(email: String) {
-        val trace = _state.value.trace ?: return
+        val trafficEntry = _state.value.trafficEntry ?: return
         viewModelScope.launch {
-            slackShareService.shareText(trace, email)
+            slackShareService.shareText(trafficEntry, email)
                 .onSuccess {
                     hideSlackSheet()
                 }

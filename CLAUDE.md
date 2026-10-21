@@ -324,7 +324,7 @@ the current build knows its own types, so it cannot impersonate an older peer an
 `SlackShareService`. `platformModule` is `expect`/`actual` — Android provides Room database builder,
 `AndroidCacheInspector`, `AndroidAppDatabaseProvider`, `DevToolsTcpServer`, and `ShareManager`.
 
-**Persistence:** `AlohomoraDb : RoomDatabase` (currently `version = 4`) with five entities (
+**Persistence:** `AlohomoraDb : RoomDatabase` (currently `version = 5`) with five entities (
 `TrafficEntry`, `Event`, `Error`, `Screen`, `Span`). Uses bundled SQLite. The database undergoes a
 `PRAGMA quick_check` health validation at startup; corrupt databases are deleted and recreated.
 

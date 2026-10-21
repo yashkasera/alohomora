@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -72,6 +73,13 @@ internal fun traceSpanLaneWidth(viewportWidth: Dp): Dp =
 private val SpanBarCornerRadius: Dp = 4.dp
 
 /**
+ * Touch target for the collapse/expand control. The chevron glyph stays [dimens.icon.md][dimens]
+ * small, but its hit box is the Material minimum of 48dp. Leaf rows reserve the same width so the
+ * tree stays aligned.
+ */
+private val CollapseTargetSize: Dp = 48.dp
+
+/**
  * One span as a phone-width row: tree-indented name, duration, and a mini bar lane.
  *
  * Reuses `barGeometry` and `spanBarColor` from the shared waterfall rather than reimplementing the
@@ -111,19 +119,28 @@ internal fun TraceSpanRow(
         Spacer(Modifier.width(IndentPerDepth * row.depth))
 
         if (row.hasChildren) {
-            Icon(
-                imageVector = if (row.isCollapsed) Icons.ChevronRight else Icons.ChevronDown,
-                contentDescription = if (row.isCollapsed) "Expand" else "Collapse",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            Box(
                 modifier = Modifier
-                    .size(MaterialTheme.dimens.icon.md)
+                    .size(CollapseTargetSize)
                     .testTag(AlohomoraTestTags.TraceDetails.spanCollapse(span.spanId))
-                    .clickable(onClick = onToggleCollapse),
-            )
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = if (row.isCollapsed) "Expand" else "Collapse",
+                        onClick = onToggleCollapse,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = if (row.isCollapsed) Icons.ChevronRight else Icons.ChevronDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(MaterialTheme.dimens.icon.md),
+                )
+            }
         } else {
             // Keeps leaf names aligned with their expandable siblings; without it the tree stops
             // reading as a tree.
-            Spacer(Modifier.width(MaterialTheme.dimens.icon.md))
+            Spacer(Modifier.width(CollapseTargetSize))
         }
 
         Column(modifier = Modifier.weight(1f)) {
@@ -147,7 +164,6 @@ internal fun TraceSpanRow(
                 if (row.isCollapsed && row.descendantCount > 0) {
                     AlohomoraChip(
                         label = "+${row.descendantCount}",
-                        uppercase = false,
                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
