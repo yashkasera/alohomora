@@ -28,7 +28,7 @@ opentelemetry = "1.51.0"
 mcp = "0.15.0"
 zxing = "3.5.3"
 # JGit: EDL (BSD-3-style), Apache-2.0 compatible. Backs the version-controlled config store.
-jgit = "6.7.0.202309050840-r"
+jgit = "7.8.0.202609011348-r"
 # Cross-platform OS keychain for the HTTPS personal access token (never java.util.prefs).
 java-keyring = "1.0.4"
 
