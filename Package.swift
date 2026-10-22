@@ -31,8 +31,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "AlohomoraKit",
-            url: "https://github.com/yashkasera/Alohomora/releases/download/v1.2.0/AlohomoraKit.xcframework.zip",
-            checksum: "51a3ebda9839067dd6e63df18f8fd6546e27c46e5c249a5160b17c75786ab987"
+            url: "https://github.com/yashkasera/Alohomora/releases/download/v1.3.0/AlohomoraKit.xcframework.zip",
+            checksum: "b96579b5d186b8f8371e35ad413b7b386c91239c877657ee9688280d59d5d56c"
         ),
         .target(
             name: "AlohomoraKitSwift",
