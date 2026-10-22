@@ -167,6 +167,10 @@ abstract class GenerateAlohomoraConfigTask : DefaultTask() {
             appendLine()
             appendLine("    override val buildTimestampUtc: Long = ${timestamp}L")
             appendLine()
+            // The task only runs for variants the consumer put in enabledBuildTypes/enabledVariants,
+            // so reaching here means DevTools is wanted here — including a non-debuggable beta.
+            appendLine("    override val devToolsEnabled: Boolean = true")
+            appendLine()
             appendLine("    override val commits: List<GitHistoryCommit> = listOf(")
 
             commits.forEach { commit ->

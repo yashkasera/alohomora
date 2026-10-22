@@ -126,6 +126,15 @@ class BundledBuildInfoTest {
     }
 
     @Test
+    fun devToolsEnabledDefaultsOffAndPassesThrough() {
+        val identity = AppIdentity(null, null, null, null)
+
+        // Default is the safe one: a caller that says nothing leaves the server gated shut.
+        assertFalse(identity.toAlohomoraConfig(buildInfo = null).devToolsEnabled)
+        assertTrue(identity.toAlohomoraConfig(buildInfo = null, devToolsEnabled = true).devToolsEnabled)
+    }
+
+    @Test
     fun blankWebhookIsTreatedAsAbsent() {
         val config = AppIdentity(null, null, null, null)
             .toAlohomoraConfig(BundledBuildInfo.parse("""{ "slackWebhookUrl": "" }"""))
