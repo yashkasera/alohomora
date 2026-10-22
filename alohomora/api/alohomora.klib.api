@@ -45,6 +45,8 @@ abstract interface io.github.yashkasera.alohomora.data.model/AlohomoraConfig { /
         abstract fun <get-versionName>(): kotlin/String // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.versionName.<get-versionName>|<get-versionName>(){}[0]
     open val appName // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.appName|{}appName[0]
         open fun <get-appName>(): kotlin/String? // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.appName.<get-appName>|<get-appName>(){}[0]
+    open val devToolsEnabled // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.devToolsEnabled|{}devToolsEnabled[0]
+        open fun <get-devToolsEnabled>(): kotlin/Boolean // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.devToolsEnabled.<get-devToolsEnabled>|<get-devToolsEnabled>(){}[0]
 }
 
 abstract interface io.github.yashkasera.alohomora.plugin/CustomScreenPlugin { // io.github.yashkasera.alohomora.plugin/CustomScreenPlugin|null[0]

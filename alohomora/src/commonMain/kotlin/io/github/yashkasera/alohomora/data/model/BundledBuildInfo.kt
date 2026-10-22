@@ -105,12 +105,16 @@ internal data class AppIdentity(
  * [buildInfo] may be null — the generator not having run is the common case on a first build, and a
  * config carrying just the version and bundle id is strictly more useful than none at all.
  */
-internal fun AppIdentity.toAlohomoraConfig(buildInfo: BundledBuildInfo?): AlohomoraConfig =
-    BundledAlohomoraConfig(identity = this, buildInfo = buildInfo)
+internal fun AppIdentity.toAlohomoraConfig(
+    buildInfo: BundledBuildInfo?,
+    devToolsEnabled: Boolean = false,
+): AlohomoraConfig =
+    BundledAlohomoraConfig(identity = this, buildInfo = buildInfo, devToolsEnabled = devToolsEnabled)
 
 private class BundledAlohomoraConfig(
     identity: AppIdentity,
     buildInfo: BundledBuildInfo?,
+    override val devToolsEnabled: Boolean,
 ) : AlohomoraConfig {
     override val appName: String? = identity.appName
     override val packageName: String? = identity.packageName

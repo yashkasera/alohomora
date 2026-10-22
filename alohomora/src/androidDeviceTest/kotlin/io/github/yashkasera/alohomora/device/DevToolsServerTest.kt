@@ -1,12 +1,15 @@
 package io.github.yashkasera.alohomora.device
 
 import io.github.yashkasera.alohomora.Alohomora
+import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.common.AuthChallengeMessage
 import io.github.yashkasera.alohomora.common.AuthOtpRequiredMessage
 import io.github.yashkasera.alohomora.common.AuthResponseMessage
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.EnvelopeRead
+import io.github.yashkasera.alohomora.data.model.AppIdentity
+import io.github.yashkasera.alohomora.data.model.toAlohomoraConfig
 import io.github.yashkasera.alohomora.devtools.DevToolsSocket
 import io.github.yashkasera.alohomora.devtools.DevToolsTcpClient
 import java.io.IOException
@@ -68,8 +71,9 @@ private const val MAX_FRAMES = 32
  * header is documented as frozen precisely because it is the one thing two mismatched builds agree
  * on; a test that re-implemented it would keep passing after the real framing changed underneath it.
  *
- * The server is gated on `isDebugBuild`, which on Android reads the host app's `FLAG_DEBUGGABLE`.
- * A test APK is debuggable, so these tests exercise the same path a developer's debug build does.
+ * The server is gated on `AlohomoraConfig.devToolsEnabled`. There's no Gradle plugin in this test
+ * app to generate that config, so [enableDevToolsAndStopInherited] seeds one with the flag set —
+ * exactly what the plugin stamps for an enabled variant.
  */
 class DevToolsServerTest {
 
@@ -77,12 +81,20 @@ class DevToolsServerTest {
     val console = ConsoleTestRule()
 
     /**
-     * `DevToolsRuntime` is a Koin singleton, and `DevToolsTcpServer.start` returns early while a
-     * socket is already bound. So a server left running by an earlier test — or an earlier class —
-     * would silently swallow every `startDevToolsServer` call here and leave the port unbound.
+     * Two things before each test:
+     *
+     * Seed a config whose `devToolsEnabled` is true. The AndroidX initializer runs init at process
+     * start with no generated config (no plugin here), so the gate would otherwise refuse to bind.
+     *
+     * Stop any inherited server: `DevToolsRuntime` is a Koin singleton and `DevToolsTcpServer.start`
+     * returns early while a socket is already bound, so a server left running by an earlier test —
+     * or class — would silently swallow every `startDevToolsServer` call here and leave the port
+     * unbound.
      */
     @Before
-    fun stopAnyInheritedServer() {
+    fun enableDevToolsAndStopInherited() {
+        AlohomoraImpl.config =
+            AppIdentity(null, null, null, null).toAlohomoraConfig(buildInfo = null, devToolsEnabled = true)
         Alohomora.stopDevToolsServer()
     }
 
@@ -92,10 +104,10 @@ class DevToolsServerTest {
     }
 
     @Test
-    fun startReportsSuccessOnADebuggableBuild() {
+    fun startReportsSuccessWhenDevToolsEnabled() {
         assertTrue(
             Alohomora.startDevToolsServer(PORT_START),
-            "startDevToolsServer returned false: isDebugBuild could not see FLAG_DEBUGGABLE",
+            "startDevToolsServer returned false despite config.devToolsEnabled = true",
         )
     }
 

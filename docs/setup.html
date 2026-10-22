@@ -124,7 +124,7 @@
                     <li><code>appName</code> overrides the display name in the desktop companion window title and export metadata. Defaults to the Android manifest's app label.</li>
                     <li><code>versionName</code> is required when the plugin is applied.</li>
                     <li><code>slackWebhookUrl</code> is automatically dropped for non-debuggable variants to prevent the webhook from shipping in a release APK.</li>
-                    <li><code>enabledVariants</code> controls which build variants get the generated config. Defaults to <code>debug</code> only.</li>
+                    <li><code>enabledVariants</code> (and <code>enabledBuildTypes</code>, default <code>debug</code>) control which build variants get the generated config. This is also the on switch for the DevTools server: an enabled variant runs it, any other variant does not. Add a non-debuggable variant such as <code>beta</code> here to run the console on a TestFlight/internal build.</li>
                 </ul>
 
 
@@ -284,6 +284,10 @@
 
     <span class="kw">return</span> <span class="kw">true</span>
 }</pre>
+                </div>
+
+                <div class="note reveal">
+                    <strong>Non-debug builds.</strong> The DevTools server runs automatically in a debug binary. To run it on a non-debuggable build (e.g. a TestFlight/beta configuration), set a boolean <code>AlohomoraDevToolsEnabled</code> key in that configuration's <code>Info.plist</code> (YES for Beta, NO or omit for Release). No code change is needed.
                 </div>
 
                 <h3 class="reveal">3. Capture traffic</h3>
