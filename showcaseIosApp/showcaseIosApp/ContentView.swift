@@ -371,7 +371,7 @@ struct DevToolsSheet: UIViewControllerRepresentable {
     let onClose: () -> Void
 
     func makeUIViewController(context: Context) -> UIViewController {
-        MainKt.MainViewController()
+        MainKt.MainViewController(onClose: onClose)
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}

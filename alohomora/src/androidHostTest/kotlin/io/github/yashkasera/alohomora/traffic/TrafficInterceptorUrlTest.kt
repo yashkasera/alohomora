@@ -47,6 +47,7 @@ class TrafficInterceptorUrlTest {
         override suspend fun getLatest(limit: Int): List<TrafficEntry> = emptyList()
         override fun observeLatest(limit: Int): Flow<List<TrafficEntry>> = emptyFlow()
         override fun count(): Flow<Long> = emptyFlow()
+        override fun countMatching(query: String, method: String): Flow<Long> = emptyFlow()
         override suspend fun markAsViewed(id: String) = Unit
         override fun observeUnviewedFailed(limit: Int): Flow<List<TrafficEntry>> = emptyFlow()
     }

@@ -116,6 +116,7 @@ public abstract interface class io/github/yashkasera/alohomora/devtools/DevTools
 
 public final class io/github/yashkasera/alohomora/network/AlohomoraInspectorKt {
 	public static final fun getAlohomoraInspector ()Lio/ktor/client/plugins/api/ClientPlugin;
+	public static final fun getAlohomoraReplayOfKey ()Lio/ktor/util/AttributeKey;
 }
 
 public abstract interface class io/github/yashkasera/alohomora/plugin/CustomScreenPlugin {

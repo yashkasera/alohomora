@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.device
 
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
+import io.github.yashkasera.alohomora.presentation.navigation.DestinationRequest
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.presentation.ui.AlohomoraApp
 
@@ -23,7 +24,7 @@ import io.github.yashkasera.alohomora.presentation.ui.AlohomoraApp
  */
 internal fun ComposeContentTestRule.launchConsole(startDestination: Routes = Routes.Overview) {
     setContent {
-        AlohomoraApp(startDestination = startDestination)
+        AlohomoraApp(destination = DestinationRequest(startDestination))
     }
     waitForIdle()
 }

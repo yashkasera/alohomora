@@ -38,6 +38,7 @@ import io.github.yashkasera.alohomora.common.clampLines
 import io.github.yashkasera.alohomora.common.isCrashEvent
 import io.github.yashkasera.alohomora.common.prettyProperties
 import io.github.yashkasera.alohomora.presentation.ui.components.EventsDetailsSheet
+import io.github.yashkasera.alohomora.presentation.ui.components.LoadMoreNearEnd
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
@@ -76,7 +77,7 @@ internal fun EventsScreen(onBackClick: () -> Unit) {
         topBar = {
             AlohomoraTopBar(
                 title = "Events",
-                subtitle = if (state.events.isEmpty()) null else "${state.events.size} EVENTS",
+                subtitle = if (state.events.isEmpty()) null else "${state.totalCount} EVENTS",
                 navigationIcon = {
                     AlohomoraIconButton(
                         onClick = onBackClick,
@@ -116,6 +117,7 @@ internal fun EventsScreen(onBackClick: () -> Unit) {
                 events = state.events,
                 showProperties = state.showProperties,
                 onEventClick = viewModel::onEventClick,
+                onLoadMore = viewModel::loadMore,
             )
         }
 
@@ -165,6 +167,7 @@ internal fun EventsList(
     events: List<Event>,
     showProperties: Boolean,
     onEventClick: (Event) -> Unit,
+    onLoadMore: () -> Unit = {},
 ) {
     if (events.isEmpty()) {
         EmptyState(
@@ -175,6 +178,7 @@ internal fun EventsList(
     } else {
         val listState = rememberLazyListState()
         FollowNewest(listState, events.size)
+        LoadMoreNearEnd(listState, onLoadMore = onLoadMore)
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 state = listState,

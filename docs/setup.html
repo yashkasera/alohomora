@@ -320,11 +320,13 @@
 
                 <h3 class="reveal">4. Open the console</h3>
 
-                <p class="reveal">Shake-to-open is built in. To present the console programmatically, use <code>MainKt.MainViewController()</code> and present it as a sheet:</p>
+                <p class="reveal">Shake-to-open is built in. To present the console programmatically, use <code>MainKt.MainViewController(onClose:)</code> and present it as a sheet:</p>
 
                 <div class="code-block reveal">
                     <div class="code-header">Swift</div>
-                    <pre><span class="kw">let</span> vc = <span class="type">MainKt</span>.<span class="fn">MainViewController</span>()
+                    <pre><span class="kw">let</span> vc = <span class="type">MainKt</span>.<span class="fn">MainViewController</span>(onClose: { [<span class="kw">weak</span> self] <span class="kw">in</span>
+    self?.<span class="fn">dismiss</span>(animated: <span class="kw">true</span>)
+})
 
 <span class="cmt">// Present as a sheet with drag indicator</span>
 vc.sheetPresentationController?.detents = [.large()]
@@ -333,7 +335,7 @@ vc.sheetPresentationController?.prefersGrabberVisible = <span class="kw">true</s
                 </div>
 
                 <div class="note reveal">
-                    <strong>Why <code>.prefersGrabberVisible</code>?</strong> The Compose-based console has no native iOS navigation chrome. The drag indicator gives users a visible affordance to dismiss the sheet.
+                    <strong>Why <code>onClose</code>?</strong> The Compose-based console has no native iOS navigation chrome, and it consumes the sheet's swipe-to-dismiss drag. Passing <code>onClose</code> renders a close button on the console's home screen; the no-argument <code>MainViewController()</code> renders none and leaves the sheet with no way out. The grabber is a second, native affordance.
                 </div>
 
 

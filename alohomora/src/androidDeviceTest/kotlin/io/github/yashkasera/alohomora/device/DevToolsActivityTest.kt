@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import io.github.yashkasera.alohomora.DevToolsActivity
@@ -24,13 +25,13 @@ import org.junit.Test
  * Every other console test hosts `AlohomoraApp` inside `ui-test-manifest`'s bare `ComponentActivity`
  * via [launchConsole], because `DevToolsActivity` is declared `launchMode="singleTask"` with its own
  * `taskAffinity` — a combination `ActivityScenario` drives poorly. What that hosting cannot reach is
- * the one thing this class covers: `updateStartDestination`, the mapping from intent extras to the
- * screen the console opens on.
+ * the one thing this class covers: `requestDestination`, the mapping from intent extras to the
+ * screen the console opens on — on a cold launch and, through `onNewIntent`, on one already open.
  *
  * `createEmptyComposeRule()`, not `createComposeRule()`: the latter launches an activity of its own,
  * which is exactly what must not happen here.
  *
- * **If this proves flaky on device, delete it and unit-test `updateStartDestination` instead.** The
+ * **If this proves flaky on device, delete it and unit-test `requestDestination` instead.** The
  * mapping is three branches of pure logic and deserves a cheaper test than a task-affinity dance.
  * Spreading `ActivityScenario` to the other classes to "make it consistent" is the wrong repair —
  * they are fast and stable precisely because they avoid it.
@@ -58,7 +59,7 @@ class DevToolsActivityTest {
 
     @Test
     fun newIntentLandsOnTheTrafficDetailsForThatEntry() {
-        // Seeded first: `updateStartDestination` maps the id to `Routes.TrafficDetails` regardless,
+        // Seeded first: `requestDestination` maps the id to `Routes.TrafficDetails` regardless,
         // but the screen only renders a subtitle once the row exists.
         console.seedTraffic(traffic(id = "notified", path = "/v1/posts", index = 0))
 
@@ -93,4 +94,44 @@ class DevToolsActivityTest {
             scenario.close()
         }
     }
+
+    @Test
+    fun aNotificationTapWhileTheConsoleIsOpenNavigatesEveryTime() {
+        // The regression: `singleTask` + SINGLE_TOP routes the tap through onNewIntent, after
+        // setContent has composed, and a destination held in a plain field never reached it. Sent
+        // twice with a manual Back in between, because the second tap carries the same route as the
+        // first and must still navigate.
+        val scenario = ActivityScenario.launch(DevToolsActivity::class.java)
+        try {
+            compose.waitForIdle()
+            compose.onNodeWithTag(Overview.GRID).assertIsDisplayed()
+
+            context.startActivity(notificationIntent())
+            compose.waitForIdle()
+            compose.onNodeWithTag(Chrome.TOP_BAR_TITLE).assertTextContains("Traffic")
+
+            compose.onNodeWithTag(Chrome.BACK).performClick()
+            compose.waitForIdle()
+            compose.onNodeWithTag(Overview.GRID).assertIsDisplayed()
+
+            context.startActivity(notificationIntent())
+            compose.waitForIdle()
+            compose.onNodeWithTag(Chrome.TOP_BAR_TITLE).assertTextContains("Traffic")
+        } finally {
+            scenario.close()
+        }
+    }
+
+    /** What `TrafficNotificationHelper`'s content intent carries, plus the NEW_TASK a PendingIntent adds. */
+    private fun notificationIntent(): Intent =
+        Intent(context, DevToolsActivity::class.java)
+            .putExtra(
+                TrafficNotificationHelper.EXTRA_START_DESTINATION,
+                TrafficNotificationHelper.DESTINATION_TRACE,
+            )
+            .addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP,
+            )
 }

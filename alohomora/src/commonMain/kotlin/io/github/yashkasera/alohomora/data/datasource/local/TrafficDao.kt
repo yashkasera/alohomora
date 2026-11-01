@@ -46,6 +46,10 @@ internal interface TrafficDao {
     @Query("SELECT COUNT(*) FROM TrafficEntry")
     fun count(): Flow<Long>
 
+    /** The same predicate as [list], so a filtered list and its count cannot disagree. */
+    @Query("SELECT COUNT(*) FROM TrafficEntry WHERE path LIKE '%' || :query || '%' AND method LIKE '%' || :method || '%'")
+    fun countMatching(query: String, method: String): Flow<Long>
+
     @Query("Update TrafficEntry SET isViewed = 1 WHERE id = :id")
     suspend fun markAsViewed(id: String)
 

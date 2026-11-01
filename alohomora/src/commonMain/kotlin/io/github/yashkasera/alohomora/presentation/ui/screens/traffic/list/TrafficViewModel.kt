@@ -4,27 +4,31 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.yashkasera.alohomora.common.TrafficEntry
-import io.github.yashkasera.alohomora.data.paging.TrafficPagingSource
 import io.github.yashkasera.alohomora.domain.repository.TrafficRepository
-import io.github.yashkasera.alohomora.utils.paging.FlowPager
-import io.github.yashkasera.alohomora.utils.paging.LoadState
-import io.github.yashkasera.alohomora.utils.paging.PagingConfig
+import io.github.yashkasera.alohomora.utils.paging.LiveWindow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @Immutable
 internal data class TrafficState(
+    /** The loaded window, newest first. Grows as the list scrolls; see [TrafficViewModel.loadMore]. */
     val calls: List<TrafficEntry> = emptyList(),
-    val isLoadingMore: Boolean = false,
-    val error: String? = null,
+    /** Every entry matching the filters, loaded or not — what the subtitle reports. */
+    val totalCount: Long = 0,
     val showClearConfirmation: Boolean = false,
     val isClearing: Boolean = false,
 )
+
+private data class TrafficFilter(val query: String = "", val method: String = "")
+
+private const val PAGE_SIZE = 20
 
 internal class TrafficViewModel(
     private val trafficRepository: TrafficRepository,
@@ -37,28 +41,25 @@ internal class TrafficViewModel(
     val method = _method.asStateFlow()
     private val showClearConfirmation = MutableStateFlow(false)
     private val isClearing = MutableStateFlow(false)
-    private val pageSize = 20
 
-    private val pager = FlowPager(
-        config = PagingConfig(pageSize = pageSize),
-        initialKey = 0,
-        getNextKey = { it + 1 },
-        pagingSourceFactory = {
-            TrafficPagingSource(trafficRepository, query.value, method.value)
-        },
-    ).cachedIn(viewModelScope)
+    private val filter = MutableStateFlow(TrafficFilter())
+
+    private val window = LiveWindow(TrafficFilter(), PAGE_SIZE) { filter, limit ->
+        trafficRepository.list(query = filter.query, method = filter.method, pageSize = limit)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val totalCount = filter.flatMapLatest { trafficRepository.count(it.query, it.method) }
 
     val state: StateFlow<TrafficState> = combine(
-        pager.pagingData,
-        query,
-        method,
+        window.items,
+        totalCount,
         showClearConfirmation,
         isClearing,
-    ) { pagingData, _, _, showClear, clearing ->
+    ) { calls, total, showClear, clearing ->
         TrafficState(
-            calls = pagingData.items,
-            isLoadingMore = pagingData.loadState is LoadState.Loading,
-            error = (pagingData.loadState as? LoadState.Error)?.error?.message,
+            calls = calls,
+            totalCount = total,
             showClearConfirmation = showClear,
             isClearing = clearing,
         )
@@ -68,22 +69,25 @@ internal class TrafficViewModel(
         initialValue = TrafficState(),
     )
 
-    init {
-        loadNextItems()
-    }
-
-    fun loadNextItems() {
-        pager.loadNextPage()
+    /** Called as the list nears its end. Safe to call repeatedly — see [LiveWindow.loadMore]. */
+    fun loadMore() {
+        window.loadMore()
     }
 
     fun setQuery(newQuery: String?) {
         _query.value = newQuery ?: ""
-        pager.refresh()
+        applyFilter()
     }
 
     fun setMethod(newMethod: String?) {
         _method.value = newMethod ?: ""
-        pager.refresh()
+        applyFilter()
+    }
+
+    private fun applyFilter() {
+        val next = TrafficFilter(query = _query.value, method = _method.value)
+        filter.value = next
+        window.setFilter(next)
     }
 
     fun showClearConfirmation() {
@@ -98,8 +102,8 @@ internal class TrafficViewModel(
         viewModelScope.launch {
             isClearing.value = true
             try {
+                // No refresh: the window is a live query, and Room re-emits it on the delete.
                 trafficRepository.clearAll()
-                pager.refresh()
             } catch (_: Exception) {
             } finally {
                 isClearing.value = false

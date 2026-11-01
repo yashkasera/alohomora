@@ -866,7 +866,9 @@ public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$D
 	public static final field $stable I
 	public static final field BROWSE Ljava/lang/String;
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Database;
+	public static final field LOAD_ERROR Ljava/lang/String;
 	public static final field QUERY_EDITOR Ljava/lang/String;
+	public static final field QUERY_ERROR Ljava/lang/String;
 	public static final field QUERY_RESULT Ljava/lang/String;
 	public static final field QUERY_RUN Ljava/lang/String;
 	public static final field QUERY_STATUS Ljava/lang/String;
@@ -923,6 +925,7 @@ public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$G
 
 public final class io/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Overview {
 	public static final field $stable I
+	public static final field CLOSE Ljava/lang/String;
 	public static final field GRID Ljava/lang/String;
 	public static final field INSTANCE Lio/github/yashkasera/alohomora/ui/testing/AlohomoraTestTags$Overview;
 	public static final field NEEDS_ATTENTION Ljava/lang/String;

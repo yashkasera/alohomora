@@ -45,6 +45,9 @@ object AlohomoraTestTags {
         const val STATUS_DOT = "alohomora_overview_status_dot"
         const val NEEDS_ATTENTION = "alohomora_overview_needs_attention"
 
+        /** Rendered only when the host passes `onClose` — the iOS sheet, not Android. */
+        const val CLOSE = "alohomora_overview_close"
+
         /**
          * [key] is the module's grid key: a built-in module's route simple name (`Traffic`,
          * `GitHistory`), or `Extension:<pluginId>` for a plugin card.
@@ -163,6 +166,8 @@ object AlohomoraTestTags {
         const val QUERY_RUN = "alohomora_database_query_run"
         const val QUERY_RESULT = "alohomora_database_query_result"
         const val QUERY_STATUS = "alohomora_database_query_status"
+        const val QUERY_ERROR = "alohomora_database_query_error"
+        const val LOAD_ERROR = "alohomora_database_load_error"
         const val SCHEMA = "alohomora_database_schema"
 
         fun database(name: String) = "alohomora_database_option_$name"
