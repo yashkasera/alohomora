@@ -11,6 +11,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.eclipse.jgit.api.Git
@@ -90,6 +91,61 @@ class GitConfigStoreTest {
     @Test
     fun `sync reports up to date on a fresh clone`() = runTest {
         assertEquals(SyncStatus.UpToDate::class, store.sync()::class)
+    }
+
+    @Test
+    fun `sync brings a teammate's pushed change into the local main line`() = runTest {
+        val teammateHead = teammatePushes(journey().copy(id = "t1", name = "Teammate flow"))
+
+        val status = store.sync()
+
+        assertIs<SyncStatus.UpToDate>(status)
+        Git.open(clone).use { g ->
+            assertEquals("main", g.repository.branch)
+            assertEquals(teammateHead, g.repository.resolve("refs/heads/main").name)
+        }
+        assertEquals(listOf("Teammate flow"), store.list(ConfigKind.Journeys).map { it.name })
+    }
+
+    @Test
+    fun `sync fast-forwards a repo with no upstream config`() = runTest {
+        // What ConfigRepoManager.initialize leaves behind: a remote, but main never set to track it.
+        Git.open(clone).use { g ->
+            g.repository.config.apply { unsetSection("branch", "main") }.save()
+        }
+        val teammateHead = teammatePushes(journey().copy(id = "t1", name = "Teammate flow"))
+
+        assertIs<SyncStatus.UpToDate>(store.sync())
+        Git.open(clone).use { g -> assertEquals(teammateHead, g.repository.resolve("refs/heads/main").name) }
+    }
+
+    @Test
+    fun `sync reports diverged and keeps local commits when both sides moved`() = runTest {
+        val localHead = Git.open(clone).use { g ->
+            File(clone, "local-note.txt").writeText("mine")
+            g.add().addFilepattern("local-note.txt").call()
+            g.commit().setMessage("local work").setAuthor(author).call().name
+        }
+        teammatePushes(journey().copy(id = "t1", name = "Teammate flow"))
+
+        val status = store.sync()
+
+        assertEquals(SyncStatus.Diverged(behind = 1, ahead = 1), status)
+        Git.open(clone).use { g -> assertEquals(localHead, g.repository.resolve("refs/heads/main").name) }
+        assertTrue(File(clone, "local-note.txt").exists(), "local work must survive a diverged sync")
+        assertTrue(store.list(ConfigKind.Journeys).isEmpty(), "the teammate's change must not be merged")
+    }
+
+    /** A second clone commits [journey] straight to main and pushes; returns the pushed commit id. */
+    private suspend fun teammatePushes(journey: JourneyDefinition): String {
+        val dir = File(root, "teammate")
+        Git.cloneRepository().setURI(bare.absolutePath).setDirectory(dir).call().use { g ->
+            LocalConfigStore(dir).save(ConfigKind.Journeys, journey)
+            g.add().addFilepattern(ConfigKind.Journeys.dir).call()
+            val commit = g.commit().setMessage("teammate").setAuthor(author).call()
+            g.push().setRemote("origin").setRefSpecs(RefSpec("refs/heads/main:refs/heads/main")).call()
+            return commit.name
+        }
     }
 
     @Test

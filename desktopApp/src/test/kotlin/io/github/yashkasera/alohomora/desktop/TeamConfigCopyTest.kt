@@ -62,6 +62,14 @@ class TeamConfigCopyTest {
     }
 
     @Test
+    fun `sync summary explains a diverged copy without git jargon`() {
+        val text = TeamConfigCopy.syncSummary(SyncStatus.Diverged(behind = 2, ahead = 1))!!
+        assertTrue("2 updates" in text, text)
+        assertTrue("Developer mode" in text, text)
+        assertNoGitJargon(text)
+    }
+
+    @Test
     fun `friendly error falls back to generic for null or blank`() {
         val generic = TeamConfigCopy.friendlyError(null)
         assertEquals(generic, TeamConfigCopy.friendlyError("   "))
