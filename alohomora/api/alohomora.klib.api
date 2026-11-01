@@ -18,6 +18,8 @@ abstract fun interface io.github.yashkasera.alohomora.plugin/PluginDataUpdateHan
     abstract suspend fun onUpdate(kotlin/String) // io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler.onUpdate|onUpdate(kotlin.String){}[0]
 }
 
+abstract fun interface io.github.yashkasera.alohomora.replay/BinaryReplayHandler : io.github.yashkasera.alohomora.replay/TrafficReplayHandler // io.github.yashkasera.alohomora.replay/BinaryReplayHandler|null[0]
+
 abstract interface io.github.yashkasera.alohomora.data.model/AlohomoraConfig { // io.github.yashkasera.alohomora.data.model/AlohomoraConfig|null[0]
     abstract val branch // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.branch|{}branch[0]
         abstract fun <get-branch>(): kotlin/String // io.github.yashkasera.alohomora.data.model/AlohomoraConfig.branch.<get-branch>|<get-branch>(){}[0]

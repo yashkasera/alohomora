@@ -154,6 +154,46 @@ class TrafficExporterTest {
     }
 
     @Test
+    fun harEntryCarriesBinaryBodyInCustomField() {
+        val binary = postEntry.copy(
+            requestBody = TrafficEntry.UNABLE_PARSE_MESSAGE,
+            requestBodyBase64 = "iVBORw0KGgo=",
+            requestContentType = "image/png",
+        )
+
+        val postData = binary.toHarEntry().request.postData!!
+        assertEquals("iVBORw0KGgo=", postData.bodyBase64)
+        // Not the placeholder: a HAR viewer would present that as the body.
+        assertEquals("", postData.text)
+        assertEquals("image/png", postData.mimeType)
+
+        val har = listOf(binary).toExportString(TrafficExportFormat.HAR, "1.0.0")
+        assertTrue(har.contains("\"_bodyBase64\": \"iVBORw0KGgo=\""))
+    }
+
+    @Test
+    fun harTextBodyHasNoCustomField() {
+        val har = listOf(postEntry).toExportString(TrafficExportFormat.HAR, "1.0.0")
+        assertFalse(har.contains("_bodyBase64"))
+    }
+
+    @Test
+    fun curlNotesABinaryBodyAndKeepsTheMethod() {
+        val binary = postEntry.copy(
+            method = "POST",
+            requestBody = TrafficEntry.UNABLE_PARSE_MESSAGE,
+            requestBodyBase64 = "iVBORw0KGgo=",
+        )
+
+        val curl = binary.curlCommand()
+
+        assertTrue(curl.startsWith("# Binary request body (8 B) not included.\ncurl "))
+        // Without --data, curl defaults to GET, so the method has to be explicit.
+        assertTrue(curl.contains("-X 'POST'"))
+        assertFalse(curl.contains("--data"))
+    }
+
+    @Test
     fun harEntryMapsResponse() {
         val harEntry = sampleEntry.toHarEntry()
         assertEquals(200, harEntry.response.status)

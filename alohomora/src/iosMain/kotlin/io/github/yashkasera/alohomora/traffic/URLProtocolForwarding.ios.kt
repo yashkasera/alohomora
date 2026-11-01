@@ -1,14 +1,20 @@
 package io.github.yashkasera.alohomora.traffic
 
 import io.github.yashkasera.alohomora.common.CapturedBody
+import io.github.yashkasera.alohomora.common.CapturedRequestBody
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
+import platform.Foundation.NSData
 import platform.Foundation.NSURLSessionAuthChallengeCancelAuthenticationChallenge
 import platform.Foundation.NSURLSessionAuthChallengeDisposition
 import platform.Foundation.NSURLSessionAuthChallengePerformDefaultHandling
 import platform.Foundation.NSURLSessionAuthChallengeRejectProtectionSpace
 import platform.Foundation.NSURLSessionAuthChallengeUseCredential
+import platform.posix.memcpy
 
 // The parts of AlohomoraURLProtocol's forwarding that do not need a live loading system, pulled out
 // so they can be unit tested. Everything that does (challenge round trips, redirects, run loop
@@ -161,6 +167,22 @@ internal class CappedBodyCapture(private val maxBytes: Int) {
 }
 
 internal data class CapturedResponseBody(val text: String, val truncated: Boolean)
+
+/**
+ * The request body a capture stores for [data], copied out of it one prefix only.
+ *
+ * At most `maxBytes + 1` bytes leave the NSData: a larger body is stored cut short (text) or as
+ * the placeholder (binary) either way, and the extra byte is what lets the decode see the cut.
+ */
+@OptIn(ExperimentalForeignApi::class)
+internal fun capturedRequestBody(data: NSData, maxBytes: Int, contentType: String?): CapturedRequestBody {
+    val totalBytes = data.length.toLong()
+    val count = minOf(totalBytes, maxBytes + 1L).toInt()
+    val prefix = ByteArray(count)
+    // addressOf(0) is out of bounds on an empty array, and an empty body has nothing to copy.
+    if (count > 0) prefix.usePinned { memcpy(it.addressOf(0), data.bytes, count.toULong()) }
+    return CapturedBody.requestBody(prefix, totalBytes, maxBytes, contentType)
+}
 
 internal data class TrafficOutcome(val status: Int?, val message: String?)
 

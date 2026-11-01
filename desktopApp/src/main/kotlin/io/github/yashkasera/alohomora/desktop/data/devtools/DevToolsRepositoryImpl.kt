@@ -616,7 +616,7 @@ class DevToolsRepositoryImpl(
                     pluginDataStore.replace(payload.pluginData)
                     buildMetadataStore.replace(payload.buildMetadata?.toDomain())
                     gitHistoryStore.replace(payload.gitHistory.map { it.toDomain() })
-                    replayStore.setSupported(payload.replaySupported)
+                    replayStore.setSupported(payload.replaySupported, payload.binaryReplaySupported)
                 }
             }
 

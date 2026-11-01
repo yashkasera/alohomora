@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.common.BinaryBodyPreview
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -269,10 +270,34 @@ private fun RequestTab(trace: TrafficEntry, onCopy: (String) -> Unit) {
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.xxl))
         }
 
+        // A binary body has no text to show, so what it is is shown instead. requestBody holds only
+        // the placeholder beside it, which the text branch below would render as the body.
+        val binaryBody = trace.requestBodyBase64
+        if (binaryBody != null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SectionHeader(title = "REQUEST BODY")
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.margin.sm))
+                AlohomoraChip(
+                    label = "BINARY",
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+            AlohomoraCodeBlock(
+                content = BinaryBodyPreview.describe(binaryBody, trace.requestContentType),
+                isScrollable = false,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.lg))
+        }
+
         // Only rendered when there is a body. A GET has none, and showing an empty block plus
         // a badge reading "*" (the subtype of a wildcard content type) made a normal request
         // look like a capture failure.
-        val requestBody = trace.requestBody?.takeIf { it.isNotBlank() }
+        val requestBody = trace.requestBody?.takeIf { it.isNotBlank() && binaryBody == null }
         if (requestBody != null) {
             val requestFormat = detectFormatFromContentType(trace.requestContentType)
             val subtype = requestFormat.contentSubtype.uppercase()
@@ -302,7 +327,8 @@ private fun RequestTab(trace: TrafficEntry, onCopy: (String) -> Unit) {
 
         // Action buttons
         Row(modifier = Modifier.fillMaxWidth()) {
-            if (trace.requestBody.isNullOrEmpty().not()) {
+            // Not for a binary body: the only text there is the placeholder.
+            if (trace.requestBody.isNullOrEmpty().not() && binaryBody == null) {
                 AlohomoraOutlinedButton(
                     text = "Copy JSON",
                     onClick = {

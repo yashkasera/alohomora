@@ -10,6 +10,7 @@ import io.github.yashkasera.alohomora.domain.usecase.traffic.GetTrafficDetailsUs
 import io.github.yashkasera.alohomora.domain.usecase.traffic.MarkTrafficAsViewedUseCase
 import io.github.yashkasera.alohomora.domain.usecase.traffic.ObserveReplayResultUseCase
 import io.github.yashkasera.alohomora.replay.ReplayBlockedReason
+import io.github.yashkasera.alohomora.replay.TrafficReplayRegistry
 import io.github.yashkasera.alohomora.replay.replayBlockedReason
 import io.github.yashkasera.alohomora.utils.share.ShareManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +30,7 @@ internal data class TrafficDetailsState(
     val replayResultTraceId: String? = null,
 ) {
     val replayBlockedReason: ReplayBlockedReason?
-        get() = trafficEntry?.replayBlockedReason()
+        get() = trafficEntry?.replayBlockedReason(TrafficReplayRegistry.isBinarySupported)
 
     val canReplay: Boolean
         get() = Alohomora.isReplaySupported && trafficEntry != null && replayBlockedReason == null

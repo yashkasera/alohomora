@@ -21,10 +21,12 @@ import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 
 @Database(
     entities = [Event::class, TrafficEntry::class, Error::class, Screen::class, Span::class],
+    // 6: TrafficEntry gained `requestBodyBase64`, the bytes of a binary request body. The
+    //    destructive fallback wipes every captured traffic entry, event, error and span on upgrade.
     // 5: TrafficEntry gained `mockedBy` column for network mocking support.
     // 4: added the Span table for distributed trace capture.
     // 3: Error.id gained `autoGenerate`, which changes its column to AUTOINCREMENT.
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 @ConstructedBy(AlohomoraDbConstructor::class)

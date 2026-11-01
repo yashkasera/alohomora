@@ -9,8 +9,8 @@ class ReplayStore {
     private val _state = MutableStateFlow(ReplayState())
     val state: StateFlow<ReplayState> = _state.asStateFlow()
 
-    fun setSupported(supported: Boolean) {
-        _state.value = _state.value.copy(supported = supported)
+    fun setSupported(supported: Boolean, binarySupported: Boolean = false) {
+        _state.value = _state.value.copy(supported = supported, binarySupported = binarySupported)
     }
 
     /** Marks a replay as sent, and drops any previous failure so a retry starts clean. */

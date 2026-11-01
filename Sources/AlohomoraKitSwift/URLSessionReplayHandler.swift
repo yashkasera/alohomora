@@ -15,6 +15,10 @@ import Foundation
 /// without it would send the replay where the console can never see it. The handler refuses such
 /// a session rather than reporting a replay that will never appear.
 ///
+/// A binary body (`bodyBase64`) is sent as the exact bytes captured, under the captured content
+/// type, so a multipart upload keeps the boundary its bytes were written with. The handler conforms
+/// to `BinaryReplayHandler` for that reason; the return type is unchanged.
+///
 /// The replay is linked to its source through a `URLProtocol` property, never a header, so
 /// nothing is added to the request that a signature could cover. If the endpoint is signed in app
 /// code, pass `resign`: it runs on the final request just before sending, so the token or
@@ -40,7 +44,9 @@ public func urlSessionReplayHandler(
     URLSessionTrafficReplayHandler(session: session, resign: resign)
 }
 
-private final class URLSessionTrafficReplayHandler: NSObject, Alohomora_commonTrafficReplayHandler {
+// BinaryReplayHandler refines Alohomora_commonTrafficReplayHandler, so conforming to it is both:
+// the registry reads the refinement to decide whether a binary body may be handed over at all.
+private final class URLSessionTrafficReplayHandler: NSObject, BinaryReplayHandler {
     private let session: URLSession
     private let resign: ((inout URLRequest) async throws -> Void)?
 
@@ -81,7 +87,13 @@ private final class URLSessionTrafficReplayHandler: NSObject, Alohomora_commonTr
         if let contentType = replay.contentType, request.value(forHTTPHeaderField: "Content-Type") == nil {
             request.setValue(contentType, forHTTPHeaderField: "Content-Type")
         }
-        if let body = replay.body {
+        if let base64 = replay.bodyBase64 {
+            // The registry has already checked it decodes; this guards a caller that bypassed it.
+            guard let bytes = Data(base64Encoded: base64) else {
+                return ReplayOutcomes.shared.failed(reason: "The binary request body is not valid base64.")
+            }
+            request.httpBody = bytes
+        } else if let body = replay.body {
             request.httpBody = Data(body.utf8)
         }
 

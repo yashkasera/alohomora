@@ -644,6 +644,15 @@ data class InitialStatePayload(
      */
     val replaySupported: Boolean = false,
     /**
+     * Whether the registered replay handler can send a binary body byte for byte (it implements
+     * `BinaryReplayHandler`, as every built-in handler does).
+     *
+     * Separate from [replaySupported] because an app may register a custom handler that only
+     * sends text. Defaults to false so a newer desktop never offers a binary replay to an app that
+     * would refuse it, or that predates binary capture altogether.
+     */
+    val binaryReplaySupported: Boolean = false,
+    /**
      * Whether the app on the other end has span capture wired up — something has called
      * `Alohomora.recordSpan` at least once.
      *

@@ -6,6 +6,7 @@ import io.github.yashkasera.alohomora.common.NANOS_PER_MILLI
 import io.github.yashkasera.alohomora.common.Span
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.FakeDevToolsRepository
+import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -101,6 +102,46 @@ class AlohomoraMcpToolDataTest {
             limit = 2,
         )
         assertEquals(2, limited.jsonArray.size)
+    }
+
+    @Test
+    fun `get_traffic leaves a binary body out unless asked and keeps its size`() {
+        val repo = FakeDevToolsRepository().apply {
+            replayState.value = ReplayState(supported = true, binarySupported = true)
+            traffic.value = listOf(
+                entry("1", status = 200, method = "POST", host = "api.example.com").apply {
+                    url = "https://api.example.com/upload"
+                    requestBody = TrafficEntry.UNABLE_PARSE_MESSAGE
+                    requestBodyBase64 = "iVBORw0KGgo="
+                },
+            )
+        }
+
+        val summary = AlohomoraMcpToolData.getTraffic(repo, "1")!!.jsonObject
+        assertEquals("null", summary["entry"]!!.jsonObject["requestBodyBase64"].toString())
+        assertEquals(8L, summary["requestBodyBinaryBytes"]!!.jsonPrimitive.long)
+        assertEquals("89 50 4E 47 0D 0A 1A 0A", summary["requestBodyHexPreview"]!!.jsonPrimitive.content)
+        assertNull(summary["replayBlockedReason"], "binary replay is supported, so nothing blocks it")
+
+        val full = AlohomoraMcpToolData.getTraffic(repo, "1", includeBinaryBody = true)!!.jsonObject
+        assertEquals("iVBORw0KGgo=", full["entry"]!!.jsonObject["requestBodyBase64"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `get_traffic says why a binary body cannot be replayed by a text only handler`() {
+        val repo = FakeDevToolsRepository().apply {
+            replayState.value = ReplayState(supported = true, binarySupported = false)
+            traffic.value = listOf(
+                entry("1", status = 200, method = "POST", host = "api.example.com").apply {
+                    url = "https://api.example.com/upload"
+                    requestBody = TrafficEntry.UNABLE_PARSE_MESSAGE
+                    requestBodyBase64 = "AAE="
+                },
+            )
+        }
+
+        val detail = AlohomoraMcpToolData.getTraffic(repo, "1")!!.jsonObject
+        assertEquals("BINARY_REPLAY_UNSUPPORTED", detail["replayBlockedReason"]!!.jsonPrimitive.content)
     }
 
     @Test

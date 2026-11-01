@@ -873,6 +873,7 @@ internal class DevToolsRuntime(
                 buildMetadata = AlohomoraImpl.config?.toBuildMetadataPayload(),
                 gitHistory = AlohomoraImpl.config?.commits?.map { it.toGitHistoryPayload() }.orEmpty(),
                 replaySupported = TrafficReplayRegistry.isSupported,
+                binaryReplaySupported = TrafficReplayRegistry.isBinarySupported,
                 spanCaptureSupported = SpanCaptureRegistry.isSupported,
                 networkRulesSupported = true,
                 vpnThrottleSupported = isVpnThrottleSupported,

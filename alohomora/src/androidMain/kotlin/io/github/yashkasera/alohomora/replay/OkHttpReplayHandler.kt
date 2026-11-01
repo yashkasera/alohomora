@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.replay
 
+import kotlin.io.encoding.Base64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -21,6 +22,10 @@ import okhttp3.RequestBody.Companion.toRequestBody
  * Alohomora.registerReplayHandler(okHttpReplayHandler(retrofitOkHttpClient))
  * ```
  *
+ * A binary body is sent as the exact bytes captured, under the captured content type, so a multipart
+ * upload keeps the boundary its bytes were written with. The handler is a [BinaryReplayHandler];
+ * the return type stays [TrafficReplayHandler] so existing callers are unaffected.
+ *
  * Interceptor order does not matter here: the replay marker travels in a [ReplayTag], not a header,
  * so nothing this adds ends up inside a signature.
  *
@@ -28,7 +33,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
  */
 @Suppress("unused")
 fun okHttpReplayHandler(client: OkHttpClient): TrafficReplayHandler =
-    TrafficReplayHandler { request ->
+    BinaryReplayHandler { request ->
         withContext(Dispatchers.IO) {
             try {
                 // Closed rather than read: TrafficInterceptor already peeked the body for capture, and
@@ -55,9 +60,12 @@ private fun ReplayRequest.toOkHttpRequest(): Request {
     // media type: `application/json` goes out as `application/json; charset=utf-8`. Any signing
     // scheme that canonicalises Content-Type into the signed set would then reject every replay,
     // and the request would differ from the captured one for no reason the user can see.
-    val capturedBody = body
+    //
+    // A binary body is decoded straight to the bytes that were captured; the registry has already
+    // checked that it decodes.
+    val capturedBody = bodyBase64?.let { Base64.decode(it) } ?: body?.encodeToByteArray()
     val requestBody = when {
-        capturedBody != null -> capturedBody.encodeToByteArray().toRequestBody(mediaType)
+        capturedBody != null -> capturedBody.toRequestBody(mediaType)
 
         // OkHttp requires a body for these and rejects one for GET/HEAD, so an empty body is the
         // only correct stand-in when a POST was captured with none.

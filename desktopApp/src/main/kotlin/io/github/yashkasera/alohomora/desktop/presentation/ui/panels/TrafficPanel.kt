@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import io.github.yashkasera.alohomora.common.BinaryBodyPreview
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.app.DesktopBuildConfig
 import io.github.yashkasera.alohomora.desktop.presentation.model.TrafficUiState
@@ -422,12 +423,12 @@ fun TrafficDetailsSideSheet(
     val isSlackConfigured = buildInfo?.slackWebhookUrl.isNullOrBlank().not()
 
     // Null when the device cannot replay at all, or when this particular entry cannot be
-    // reproduced — a truncated or multipart body. Both cases hide the action rather than offering
-    // one that would send wrong data.
+    // reproduced — a truncated or uncaptured body, or a binary one the app's handler cannot send.
+    // All of these hide the action rather than offering one that would send wrong data.
     val replayRequest = traffic
         ?.takeIf { replayState.supported }
-        ?.toReplayRequest()
-    val replayBlockedReason = traffic?.replayBlockedReason()
+        ?.toReplayRequest(replayState.binarySupported)
+    val replayBlockedReason = traffic?.replayBlockedReason(replayState.binarySupported)
 
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
@@ -711,9 +712,15 @@ private fun DesktopRequestTab(traffic: TrafficEntry) {
             expanded = bodyExpanded,
             onToggle = { bodyExpanded = !bodyExpanded },
         ) {
+            // A binary body has no text to show; requestBody holds only the placeholder.
+            val binary = traffic.requestBodyBase64
             AlohomoraCodeBlock(
                 isScrollable = false,
-                content = traffic.requestBody.orEmpty().ifBlank { "{}" },
+                content = if (binary != null) {
+                    BinaryBodyPreview.describe(binary, traffic.requestContentType)
+                } else {
+                    traffic.requestBody.orEmpty().ifBlank { "{}" }
+                },
             )
         }
     }

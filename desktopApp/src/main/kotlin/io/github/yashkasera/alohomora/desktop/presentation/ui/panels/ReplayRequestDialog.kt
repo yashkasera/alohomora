@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
+import io.github.yashkasera.alohomora.common.BinaryBodyPreview
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AlohomoraSideSheet
 import io.github.yashkasera.alohomora.replay.ReplayHeaderRow
 import io.github.yashkasera.alohomora.replay.ReplayHeaderText
@@ -33,6 +34,7 @@ import io.github.yashkasera.alohomora.replay.ReplayRequest
 import io.github.yashkasera.alohomora.replay.buildReplayHeaderMap
 import io.github.yashkasera.alohomora.replay.toReplayHeaderRows
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraTextField
@@ -69,6 +71,9 @@ private enum class HeaderMode(val label: String) {
  * Headers are edited as structured rows seeded from the captured request: a per-row toggle decides
  * what to carry over, the value field is the overwrite, and "Add header" adds custom ones. A raw
  * `Name: value` tab is kept as an escape hatch for pasting a bulk header block.
+ *
+ * The one exception is a binary body ([ReplayRequest.bodyBase64]): it is shown, not edited, and goes
+ * back exactly as captured. There is no text form of it to edit without corrupting it.
  */
 @Composable
 fun ReplayRequestSideSheet(
@@ -101,6 +106,12 @@ fun ReplayRequestSideSheet(
         JsonEditorState(initial.body.orEmpty())
     }
     var textBody by remember(initial.sourceTraceId) { mutableStateOf(initial.body.orEmpty()) }
+    val binaryBody = initial.bodyBase64
+    // The boundary in the content type is the one the captured bytes were written with, so it is
+    // checked on the original rather than on the edited headers: that is what an edit would break.
+    val carriesBoundary = remember(initial.sourceTraceId) {
+        BinaryBodyPreview.hasMultipartBoundary(initial.contentType)
+    }
 
     fun switchHeaderMode(target: HeaderMode) {
         if (headerMode == target) return
@@ -211,6 +222,14 @@ fun ReplayRequestSideSheet(
                         }
                     }
 
+                    if (carriesBoundary) {
+                        Text(
+                            BinaryBodyPreview.BOUNDARY_WARNING,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.alohomoraColors.warning,
+                        )
+                    }
+
                     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                         HeaderMode.entries.forEachIndexed { index, mode ->
                             SegmentedButton(
@@ -290,55 +309,67 @@ fun ReplayRequestSideSheet(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        BodyMode.entries.forEachIndexed { index, mode ->
-                            SegmentedButton(
-                                selected = bodyMode == mode,
-                                onClick = {
-                                    if (bodyMode != mode) {
-                                        if (mode == BodyMode.JSON) {
-                                            jsonBodyState.setText(textBody)
-                                        } else {
-                                            textBody = jsonBodyState.text
+                    if (binaryBody != null) {
+                        AlohomoraCodeBlock(
+                            content = BinaryBodyPreview.describe(binaryBody, initial.contentType),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text(
+                            BinaryBodyPreview.READ_ONLY_NOTE,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            BodyMode.entries.forEachIndexed { index, mode ->
+                                SegmentedButton(
+                                    selected = bodyMode == mode,
+                                    onClick = {
+                                        if (bodyMode != mode) {
+                                            if (mode == BodyMode.JSON) {
+                                                jsonBodyState.setText(textBody)
+                                            } else {
+                                                textBody = jsonBodyState.text
+                                            }
+                                            bodyMode = mode
                                         }
-                                        bodyMode = mode
-                                    }
-                                },
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = index,
-                                    count = BodyMode.entries.size,
-                                    baseShape = MaterialTheme.shapes.small,
-                                ),
-                            ) {
-                                Text(mode.label, style = MaterialTheme.typography.labelMedium)
+                                    },
+                                    shape = SegmentedButtonDefaults.itemShape(
+                                        index = index,
+                                        count = BodyMode.entries.size,
+                                        baseShape = MaterialTheme.shapes.small,
+                                    ),
+                                ) {
+                                    Text(mode.label, style = MaterialTheme.typography.labelMedium)
+                                }
                             }
                         }
-                    }
 
-                    when (bodyMode) {
-                        BodyMode.JSON -> {
-                            JsonEditor(
-                                modifier = Modifier.weight(1f).fillMaxWidth(),
-                                state = jsonBodyState,
-                                readOnly = inFlight,
-                                minLines = 6,
-                            )
-                        }
-
-                        BodyMode.TEXT -> {
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                                    .verticalScroll(rememberScrollState()),
-                            ) {
-                                AlohomoraTextField(
-                                    value = textBody,
-                                    onValueChange = { textBody = it },
-                                    singleLine = false,
-                                    enabled = !inFlight,
-                                    modifier = Modifier.fillMaxWidth(),
+                        when (bodyMode) {
+                            BodyMode.JSON -> {
+                                JsonEditor(
+                                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                                    state = jsonBodyState,
+                                    readOnly = inFlight,
+                                    minLines = 6,
                                 )
+                            }
+
+                            BodyMode.TEXT -> {
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxWidth()
+                                        .verticalScroll(rememberScrollState()),
+                                ) {
+                                    AlohomoraTextField(
+                                        value = textBody,
+                                        onValueChange = { textBody = it },
+                                        singleLine = false,
+                                        enabled = !inFlight,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                }
                             }
                         }
                     }
@@ -364,7 +395,8 @@ fun ReplayRequestSideSheet(
                             method = method.trim().uppercase(),
                             url = url.trim(),
                             headers = currentHeaders(),
-                            body = body.takeIf { it.isNotBlank() },
+                            // A binary body travels as bodyBase64, carried over by copy().
+                            body = if (binaryBody != null) null else body.takeIf { it.isNotBlank() },
                         ),
                     )
                 },

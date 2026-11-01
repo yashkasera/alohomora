@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora.desktop.data.local
 
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -160,10 +162,21 @@ internal data class HarExportContent(
     val text: String? = null,
 )
 
+/**
+ * HAR 1.2 `postData`, which has no encoding field and so no standard way to carry bytes.
+ *
+ * A binary body goes in [bodyBase64] as the `_bodyBase64` custom field (HAR reserves a leading
+ * underscore for exactly this) with an empty [text], rather than the `Cannot parse body`
+ * placeholder, which a HAR viewer would present as the body. Left out entirely for a text body.
+ */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 internal data class HarExportPostData(
     val mimeType: String,
     val text: String,
+    @SerialName("_bodyBase64")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    val bodyBase64: String? = null,
 )
 
 @Serializable
@@ -195,11 +208,19 @@ internal fun TrafficEntry.toHarEntry(): HarExportEntry {
             headers = requestHeaders.toHarHeaders(),
             queryString = parseQueryString(query),
             bodySize = requestSize ?: requestBody?.length?.toLong() ?: 0,
-            postData = requestBody?.takeIf { it.isNotBlank() }?.let { body ->
-                HarExportPostData(
+            postData = when {
+                requestBodyBase64 != null -> HarExportPostData(
                     mimeType = requestContentType ?: "application/octet-stream",
-                    text = body,
+                    text = "",
+                    bodyBase64 = requestBodyBase64,
                 )
+
+                else -> requestBody?.takeIf { it.isNotBlank() }?.let { body ->
+                    HarExportPostData(
+                        mimeType = requestContentType ?: "application/octet-stream",
+                        text = body,
+                    )
+                }
             },
         ),
         response = HarExportResponse(

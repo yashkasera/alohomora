@@ -82,7 +82,7 @@ fun registerAlohomoraWriteTools(
                     )
                 },
             )
-            put("body", stringProp("Override request body (optional)."))
+            put("body", stringProp("Override request body (optional). Not allowed for a binary body, which is sent as captured."))
             put("contentType", stringProp("Override content type (optional)."))
         },
     ) { request ->
@@ -281,11 +281,20 @@ internal object AlohomoraMcpWriteData {
         }
         val entry = repo.traffic.value.firstOrNull { it.id == id }
             ?: return WriteResult.Error("No traffic entry with id $id")
-        entry.replayBlockedReason()?.let {
+        val binarySupported = repo.replayState.value.binarySupported
+        entry.replayBlockedReason(binarySupported)?.let {
             return WriteResult.Error("This request cannot be replayed: ${it.name}")
         }
-        val base = entry.toReplayRequest()
+        val base = entry.toReplayRequest(binarySupported)
             ?: return WriteResult.Error("This request cannot be replayed.")
+        // A binary body goes back exactly as captured. A text override would be ignored on the
+        // device in favour of the bytes, so it is refused here rather than silently dropped.
+        if (base.bodyBase64 != null && body != null) {
+            return WriteResult.Error(
+                "This request has a binary body, which is replayed as captured and cannot be " +
+                    "overridden. Omit body.",
+            )
+        }
         val request = base.copy(
             method = method?.trim()?.uppercase() ?: base.method,
             url = url?.trim() ?: base.url,

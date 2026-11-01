@@ -1,6 +1,8 @@
 package io.github.yashkasera.alohomora.common
 
+import kotlin.io.encoding.Base64
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -70,5 +72,52 @@ class CapturedBodyTest {
         assertFalse(CapturedBody.isEventStream("text/plain"))
         assertFalse(CapturedBody.isEventStream("application/json"))
         assertFalse(CapturedBody.isEventStream(null))
+    }
+
+    private val png = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00)
+
+    @Test
+    fun `a text request body is stored as text`() {
+        val bytes = """{"a":1}""".encodeToByteArray()
+
+        val captured = CapturedBody.requestBody(bytes, bytes.size.toLong(), maxBytes = 100, contentType = null)
+
+        assertEquals(CapturedRequestBody("""{"a":1}"""), captured)
+    }
+
+    @Test
+    fun `a binary request body within the cap keeps its bytes`() {
+        val captured = CapturedBody.requestBody(png, png.size.toLong(), maxBytes = 100, contentType = null)
+
+        assertEquals(TrafficEntry.UNABLE_PARSE_MESSAGE, captured.text)
+        assertContentEquals(png, Base64.decode(captured.base64!!))
+        assertFalse(captured.truncated)
+    }
+
+    @Test
+    fun `a known binary type is kept as bytes even when it decodes`() {
+        val bytes = "GIF89a".encodeToByteArray()
+
+        val captured = CapturedBody.requestBody(bytes, bytes.size.toLong(), maxBytes = 100, contentType = "image/gif")
+
+        assertContentEquals(bytes, Base64.decode(captured.base64!!))
+    }
+
+    @Test
+    fun `a binary request body over the cap keeps only the placeholder`() {
+        val captured = CapturedBody.requestBody(png, totalBytes = 5_000, maxBytes = 8, contentType = null)
+
+        assertEquals(CapturedRequestBody(TrafficEntry.UNABLE_PARSE_MESSAGE), captured)
+    }
+
+    @Test
+    fun `a text request body over the cap is cut and flagged`() {
+        val bytes = "abcdefghij".encodeToByteArray()
+
+        val captured = CapturedBody.requestBody(bytes, totalBytes = 10, maxBytes = 4, contentType = null)
+
+        assertTrue(captured.truncated)
+        assertNull(captured.base64)
+        assertTrue(captured.text.startsWith("abcd\n…truncated (10 bytes total)"))
     }
 }

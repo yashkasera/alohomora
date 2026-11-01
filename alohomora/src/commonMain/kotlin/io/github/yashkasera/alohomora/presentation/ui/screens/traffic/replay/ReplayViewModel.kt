@@ -11,6 +11,7 @@ import io.github.yashkasera.alohomora.replay.ReplayBlockedReason
 import io.github.yashkasera.alohomora.replay.ReplayHeaderText
 import io.github.yashkasera.alohomora.replay.ReplayOutcome
 import io.github.yashkasera.alohomora.replay.ReplayRequest
+import io.github.yashkasera.alohomora.replay.TrafficReplayRegistry
 import io.github.yashkasera.alohomora.replay.replayBlockedReason
 import io.github.yashkasera.alohomora.replay.toReplayRequest
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +31,8 @@ internal data class ReplayState(
     val headers: String = "",
     val body: String = "",
     val contentType: String? = null,
+    /** A binary body, sent as captured; [body] is unused and the screen offers no editor for it. */
+    val bodyBase64: String? = null,
     val isReplaying: Boolean = false,
     val replayError: String? = null,
     /** The request was sent; the screen shows the "opening result" state while the result is located. */
@@ -59,7 +62,8 @@ internal class ReplayViewModel(
                 return@launch
             }
 
-            val blocked = trace.replayBlockedReason()
+            val binarySupported = TrafficReplayRegistry.isBinarySupported
+            val blocked = trace.replayBlockedReason(binarySupported)
             if (blocked != null || !Alohomora.isReplaySupported) {
                 _state.value = _state.value.copy(
                     isLoading = false,
@@ -69,7 +73,7 @@ internal class ReplayViewModel(
                 return@launch
             }
 
-            val request = trace.toReplayRequest()!!
+            val request = trace.toReplayRequest(binarySupported)!!
             _state.value = _state.value.copy(
                 isLoading = false,
                 sourceTrace = trace,
@@ -78,6 +82,7 @@ internal class ReplayViewModel(
                 headers = ReplayHeaderText.render(request.headers),
                 body = request.body.orEmpty(),
                 contentType = request.contentType,
+                bodyBase64 = request.bodyBase64,
             )
         }
     }
@@ -113,8 +118,9 @@ internal class ReplayViewModel(
                 method = s.method.trim().uppercase(),
                 url = s.url.trim(),
                 headers = ReplayHeaderText.parse(s.headers),
-                body = s.body.takeIf { it.isNotBlank() },
+                body = if (s.bodyBase64 != null) null else s.body.takeIf { it.isNotBlank() },
                 contentType = s.contentType,
+                bodyBase64 = s.bodyBase64,
             )
             when (val outcome = replayTrafficUseCase(request)) {
                 is ReplayOutcome.Sent -> {

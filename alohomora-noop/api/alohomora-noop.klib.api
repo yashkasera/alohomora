@@ -18,6 +18,8 @@ abstract fun interface io.github.yashkasera.alohomora.plugin/PluginDataUpdateHan
     abstract suspend fun onUpdate(kotlin/String) // io.github.yashkasera.alohomora.plugin/PluginDataUpdateHandler.onUpdate|onUpdate(kotlin.String){}[0]
 }
 
+abstract fun interface io.github.yashkasera.alohomora.replay/BinaryReplayHandler : io.github.yashkasera.alohomora.replay/TrafficReplayHandler // io.github.yashkasera.alohomora.replay/BinaryReplayHandler|null[0]
+
 abstract fun interface io.github.yashkasera.alohomora.replay/TrafficReplayHandler { // io.github.yashkasera.alohomora.replay/TrafficReplayHandler|null[0]
     abstract suspend fun replay(io.github.yashkasera.alohomora.replay/ReplayRequest): io.github.yashkasera.alohomora.replay/ReplayOutcome // io.github.yashkasera.alohomora.replay/TrafficReplayHandler.replay|replay(io.github.yashkasera.alohomora.replay.ReplayRequest){}[0]
 }
@@ -227,10 +229,13 @@ final class io.github.yashkasera.alohomora.plugin/PluginDataField { // io.github
 }
 
 final class io.github.yashkasera.alohomora.replay/ReplayRequest { // io.github.yashkasera.alohomora.replay/ReplayRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.yashkasera.alohomora.replay/ReplayRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>;kotlin.String?;kotlin.String?){}[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.yashkasera.alohomora.replay/ReplayRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>>, kotlin/String?, kotlin/String?) // io.github.yashkasera.alohomora.replay/ReplayRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>;kotlin.String?;kotlin.String?){}[0]
 
     final val body // io.github.yashkasera.alohomora.replay/ReplayRequest.body|{}body[0]
         final fun <get-body>(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayRequest.body.<get-body>|<get-body>(){}[0]
+    final val bodyBase64 // io.github.yashkasera.alohomora.replay/ReplayRequest.bodyBase64|{}bodyBase64[0]
+        final fun <get-bodyBase64>(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayRequest.bodyBase64.<get-bodyBase64>|<get-bodyBase64>(){}[0]
     final val contentType // io.github.yashkasera.alohomora.replay/ReplayRequest.contentType|{}contentType[0]
         final fun <get-contentType>(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayRequest.contentType.<get-contentType>|<get-contentType>(){}[0]
     final val headers // io.github.yashkasera.alohomora.replay/ReplayRequest.headers|{}headers[0]
@@ -248,7 +253,8 @@ final class io.github.yashkasera.alohomora.replay/ReplayRequest { // io.github.y
     final fun component4(): kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> // io.github.yashkasera.alohomora.replay/ReplayRequest.component4|component4(){}[0]
     final fun component5(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayRequest.component5|component5(){}[0]
     final fun component6(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayRequest.component6|component6(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.yashkasera.alohomora.replay/ReplayRequest // io.github.yashkasera.alohomora.replay/ReplayRequest.copy|copy(kotlin.String;kotlin.String;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>;kotlin.String?;kotlin.String?){}[0]
+    final fun component7(): kotlin/String? // io.github.yashkasera.alohomora.replay/ReplayRequest.component7|component7(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.yashkasera.alohomora.replay/ReplayRequest // io.github.yashkasera.alohomora.replay/ReplayRequest.copy|copy(kotlin.String;kotlin.String;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yashkasera.alohomora.replay/ReplayRequest.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.yashkasera.alohomora.replay/ReplayRequest.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.yashkasera.alohomora.replay/ReplayRequest.toString|toString(){}[0]
