@@ -71,7 +71,11 @@ class TrafficInterceptor(
 
         trace?.let { runCatching { collector.onRequestSent(it) } }
 
-        val mockRule = NetworkRuleEngine.findMatch(request.url.toString(), request.method)
+        // A lookup that fails is treated as no match, so the request goes to the network as it
+        // would without Alohomora. Uncaught, it was rethrown on OkHttp's dispatcher thread.
+        val mockRule = runCatching { NetworkRuleEngine.findMatch(request.url.toString(), request.method) }
+            .onFailure { it.logCaptureFailure("mock") }
+            .getOrNull()
         if (mockRule != null && trace != null) {
             runCatching {
                 trace.status = mockRule.statusCode

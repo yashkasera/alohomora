@@ -28,6 +28,7 @@ import platform.Foundation.NSMutableData
 import platform.Foundation.NSMutableURLRequest
 import platform.Foundation.NSString
 import platform.Foundation.NSStringFromClass
+import platform.Foundation.NSURL
 import platform.Foundation.NSURLCacheStoragePolicy
 import platform.Foundation.NSURLProtocol
 import platform.Foundation.NSURLProtocolClientProtocol
@@ -191,10 +192,12 @@ class AlohomoraURLProtocol :
             }
         }
 
-        val mockRule = NetworkRuleEngine.findMatch(
-            request.URL?.absoluteString ?: "",
-            request.HTTPMethod ?: "GET",
-        )
+        // Every Kotlin step on this path runs under an Objective-C caller, where an uncaught
+        // exception terminates the app rather than failing one request. A lookup that throws is
+        // treated as no match, so the request goes to the network as it would without Alohomora.
+        val mockRule = runCatching {
+            NetworkRuleEngine.findMatch(request.URL?.absoluteString ?: "", request.HTTPMethod ?: "GET")
+        }.getOrNull()
         if (mockRule != null) {
             deliverMockResponse(mockRule)
             return
@@ -243,16 +246,18 @@ class AlohomoraURLProtocol :
     private fun captureRequestBody(data: NSData?) {
         if (data == null) return
         capturedRequestSize = data.length.toLong()
-        val text = NSString.create(data = data, encoding = NSUTF8StringEncoding)?.toString()
-        capturedRequestBody = when {
-            text == null -> TrafficEntry.UNABLE_PARSE_MESSAGE
-            text.length.toLong() > MAX_BODY_BYTES -> {
-                capturedRequestBodyTruncated = true
-                text.take(MAX_BODY_BYTES.toInt()) + "\n…truncated (${text.length} chars total)"
-            }
+        capturedRequestBody = runCatching {
+            val text = NSString.create(data = data, encoding = NSUTF8StringEncoding)?.toString()
+            when {
+                text == null -> TrafficEntry.UNABLE_PARSE_MESSAGE
+                text.length.toLong() > MAX_BODY_BYTES -> {
+                    capturedRequestBodyTruncated = true
+                    text.take(MAX_BODY_BYTES.toInt()) + "\n…truncated (${text.length} chars total)"
+                }
 
-            else -> text
-        }
+                else -> text
+            }
+        }.getOrDefault(TrafficEntry.UNABLE_PARSE_MESSAGE)
     }
 
     /**
@@ -350,8 +355,14 @@ class AlohomoraURLProtocol :
     private fun deliverMockResponse(mockRule: MockRule) {
         val url = request.URL ?: return
         val bodyBytes = mockRule.responseBody.encodeToByteArray()
-        val bodyData = bodyBytes.usePinned { pinned ->
-            NSData.create(bytes = pinned.addressOf(0), length = bodyBytes.size.toULong())
+        // addressOf(0) is out of bounds on an empty array, so a mock with no body (a 204, say)
+        // threw here, under an Objective-C caller.
+        val bodyData = if (bodyBytes.isEmpty()) {
+            NSData()
+        } else {
+            bodyBytes.usePinned { pinned ->
+                NSData.create(bytes = pinned.addressOf(0), length = bodyBytes.size.toULong())
+            }
         }
 
         // K/N 2.4 exposes initWithURL:statusCode:HTTPVersion:headerFields: but with
@@ -370,6 +381,11 @@ class AlohomoraURLProtocol :
         client?.URLProtocol(this, didLoadData = bodyData)
         client?.URLProtocolDidFinishLoading(this)
 
+        runCatching { recordMock(url, mockRule) }
+    }
+
+    /** Records a delivered mock. Best-effort: the response has already reached the client. */
+    private fun recordMock(url: NSURL, mockRule: MockRule) {
         val req = request
         val requestHeaders: Map<String, List<String>> = HeaderRedaction.redact(
             req.allHTTPHeaderFields
@@ -407,8 +423,17 @@ class AlohomoraURLProtocol :
         )
     }
 
-    @OptIn(BetaInteropApi::class)
+    /**
+     * Records the finished load. Called from the session delegate and from [startLoading], both
+     * under an Objective-C caller, after the client has already been told the outcome — so a
+     * capture failure is dropped here instead of terminating the app.
+     */
     private fun persistTrace(error: NSError?) {
+        runCatching { buildAndPersistTrace(error) }
+    }
+
+    @OptIn(BetaInteropApi::class)
+    private fun buildAndPersistTrace(error: NSError?) {
         val req = request
         val url = req.URL
         val endTime = Clock.System.now().toEpochMilliseconds()
