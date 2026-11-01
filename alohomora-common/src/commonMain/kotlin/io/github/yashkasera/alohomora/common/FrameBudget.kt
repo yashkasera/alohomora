@@ -55,20 +55,27 @@ object FrameBudget {
         else -> null
     }
 
+    // The base64 counts in full: a 1 MB binary upload is 1.33 MB of it, and it is the field that
+    // carries the bytes, so leaving it out would let a snapshot of uploads overrun the frame.
     private fun TrafficEntry.bodyChars(): Long =
-        (requestBody?.length ?: 0).toLong() + (responseBody?.length ?: 0).toLong()
+        (requestBody?.length ?: 0).toLong() +
+            (requestBodyBase64?.length ?: 0).toLong() +
+            (responseBody?.length ?: 0).toLong()
 
     /**
      * This entry with both bodies replaced by [BODY_OMITTED_MESSAGE] and flagged truncated.
      *
      * Flagged rather than nulled: a null request body reads as "this request had no body", and
      * replay would then send an empty one. A truncated body is refused by `replayBlockedReason`.
+     * A binary body's base64 goes with it and is flagged the same way, so its replay is refused
+     * instead of falling back to the placeholder text.
      */
     private fun TrafficEntry.withoutBodies(): TrafficEntry {
-        val shedRequest = !requestBody.isNullOrEmpty()
+        val shedRequest = !requestBody.isNullOrEmpty() || !requestBodyBase64.isNullOrEmpty()
         val shedResponse = !responseBody.isNullOrEmpty()
         return copy(
             requestBody = if (shedRequest) BODY_OMITTED_MESSAGE else requestBody,
+            requestBodyBase64 = if (shedRequest) null else requestBodyBase64,
             requestBodyTruncated = requestBodyTruncated || shedRequest,
             responseBody = if (shedResponse) BODY_OMITTED_MESSAGE else responseBody,
             responseBodyTruncated = responseBodyTruncated || shedResponse,

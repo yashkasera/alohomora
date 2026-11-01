@@ -55,6 +55,27 @@ class FrameBudgetTest {
     }
 
     @Test
+    fun `binary bodies count toward the budget`() {
+        val binary = entry("a", TrafficEntry.UNABLE_PARSE_MESSAGE).copy(requestBodyBase64 = "A".repeat(100))
+
+        val fitted = FrameBudget.fitBodiesToBudget(listOf(binary), budgetChars = 50)
+
+        assertNull(fitted.single().requestBodyBase64)
+    }
+
+    @Test
+    fun `a shed binary body blocks replay instead of replaying the placeholder`() {
+        val binary = entry("a", TrafficEntry.UNABLE_PARSE_MESSAGE).copy(requestBodyBase64 = "AAE=")
+
+        val shed = FrameBudget.fitBodiesToBudget(listOf(binary), budgetChars = 0).single()
+
+        assertNull(shed.requestBodyBase64)
+        assertEquals(FrameBudget.BODY_OMITTED_MESSAGE, shed.requestBody)
+        assertTrue(shed.requestBodyTruncated)
+        assertEquals(ReplayBlockedReason.TRUNCATED_BODY, shed.replayBlockedReason())
+    }
+
+    @Test
     fun `absent and empty bodies stay as they were`() {
         val fitted = FrameBudget.fitBodiesToBudget(listOf(entry("a", request = null, response = "")), 0)
 

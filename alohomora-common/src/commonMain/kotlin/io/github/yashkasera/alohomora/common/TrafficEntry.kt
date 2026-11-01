@@ -47,6 +47,18 @@ data class TrafficEntry(
      */
     var replayOf: String? = null,
     var mockedBy: String? = null,
+    /**
+     * The complete request body as base64, when it is not text, or null.
+     *
+     * Set only for a body that failed strict UTF-8 decoding (or has a known-binary content type)
+     * and was captured whole within the capture cap; a larger one is stored truncated and refused
+     * by replay, as before. [requestBody] keeps [UNABLE_PARSE_MESSAGE] alongside it, so an older
+     * console that has never heard of this field renders and refuses the entry exactly as it did.
+     *
+     * Base64 rather than the text field because replay must send the same bytes back: text is
+     * stored decoded, and no decoding of a binary body survives the round trip.
+     */
+    var requestBodyBase64: String? = null,
 ) {
 
     fun isSuccessful(): Boolean = status in 200..299
