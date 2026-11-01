@@ -57,6 +57,10 @@ class ConsoleTestRule : TestRule {
         AlohomoraImpl.setShakeToOpenEnabled(false)
         AlohomoraImpl.clearReplayHandler()
         AlohomoraImpl.clearAppDatabaseOverrides()
+        // Back to the shipped redaction policy, so a test that opted out cannot leave the next one
+        // asserting against raw credentials.
+        AlohomoraImpl.clearRedactedHeaders()
+        AlohomoraImpl.setDefaultHeaderRedactionEnabled(true)
 
         runBlocking {
             koin.get<TrafficRepository>().clearAll()

@@ -157,12 +157,28 @@ object Alohomora {
         AlohomoraImpl.setReplayStrippedHeaders(*headerNames)
 
     /**
-     * Specifies which HTTP header names should have their values replaced with `[REDACTED]`
-     * at capture time. Matching is case-insensitive.
+     * Names extra HTTP headers whose values are replaced with `[REDACTED]` at capture time, on top
+     * of the defaults. Matching is case-insensitive, and each call replaces the previous list.
+     *
+     * `Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie` and `X-Api-Key` are redacted
+     * by default and need not be listed; name app-specific secrets (a session or signing header)
+     * here. To see the default headers' raw values, call [setDefaultHeaderRedactionEnabled].
      */
     fun redactHeaders(vararg headerNames: String) = AlohomoraImpl.redactHeaders(*headerNames)
 
+    /** Clears the names set by [redactHeaders]. The default headers stay redacted. */
     fun clearRedactedHeaders() = AlohomoraImpl.clearRedactedHeaders()
+
+    /**
+     * Turns redaction of the default headers (`Authorization`, `Proxy-Authorization`, `Cookie`,
+     * `Set-Cookie`, `X-Api-Key`) on or off. On by default. Names passed to [redactHeaders] are
+     * redacted either way.
+     *
+     * Turning it off stores those credentials verbatim, and from there they reach the desktop,
+     * Slack shares, `curl` exports and MCP clients. Only affects traffic captured afterwards.
+     */
+    fun setDefaultHeaderRedactionEnabled(enabled: Boolean) =
+        AlohomoraImpl.setDefaultHeaderRedactionEnabled(enabled)
 
     fun recordFeatureFlag(
         key: String,

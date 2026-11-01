@@ -8,10 +8,13 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.common.Error
+import io.github.yashkasera.alohomora.common.HeaderRedaction
+import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.device.Seed.BASE_MILLIS
 import io.github.yashkasera.alohomora.device.Seed.BASE_NANOS
 import io.github.yashkasera.alohomora.device.Seed.flag
 import io.github.yashkasera.alohomora.domain.repository.ErrorRepository
+import io.github.yashkasera.alohomora.domain.repository.TrafficRepository
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags.Chrome
 import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags.FeatureFlags
@@ -73,6 +76,29 @@ class RecordApiTest {
 
         compose.awaitTag(Traffic.item("recorded"))
         compose.onNodeWithTag(Traffic.item("recorded")).assertIsDisplayed()
+    }
+
+    @Test
+    fun recordTrafficRedactsDefaultHeaders() {
+        // The manual path is how a Swift or Flutter app records traffic, so it has to apply the
+        // same redaction the interceptors do or the defaults protect only OkHttp and Ktor apps.
+        Alohomora.recordTraffic(
+            id = "redacted",
+            status = 200,
+            url = "https://api.example.com/v1/me",
+            method = "GET",
+            requestHeaders = mapOf(
+                "Authorization" to listOf("Bearer secret"),
+                "Accept" to listOf("application/json"),
+            ),
+            responseHeaders = mapOf("Set-Cookie" to listOf("session=1")),
+        )
+
+        val entry = awaitTraffic("redacted")
+
+        assertEquals(listOf(HeaderRedaction.REDACTED), entry.requestHeaders?.get("Authorization"))
+        assertEquals(listOf("application/json"), entry.requestHeaders?.get("Accept"))
+        assertEquals(listOf(HeaderRedaction.REDACTED), entry.responseHeaders?.get("Set-Cookie"))
     }
 
     @Test
@@ -205,6 +231,17 @@ class RecordApiTest {
         waitUntil(timeoutMillis = POLL_TIMEOUT_MILLIS) {
             onAllNodesWithText(text, substring = true).fetchSemanticsNodes().isNotEmpty()
         }
+    }
+
+    /** Polls the traffic store, since header values are asserted against the row, not the UI. */
+    private fun awaitTraffic(id: String): TrafficEntry {
+        val deadline = System.currentTimeMillis() + POLL_TIMEOUT_MILLIS
+        while (System.currentTimeMillis() < deadline) {
+            runBlocking { console.koin.get<TrafficRepository>().getById(id).first() }
+                ?.let { return it }
+            Thread.sleep(POLL_INTERVAL_MILLIS)
+        }
+        throw AssertionError("no traffic entry '$id' after ${POLL_TIMEOUT_MILLIS}ms")
     }
 
     /** Polls the error store, since this assertion has no UI to hang a Compose wait off. */
