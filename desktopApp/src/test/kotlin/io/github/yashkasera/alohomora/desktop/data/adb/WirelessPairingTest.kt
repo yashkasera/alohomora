@@ -26,7 +26,12 @@ class WirelessPairingTest {
         var tcpipCalls = 0
 
         override suspend fun listDevices(): List<AdbDevice> = emptyList()
-        override suspend fun forwardDevToolsPort(deviceId: String, hostPort: Int, devicePort: Int) = Unit
+        override suspend fun forwardDevToolsPort(
+            deviceId: String,
+            hostPort: Int,
+            devicePort: Int,
+            rebind: Boolean,
+        ) = Unit
         override suspend fun removeForward(deviceId: String, hostPort: Int) = Unit
         override suspend fun enableTcpMode(deviceId: String, tcpPort: Int) { tcpipCalls++ }
         override suspend fun connect(host: String, port: Int): AdbCommandResult {

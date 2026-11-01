@@ -52,6 +52,14 @@ class AdbRepositoryImpl(
      * device from the single global [_selectedDeviceId] — so with two windows open, connecting
      * device B killed device A's tunnel, and closing window A removed device B's forward.
      * Guarded by [deviceMutex] along with every other mutation here.
+     *
+     * Keying by device only helps if two devices never share a host port, and nothing used to
+     * enforce that: the launcher defaulted every device to 53999, and a plain `adb forward`
+     * moves an existing forward to the new device without a word. Device B took over device A's
+     * tunnel, A's next reconnect talked to B, and `adb forward --remove` from either window
+     * (which adb resolves by port, not serial) tore down the one forward both relied on. The
+     * launcher now picks a free port per session ([HostPortAllocator]); [activateDevice] refuses
+     * a port owned by another device here, and `--no-rebind` refuses one owned by anything else.
      */
     private val forwards = mutableMapOf<String, Int>()
 
@@ -84,13 +92,22 @@ class AdbRepositoryImpl(
                 return@withLock "Device ${device.id} is ${device.state.name.lowercase()}"
             }
 
+            forwards.entries.firstOrNull { it.key != deviceId && it.value == hostPort }?.let { owner ->
+                return@withLock "Host port $hostPort is already forwarded to ${owner.key}. " +
+                    "Leave Host Port blank to pick a free one, or choose another."
+            }
+
             return@withLock try {
                 // Only this device's own stale forward is replaced. Other devices' forwards
                 // are on their own host ports and must be left alone.
                 forwards[deviceId]?.takeIf { it != hostPort }?.let { stalePort ->
                     runCatching { dataSource.removeForward(deviceId, stalePort) }
                 }
-                dataSource.forwardDevToolsPort(deviceId, hostPort, devicePort)
+                // Rebinding is allowed only over this device's own forward: a device window
+                // re-forwards when its device comes back online, and adb may or may not have
+                // dropped the old listener with the transport.
+                val rebind = forwards[deviceId] == hostPort
+                dataSource.forwardDevToolsPort(deviceId, hostPort, devicePort, rebind)
                 forwards[deviceId] = hostPort
                 _selectedDeviceId.value = deviceId
                 _error.value = null
@@ -112,12 +129,17 @@ class AdbRepositoryImpl(
                 ?: return@withLock null
             return@withLock try {
                 dataSource.removeForward(target, hostPort)
-                forwards.remove(target)
                 if (_selectedDeviceId.value == target) _selectedDeviceId.value = null
                 null
             } catch (e: Exception) {
                 _error.value = e.message
                 e.message ?: "Failed to remove forward"
+            } finally {
+                // Forgotten even when adb refuses. The usual cause is an unplugged device, whose
+                // forwards adb drops with its transport; kept, the entry would refuse this port to
+                // every other device until restart. A listener that does survive is still caught
+                // by `--no-rebind` and the launcher's bind probe.
+                forwards.remove(target)
             }
         }
     }

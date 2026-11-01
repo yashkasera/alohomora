@@ -14,8 +14,14 @@ internal class AdbServiceImpl(
         AdbParser.parseDevices(result.stdout)
     }
 
-    override suspend fun forwardDevToolsPort(deviceId: String, hostPort: Int, devicePort: Int) {
-        runRequired(deviceId, listOf("forward", "tcp:$hostPort", "tcp:$devicePort"))
+    override suspend fun forwardDevToolsPort(
+        deviceId: String,
+        hostPort: Int,
+        devicePort: Int,
+        rebind: Boolean,
+    ) {
+        val noRebind = if (rebind) emptyList() else listOf("--no-rebind")
+        runRequired(deviceId, listOf("forward") + noRebind + listOf("tcp:$hostPort", "tcp:$devicePort"))
     }
 
     override suspend fun removeForward(deviceId: String, hostPort: Int) {
