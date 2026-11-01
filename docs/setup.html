@@ -197,7 +197,20 @@
                 </div>
 
                 <h4 class="reveal">Swift replay handlers</h4>
-                <p class="reveal">Kotlin sealed class subtypes are not exported to ObjC/Swift. Use <code>ReplayOutcomes</code> factory methods to construct results:</p>
+                <p class="reveal">A URLSession app registers the ready-made handler from <code>AlohomoraKitSwift</code>. It drops the headers CFNetwork manages, links the replay to its source without adding a header, and refuses a session that lacks Alohomora's protocol. Pass <code>resign</code> if your endpoint is signed in app code, so the signature is computed over the body being replayed:</p>
+
+                <div class="code-block reveal">
+                    <div class="code-header">Swift</div>
+                    <pre><span class="kw">import</span> <span class="type">AlohomoraKitSwift</span>
+
+<span class="kw">let</span> session = <span class="type">URLSession</span>(configuration: <span class="type">Alohomora</span>.shared.<span class="fn">alohomoraURLSessionConfiguration</span>())
+
+<span class="type">Alohomora</span>.shared.<span class="fn">registerReplayHandler</span>(handler: <span class="fn">urlSessionReplayHandler</span>(session: session) { request <span class="kw">in</span>
+    request.<span class="fn">setValue</span>(<span class="kw">try await</span> signer.<span class="fn">signature</span>(for: request), forHTTPHeaderField: <span class="str">"X-Signature"</span>)
+})</pre>
+                </div>
+
+                <p class="reveal">Writing your own instead? Kotlin sealed class subtypes are not exported to ObjC/Swift, so build results with the <code>ReplayOutcomes</code> factory methods:</p>
 
                 <div class="code-block reveal">
                     <div class="code-header">Swift</div>

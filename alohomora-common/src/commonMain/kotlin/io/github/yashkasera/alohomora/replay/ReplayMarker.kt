@@ -10,8 +10,9 @@ import io.github.yashkasera.alohomora.replay.ReplayMarker.HEADER
  * in the console as an unexplained duplicate of the request above it.
  *
  * The handlers Alohomora ships do **not** use [HEADER]. `okHttpReplayHandler` carries the marker in
- * an OkHttp request tag and `ktorReplayHandler` in a Ktor attribute, both of which stay client-side
- * and never reach the wire. That is deliberate: see [HEADER] for what goes wrong otherwise.
+ * an OkHttp request tag, `ktorReplayHandler` in a Ktor attribute and the Swift
+ * `urlSessionReplayHandler` in an `NSURLProtocol` property (`AlohomoraReplayKeys.PROPERTY_KEY`), all
+ * of which stay client-side and never reach the wire. That is deliberate: see [HEADER] for what goes wrong otherwise.
  */
 object ReplayMarker {
 
