@@ -41,6 +41,16 @@ jobs:
       - name: Unit tests (common)
         run: ./gradlew :alohomora-common:jvmTest
 
+      # The library itself has no JVM target, so none of its tests ran on a PR: CrashHandlerTest, the
+      # protocol and pairing tests and the rest of commonTest only ever ran on a developer's machine.
+      - name: Unit tests (library, Android host)
+        run: ./gradlew :alohomora:testAndroidHostTest
+
+      # Compiled, not run: the device tests need a physical device. Compiling them is still what
+      # catches an internal API change that breaks them, which is how #48 left `check` red until #54.
+      - name: Device tests compile
+        run: ./gradlew :alohomora:assembleAndroidDeviceTest
+
       - name: Unit tests (desktop)
         run: ./gradlew :desktopApp:test
 
@@ -49,3 +59,22 @@ jobs:
 
       - name: Noop parity check
         run: ./gradlew consumerParity
+
+  # iOS targets only compile on macOS, so the iOS half of every expect/actual pair, and every iosTest,
+  # went untested on PRs. The simulator target is the only one Kotlin/Native can run tests on; nothing
+  # here runs or verifies app behaviour.
+  ios:
+    name: iOS unit tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Unit tests (iOS)
+        run: ./gradlew :alohomora:iosSimulatorArm64Test :alohomora-common:iosSimulatorArm64Test
