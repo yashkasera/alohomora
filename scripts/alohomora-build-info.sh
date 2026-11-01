@@ -8,9 +8,13 @@
 # names, the millisecond timestamps and the release-build webhook gate all match the Gradle task
 # deliberately — the two producers feed one runtime contract (`BundledBuildInfo`).
 #
-# Add to the app target as a "Run Script" phase, placed AFTER "Copy Bundle Resources":
+# Add to the app target as a "Run Script" phase, placed AFTER "Copy Bundle Resources". An app that
+# depends on Alohomora through Swift Package Manager runs it from the package checkout, which holds
+# the whole repository, so nothing needs copying into the app:
 #
-#     "$SRCROOT/../scripts/alohomora-build-info.sh"
+#     "${BUILD_DIR%/Build/*}/SourcePackages/checkouts/Alohomora/scripts/alohomora-build-info.sh"
+#
+# The showcase app, built from source in this repository, uses "$SRCROOT/../scripts/alohomora-build-info.sh".
 #
 # Leave the phase's output files EMPTY and tick "Based on dependency analysis" off: git state changes
 # without any input file changing, so a cached phase would ship yesterday's commit sha.

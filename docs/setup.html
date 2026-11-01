@@ -331,16 +331,18 @@ vc.sheetPresentationController?.prefersGrabberVisible = <span class="kw">true</s
 
                 <h3 class="reveal">Add the Run Script phase</h3>
 
-                <p class="reveal">In Xcode, add a new Run Script phase <strong>after</strong> "Copy Bundle Resources":</p>
+                <p class="reveal">There is nothing to copy into your project. Swift Package Manager checks out the whole Alohomora repository, script included, so the build phase runs it straight from that checkout. In Xcode, add a new Run Script phase <strong>after</strong> "Copy Bundle Resources":</p>
 
                 <div class="code-block reveal">
                     <div class="code-header">Run Script Phase</div>
-                    <pre>"$SRCROOT/../scripts/alohomora-build-info.sh"</pre>
+                    <pre>"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/Alohomora/scripts/alohomora-build-info.sh"</pre>
                 </div>
 
                 <ul class="reveal">
                     <li>Untick <strong>"Based on dependency analysis"</strong> so the script runs on every build.</li>
                     <li>Set <strong>ENABLE_USER_SCRIPT_SANDBOXING = NO</strong> in Build Settings. The script needs to run <code>git</code>, which the sandbox blocks.</li>
+                    <li>The checkout folder is named after the package URL's last path component. If you added Alohomora from a fork or mirror, use that repository's name instead of <code>Alohomora</code>.</li>
+                    <li>Building Alohomora from source in the same repository instead? Point the phase at <code>scripts/alohomora-build-info.sh</code> relative to <code>$SRCROOT</code>, as the showcase app does.</li>
                 </ul>
 
                 <h3 class="reveal">Environment variables</h3>
