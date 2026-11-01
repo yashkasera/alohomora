@@ -143,6 +143,20 @@ object Alohomora {
     val isReplaySupported: Boolean get() = AlohomoraImpl.isReplaySupported
 
     /**
+     * Names extra request headers to drop before a replay reaches the registered handler, so the
+     * app's own interceptors regenerate them. Matching is case-insensitive, and each call replaces
+     * the previous list; call with no arguments to clear it.
+     *
+     * For per-request values that are not secret, so are not redacted at capture time — a payload
+     * signature, a nonce, a timestamp. Forwarded verbatim they are stale, and an interceptor that
+     * appends rather than sets leaves the server two values to choose between. Hop-by-hop and
+     * client-negotiated headers (`Content-Length`, `Host`, `Accept-Encoding`, …) are always dropped
+     * and need not be listed. Applies to replays from both consoles.
+     */
+    fun setReplayStrippedHeaders(vararg headerNames: String) =
+        AlohomoraImpl.setReplayStrippedHeaders(*headerNames)
+
+    /**
      * Specifies which HTTP header names should have their values replaced with `[REDACTED]`
      * at capture time. Matching is case-insensitive.
      */

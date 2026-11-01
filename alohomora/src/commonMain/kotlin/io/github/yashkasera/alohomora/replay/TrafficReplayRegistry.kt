@@ -34,11 +34,19 @@ internal object TrafficReplayRegistry {
      * from a debug console, often against a URL that was edited by hand, so a refused connection or
      * a malformed URL is an expected outcome that belongs on screen — not an exception that takes
      * down the console or the DevTools connection with it.
+     *
+     * Headers are sanitised again here, on the device, because this is the one point both consoles
+     * share. A desktop replay was prepared in the desktop process, which never sees the app's
+     * [ReplayHeaders.additionalStripList], so its headers have only been through the built-in
+     * list. [ReplayHeaders.sanitize] is idempotent, so the mobile path paying for it twice is
+     * harmless — and a hand-edited header named in the policy is dropped either way, which is the
+     * point of having one.
      */
     suspend fun replay(request: ReplayRequest): ReplayOutcome {
         val handler = handler ?: return ReplayOutcome.Failed(NO_HANDLER)
+        val sanitized = request.copy(headers = ReplayHeaders.sanitize(request.headers))
         return try {
-            handler.replay(request)
+            handler.replay(sanitized)
         } catch (e: Throwable) {
             Logger.d { "[Alohomora] Replay handler threw: ${e.message}" }
             ReplayOutcome.Failed(e.message ?: e::class.simpleName ?: "Replay failed")

@@ -38,6 +38,7 @@ public final class io/github/yashkasera/alohomora/Alohomora {
 	public final fun setDebugConfig (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun setFeatureFlags (Ljava/util/List;Ljava/lang/String;)V
 	public static synthetic fun setFeatureFlags$default (Lio/github/yashkasera/alohomora/Alohomora;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun setReplayStrippedHeaders ([Ljava/lang/String;)V
 	public final fun setShakeToOpenEnabled (Z)V
 	public final fun startDevToolsServer (I)Z
 	public static synthetic fun startDevToolsServer$default (Lio/github/yashkasera/alohomora/Alohomora;IILjava/lang/Object;)Z

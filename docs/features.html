@@ -158,7 +158,7 @@
                 <p class="reveal">If your app signs requests, tell replay which headers to strip so your interceptors regenerate them:</p>
                 <div class="code-block reveal">
                     <div class="code-header">Kotlin</div>
-                    <pre><span class="type">ReplayHeaders</span>.additionalStripList = <span class="fn">setOf</span>(<span class="str">"X-Signature"</span>, <span class="str">"X-Timestamp"</span>)</pre>
+                    <pre><span class="type">Alohomora</span>.<span class="fn">setReplayStrippedHeaders</span>(<span class="str">"X-Signature"</span>, <span class="str">"X-Timestamp"</span>)</pre>
                 </div>
 
                 <h4 class="reveal">Retrofit</h4>
