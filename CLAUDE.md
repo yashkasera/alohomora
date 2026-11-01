@@ -29,7 +29,7 @@ Desktop app via a custom binary TCP protocol over ADB port forwarding.
 ./gradlew :showcaseApp:installDebug
 
 # Publishing
-./gradlew publishMavenCentral         # Publish all five artifacts to Maven Central
+./gradlew publishMavenCentral         # Publish all six artifacts to Maven Central
 ./gradlew publishToMavenLocal         # Publish to Maven Local for verification
 
 # API compatibility (run before any public API change)
@@ -40,7 +40,7 @@ Desktop app via a custom binary TCP protocol over ADB port forwarding.
 **Env vars required for publishing:** `mavenCentralUsername`/`mavenCentralPassword` (Sonatype
 Central Portal) and `signing.keyId`/`signing.password`/`signing.secretKeyRingFile` (GPG).
 
-**Five artifacts ship, not four.** `publishMavenCentral` covers `:alohomora`, `:alohomora-noop`,
+**Six artifacts ship, not five.** `publishMavenCentral` covers `:alohomora`, `:alohomora-core`, `:alohomora-noop`,
 `:alohomora-common`, `:alohomora-ui` *and* `alohomora-gradle-plugin`. The plugin cannot go in the
 root `publishedProjects` list because it is an included build, not a subproject — a
 `:alohomora-gradle-plugin:` task path does not resolve — so the root reaches it through
@@ -64,6 +64,7 @@ The plugin ships to **both** Maven Central and the Gradle Plugin Portal, so a co
 |---------------------------|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
 | `alohomora`               | KMP library (Android + iOS)       | Full debug-time library: public API, Room DB, DevTools TCP server, Koin DI, Compose UI                                                            |
 | `alohomora-noop`          | KMP library (Android + iOS + JVM) | Production no-op mirror of the same public API. Zero runtime overhead.                                                                            |
+| `alohomora-core`          | KMP library (Android + iOS)       | Capture layer with no Compose: interceptors, URL protocol, mock rule engine. `alohomora` depends on it with `api` and re-exports it to Swift.     |
 | `alohomora-common`        | KMP library (Android + iOS + JVM) | Shared data models, Room entities, binary protocol types. Used by both `alohomora` and `desktopApp`.                                              |
 | `alohomora-ui`            | KMP library (Android + iOS + JVM) | Shared Compose UI components (incl. the trace waterfall), icons, and theming. Depends on `alohomora-common` for the models the waterfall renders. |
 | `alohomora-gradle-plugin` | Gradle plugin (included build)    | Code-generates `AlohomoraBuildGenerationInfo` from Git metadata at build time.                                                                    |
@@ -687,7 +688,7 @@ translation patterns.
   `DatabaseRepositoryImpl`, `ShareManager`
   all have platform-specific `actual` implementations. **When modifying these, update all three (
   Android, iOS, Desktop).**
-- **API validation:** `alohomora`, `alohomora-noop` and `alohomora-ui` are API-validated; only
+- **API validation:** `alohomora`, `alohomora-core`, `alohomora-noop` and `alohomora-ui` are API-validated; only
   `desktopApp`, `showcaseApp` and `alohomora-common` are excluded (`apiValidation.ignoredProjects`
   in the root build). Run `./gradlew apiCheck` before any commit
   that changes the public surface; run `./gradlew apiDump` to update the `.api` golden files.

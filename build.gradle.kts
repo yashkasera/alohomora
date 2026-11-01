@@ -26,6 +26,9 @@ allprojects {
 apiValidation {
     ignoredProjects += listOf("showcaseApp", "desktopApp", "alohomora-common")
 
+    // Public only so :alohomora can reach it in :alohomora-core; not part of the API.
+    nonPublicMarkers += "io.github.yashkasera.alohomora.InternalAlohomoraApi"
+
     // Without this, :alohomora:apiCheck is a no-op: BCV only dumps JVM targets by default,
     // :alohomora has no jvm() target, and klib validation is disabled out of the box. The
     // repo previously claimed apiCheck guarded the public surface while enforcing nothing.
@@ -151,16 +154,16 @@ tasks.named("check") {
     dependsOn(":alohomora:assembleAndroidDeviceTest", ":showcaseApp:assembleDebugAndroidTest")
 }
 
-// All four modules must ship together: :alohomora's POM lists :alohomora-common and
-// :alohomora-ui as runtime dependencies, so publishing only the first two leaves every
+// All five modules must ship together: :alohomora's POM lists :alohomora-core,
+// :alohomora-common and :alohomora-ui as dependencies, so leaving any of them out leaves every
 // external consumer with unresolvable dependencies.
 val publishedProjects =
-    listOf(":alohomora", ":alohomora-noop", ":alohomora-common", ":alohomora-ui")
+    listOf(":alohomora", ":alohomora-core", ":alohomora-noop", ":alohomora-common", ":alohomora-ui")
 
-// The Gradle plugin is the fifth published artifact and cannot go in the list above: it is an
+// The Gradle plugin is the sixth published artifact and cannot go in the list above: it is an
 // included build, not a subproject, so a `:alohomora-gradle-plugin:` task path does not resolve.
 // `gradle.includedBuild(...)` is how the root reaches it, which keeps one publish entry point for
-// all five rather than a second CI invocation that is easy to forget — the way the plugin went
+// all six rather than a second CI invocation that is easy to forget — the way the plugin went
 // unpublished through v1.0.0 in the first place.
 val pluginBuild = gradle.includedBuild("alohomora-gradle-plugin")
 

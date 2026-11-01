@@ -1,0 +1,42 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.yashkasera:alohomora-core>
+open annotation class io.github.yashkasera.alohomora/InternalAlohomoraApi : kotlin/Annotation { // io.github.yashkasera.alohomora/InternalAlohomoraApi|null[0]
+    constructor <init>() // io.github.yashkasera.alohomora/InternalAlohomoraApi.<init>|<init>(){}[0]
+}
+
+final class io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol : platform.Foundation/NSURLProtocol, platform.Foundation/NSURLSessionDataDelegateProtocol { // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol|null[0]
+    constructor <init>(platform.Foundation/NSURLRequest, platform.Foundation/NSCachedURLResponse?, platform.Foundation/NSURLProtocolClientProtocol?) // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.<init>|<init>(request:platform.Foundation.NSURLRequest;cachedResponse:platform.Foundation.NSCachedURLResponse?;client:platform.Foundation.NSURLProtocolClientProtocol?){}[0]
+
+    final fun URLSession(platform.Foundation/NSURLSession, platform.Foundation/NSURLSessionDataTask, platform.Foundation/NSData) // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.URLSession|objc:URLSession:dataTask:didReceiveData:[0]
+    final fun URLSession(platform.Foundation/NSURLSession, platform.Foundation/NSURLSessionDataTask, platform.Foundation/NSURLResponse, kotlin/Function1<kotlin/Long, kotlin/Unit>) // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.URLSession|objc:URLSession:dataTask:didReceiveResponse:completionHandler:[0]
+    final fun URLSession(platform.Foundation/NSURLSession, platform.Foundation/NSURLSessionTask, platform.Foundation/NSError?) // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.URLSession|objc:URLSession:task:didCompleteWithError:[0]
+    final fun URLSession(platform.Foundation/NSURLSession, platform.Foundation/NSURLSessionTask, platform.Foundation/NSHTTPURLResponse, platform.Foundation/NSURLRequest, kotlin/Function1<platform.Foundation/NSURLRequest?, kotlin/Unit>) // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.URLSession|objc:URLSession:task:willPerformHTTPRedirection:newRequest:completionHandler:[0]
+    final fun URLSession(platform.Foundation/NSURLSession, platform.Foundation/NSURLSessionTask, platform.Foundation/NSURLAuthenticationChallenge, kotlin/Function2<kotlin/Long, platform.Foundation/NSURLCredential?, kotlin/Unit>) // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.URLSession|objc:URLSession:task:didReceiveChallenge:completionHandler:[0]
+    final fun startLoading() // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.startLoading|objc:startLoading[0]
+    final fun stopLoading() // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.stopLoading|objc:stopLoading[0]
+
+    final object Companion : platform.Foundation/NSURLProtocolMeta { // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.Companion|null[0]
+        final fun canInitWithRequest(platform.Foundation/NSURLRequest): kotlin/Boolean // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.Companion.canInitWithRequest|objc:canInitWithRequest:[0]
+        final fun canonicalRequestForRequest(platform.Foundation/NSURLRequest): platform.Foundation/NSURLRequest // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.Companion.canonicalRequestForRequest|objc:canonicalRequestForRequest:[0]
+        final fun register(): kotlin/Boolean // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.Companion.register|register(){}[0]
+        final fun unregister() // io.github.yashkasera.alohomora.traffic/AlohomoraURLProtocol.Companion.unregister|unregister(){}[0]
+    }
+}
+
+final object io.github.yashkasera.alohomora.traffic/AlohomoraReplayKeys { // io.github.yashkasera.alohomora.traffic/AlohomoraReplayKeys|null[0]
+    final const val HEADER // io.github.yashkasera.alohomora.traffic/AlohomoraReplayKeys.HEADER|{}HEADER[0]
+        final fun <get-HEADER>(): kotlin/String // io.github.yashkasera.alohomora.traffic/AlohomoraReplayKeys.HEADER.<get-HEADER>|<get-HEADER>(){}[0]
+    final const val PROPERTY_KEY // io.github.yashkasera.alohomora.traffic/AlohomoraReplayKeys.PROPERTY_KEY|{}PROPERTY_KEY[0]
+        final fun <get-PROPERTY_KEY>(): kotlin/String // io.github.yashkasera.alohomora.traffic/AlohomoraReplayKeys.PROPERTY_KEY.<get-PROPERTY_KEY>|<get-PROPERTY_KEY>(){}[0]
+}
+
+final val io.github.yashkasera.alohomora.network/AlohomoraInspector // io.github.yashkasera.alohomora.network/AlohomoraInspector|{}AlohomoraInspector[0]
+    final fun <get-AlohomoraInspector>(): io.ktor.client.plugins.api/ClientPlugin<kotlin/Unit> // io.github.yashkasera.alohomora.network/AlohomoraInspector.<get-AlohomoraInspector>|<get-AlohomoraInspector>(){}[0]
+final val io.github.yashkasera.alohomora.network/AlohomoraReplayOfKey // io.github.yashkasera.alohomora.network/AlohomoraReplayOfKey|{}AlohomoraReplayOfKey[0]
+    final fun <get-AlohomoraReplayOfKey>(): io.ktor.util/AttributeKey<kotlin/String> // io.github.yashkasera.alohomora.network/AlohomoraReplayOfKey.<get-AlohomoraReplayOfKey>|<get-AlohomoraReplayOfKey>(){}[0]

@@ -4,13 +4,22 @@ import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
 import io.github.yashkasera.alohomora.common.mock.TemplateEngine
+import io.github.yashkasera.alohomora.InternalAlohomoraApi
 import kotlin.concurrent.Volatile
+import kotlin.experimental.ExperimentalObjCRefinement
+import kotlin.native.HiddenFromObjC
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-internal const val MOCK_ID_HEADER = "X-Alohomora-Mock-Id"
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
+@InternalAlohomoraApi
+const val MOCK_ID_HEADER = "X-Alohomora-Mock-Id"
 
-internal object NetworkRuleEngine {
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
+@InternalAlohomoraApi
+object NetworkRuleEngine {
 
     @Volatile
     private var _throttle: ThrottleProfile = ThrottleProfiles.NONE

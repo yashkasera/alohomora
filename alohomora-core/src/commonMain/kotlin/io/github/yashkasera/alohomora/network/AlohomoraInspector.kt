@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.network
 
-import io.github.yashkasera.alohomora.AlohomoraImpl
+import io.github.yashkasera.alohomora.InternalAlohomoraApi
+import io.github.yashkasera.alohomora.capture.CaptureSink
 import io.github.yashkasera.alohomora.common.CapturedBody
 import io.github.yashkasera.alohomora.common.HeaderRedaction
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -105,7 +106,7 @@ private fun TrafficEntry.captureRequestBody(content: OutgoingContent) {
  */
 private fun String.looksDecodedFromBinary(): Boolean = indexOf('�') >= 0 || indexOf('\u0000') >= 0
 
-@OptIn(ExperimentalUuidApi::class)
+@OptIn(ExperimentalUuidApi::class, InternalAlohomoraApi::class)
 val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
     // The body is not read here. onRequest runs before ContentNegotiation serializes, so for
     // `setBody(dto)` the content is still the DTO object; reading it as "no body" let replay send
@@ -205,7 +206,7 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
                 "<binary or unreadable body: ${e.message}>"
             }
 
-            AlohomoraImpl.persistTrafficEntry(entity)
+            CaptureSink.persistTrafficEntry(entity)
 
             // Ktor hooks are suspending, so delay() throttles the caller directly.
             // Bandwidth throttling is not implemented here — on Android, the OkHttp engine's
