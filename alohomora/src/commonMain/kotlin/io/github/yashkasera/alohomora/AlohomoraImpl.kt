@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import io.github.yashkasera.alohomora.AlohomoraImpl.initLock
 import io.github.yashkasera.alohomora.AlohomoraImpl.persistError
 import io.github.yashkasera.alohomora.cache.SharedPreferencesOverrides
+import io.github.yashkasera.alohomora.capture.CaptureSink
 import io.github.yashkasera.alohomora.common.ActionParameter
 import io.github.yashkasera.alohomora.common.CRASH_EVENT_NAME
 import io.github.yashkasera.alohomora.common.Error
@@ -130,6 +131,7 @@ internal object AlohomoraImpl {
             this.config = config
             this.hostDebuggable = hostDebuggable
             koinApplication = initKoin(appDeclaration)
+            CaptureSink.trafficSink = ::persistTrafficEntry
             // Both hooks follow DevTools activation, because on iOS nothing else stops them: there
             // is no noop artifact and SPM cannot drop a package per configuration, so an App Store
             // build that calls init() would otherwise open the whole console — traffic bodies, the

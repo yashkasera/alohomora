@@ -62,7 +62,15 @@ kotlin {
     iosSimulatorArm64()
 
     sourceSets {
+        all {
+            languageSettings.optIn("io.github.yashkasera.alohomora.InternalAlohomoraApi")
+        }
+
         commonMain.dependencies {
+            // api: everything that moved to core keeps its package and name, so consumers of this
+            // artifact must keep seeing it on their compile classpath exactly as before.
+            api(project(":alohomora-core"))
+
             // api, not implementation: these modules' types appear in Alohomora's public
             // surface (TraceEntry from -common, ImageVector/theme from -ui via
             // CustomScreenPlugin), so consumers need them on their compile classpath.
@@ -161,6 +169,9 @@ kotlin {
                     // skiko once into its dylib and is referenced (not force-loaded), so it is
                     // embedded per-configuration (debug/beta only, excluded from release).
                     isStatic = false
+                    // Exported so core's declarations keep their unprefixed Swift names
+                    // (AlohomoraURLProtocol, not Alohomora_coreAlohomoraURLProtocol).
+                    export(project(":alohomora-core"))
                     xcf.add(this)
                 }
             }
