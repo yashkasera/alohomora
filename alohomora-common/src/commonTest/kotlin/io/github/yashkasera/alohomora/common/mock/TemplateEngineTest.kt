@@ -129,4 +129,46 @@ class TemplateEngineTest {
         assertEquals(TemplateEngine.resolve("{{bool}}suffix").endsWith("suffix"), true)
         assertEquals(TemplateEngine.resolve("prefix{{bool}}").startsWith("prefix"), true)
     }
+
+    @Test
+    fun rangesThatUsedToThrowNowResolve() {
+        // Each of these threw from Random before ranges were normalised, failing the app's request.
+        val templates = listOf(
+            "{{int(10,5)}}",
+            "{{int(2147483647,2147483647)}}",
+            "{{float(1,1)}}",
+            "{{float(2,1)}}",
+            "{{amount(5,5)}}",
+            "{{date(past,0)}}",
+            "{{date(future,-3)}}",
+        )
+        for (template in templates) {
+            val result = TemplateEngine.resolve(template)
+            assertTrue(!result.contains("{{"), "$template was not resolved: $result")
+        }
+    }
+
+    @Test
+    fun nonFiniteFloatBoundsFallBackToDefaults() {
+        repeat(10) {
+            val value = TemplateEngine.resolve("{{float(NaN,Infinity)}}").toDouble()
+            assertTrue(value >= 0.0 && value <= 1.0, "Expected default range but got $value")
+        }
+    }
+
+    @Test
+    fun negativeFloatRangeRendersAsANumber() {
+        val result = TemplateEngine.resolve("{{float(-1,-0.5)}}")
+        val value = result.toDoubleOrNull()
+        assertTrue(value != null, "Expected a number but got $result")
+        assertTrue(value >= -1.0 && value <= -0.5, "Expected value in range but got $value")
+    }
+
+    @Test
+    fun oneBadPlaceholderDoesNotStopTheRest() {
+        val result = TemplateEngine.resolve("""{"a": {{int(9,3)}}, "b": "{{uuid}}", "c": {{nope}}}""")
+        assertTrue(!result.contains("{{int"), "int should be resolved: $result")
+        assertTrue(!result.contains("{{uuid}}"), "uuid should be resolved: $result")
+        assertTrue(result.contains("{{nope}}"), "unknown placeholder should stay literal: $result")
+    }
 }

@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.common.mock
 
-import kotlin.math.roundToInt
+import kotlin.math.abs
+import kotlin.math.roundToLong
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
@@ -43,20 +44,21 @@ internal object MockGenerators {
         return "$first.$last@example.com"
     }
 
-    fun int(min: Int = 0, max: Int = 100): String =
-        Random.nextInt(min, max + 1).toString()
-
-    fun float(min: Double = 0.0, max: Double = 1.0): String {
-        val value = Random.nextDouble(min, max)
-        val scaled = (value * 10_000).roundToInt()
-        return "${scaled / 10_000}.${(scaled % 10_000).toString().padStart(4, '0')}"
+    // Bounds come from a hand-written template, so they are normalised rather than trusted:
+    // reversed bounds are swapped and equal bounds yield that value. Random throws on all of
+    // these, and the throw happened inside the host app's request (see TemplateEngine.resolve).
+    // Long arithmetic, because `max + 1` overflows at Int.MAX_VALUE.
+    fun int(min: Int = 0, max: Int = 100): String {
+        val lo = minOf(min, max).toLong()
+        val hi = maxOf(min, max).toLong()
+        return Random.nextLong(lo, hi + 1).toString()
     }
 
-    fun amount(min: Double = 0.0, max: Double = 1000.0): String {
-        val value = Random.nextDouble(min, max)
-        val cents = (value * 100).roundToInt()
-        return "${cents / 100}.${(cents % 100).toString().padStart(2, '0')}"
-    }
+    fun float(min: Double = 0.0, max: Double = 1.0): String =
+        fixed(between(min, max), decimals = 4)
+
+    fun amount(min: Double = 0.0, max: Double = 1000.0): String =
+        fixed(between(min, max), decimals = 2)
 
     fun bool(): String = Random.nextBoolean().toString()
 
@@ -64,7 +66,9 @@ internal object MockGenerators {
 
     fun date(direction: String = "past", offsetDays: Int = 30): String {
         val now = Clock.System.now()
-        val days = Random.nextInt(1, offsetDays + 1)
+        // 1..offsetDays as before, but an offset of zero or less means today. `nextInt(n) + 1`
+        // rather than `nextInt(1, n + 1)`, which threw for 0 and overflowed at Int.MAX_VALUE.
+        val days = if (offsetDays <= 0) 0 else Random.nextInt(offsetDays) + 1
         val instant = when (direction.lowercase()) {
             "future" -> now.plus(days, DateTimeUnit.DAY, TimeZone.UTC)
             else -> now.minus(days, DateTimeUnit.DAY, TimeZone.UTC)
@@ -79,5 +83,30 @@ internal object MockGenerators {
     fun oneOf(options: List<String>): String {
         if (options.isEmpty()) return ""
         return options[Random.nextInt(options.size)].trim()
+    }
+
+    private fun between(min: Double, max: Double): Double {
+        val lo = minOf(min, max)
+        val hi = maxOf(min, max)
+        return if (lo == hi) lo else Random.nextDouble(lo, hi)
+    }
+
+    /**
+     * Formats [value] with exactly [decimals] places and no exponent, so it drops into a JSON
+     * body as a plain number.
+     *
+     * The sign is handled apart from the digits. Splitting a negative scaled value with `/` and
+     * `%` gave `0.-5000` for -0.5. Magnitudes past what a Long can hold after scaling fall back
+     * to `toString()`, which is still a valid JSON number, rather than clamping to a wrong one.
+     */
+    private fun fixed(value: Double, decimals: Int): String {
+        var factor = 1L
+        repeat(decimals) { factor *= 10 }
+        val magnitude = abs(value) * factor
+        if (magnitude >= Long.MAX_VALUE.toDouble()) return value.toString()
+        val scaled = magnitude.roundToLong()
+        val sign = if (value < 0 && scaled != 0L) "-" else ""
+        val fraction = (scaled % factor).toString().padStart(decimals, '0')
+        return "$sign${scaled / factor}.$fraction"
     }
 }

@@ -4,6 +4,15 @@ object TemplateEngine {
 
     private val pattern = Regex("""\{\{(\w+)(?:\(([^)]*)\))?\}\}""")
 
+    /**
+     * Replaces every `{{generator(args)}}` in [template] with a fresh value.
+     *
+     * Never throws. It runs inside the host app's request (`NetworkRuleEngine.findMatch`, from the
+     * OkHttp interceptors and the iOS URLProtocol), where an exception is an app crash: OkHttp
+     * rethrows non-IO exceptions on its dispatcher thread, and a Kotlin exception crossing into
+     * Objective-C terminates the process. So a generator that fails leaves its own placeholder as
+     * literal text, the way an unknown name does, and the rest of the body still resolves.
+     */
     fun resolve(template: String): String {
         if (!template.contains("{{")) return template
         return pattern.replace(template) { match ->
@@ -13,7 +22,7 @@ object TemplateEngine {
                 ?.split(",")
                 ?.map { it.trim() }
                 ?: emptyList()
-            generate(name, args) ?: match.value
+            runCatching { generate(name, args) }.getOrNull() ?: match.value
         }
     }
 
@@ -32,14 +41,14 @@ object TemplateEngine {
         }
 
         "float" -> {
-            val min = args.getOrNull(0)?.toDoubleOrNull() ?: 0.0
-            val max = args.getOrNull(1)?.toDoubleOrNull() ?: 1.0
+            val min = args.getOrNull(0)?.toFiniteDoubleOrNull() ?: 0.0
+            val max = args.getOrNull(1)?.toFiniteDoubleOrNull() ?: 1.0
             MockGenerators.float(min, max)
         }
 
         "amount" -> {
-            val min = args.getOrNull(0)?.toDoubleOrNull() ?: 0.0
-            val max = args.getOrNull(1)?.toDoubleOrNull() ?: 1000.0
+            val min = args.getOrNull(0)?.toFiniteDoubleOrNull() ?: 0.0
+            val max = args.getOrNull(1)?.toFiniteDoubleOrNull() ?: 1000.0
             MockGenerators.amount(min, max)
         }
 
@@ -52,4 +61,7 @@ object TemplateEngine {
         "oneof" -> MockGenerators.oneOf(args)
         else -> null
     }
+
+    // "NaN" and "Infinity" parse as doubles but are not a range, so they get the default too.
+    private fun String.toFiniteDoubleOrNull(): Double? = toDoubleOrNull()?.takeIf { it.isFinite() }
 }

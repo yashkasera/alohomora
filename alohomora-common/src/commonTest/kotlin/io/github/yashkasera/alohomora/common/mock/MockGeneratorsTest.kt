@@ -86,4 +86,87 @@ class MockGeneratorsTest {
     fun oneOfEmptyReturnsEmpty() {
         assertTrue(MockGenerators.oneOf(emptyList()).isEmpty())
     }
+
+    @Test
+    fun intWithReversedBoundsStaysInRange() {
+        repeat(20) {
+            val value = MockGenerators.int(10, 5).toInt()
+            assertTrue(value in 5..10, "int(10,5) produced $value")
+        }
+    }
+
+    @Test
+    fun intWithEqualBoundsReturnsThatValue() {
+        assertEquals("7", MockGenerators.int(7, 7))
+    }
+
+    @Test
+    fun intAtIntMaxDoesNotOverflow() {
+        assertEquals(Int.MAX_VALUE.toString(), MockGenerators.int(Int.MAX_VALUE, Int.MAX_VALUE))
+        repeat(20) {
+            val value = MockGenerators.int(Int.MAX_VALUE - 1, Int.MAX_VALUE).toLong()
+            assertTrue(value in (Int.MAX_VALUE - 1L)..Int.MAX_VALUE.toLong(), "produced $value")
+        }
+    }
+
+    @Test
+    fun intAcrossTheWholeIntRange() {
+        repeat(20) {
+            val value = MockGenerators.int(Int.MIN_VALUE, Int.MAX_VALUE).toLong()
+            assertTrue(value in Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong(), "produced $value")
+        }
+    }
+
+    @Test
+    fun floatWithEqualBoundsReturnsThatValue() {
+        assertEquals("1.0000", MockGenerators.float(1.0, 1.0))
+    }
+
+    @Test
+    fun floatWithReversedBoundsStaysInRange() {
+        repeat(20) {
+            val value = MockGenerators.float(2.0, 1.0).toDouble()
+            assertTrue(value >= 1.0 && value <= 2.0, "float(2,1) produced $value")
+        }
+    }
+
+    @Test
+    fun negativeFloatKeepsItsSignInFront() {
+        assertEquals("-0.5000", MockGenerators.float(-0.5, -0.5))
+        assertEquals("-12.2500", MockGenerators.float(-12.25, -12.25))
+        repeat(20) {
+            val result = MockGenerators.float(-1.0, 0.0)
+            assertTrue(result.matches(Regex("""-?\d+\.\d{4}""")), "Malformed float: $result")
+            val value = result.toDouble()
+            assertTrue(value >= -1.0 && value <= 0.0, "float(-1,0) produced $value")
+        }
+    }
+
+    @Test
+    fun floatRoundingToZeroHasNoMinusSign() {
+        assertEquals("0.0000", MockGenerators.float(-0.00001, -0.00001))
+    }
+
+    @Test
+    fun negativeAmountKeepsItsSignInFront() {
+        assertEquals("-3.07", MockGenerators.amount(-3.07, -3.07))
+    }
+
+    @Test
+    fun hugeFloatFallsBackToAValidNumber() {
+        val result = MockGenerators.float(1e300, 1e300)
+        assertEquals(1e300, result.toDouble())
+    }
+
+    @Test
+    fun dateWithZeroOffsetIsToday() {
+        val today = MockGenerators.date("past", 0)
+        assertTrue(today.matches(Regex("""\d{4}-\d{2}-\d{2}""")), "Expected ISO date: $today")
+        assertEquals(today, MockGenerators.date("future", 0))
+    }
+
+    @Test
+    fun dateWithNegativeOffsetIsToday() {
+        assertEquals(MockGenerators.date("past", 0), MockGenerators.date("past", -5))
+    }
 }

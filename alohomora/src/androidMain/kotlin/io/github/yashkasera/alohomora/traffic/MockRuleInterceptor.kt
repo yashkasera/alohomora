@@ -26,7 +26,9 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 class MockRuleInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        val mockRule = NetworkRuleEngine.findMatch(request.url.toString(), request.method)
+        // A failed lookup falls through to the network rather than failing the app's request.
+        val mockRule = runCatching { NetworkRuleEngine.findMatch(request.url.toString(), request.method) }
+            .getOrNull()
             ?: return chain.proceed(request)
 
         return Response.Builder()
