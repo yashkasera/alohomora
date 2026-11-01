@@ -216,7 +216,8 @@ competing for those is how a debug library breaks a host app's crash reporter. S
 and
 must not gain one.** The host app writes a ~15-line adapter from whatever tracer it already runs;
 the
-README carries ready-made ones for OpenTelemetry and Sentry, and `showcaseApp` wires the OTel one.
+`docs/traces.html` carries ready-made ones for OpenTelemetry and Sentry, and `showcaseApp` wires the
+OTel one.
 
 This is the `registerReplayHandler` shape, not the `TrafficInterceptor` shape, and the distinction
 is the
@@ -294,10 +295,19 @@ Custom framed binary protocol defined in `alohomora-common`: 9-byte header (`mag
 *`alohomora-common` is a shared protocol contract** — changes here affect both the in-app library
 and the desktop app.
 
-Message types: `STREAM_EVENT`, `STREAM_API_LOG`, `SNAPSHOT_DATABASE`, `SNAPSHOT_PREFS`,
-`REQUEST_INITIAL_STATE`, `REQUEST_DATABASE_SCHEMA`, `REQUEST_DATABASE_TABLE`, `REQUEST_PREF_VALUE`,
-`REQUEST_CLEAR`, `REQUEST_REPLAY_TRACE`, `REPLAY_RESULT`, `PING`, `PONG`, `STREAM_ERROR`,
-`STREAM_SPAN`, `SNAPSHOT_TRACE_SPANS`, `REQUEST_TRACE_SPANS`.
+Message types (the `@SerialName`s in `DevToolsMessages.kt`, the source of truth):
+
+- Auth: `AUTH_CHALLENGE`, `AUTH_RESPONSE`, `AUTH_OTP_REQUIRED`, `AUTH_SUCCESS`, `AUTH_FAILURE`
+- Streams: `STREAM_TRAFFIC`, `STREAM_EVENT`, `STREAM_ERROR`, `STREAM_SPAN`, `STREAM_PLUGIN_DATA`
+- Snapshots: `INITIAL_STATE`, `SNAPSHOT_DATABASE`, `SNAPSHOT_CACHE`, `SNAPSHOT_TRACE_SPANS`,
+  `SNAPSHOT_FEATURE_FLAGS`
+- Requests: `REQUEST_INITIAL_STATE`, `REQUEST_DATABASE_SCHEMA`, `REQUEST_DATABASE_TABLE`,
+  `REQUEST_DATABASE_UPDATE`, `REQUEST_CACHE_VALUE`, `REQUEST_CACHE_UPDATE`, `REQUEST_CACHE_DELETE`,
+  `REQUEST_CACHE_REFRESH`, `REQUEST_CLEAR`, `REQUEST_REPLAY_TRACE`, `REQUEST_TRACE_SPANS`,
+  `REQUEST_CUSTOM_ACTION`, `REQUEST_PLUGIN_DATA_UPDATE`
+- Network rules: `SET_MOCK_RULES`, `SET_THROTTLE_PROFILE`, `SET_VPN_THROTTLE`, `VPN_STATE`
+- Results and control: `REPLAY_RESULT`, `CUSTOM_ACTION_RESULT`, `PLUGIN_DATA_UPDATE_RESULT`,
+  `DEVICE_ERROR`, `SERVER_SHUTTING_DOWN`, `PING`, `PONG`, plus the decode-only sentinel `UNKNOWN`
 
 **Liveness (`PING`/`PONG`):** the device pings an idle client every
 `DevToolsHeartbeat.PING_INTERVAL_MILLIS` and reaps `activeConnection` once the client has sent
@@ -433,7 +443,8 @@ Unknown placeholders pass through as-is.
 **`MockRule`** (`alohomora-common/.../NetworkRule.kt`) carries `id`, `name`, `enabled`,
 `urlPattern`,
 `isRegex`, `method`, `statusCode`, `responseBody`, `contentType`. Also in `NetworkRule.kt`:
-`ThrottleProfile` with five presets (NONE, EDGE, SLOW_3G, FAST_3G, SLOW_WIFI).
+the `ThrottleProfile` data class and the `ThrottleProfiles` object holding its five presets (NONE,
+EDGE, SLOW_3G, FAST_3G, SLOW_WIFI).
 
 **Desktop-side persistence** (`desktopApp/.../data/local/MockSessionStore.kt`): file-backed at
 `~/.alohomora/mock-sessions/` with an `index.json` + per-session `{uuid}.json`. Auto-save with
@@ -447,7 +458,7 @@ Unknown placeholders pass through as-is.
 
 **UI:** `MockRulesSideSheet` (master, 50% width) with session selector, save/import/export actions,
 rule list. `EditMockRuleSideSheet` (detail, 40% width) with JSON editor and "Insert generator"
-dropdown. `NetworkRulesActions` in the top bar shows throttle preset dropdown, mock-rules chip
+dropdown. `NetworkRulesToolbar` (`panels/NetworkRulesToolbar.kt`) in the top bar shows throttle preset dropdown, mock-rules chip
 (with session name and active count), and VPN state chip.
 
 ### Deep link builder
@@ -473,7 +484,7 @@ State `showDeepLinkBuilder` lives in `DevToolsDesktopApp`.
 ### Command palette
 
 `CommandPalette` (`desktopApp/.../components/CommandPalette.kt`) opens via `Cmd/Ctrl+K`. A modal
-overlay with a search field, grouped action list (NAVIGATION, GENERAL, DEVICE, DATA categories),
+overlay with a search field, grouped action list (NAVIGATION, GENERAL, DEVICE, DATA, GIT categories),
 keyboard navigation (arrow keys + Enter), and shortcut chips.
 
 `buildCommandActions()` assembles the full action list from callbacks. Categories:
@@ -487,10 +498,11 @@ keyboard navigation (arrow keys + Enter), and shortcut chips.
 ### Desktop app architecture
 
 Manual DI (no Koin): `DesktopAppComposition` constructs all stores (`MockSessionStore`,
-`DeepLinkHistoryStore`), repositories, use cases, and ViewModels. `LauncherScreen` dialog lets users
+`DeepLinkHistoryStore`), repositories, use cases, and ViewModels. `LauncherWindow` lets users
 select an ADB device and open per-device windows. Each window owns its own `DesktopAppComposition`.
-ADB port forwarding sets up the TCP tunnel from host to device. Includes an embedded terminal
-panel (`LocalTerminal`, `TerminalView`) via pty4j.
+ADB port forwarding sets up the TCP tunnel from host to device. There is **no embedded terminal**
+(no pty4j): `AdbToolsPanel` offers developer-option toggles, app/APK actions and a one-line
+`adb shell <command>` box with output history.
 
 ### MCP server (desktop-only)
 
@@ -592,10 +604,11 @@ do/don't, contribution guide).
   `large` 16 / `extraLarge` 28, plus `AlohomoraBottomSheetShape` (top corners only). This is the
   single corner scale; a former parallel `AlohomoraDimens.Corner` was deleted.
 - **Typography** (`MaterialTheme.typography`, `Type.kt`): **not** stock M3 fonts. Three bundled
-  families, one `Regular` face each — Instrument Serif (`display*`/`headline*`), Newsreader
-  (`title*`), JetBrains Mono (`body*`/`label*`). Weight is pinned to `Normal` everywhere; **emphasis
-  is carried by size and colour, never `FontWeight`** (a fake weight has no bundled face and Skia
-  synthesises it differently per platform).
+  families — Instrument Serif (`display*`/`headline*`, Regular only), Newsreader (`title*`) and
+  JetBrains Mono (`body*`/`label*`), the last two with Regular and Medium faces. Weight is `Normal`
+  everywhere except the M3 Emphasized roles, which `Type.kt` binds to the bundled Medium face. In
+  your own code **emphasis is carried by size and colour, never `FontWeight`**: a weight with no
+  bundled face is synthesised, and Skia synthesises it differently per platform.
 - **Colors:** Material roles via `MaterialTheme.colorScheme` (primary, surface, onSurface,
   onSurfaceVariant, outline, scrim, surfaceContainer*, …), plus semantic status tokens via
   `MaterialTheme.alohomoraColors` (`accent`, `success`, `successContainer`, `warning`, `info`,
@@ -662,7 +675,7 @@ translation patterns.
 
 ### Desktop
 
-- Embedded terminal (`TerminalView` via pty4j) is **desktop-only** and not available on mobile
+- ADB tools (`AdbToolsPanel`) and Logcat are **desktop-only** and hidden for iOS devices
 - ADB port forwarding handles TCP tunneling; the desktop app never has raw socket access to the
   device
 - Device selection is per-window; closing a window closes the ADB tunnel for that device
@@ -674,8 +687,9 @@ translation patterns.
   `DatabaseRepositoryImpl`, `ShareManager`
   all have platform-specific `actual` implementations. **When modifying these, update all three (
   Android, iOS, Desktop).**
-- **API validation:** Only `alohomora` and `alohomora-noop` are API-validated (not `desktopApp`,
-  `showcaseApp`, `alohomora-common`, `alohomora-ui`). Run `./gradlew apiCheck` before any commit
+- **API validation:** `alohomora`, `alohomora-noop` and `alohomora-ui` are API-validated; only
+  `desktopApp`, `showcaseApp` and `alohomora-common` are excluded (`apiValidation.ignoredProjects`
+  in the root build). Run `./gradlew apiCheck` before any commit
   that changes the public surface; run `./gradlew apiDump` to update the `.api` golden files.
 - **Noop parity is enforced by `./gradlew consumerParity`**, which the root `check` depends on. It
   diffs the `Alohomora` object's member list out of both klib dumps and fails on divergence, so a
@@ -831,9 +845,9 @@ navigate-and-return assertion.
   and one `PluginRegistry` serve every class. Never call `Alohomora.init()` from a test — the
   startup provider already did, and a second call is a silent no-op.
 - **Test tags come from `AlohomoraTestTags`** in `alohomora-ui` — public so both suites and any
-  consumer can address the console, and free of `.api` churn because `alohomora-ui` is not
-  api-validated. Putting tags in `:alohomora` `commonMain` instead *would* change
-  `alohomora.klib.api`.
+  consumer can address the console. `alohomora-ui` is API-validated too, so a new tag does change
+  `alohomora-ui`'s `.api` files (run `apiDump`), but it keeps the churn out of `alohomora.klib.api`,
+  the surface consumers actually depend on, which tags in `:alohomora` `commonMain` would change.
 - **A tagged `AlohomoraTextField` is not the editable node.** The caller's modifier lands on a
   wrapping `Column`; the `SetText` action belongs to the `BasicTextField` beneath, and Compose does
   not merge an editable field into its parent. Use `onTextFieldIn(tag)`, not

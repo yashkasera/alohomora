@@ -208,6 +208,26 @@
                             <td><code>list_devices</code></td>
                             <td>Connected devices with model, OS version, and session status.</td>
                         </tr>
+                        <tr>
+                            <td><code>search_traffic</code></td>
+                            <td>Full-text search across captured traffic: URLs, headers, request and response bodies. Returns the same summaries as <code>list_traffic</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>get_timeline</code></td>
+                            <td>Traffic, events, errors and trace spans interleaved in time order, optionally within a window, each tagged with its kind. The best tool for correlating what happened around a failure.</td>
+                        </tr>
+                        <tr>
+                            <td><code>list_journeys</code></td>
+                            <td>Saved event journeys, LOCAL or TEAM scope (omit for both). No device needed.</td>
+                        </tr>
+                        <tr>
+                            <td><code>verify_journey</code></td>
+                            <td>Grade a journey against a device's captured events: PASSED / FAILED / NOT_EXERCISED, with per-step outcomes. Non-mutating.</td>
+                        </tr>
+                        <tr>
+                            <td><code>list_deeplinks</code></td>
+                            <td>The typed deep-link catalog, optionally filtered by module. No device needed.</td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -236,6 +256,10 @@
                         <tr>
                             <td><code>explain_screen(name)</code></td>
                             <td>Explain what this screen is doing: events fired, traffic triggered, errors encountered.</td>
+                        </tr>
+                        <tr>
+                            <td><code>verify_flow</code></td>
+                            <td>Check whether the connected device actually walked an expected journey.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -283,6 +307,26 @@
                         <tr>
                             <td><code>clear_captured</code></td>
                             <td>Delete captured traffic, traces, events, and/or errors.</td>
+                        </tr>
+                        <tr>
+                            <td><code>create_mock_from_traffic</code></td>
+                            <td>Create a mock rule from a captured response, matching its path and method, and send it to the device.</td>
+                        </tr>
+                        <tr>
+                            <td><code>run_adb_command</code></td>
+                            <td>Run an allowlisted <code>adb shell</code> command on the connected device (<code>am</code>, <code>pm</code>, <code>dumpsys</code>, <code>settings</code>, <code>getprop</code>, <code>svc</code>, <code>input</code>, <code>screencap</code>, <code>monkey</code>, <code>wm</code>, <code>cmd</code>, plus <code>logcat</code>). Install, uninstall, push, pull and reboot are refused, as is any argument containing shell metacharacters. <code>pm</code> and <code>cmd</code> ask for confirmation in the desktop app first.</td>
+                        </tr>
+                        <tr>
+                            <td><code>save_journey</code></td>
+                            <td>Create or update a LOCAL journey from a full definition; an existing id updates in place.</td>
+                        </tr>
+                        <tr>
+                            <td><code>share_journey</code></td>
+                            <td>Propose a journey to the team: pushes a branch and opens (or links to) a review. Asks for confirmation in the desktop app and needs a connected config repo.</td>
+                        </tr>
+                        <tr>
+                            <td><code>fire_deeplink</code></td>
+                            <td>Fire a catalogued deep link on a device after validating its typed parameters.</td>
                         </tr>
                     </tbody>
                 </table>

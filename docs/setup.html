@@ -111,7 +111,7 @@
 }
 
 <span class="fn">alohomora</span> {
-    enabledVariants = <span class="fn">setOf</span>(<span class="str">"debug"</span>)
+    enabledBuildTypes = <span class="fn">setOf</span>(<span class="str">"debug"</span>)  <span class="cmt">// every &lt;flavor&gt;Debug variant</span>
     appName = <span class="str">"MyApp"</span>
     maxCommits = <span class="num">50</span>
     versionName = project.version.<span class="fn">toString</span>()
@@ -122,7 +122,7 @@
 
                 <ul class="reveal">
                     <li><code>appName</code> overrides the display name in the desktop companion window title and export metadata. Defaults to the Android manifest's app label.</li>
-                    <li><code>versionName</code> is required when the plugin is applied.</li>
+                    <li><code>versionName</code> defaults to <code>project.version</code>; set it only when the two differ.</li>
                     <li><code>slackWebhookUrl</code> is automatically dropped for non-debuggable variants to prevent the webhook from shipping in a release APK.</li>
                     <li><code>enabledVariants</code> (and <code>enabledBuildTypes</code>, default <code>debug</code>) control which build variants get the generated config. A generated config also opts its variant into the DevTools server even when the variant is not debuggable: add a variant such as <code>beta</code> here to run the console on an internal build. A variant with no generated config falls back to the app's <code>debuggable</code> flag.</li>
                 </ul>
@@ -156,7 +156,7 @@
     url = <span class="str">"https://api.example.com/users"</span>,
     method = <span class="str">"GET"</span>,
     requestHeaders = headers,
-    responseCode = <span class="num">200</span>,
+    status = <span class="num">200</span>,
     responseBody = body
 )</pre>
                 </div>
@@ -187,8 +187,14 @@
                 <div class="code-block reveal">
                     <div class="code-header">Custom handler</div>
                     <pre><span class="type">Alohomora</span>.<span class="fn">registerReplayHandler</span> { request ->
-    <span class="cmt">// Sign the request, send it through your client, return the response</span>
-    myClient.<span class="fn">execute</span>(request.<span class="fn">sign</span>())
+    <span class="cmt">// Sign the request and send it through your client, then report whether it went out.</span>
+    <span class="cmt">// The response itself is captured like any other request.</span>
+    <span class="kw">try</span> {
+        myClient.<span class="fn">execute</span>(request.<span class="fn">sign</span>())
+        <span class="type">ReplayOutcome</span>.<span class="type">Sent</span>()
+    } <span class="kw">catch</span> (e: <span class="type">Exception</span>) {
+        <span class="type">ReplayOutcome</span>.<span class="type">Failed</span>(e.message ?: <span class="str">"Replay failed"</span>)
+    }
 }</pre>
                 </div>
 
@@ -253,7 +259,7 @@
                 <!-- iOS Setup -->
                 <h2 id="ios" class="reveal">iOS Setup</h2>
 
-                <p class="reveal">The library ships as a static framework named <strong>AlohomoraKit</strong>.</p>
+                <p class="reveal">The library ships as a dynamic framework named <strong>AlohomoraKit</strong>. Unlike Android there is no no-op artifact: Swift Package Manager links a package into every build configuration, so release builds carry the framework too.</p>
 
                 <h3 class="reveal">1. Add the dependency</h3>
 
@@ -305,17 +311,17 @@
 
                 <h3 class="reveal">3. Capture traffic</h3>
 
-                <p class="reveal"><code>URLSession.shared</code> cannot be intercepted. Use the provided configuration factory or wrap your existing configuration:</p>
+                <p class="reveal"><code>URLSession.shared</code> cannot be intercepted. Use the provided configuration factory, or install Alohomora into a configuration you already build. Either way, do it before creating the session: <code>URLSession</code> copies its configuration.</p>
 
                 <div class="code-block reveal">
                     <div class="code-header">Swift</div>
                     <pre><span class="cmt">// Option A: use the provided configuration</span>
 <span class="kw">let</span> session = <span class="type">URLSession</span>(configuration: <span class="type">Alohomora</span>.shared.<span class="fn">alohomoraURLSessionConfiguration</span>())
 
-<span class="cmt">// Option B: wrap your existing configuration</span>
+<span class="cmt">// Option B: install into your existing configuration</span>
 <span class="kw">let</span> config = <span class="type">URLSessionConfiguration</span>.default
 <span class="cmt">// ... your customization ...</span>
-<span class="kw">let</span> session = <span class="type">URLSession</span>(configuration: <span class="type">Alohomora</span>.shared.<span class="fn">wrapConfiguration</span>(config))</pre>
+<span class="kw">let</span> session = <span class="type">URLSession</span>(configuration: <span class="type">Alohomora</span>.shared.<span class="fn">alohomoraURLSessionConfiguration</span>(base: config))</pre>
                 </div>
 
                 <h3 class="reveal">4. Open the console</h3>

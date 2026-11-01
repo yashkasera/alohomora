@@ -119,9 +119,19 @@
                     <pre><span class="type">Alohomora</span>.<span class="fn">recordTraffic</span>(
     method = <span class="str">"GET"</span>,
     url = <span class="str">"https://api.example.com/users"</span>,
-    statusCode = <span class="num">200</span>,
+    status = <span class="num">200</span>,
     requestHeaders = headers,
     responseBody = body
+)</pre>
+                </div>
+
+                <div class="code-block reveal">
+                    <div class="code-header">Swift</div>
+                    <pre><span class="kw">import</span> <span class="type">AlohomoraKitSwift</span>
+
+<span class="type">Alohomora</span>.shared.<span class="fn">recordTraffic</span>(
+    <span class="type">AlohomoraTraffic</span>(url: <span class="str">"https://api.example.com/users"</span>, method: <span class="str">"GET"</span>, status: <span class="num">200</span>,
+                     responseBody: body, startedAt: sentAt, duration: elapsed)
 )</pre>
                 </div>
 
@@ -151,9 +161,14 @@
 <span class="cmt">// Ktor (Android + iOS)</span>
 <span class="type">Alohomora</span>.<span class="fn">registerReplayHandler</span>(<span class="fn">ktorReplayHandler</span>(client))
 
-<span class="cmt">// Custom lambda</span>
+<span class="cmt">// Custom lambda: send it yourself, then say whether it went out</span>
 <span class="type">Alohomora</span>.<span class="fn">registerReplayHandler</span> { request -&gt;
-    <span class="cmt">// sign, send, return response</span>
+    <span class="kw">try</span> {
+        send(request)  <span class="cmt">// through your own client, so it re-signs</span>
+        <span class="type">ReplayOutcome</span>.<span class="type">Sent</span>()
+    } <span class="kw">catch</span> (e: <span class="type">Exception</span>) {
+        <span class="type">ReplayOutcome</span>.<span class="type">Failed</span>(e.message ?: <span class="str">"Replay failed"</span>)
+    }
 }</pre>
                 </div>
 
@@ -238,15 +253,15 @@
                         <tr><th>Preset</th><th>Latency</th><th>Throughput</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>Edge</td><td>500 ms</td><td>50 KB/s</td></tr>
-                        <tr><td>Slow 3G</td><td>200 ms</td><td>100 KB/s</td></tr>
-                        <tr><td>Fast 3G</td><td>100 ms</td><td>300 KB/s</td></tr>
-                        <tr><td>Slow Wi-Fi</td><td>50 ms</td><td>1 MB/s</td></tr>
+                        <tr><td>Edge</td><td>800 ms</td><td>6 KB/s</td></tr>
+                        <tr><td>Slow 3G</td><td>400 ms</td><td>40 KB/s</td></tr>
+                        <tr><td>Fast 3G</td><td>150 ms</td><td>200 KB/s</td></tr>
+                        <tr><td>Slow Wi-Fi</td><td>50 ms</td><td>500 KB/s</td></tr>
                         <tr><td>None</td><td>0</td><td>Unlimited</td></tr>
                     </tbody>
                 </table>
 
-                <p class="reveal">Latency is applied before the response. Throughput is capped on the body.</p>
+                <p class="reveal">Latency is applied before the response on every capture path. Throughput is capped on the body on Android only, by the OkHttp interceptor and the VPN below; the Ktor plugin and the iOS URL protocol apply latency alone.</p>
 
                 <p class="reveal">On Android, device-wide throttling is available via a local VPN service. This covers all device traffic including WebViews, not just your HTTP client.</p>
 
@@ -257,7 +272,7 @@
                 <ul class="reveal">
                     <li>Run arbitrary SQL queries and see results with execution time</li>
                     <li>View schema: columns, types, primary keys, indexes</li>
-                    <li>Read-only inspection (no row editing, no write history)</li>
+                    <li>Edit cell values from the desktop companion (no write history is kept)</li>
                 </ul>
 
                 <h4 class="reveal">Registration</h4>
@@ -351,14 +366,14 @@
 
                 <p class="reveal"><strong>Config</strong> shows build metadata: app name, variant, version name/code, branch, commit SHA, dirty flag, and build timestamp. Set <code>appName</code> in the plugin config to override the display name in the desktop window title and exports.</p>
 
-                <p class="reveal"><strong>Git History</strong> shows the last N commits (configurable, default 50): SHA, author, subject, and timestamp.</p>
+                <p class="reveal"><strong>Git History</strong> shows the last N commits: SHA, author, subject, and timestamp. N is <code>maxCommits</code> in the Gradle plugin (default 10) and <code>ALOHOMORA_MAX_COMMITS</code> in the iOS script (default 50).</p>
 
                 <p class="reveal">Both are injected at build time by the Gradle plugin (Android) or an Xcode run-script phase (iOS). No runtime cost.</p>
 
                 <div class="code-block reveal">
                     <div class="code-header">build.gradle.kts</div>
                     <pre><span class="fn">alohomora</span> {
-    enabledVariants = <span class="fn">setOf</span>(<span class="str">"debug"</span>)
+    enabledBuildTypes = <span class="fn">setOf</span>(<span class="str">"debug"</span>)  <span class="cmt">// every &lt;flavor&gt;Debug variant</span>
     appName = <span class="str">"MyApp"</span>
     maxCommits = <span class="num">50</span>
     slackWebhookUrl = <span class="str">"https://hooks.slack.com/services/..."</span>
@@ -381,12 +396,13 @@
                 <!-- COMMAND PALETTE -->
                 <h2 id="command-palette" class="reveal">Command Palette</h2>
 
-                <p class="reveal"><code>Cmd/Ctrl+K</code> opens a searchable command palette on the desktop app. Actions are grouped into four categories:</p>
+                <p class="reveal"><code>Cmd/Ctrl+K</code> opens a searchable command palette on the desktop app. Actions are grouped into five categories:</p>
                 <ul class="reveal">
                     <li><strong>Navigation</strong> &mdash; one entry per sidebar section, with <code>Cmd+1..9</code> shortcuts</li>
-                    <li><strong>General</strong> &mdash; toggle theme, help, zoom in/out/reset</li>
+                    <li><strong>General</strong> &mdash; preferences, keyboard shortcuts, zoom in/out/reset, focus search</li>
                     <li><strong>Device</strong> &mdash; screenshot, force stop, launch, clear data, reboot, Wi-Fi/data toggle, clear logcat, deep link builder (gated on device connected)</li>
-                    <li><strong>Data</strong> &mdash; clear traffic, clear traces, clear events (gated on connected session)</li>
+                    <li><strong>Data</strong> &mdash; mock rules, event journeys, deep link catalog, and clear traffic, traces, events or errors (the clear actions are gated on a connected session)</li>
+                    <li><strong>Git</strong> &mdash; sync and reveal the Team config repository</li>
                 </ul>
                 <p class="reveal">Arrow keys to navigate, Enter to select. Each action shows its keyboard shortcut as a chip.</p>
 
@@ -396,7 +412,7 @@
                 <ul class="reveal">
                     <li><strong>Dashboard</strong> &mdash; live device metrics, deep link builder button, build info at a glance</li>
                     <li><strong>Logcat</strong> &mdash; streamed device log with level filtering</li>
-                    <li><strong>ADB</strong> &mdash; embedded terminal (pty4j) for running arbitrary ADB commands</li>
+                    <li><strong>ADB Shortcuts</strong> &mdash; one-click developer options (animations, don't keep activities, layout bounds, show taps, stay awake, Wi-Fi and mobile data), app and APK actions, and a command box that runs <code>adb shell &lt;command&gt;</code> and keeps the output</li>
                 </ul>
                 <p class="reveal">These panels are gated on device capability and hidden when connected to an iOS device.</p>
 
@@ -410,8 +426,14 @@
                     <tbody>
                         <tr><td><code>Cmd/Ctrl+K</code></td><td>Open command palette</td></tr>
                         <tr><td><code>Cmd/Ctrl+1..9</code></td><td>Switch to Nth sidebar section</td></tr>
-                        <tr><td><code>Cmd/Ctrl+T</code></td><td>Toggle dark/light theme</td></tr>
                         <tr><td><code>Cmd/Ctrl+/</code></td><td>Open keyboard shortcuts help</td></tr>
+                        <tr><td><code>Cmd/Ctrl+,</code></td><td>Preferences</td></tr>
+                        <tr><td><code>Cmd/Ctrl+F</code></td><td>Focus search</td></tr>
+                        <tr><td><code>Cmd/Ctrl+E</code></td><td>Toggle the properties panel</td></tr>
+                        <tr><td><code>Cmd/Ctrl+L</code></td><td>Deep Link Builder</td></tr>
+                        <tr><td><code>Cmd/Ctrl+Shift+L</code></td><td>Deep Link Catalog</td></tr>
+                        <tr><td><code>Cmd/Ctrl+Shift+M</code></td><td>Mock Rules</td></tr>
+                        <tr><td><code>Cmd/Ctrl+Shift+J</code></td><td>Event Journeys</td></tr>
                         <tr><td><code>Cmd/Ctrl+N</code></td><td>New window</td></tr>
                         <tr><td><code>Cmd/Ctrl+W</code></td><td>Close window</td></tr>
                         <tr><td><code>Cmd/Ctrl+=</code></td><td>Zoom in</td></tr>
