@@ -35,6 +35,7 @@ import io.github.yashkasera.alohomora.error.ErrorCapture
 import io.github.yashkasera.alohomora.error.installCrashHandler
 import io.github.yashkasera.alohomora.plugin.CustomScreenPlugin
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
+import io.github.yashkasera.alohomora.replay.ReplayHeaders
 import io.github.yashkasera.alohomora.replay.TrafficReplayHandler
 import io.github.yashkasera.alohomora.replay.TrafficReplayRegistry
 import io.github.yashkasera.alohomora.trace.SpanCaptureRegistry
@@ -382,6 +383,10 @@ internal object AlohomoraImpl {
     }
 
     val isReplaySupported: Boolean get() = TrafficReplayRegistry.isSupported
+
+    fun setReplayStrippedHeaders(vararg headerNames: String) {
+        ReplayHeaders.additionalStripList = headerNames.toSet()
+    }
 
     fun redactHeaders(vararg headerNames: String) {
         HeaderRedaction.setHeaders(headerNames.toSet())

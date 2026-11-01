@@ -253,11 +253,13 @@
 
                     <div class="api-grid reveal">
                         <div class="api-card">
-                            <h4>ReplayHeaders.additionalStripList</h4>
-                            <p>Set of header names to strip before replay. Add custom signature or
-                                auth headers here so your interceptors regenerate them. <code>Content-Length</code>,
-                                <code>Host</code>, and <code>[REDACTED]</code> values are always
-                                stripped.</p>
+                            <h4>Alohomora.setReplayStrippedHeaders(vararg headerNames)</h4>
+                            <p>Header names to strip before replay, case-insensitive; each call
+                                replaces the list. Add custom signature or nonce headers here so your
+                                interceptors regenerate them. Applied on the device, so it covers
+                                desktop replays too. <code>Content-Length</code>, <code>Host</code>,
+                                <code>Accept-Encoding</code>, <code>Content-Encoding</code>, hop-by-hop
+                                headers and <code>[REDACTED]</code> values are always stripped.</p>
                         </div>
                     </div>
 
@@ -265,7 +267,7 @@
                         <div class="code-header">Kotlin</div>
                         <pre><span
                             class="cmt">// Strip custom signature headers before replay</span>
-<span class="type">ReplayHeaders</span>.additionalStripList = <span class="fn">setOf</span>(
+<span class="type">Alohomora</span>.<span class="fn">setReplayStrippedHeaders</span>(
     <span class="str">"X-Signature"</span>,
     <span class="str">"X-Request-Id"</span>,
     <span class="str">"X-Timestamp"</span>

@@ -370,8 +370,13 @@ Rules that keep replay honest — none are cosmetic:
   truncated body (`requestBodyTruncated`) would send silently corrupted data, and
   `UNABLE_PARSE_MESSAGE` bodies (multipart, streaming, one-shot) are placeholders.
 - **Drop `[REDACTED]` header values, never forward them.** `ReplayHeaders.sanitize` removes them
-  along with `Content-Length`/`Host` and anything in `additionalStripList`, so the app's own
-  interceptors resupply them.
+  along with `Content-Length`/`Host`, the client-negotiated `Accept-Encoding`/`Content-Encoding`,
+  and anything the app named via `Alohomora.setReplayStrippedHeaders` (`additionalStripList`), so
+  the app's own interceptors resupply them.
+- **Sanitize again on the device.** The desktop runs `toReplayRequest()` in its own process, which
+  never sees the app's `additionalStripList`, so `TrafficReplayRegistry.replay` re-applies
+  `sanitize` before the handler runs. Both consoles reach the handler only through the registry;
+  keep it that way or the app's strip list silently stops applying to desktop replays.
 - The replay's response is not returned to the caller. Capture records it like any other request,
   stamped with `replayOf`; the consoles find it from there.
 

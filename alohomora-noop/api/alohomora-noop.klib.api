@@ -303,6 +303,7 @@ final object io.github.yashkasera.alohomora/Alohomora { // io.github.yashkasera.
     final fun removeDebugConfig(kotlin/String) // io.github.yashkasera.alohomora/Alohomora.removeDebugConfig|removeDebugConfig(kotlin.String){}[0]
     final fun setDebugConfig(kotlin/String, kotlin/String) // io.github.yashkasera.alohomora/Alohomora.setDebugConfig|setDebugConfig(kotlin.String;kotlin.String){}[0]
     final fun setFeatureFlags(kotlin.collections/List<io.github.yashkasera.alohomora.common/FeatureFlag>, kotlin/String? = ...) // io.github.yashkasera.alohomora/Alohomora.setFeatureFlags|setFeatureFlags(kotlin.collections.List<io.github.yashkasera.alohomora.common.FeatureFlag>;kotlin.String?){}[0]
+    final fun setReplayStrippedHeaders(kotlin/Array<out kotlin/String>...) // io.github.yashkasera.alohomora/Alohomora.setReplayStrippedHeaders|setReplayStrippedHeaders(kotlin.Array<out|kotlin.String>...){}[0]
     final fun setShakeToOpenEnabled(kotlin/Boolean) // io.github.yashkasera.alohomora/Alohomora.setShakeToOpenEnabled|setShakeToOpenEnabled(kotlin.Boolean){}[0]
     final fun startDevToolsServer(kotlin/Int = ...): kotlin/Boolean // io.github.yashkasera.alohomora/Alohomora.startDevToolsServer|startDevToolsServer(kotlin.Int){}[0]
     final fun stopDevToolsServer() // io.github.yashkasera.alohomora/Alohomora.stopDevToolsServer|stopDevToolsServer(){}[0]
