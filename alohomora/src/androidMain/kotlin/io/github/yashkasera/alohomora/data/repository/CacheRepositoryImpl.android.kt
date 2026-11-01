@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import io.github.yashkasera.alohomora.cache.SharedPreferencesOverrides
+import io.github.yashkasera.alohomora.devtools.AlohomoraInternalPrefs
 import io.github.yashkasera.alohomora.domain.model.CacheEntry
 import io.github.yashkasera.alohomora.domain.model.CacheSource
 import io.github.yashkasera.alohomora.domain.model.CacheStore
@@ -45,7 +46,7 @@ internal class CacheRepositoryImpl(
         val overrides = SharedPreferencesOverrides.snapshot()
 
         if (prefsDir.exists() && prefsDir.isDirectory) {
-            prefsDir.listFiles { file -> file.extension == "xml" }?.forEach { file ->
+            prefsDir.listFiles { file -> file.isHostPrefsFile() }?.forEach { file ->
                 val name = file.nameWithoutExtension
                 val override = overrides[name]
                 val isEncrypted = override != null || isLikelyEncrypted(name)
@@ -123,6 +124,9 @@ internal class CacheRepositoryImpl(
         }
 
     private fun resolvePrefs(storeName: String): SharedPreferences? {
+        // Refused even by exact name: hiding a store from the listing is not enough when the
+        // desktop can send any storeName it likes.
+        if (storeName in AlohomoraInternalPrefs.ALL) return null
         val override = SharedPreferencesOverrides.snapshot()[storeName]
         return if (override != null) {
             // For registered stores, we need the actual SharedPreferences instance
@@ -139,6 +143,10 @@ internal class CacheRepositoryImpl(
         cachedPreferences = emptyList()
     }
 
+    /** A preferences file belonging to the host app, not to Alohomora. */
+    private fun File.isHostPrefsFile(): Boolean =
+        extension == "xml" && nameWithoutExtension !in AlohomoraInternalPrefs.ALL
+
     private suspend fun scanAllPreferences(): List<CacheEntry> = withContext(Dispatchers.IO) {
         val allEntries = mutableListOf<CacheEntry>()
         allEntries.addAll(scanSharedPreferences())
@@ -153,7 +161,7 @@ internal class CacheRepositoryImpl(
             return entries
         }
 
-        val xmlFiles = prefsDir.listFiles { file -> file.extension == "xml" } ?: return entries
+        val xmlFiles = prefsDir.listFiles { file -> file.isHostPrefsFile() } ?: return entries
         val overrides = SharedPreferencesOverrides.snapshot()
 
         for (file in xmlFiles) {

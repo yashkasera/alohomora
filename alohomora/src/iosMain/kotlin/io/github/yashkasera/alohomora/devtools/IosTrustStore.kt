@@ -7,10 +7,16 @@ import platform.Foundation.NSUserDefaults
 import platform.posix.arc4random_buf
 
 /**
+ * Prefix for every key Alohomora writes into the host app's standard NSUserDefaults. The Cache
+ * inspector hides and refuses to edit anything under it.
+ */
+internal const val ALOHOMORA_DEFAULTS_KEY_PREFIX: String = "alohomora."
+
+/**
  * [DevToolsTrustStore] backed by NSUserDefaults.
  *
- * Namespaced under an `alohomora.` key prefix so it is obvious in the Preferences inspector which
- * entries belong to the debug tooling rather than the host app.
+ * Namespaced under [ALOHOMORA_DEFAULTS_KEY_PREFIX] so it cannot collide with host-app keys, and so
+ * the Cache inspector can exclude it.
  */
 @OptIn(ExperimentalForeignApi::class)
 internal class IosTrustStore(
@@ -44,6 +50,6 @@ internal class IosTrustStore(
         defaults.stringArrayForKey(KEY_TOKENS)?.filterIsInstance<String>().orEmpty()
 
     private companion object {
-        const val KEY_TOKENS = "alohomora.devtools.trusted_tokens"
+        const val KEY_TOKENS = "${ALOHOMORA_DEFAULTS_KEY_PREFIX}devtools.trusted_tokens"
     }
 }

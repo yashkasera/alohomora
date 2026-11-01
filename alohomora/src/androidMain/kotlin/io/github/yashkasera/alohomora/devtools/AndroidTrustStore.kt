@@ -8,12 +8,12 @@ import java.security.SecureRandom
  * [DevToolsTrustStore] backed by SharedPreferences.
  *
  * Stored in a dedicated file rather than the app's own preferences so it cannot collide with
- * host-app keys, and so the Preferences inspector shows it as clearly Alohomora's.
+ * host-app keys, and so the Cache inspector can exclude it (see [AlohomoraInternalPrefs]).
  */
 internal class AndroidTrustStore(context: Context) : DevToolsTrustStore {
 
     private val prefs = context.applicationContext
-        .getSharedPreferences("alohomora_devtools_trust", Context.MODE_PRIVATE)
+        .getSharedPreferences(AlohomoraInternalPrefs.TRUST, Context.MODE_PRIVATE)
 
     // SecureRandom, not kotlin.random.Random: a token is a long-lived credential that replaces
     // the OTP entirely, so a predictable one would be a permanent auth bypass.

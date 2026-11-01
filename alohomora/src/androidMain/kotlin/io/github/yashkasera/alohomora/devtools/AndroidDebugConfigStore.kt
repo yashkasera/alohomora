@@ -5,7 +5,7 @@ import android.content.Context
 internal class AndroidDebugConfigStore(context: Context) : DebugConfigStore {
 
     private val prefs = context.applicationContext
-        .getSharedPreferences("alohomora_debug_config", Context.MODE_PRIVATE)
+        .getSharedPreferences(AlohomoraInternalPrefs.DEBUG_CONFIG, Context.MODE_PRIVATE)
 
     override fun get(key: String): String? = prefs.getString(key, null)
 
