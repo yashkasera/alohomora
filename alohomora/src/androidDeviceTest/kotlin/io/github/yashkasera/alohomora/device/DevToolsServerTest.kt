@@ -71,9 +71,10 @@ private const val MAX_FRAMES = 32
  * header is documented as frozen precisely because it is the one thing two mismatched builds agree
  * on; a test that re-implemented it would keep passing after the real framing changed underneath it.
  *
- * The server is gated on `AlohomoraConfig.devToolsEnabled`. There's no Gradle plugin in this test
- * app to generate that config, so [enableDevToolsAndStopInherited] seeds one with the flag set —
- * exactly what the plugin stamps for an enabled variant.
+ * The server is gated on `AlohomoraImpl.isDevToolsEnabled()`. There's no Gradle plugin in this test
+ * app, so the gate would fall back to the test APK's `FLAG_DEBUGGABLE`; [enableDevToolsAndStopInherited]
+ * seeds an explicit opt-in instead — exactly what the plugin stamps for an enabled variant — so these
+ * tests do not hinge on how the test APK happens to be signed.
  */
 class DevToolsServerTest {
 
@@ -84,7 +85,7 @@ class DevToolsServerTest {
      * Two things before each test:
      *
      * Seed a config whose `devToolsEnabled` is true. The AndroidX initializer runs init at process
-     * start with no generated config (no plugin here), so the gate would otherwise refuse to bind.
+     * start with no generated config (no plugin here), leaving the gate to the APK's debuggability.
      *
      * Stop any inherited server: `DevToolsRuntime` is a Koin singleton and `DevToolsTcpServer.start`
      * returns early while a socket is already bound, so a server left running by an earlier test —

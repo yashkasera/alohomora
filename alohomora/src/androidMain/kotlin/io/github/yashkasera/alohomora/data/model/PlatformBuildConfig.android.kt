@@ -8,3 +8,6 @@ package io.github.yashkasera.alohomora.data.model
  * build that has the real thing compiled in.
  */
 internal actual fun discoverPlatformBuildConfig(): AlohomoraConfig? = null
+
+/** Always false: see `AlohomoraInitializer`, which reads `FLAG_DEBUGGABLE` from the `Context`. */
+internal actual fun discoverHostDebuggable(): Boolean = false

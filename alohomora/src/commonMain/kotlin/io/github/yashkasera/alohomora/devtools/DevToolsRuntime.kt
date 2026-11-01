@@ -164,10 +164,10 @@ internal class DevToolsRuntime(
     val serverState: StateFlow<DevToolsServerState> = _serverState.asStateFlow()
 
     fun start(port: Int = DevToolsDefaults.DEFAULT_PORT): Boolean {
-        // Activation is the consumer's build-config call, carried on AlohomoraConfig: the Gradle
-        // plugin sets it per enabled variant, iOS reads it from Info.plist. Absent/false config
-        // (e.g. a release with no generated config) keeps the socket closed.
-        if (AlohomoraImpl.config?.devToolsEnabled != true) return false
+        // An explicit build decision (plugin-generated config, iOS Info.plist key) wins; without one
+        // the host app's debuggability decides, so a release build keeps the socket closed. See
+        // DevToolsActivation.
+        if (!AlohomoraImpl.isDevToolsEnabled()) return false
         // Guarded: start() used to add a fresh collector on every call, so toggling the server
         // off and on left two observers driving the same prompt.
         if (!isObservingOtp) {

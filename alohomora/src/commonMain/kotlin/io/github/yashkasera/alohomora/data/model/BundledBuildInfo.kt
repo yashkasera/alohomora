@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.data.model
 
+import io.github.yashkasera.alohomora.devtools.ExplicitDevToolsDecision
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -107,15 +108,21 @@ internal data class AppIdentity(
  */
 internal fun AppIdentity.toAlohomoraConfig(
     buildInfo: BundledBuildInfo?,
-    devToolsEnabled: Boolean = false,
+    devToolsEnabled: Boolean? = null,
 ): AlohomoraConfig =
-    BundledAlohomoraConfig(identity = this, buildInfo = buildInfo, devToolsEnabled = devToolsEnabled)
+    BundledAlohomoraConfig(identity = this, buildInfo = buildInfo, devToolsDecision = devToolsEnabled)
 
+/**
+ * [devToolsDecision] is null when the build did not decide (no Info.plist key), which
+ * `DevToolsActivation` resolves from the host app's own debuggability. [devToolsEnabled] is only the
+ * public projection of it; nothing should gate on that directly.
+ */
 private class BundledAlohomoraConfig(
     identity: AppIdentity,
     buildInfo: BundledBuildInfo?,
-    override val devToolsEnabled: Boolean,
-) : AlohomoraConfig {
+    override val devToolsDecision: Boolean?,
+) : AlohomoraConfig, ExplicitDevToolsDecision {
+    override val devToolsEnabled: Boolean = devToolsDecision == true
     override val appName: String? = identity.appName
     override val packageName: String? = identity.packageName
     override val versionName: String = identity.versionName ?: UNKNOWN

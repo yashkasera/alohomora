@@ -24,7 +24,8 @@ dependencies {
 }
 ```
 
-Android auto-initializes via AndroidX Startup. Shake the device to open the console.
+Android auto-initializes via AndroidX Startup. Shake the device to open the console. The DevTools
+server for the desktop companion runs in any debuggable build; the Gradle plugin is optional.
 
 [Full setup guide →](https://yashkasera.github.io/alohomora/setup.html) (Gradle plugin, iOS,
 traffic capture, desktop app)

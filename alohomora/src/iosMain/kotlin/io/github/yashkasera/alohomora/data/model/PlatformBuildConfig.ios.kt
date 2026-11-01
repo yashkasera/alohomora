@@ -1,6 +1,5 @@
 package io.github.yashkasera.alohomora.data.model
 
-import kotlin.experimental.ExperimentalNativeApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSBundle
 import platform.Foundation.NSNumber
@@ -12,7 +11,7 @@ import platform.Foundation.stringWithContentsOfFile
  * Never returns null: even with no manifest, `Bundle.main` still knows the version and bundle id, so
  * the Config panel shows something rather than the `"unknown"` placeholders it renders today.
  */
-@OptIn(ExperimentalForeignApi::class, ExperimentalNativeApi::class)
+@OptIn(ExperimentalForeignApi::class)
 internal actual fun discoverPlatformBuildConfig(): AlohomoraConfig? {
     val bundle = NSBundle.mainBundle
     val identity = AppIdentity(
@@ -27,11 +26,14 @@ internal actual fun discoverPlatformBuildConfig(): AlohomoraConfig? {
     )
     return identity.toAlohomoraConfig(
         readBundledBuildInfo(bundle),
-        // The consumer's per-configuration switch (Drogon sets it YES in Beta). Absent => fall back
-        // to the debug binary so a plain debug build keeps DevTools without touching its Info.plist.
-        devToolsEnabled = bundle.infoBool("AlohomoraDevToolsEnabled") ?: Platform.isDebugBinary,
+        // The consumer's per-configuration switch (Drogon sets it YES in Beta). Absent stays null so
+        // DevToolsActivation falls back to the app's signing — not to Platform.isDebugBinary, which
+        // describes this framework and is false for every consumer of the Release XCFramework.
+        devToolsEnabled = bundle.infoBool("AlohomoraDevToolsEnabled"),
     )
 }
+
+internal actual fun discoverHostDebuggable(): Boolean = isDevelopmentSignedBuild
 
 @OptIn(ExperimentalForeignApi::class)
 private fun readBundledBuildInfo(bundle: NSBundle): BundledBuildInfo? {

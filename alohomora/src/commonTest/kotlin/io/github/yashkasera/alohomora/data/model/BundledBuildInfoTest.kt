@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.data.model
 
+import io.github.yashkasera.alohomora.devtools.DevToolsActivation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -126,10 +127,20 @@ class BundledBuildInfoTest {
     }
 
     @Test
-    fun devToolsEnabledDefaultsOffAndPassesThrough() {
+    fun devToolsDecisionPassesThroughIncludingAbsent() {
         val identity = AppIdentity(null, null, null, null)
 
-        // Default is the safe one: a caller that says nothing leaves the server gated shut.
+        // Absent must stay absent rather than collapse to false: an Info.plist with no key defers to
+        // the host app's signing, while an explicit NO keeps a development build closed.
+        assertNull(DevToolsActivation.explicitDecision(identity.toAlohomoraConfig(buildInfo = null)))
+        assertEquals(
+            false,
+            DevToolsActivation.explicitDecision(identity.toAlohomoraConfig(buildInfo = null, devToolsEnabled = false)),
+        )
+        assertEquals(
+            true,
+            DevToolsActivation.explicitDecision(identity.toAlohomoraConfig(buildInfo = null, devToolsEnabled = true)),
+        )
         assertFalse(identity.toAlohomoraConfig(buildInfo = null).devToolsEnabled)
         assertTrue(identity.toAlohomoraConfig(buildInfo = null, devToolsEnabled = true).devToolsEnabled)
     }
