@@ -17,9 +17,10 @@ enum class ReplayBlockedReason {
     INCOMPLETE_TRACE,
 
     /**
-     * The body was never captured as text — a multipart upload, a streaming body, or a one-shot
-     * body the interceptor deliberately refused to consume. What is stored is a placeholder, and
-     * replaying it would send the literal string `Cannot parse body` to the server.
+     * The body was never captured — a streaming body, a one-shot body the interceptor deliberately
+     * refused to consume, a binary body over the capture cap, or one captured by an app that
+     * predates binary capture. What is stored is a placeholder, and replaying it would send the
+     * literal string `Cannot parse body` to the server.
      */
     UNPARSEABLE_BODY,
 
@@ -30,18 +31,30 @@ enum class ReplayBlockedReason {
      * replaying it would send silently corrupted data and blame the server for rejecting it.
      */
     TRUNCATED_BODY,
+
+    /**
+     * The body was captured as bytes, but the app's replay handler only sends text.
+     *
+     * Kept apart from [UNPARSEABLE_BODY] because the fix is different: the capture is complete, and
+     * registering a handler that can send bytes (every built-in one can) is all it takes.
+     */
+    BINARY_REPLAY_UNSUPPORTED,
     ;
 
     val message: String
         get() = when (this) {
             INCOMPLETE_TRACE -> "This trace has no URL or method to replay."
             UNPARSEABLE_BODY ->
-                "The request body was not captured as text (multipart, streaming or one-shot), " +
-                    "so it cannot be reproduced."
+                "The request body was not captured (streaming, one-shot, or a binary body over the " +
+                    "capture limit), so it cannot be reproduced."
 
             TRUNCATED_BODY ->
                 "The request body was too large to capture in full. Replaying the truncated copy " +
                     "would send incomplete data."
+
+            BINARY_REPLAY_UNSUPPORTED ->
+                "The request body is binary, and the app's replay handler can only send text. " +
+                    "Register one of the built-in handlers, or a BinaryReplayHandler."
         }
 }
 
@@ -153,9 +166,19 @@ object ReplayHeaderText {
 
 /**
  * Returns why this trace cannot be replayed, or null when it can be.
+ *
+ * [binaryReplaySupported] is whether the app's registered handler can send bytes: the device's
+ * `InitialStatePayload.binaryReplaySupported`, or the registry itself on the device. It defaults
+ * to false so a caller that does not know refuses a binary body rather than offering a replay
+ * the device would turn down.
  */
-fun TrafficEntry.replayBlockedReason(): ReplayBlockedReason? = when {
+fun TrafficEntry.replayBlockedReason(binaryReplaySupported: Boolean = false): ReplayBlockedReason? = when {
     url.isNullOrBlank() || method.isNullOrBlank() -> ReplayBlockedReason.INCOMPLETE_TRACE
+    // Ahead of the placeholder check: a binary body keeps the placeholder in requestBody for
+    // older consoles, and the bytes beside it are what makes it replayable.
+    requestBodyBase64 != null && !requestBodyTruncated ->
+        if (binaryReplaySupported) null else ReplayBlockedReason.BINARY_REPLAY_UNSUPPORTED
+
     requestBody == TrafficEntry.UNABLE_PARSE_MESSAGE -> ReplayBlockedReason.UNPARSEABLE_BODY
     requestBodyTruncated -> ReplayBlockedReason.TRUNCATED_BODY
     else -> null
@@ -163,16 +186,18 @@ fun TrafficEntry.replayBlockedReason(): ReplayBlockedReason? = when {
 
 /**
  * Builds a replayable request from this trace, or returns null when [replayBlockedReason] says it
- * cannot be replayed.
+ * cannot be replayed. A binary body travels as [ReplayRequest.bodyBase64], never as text.
  */
-fun TrafficEntry.toReplayRequest(): ReplayRequest? {
-    if (replayBlockedReason() != null) return null
+fun TrafficEntry.toReplayRequest(binaryReplaySupported: Boolean = false): ReplayRequest? {
+    if (replayBlockedReason(binaryReplaySupported) != null) return null
+    val binary = requestBodyBase64
     return ReplayRequest(
         sourceTraceId = id,
         method = method!!.uppercase(),
         url = url!!,
         headers = ReplayHeaders.sanitize(requestHeaders),
-        body = requestBody,
+        body = if (binary != null) null else requestBody,
         contentType = requestContentType,
+        bodyBase64 = binary,
     )
 }

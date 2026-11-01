@@ -8,6 +8,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
+import kotlin.io.encoding.Base64
 
 /**
  * A [TrafficReplayHandler] that re-sends a captured request through [client].
@@ -16,6 +17,10 @@ import io.ktor.http.contentType
  * runs again — a signing plugin recomputes the signature over the body being replayed rather than the
  * one that was captured. Editing a payload in the console and getting a valid signature back is a
  * consequence of that, not something this function does.
+ *
+ * A binary body is sent as the exact bytes captured, under the captured content type, so a multipart
+ * upload keeps the boundary its bytes were written with. The handler is a [BinaryReplayHandler];
+ * the return type stays [TrafficReplayHandler] so existing callers are unaffected.
  *
  * Works on Android and iOS alike, since the client is Ktor's and not a platform type. Pass the client
  * the app uses for the endpoint being replayed: one without the signing plugin produces
@@ -27,7 +32,7 @@ import io.ktor.http.contentType
  *
  * @param client the app's own client, complete with its plugins
  */
-fun ktorReplayHandler(client: HttpClient): TrafficReplayHandler = TrafficReplayHandler { replay ->
+fun ktorReplayHandler(client: HttpClient): TrafficReplayHandler = BinaryReplayHandler { replay ->
     try {
         client.request(replay.url) {
             // Trimmed here as well as in the editors: HttpMethod.parse throws on "POST " and a
@@ -46,7 +51,13 @@ fun ktorReplayHandler(client: HttpClient): TrafficReplayHandler = TrafficReplayH
             // back to its source, and nothing reaches the wire for a signing plugin to sign.
             attributes.put(AlohomoraReplayOfKey, replay.sourceTraceId)
 
-            replay.body?.let { setBody(it) }
+            // A ByteArray, not a String: Ktor sends it unchanged, where text would be re-encoded.
+            val bytes = replay.bodyBase64?.let { Base64.decode(it) }
+            val text = replay.body
+            when {
+                bytes != null -> setBody(bytes)
+                text != null -> setBody(text)
+            }
         }
 
         // No id to hand back: the inspector mints its own and stamps replayOf with sourceTraceId,

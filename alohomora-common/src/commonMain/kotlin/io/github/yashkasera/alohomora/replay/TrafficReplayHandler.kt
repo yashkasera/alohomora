@@ -12,7 +12,9 @@ import kotlinx.serialization.Serializable
  * straight to its client and let the app's own interceptor chain re-derive auth and signatures.
  *
  * @property sourceTraceId the trace this replay was built from, for linking the two in the console
- * @property body the request body as text; null for a bodyless request
+ * @property body the request body as text; null for a bodyless request, or when [bodyBase64] is set
+ * @property bodyBase64 a binary request body as base64, to be sent byte for byte. Only a
+ *   [BinaryReplayHandler] is handed one; when it is set, [body] is null and ignored.
  */
 @Serializable
 data class ReplayRequest(
@@ -22,7 +24,23 @@ data class ReplayRequest(
     val headers: Map<String, List<String>> = emptyMap(),
     val body: String? = null,
     val contentType: String? = null,
-)
+    val bodyBase64: String? = null,
+) {
+    /**
+     * The constructor as it was before [bodyBase64].
+     *
+     * Kotlin callers are served by the default, but Swift sees no default arguments: without this
+     * overload, every Swift call site that builds a request would stop compiling.
+     */
+    constructor(
+        sourceTraceId: String,
+        method: String,
+        url: String,
+        headers: Map<String, List<String>>,
+        body: String?,
+        contentType: String?,
+    ) : this(sourceTraceId, method, url, headers, body, contentType, bodyBase64 = null)
+}
 
 /** The result of handing a [ReplayRequest] to a [TrafficReplayHandler]. */
 sealed interface ReplayOutcome {
@@ -42,6 +60,9 @@ sealed interface ReplayOutcome {
 
 /**
  * Executes a replayed request using the host app's own HTTP client.
+ *
+ * A handler that can send a binary body says so by implementing `BinaryReplayHandler` instead;
+ * one that does not is never handed a [ReplayRequest.bodyBase64].
  *
  * Alohomora never sends the request itself. Anything the app derives per-request — payload
  * signatures, bearer tokens, certificate pinning — lives in the app's client chain, so a

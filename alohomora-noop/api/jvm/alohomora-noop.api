@@ -196,6 +196,9 @@ public abstract interface class io/github/yashkasera/alohomora/plugin/PluginData
 	public abstract fun onUpdate (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public abstract interface class io/github/yashkasera/alohomora/replay/BinaryReplayHandler : io/github/yashkasera/alohomora/replay/TrafficReplayHandler {
+}
+
 public final class io/github/yashkasera/alohomora/replay/KtorReplayHandlerKt {
 	public static final fun ktorReplayHandler (Lio/ktor/client/HttpClient;)Lio/github/yashkasera/alohomora/replay/TrafficReplayHandler;
 }
@@ -240,17 +243,20 @@ public final class io/github/yashkasera/alohomora/replay/ReplayOutcomes {
 public final class io/github/yashkasera/alohomora/replay/ReplayRequest {
 	public static final field $stable I
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Ljava/util/Map;
 	public final fun component5 ()Ljava/lang/String;
 	public final fun component6 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;)Lio/github/yashkasera/alohomora/replay/ReplayRequest;
-	public static synthetic fun copy$default (Lio/github/yashkasera/alohomora/replay/ReplayRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/yashkasera/alohomora/replay/ReplayRequest;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/github/yashkasera/alohomora/replay/ReplayRequest;
+	public static synthetic fun copy$default (Lio/github/yashkasera/alohomora/replay/ReplayRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/yashkasera/alohomora/replay/ReplayRequest;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getBody ()Ljava/lang/String;
+	public final fun getBodyBase64 ()Ljava/lang/String;
 	public final fun getContentType ()Ljava/lang/String;
 	public final fun getHeaders ()Ljava/util/Map;
 	public final fun getMethod ()Ljava/lang/String;

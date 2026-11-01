@@ -16,7 +16,18 @@ data class ReplayRequest(
     val headers: Map<String, List<String>> = emptyMap(),
     val body: String? = null,
     val contentType: String? = null,
-)
+    val bodyBase64: String? = null,
+) {
+    /** Mirrors the pre-[bodyBase64] constructor kept for Swift callers. */
+    constructor(
+        sourceTraceId: String,
+        method: String,
+        url: String,
+        headers: Map<String, List<String>>,
+        body: String?,
+        contentType: String?,
+    ) : this(sourceTraceId, method, url, headers, body, contentType, bodyBase64 = null)
+}
 
 /** No-op mirror of `:alohomora`'s `ReplayOutcome`. */
 @Suppress("unused")
@@ -50,3 +61,10 @@ object ReplayOutcomes {
 fun interface TrafficReplayHandler {
     suspend fun replay(request: ReplayRequest): ReplayOutcome
 }
+
+/**
+ * No-op mirror of `:alohomora`'s `BinaryReplayHandler`. A host app's custom handler implements it
+ * in shared code, so the release build has to resolve the same name.
+ */
+@Suppress("unused")
+fun interface BinaryReplayHandler : TrafficReplayHandler

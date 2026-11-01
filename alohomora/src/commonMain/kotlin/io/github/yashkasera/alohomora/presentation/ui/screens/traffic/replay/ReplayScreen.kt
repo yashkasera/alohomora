@@ -297,10 +297,13 @@ private fun BlockedContent(
                             "This request is missing its URL or method and cannot be replayed."
 
                         ReplayBlockedReason.UNPARSEABLE_BODY ->
-                            "The request body was multipart or streaming and cannot be reconstructed."
+                            "The request body was streaming, one-shot or over the capture limit, and cannot be reconstructed."
 
                         ReplayBlockedReason.TRUNCATED_BODY ->
                             "The request body exceeded the capture limit. Replaying would send corrupted data."
+
+                        ReplayBlockedReason.BINARY_REPLAY_UNSUPPORTED ->
+                            "The request body is binary, and this app's replay handler can only send text."
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onErrorContainer,

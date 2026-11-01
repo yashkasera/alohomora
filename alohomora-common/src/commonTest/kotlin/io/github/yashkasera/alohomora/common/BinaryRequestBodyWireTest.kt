@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.common
 
+import io.github.yashkasera.alohomora.replay.ReplayRequest
 import kotlin.io.encoding.Base64
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -72,5 +73,39 @@ class BinaryRequestBodyWireTest {
             assertNotNull(DevToolsProtocol.decodeEnvelope(json.encodeToByteArray())),
         )
         assertEquals("AAE=", decoded.traffic.requestBodyBase64)
+    }
+
+    @Test
+    fun `a binary replay request survives the wire byte for byte`() {
+        val request = ReplayRequest(
+            sourceTraceId = "a",
+            method = "POST",
+            url = "https://example.com/upload",
+            contentType = "multipart/form-data; boundary=b",
+            bodyBase64 = Base64.encode(bytes),
+        )
+
+        val decoded = assertIs<RequestReplayTraceMessage>(roundTrip(RequestReplayTraceMessage(1, request)))
+
+        assertEquals(request, decoded.request)
+        assertNull(decoded.request.body)
+    }
+
+    /** A desktop that predates binary replay sends no `bodyBase64` key at all. */
+    @Test
+    fun `a replay request from an older desktop decodes without the bytes`() {
+        val json = """
+            {
+              "type": "REQUEST_REPLAY_TRACE",
+              "sequence": 1,
+              "request": { "sourceTraceId": "a", "method": "POST", "url": "https://example.com", "body": "{}" }
+            }
+        """.trimIndent()
+
+        val decoded = assertIs<RequestReplayTraceMessage>(
+            assertNotNull(DevToolsProtocol.decodeEnvelope(json.encodeToByteArray())),
+        )
+        assertNull(decoded.request.bodyBase64)
+        assertEquals("{}", decoded.request.body)
     }
 }

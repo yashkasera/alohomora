@@ -104,6 +104,8 @@ class TrafficReplayProtocolTest {
         val decoded = decodePayload(legacy) as InitialStateMessage
 
         assertFalse(decoded.payload.replaySupported)
+        // Same rule for binary replay: an app that never said it can send bytes is never asked to.
+        assertFalse(decoded.payload.binaryReplaySupported)
     }
 
     @Test
