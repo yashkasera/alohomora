@@ -1,11 +1,14 @@
 package io.github.yashkasera.alohomora.devtools
 
 import io.github.yashkasera.alohomora.common.AuthChallengeMessage
+import io.github.yashkasera.alohomora.common.AuthFailureMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.EnvelopeRead
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
 
 class DevToolsProtocolTest {
@@ -68,6 +71,48 @@ class DevToolsProtocolTest {
         for (offset in LENGTH_OFFSET until LENGTH_OFFSET + 4) frame[offset] = 0xFF.toByte()
 
         assertIs<EnvelopeRead.VersionMismatch>(readFrom(frame))
+    }
+
+    /**
+     * Oversized is reported apart from Malformed because the desktop must not retry it: an app that
+     * builds an oversized snapshot builds the same one on every reconnect.
+     */
+    @Test
+    fun readEnvelopeReportsAnOverLimitLengthAsOversized() = runTest {
+        val frame = DevToolsProtocol.encodeEnvelope(AuthChallengeMessage(sequence = 1))
+        writeLength(frame, DevToolsProtocol.MAX_PAYLOAD_BYTES + 1)
+
+        val read = assertIs<EnvelopeRead.Oversized>(readFrom(frame))
+        assertEquals(DevToolsProtocol.MAX_PAYLOAD_BYTES + 1, read.length)
+    }
+
+    @Test
+    fun readEnvelopeStillReportsANegativeLengthAsMalformed() = runTest {
+        val frame = DevToolsProtocol.encodeEnvelope(AuthChallengeMessage(sequence = 1))
+        for (offset in LENGTH_OFFSET until LENGTH_OFFSET + 4) frame[offset] = 0xFF.toByte()
+
+        assertIs<EnvelopeRead.Malformed>(readFrom(frame))
+    }
+
+    @Test
+    fun encodeWithinLimitKeepsAFrameThatFits() {
+        val message = AuthChallengeMessage(sequence = 3)
+
+        assertEquals(
+            message,
+            DevToolsProtocol.decodeFrame(assertNotNull(DevToolsProtocol.encodeEnvelopeWithinLimit(message))),
+        )
+    }
+
+    @Test
+    fun encodeWithinLimitRefusesAFrameTheReaderWouldReject() {
+        val huge = AuthFailureMessage(sequence = 4, reason = "x".repeat(DevToolsProtocol.MAX_PAYLOAD_BYTES))
+
+        assertNull(DevToolsProtocol.encodeEnvelopeWithinLimit(huge))
+    }
+
+    private fun writeLength(frame: ByteArray, length: Int) {
+        for (i in 0 until 4) frame[LENGTH_OFFSET + i] = (length shr (24 - 8 * i)).toByte()
     }
 
     private suspend fun readFrom(bytes: ByteArray): EnvelopeRead =

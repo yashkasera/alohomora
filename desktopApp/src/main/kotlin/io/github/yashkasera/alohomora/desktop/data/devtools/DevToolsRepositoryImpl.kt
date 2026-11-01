@@ -347,6 +347,16 @@ class DevToolsRepositoryImpl(
                         "Update whichever of the two is older.",
                 )
 
+                // Fatal, not retried. An app that builds an oversized snapshot builds the same one on
+                // every reconnect (SDKs before the frame budget did, from binary bodies), so retrying
+                // was an endless reconnect loop with nothing on screen.
+                is EnvelopeRead.Oversized -> SessionOutcome.Fatal(
+                    "The app sent a ${read.length / (1024 * 1024)} MB message, over the " +
+                        "${DevToolsProtocol.MAX_PAYLOAD_BYTES / (1024 * 1024)} MB limit, and would " +
+                        "send it again on every reconnect. Clear Traffic on the device and reconnect, " +
+                        "or update the app's Alohomora SDK.",
+                )
+
                 // Retryable on purpose. A desynced or truncated frame is usually transient, and a
                 // reconnect resynchronises; only a version difference is known to be permanent.
                 is EnvelopeRead.Malformed -> {
