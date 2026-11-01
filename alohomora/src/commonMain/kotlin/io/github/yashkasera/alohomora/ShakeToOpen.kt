@@ -17,7 +17,9 @@ internal object ShakeToOpenState {
 /**
  * Installs a shake-to-open gesture that surfaces the Alohomora console on a physical shake.
  *
- * Called once from `Alohomora.initInternal`, under the init lock, mirroring `installCrashHandler`.
+ * Called once from `Alohomora.initInternal`, under the init lock, mirroring `installCrashHandler`,
+ * and only when `AlohomoraImpl.isDevToolsEnabled()` — a shake must not open the console in a build
+ * that has DevTools off.
  * The mechanism is deliberately platform-specific:
  *
  * - **iOS** starts a Core Motion accelerometer stream here and presents the console itself, because

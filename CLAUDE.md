@@ -94,7 +94,10 @@ resolver: an explicit build decision wins, otherwise the **host app's** debuggab
 an `embedded.mobileprovision` granting `get-task-allow`). Explicit decisions are the plugin's
 generated `devToolsEnabled = true` (how a non-debuggable beta opts in) and the iOS
 `AlohomoraDevToolsEnabled` Info.plist key, YES or NO. Never gate on `config.devToolsEnabled` or
-`Platform.isDebugBinary` directly:
+`Platform.isDebugBinary` directly. `initInternal` (and `AlohomoraInitializer` for the Android shake
+listener) installs the crash handler and shake-to-open only when it says yes — on iOS that is the
+only thing keeping an App Store build that calls `init()` from opening the console on a shake, since
+there is no iOS noop and SPM cannot drop a package per configuration:
 
 - **A plain config's `false` means "no opinion".** It is the interface default, which every config
   from plugin ≤1.2.0 inherits; reading it as "off" left DevTools dead in those consumers' debug
@@ -105,6 +108,10 @@ generated `devToolsEnabled = true` (how a non-debuggable beta opts in) and the i
 - **`Platform.isDebugBinary` describes the framework, not the app.** SPM consumers link the Release
   XCFramework, so it is false in every consumer's Debug build. The same goes for the AAR's own
   `BuildConfig` on Android.
+- **Never request notification permission.** The "server active" banner posts only if the app
+  already holds notification authorization (iOS: authorized/provisional/ephemeral; Android:
+  `POST_NOTIFICATIONS` granted). The system prompt is one-shot per install; spending it on a debug
+  banner pre-empts the host app's own push onboarding.
 
 ### Gradle plugin: build-time config injection
 
@@ -170,7 +177,8 @@ fails on what is not an API change at all.
 ### Error capture
 
 `Alohomora.recordError(...)` for caught failures, plus a crash handler installed once from
-`initInternal` (`installCrashHandler`, `expect`/`actual`). Four constraints, none cosmetic:
+`initInternal` (`installCrashHandler`, `expect`/`actual`) — only when DevTools is enabled (see
+DevTools activation). Four constraints, none cosmetic:
 
 - **Chain, never replace.** Each actual keeps the handler it displaced and calls it in a `finally`.
   Alohomora arrives via `debugImplementation`, so swallowing the exception would disable the host

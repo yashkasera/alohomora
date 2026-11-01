@@ -130,8 +130,17 @@ internal object AlohomoraImpl {
             this.config = config
             this.hostDebuggable = hostDebuggable
             koinApplication = initKoin(appDeclaration)
-            installCrashHandler()
-            installShakeToOpen()
+            // Both hooks follow DevTools activation, because on iOS nothing else stops them: there
+            // is no noop artifact and SPM cannot drop a package per configuration, so an App Store
+            // build that calls init() would otherwise open the whole console — traffic bodies, the
+            // database editor, NSUserDefaults — to anyone who shakes the phone. The crash handler
+            // chains and never swallows, but in a build where the console is unreachable its only
+            // effect is a bounded synchronous SQLite write on the crashing thread, ahead of the host's
+            // own reporter, in exactly the builds where that reporter matters most.
+            if (isDevToolsEnabled()) {
+                installCrashHandler()
+                installShakeToOpen()
+            }
         }
     }
 
