@@ -163,21 +163,14 @@
                         </div>
                         <div class="api-card">
                             <h4>redactHeaders(vararg headerNames)</h4>
-                            <p>Mark extra headers for redaction at capture time, on top of the
-                                defaults (<code>Authorization</code>, <code>Proxy-Authorization</code>,
-                                <code>Cookie</code>, <code>Set-Cookie</code>, <code>X-Api-Key</code>).
-                                Values are replaced with <code>[REDACTED]</code> before reaching the
-                                database. Case-insensitive; each call replaces the previous list.</p>
+                            <p>Mark headers for redaction at capture time. Values are replaced with
+                                <code>[REDACTED]</code> before reaching the database.
+                                Case-insensitive.</p>
                         </div>
                         <div class="api-card">
                             <h4>clearRedactedHeaders()</h4>
-                            <p>Remove the headers added with <code>redactHeaders</code>. The defaults
-                                stay redacted.</p>
-                        </div>
-                        <div class="api-card">
-                            <h4>setDefaultHeaderRedactionEnabled(enabled)</h4>
-                            <p>Turn redaction of the default headers on or off. Default: on. Headers
-                                named with <code>redactHeaders</code> are redacted either way.</p>
+                            <p>Remove all header redaction rules. New traffic captures will include
+                                full header values again.</p>
                         </div>
                         <div class="api-card">
                             <h4>registerSharedPreferences(name, reader)</h4>
