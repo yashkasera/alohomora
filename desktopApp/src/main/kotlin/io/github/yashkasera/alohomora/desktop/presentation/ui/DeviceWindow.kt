@@ -42,6 +42,8 @@ import kotlin.math.roundToInt
 @Composable
 fun DeviceWindow(
     session: DeviceWindowSession,
+    /** Bumped by the app to bring this window forward, e.g. when its device is picked again. */
+    focusRequest: Int = 0,
     isDarkState: MutableState<Boolean>,
     isDark: Boolean,
     themeId: String,
@@ -53,7 +55,11 @@ fun DeviceWindow(
     appOverlays: @Composable () -> Unit,
     onOpenLauncher: () -> Unit,
     onExit: () -> Unit,
-    onSessionClosed: () -> Unit,
+    /**
+     * Ends this session. The app owns the teardown (see `DeviceWindowSession.release`) so the
+     * menu item, the title-bar close button and app exit cannot drift apart again.
+     */
+    onClose: () -> Unit,
     screenshotDir: String = "",
     screenshotShowToast: Boolean = true,
 ) {
@@ -67,16 +73,6 @@ fun DeviceWindow(
     val zoomIn = { zoomScale = (zoomScale + 0.1f).coerceAtMost(2.0f) }
     val zoomOut = { zoomScale = (zoomScale - 0.1f).coerceAtLeast(0.5f) }
     val resetZoom = { zoomScale = 1.0f }
-
-    val closeWindow = {
-        val devicesVm = session.composition.devicesViewModel
-        val devToolsVm = session.composition.devToolsViewModel
-        devicesVm.disconnectHost(session.host, session.hostPort)
-        devicesVm.deactivateDevice(session.deviceId, session.hostPort)
-        devToolsVm.disconnect()
-        session.composition.close()
-        onSessionClosed()
-    }
 
     var deviceWasOnline by remember { mutableStateOf(true) }
     val devicesForReforward by session.composition.devicesViewModel.devices.collectAsState()
@@ -109,12 +105,16 @@ fun DeviceWindow(
                 false
             }
         },
-        onCloseRequest = {
-            session.composition.devToolsViewModel.disconnect()
-            session.composition.close()
-            onSessionClosed()
-        },
+        onCloseRequest = onClose,
     ) {
+        LaunchedEffect(focusRequest) {
+            if (focusRequest > 0) {
+                state.isMinimized = false
+                window.toFront()
+                window.requestFocus()
+            }
+        }
+
         AppTheme(isDarkState = isDarkState, themeId = themeId) {
             MenuBar {
                 Menu("File") {
@@ -136,7 +136,7 @@ fun DeviceWindow(
                     Item(
                         "Close Window",
                         shortcut = KeyShortcut(Key.W, meta = isMacOs, ctrl = !isMacOs),
-                        onClick = closeWindow,
+                        onClick = onClose,
                     )
                     Item("Exit", onClick = onExit)
                 }
@@ -292,7 +292,7 @@ fun DeviceWindow(
                         onZoomIn = zoomIn,
                         onZoomOut = zoomOut,
                         onResetZoom = resetZoom,
-                        onDisconnectWindow = closeWindow,
+                        onDisconnectWindow = onClose,
                         screenshotDir = screenshotDir,
                         screenshotShowToast = screenshotShowToast,
                     )

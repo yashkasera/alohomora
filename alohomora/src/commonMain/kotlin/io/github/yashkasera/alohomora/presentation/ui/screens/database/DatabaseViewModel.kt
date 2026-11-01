@@ -32,7 +32,13 @@ internal data class DatabaseState(
     val isLoadingTableData: Boolean = false,
     val isLoadingSchema: Boolean = false,
     val isExecutingQuery: Boolean = false,
+    /** A failure loading databases, tables, rows or schema — shown above the tabs. */
     val error: String? = null,
+    /**
+     * Why the last query failed — SQLite's own message. Kept apart from [error] because it belongs
+     * beside the query that caused it, and a load failure must not be cleared by running a query.
+     */
+    val queryError: String? = null,
 )
 
 internal data class QueryStatus(
@@ -62,6 +68,7 @@ internal class DatabaseViewModel(
     private val isLoadingSchema = MutableStateFlow(false)
     private val isExecutingQuery = MutableStateFlow(false)
     private val error = MutableStateFlow<String?>(null)
+    private val queryError = MutableStateFlow<String?>(null)
 
     @Suppress("UNCHECKED_CAST")
     val state: StateFlow<DatabaseState> = combine(
@@ -82,6 +89,7 @@ internal class DatabaseViewModel(
         isLoadingSchema,
         isExecutingQuery,
         error,
+        queryError,
     ) { flows ->
         DatabaseState(
             databases = flows[0] as List<DatabaseInfo>,
@@ -101,6 +109,7 @@ internal class DatabaseViewModel(
             isLoadingSchema = flows[14] as Boolean,
             isExecutingQuery = flows[15] as Boolean,
             error = flows[16] as String?,
+            queryError = flows[17] as String?,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -144,6 +153,7 @@ internal class DatabaseViewModel(
         tableSchema.value = null
         queryResults.value = null
         queryStatus.value = null
+        queryError.value = null
         showDatabaseSelector.value = false
 
         loadTables(database.path)
@@ -229,7 +239,7 @@ internal class DatabaseViewModel(
 
         viewModelScope.launch {
             isExecutingQuery.value = true
-            error.value = null
+            queryError.value = null
             try {
                 vaultRepository.executeQuery(dbPath, query).collect { result ->
                     queryResults.value = result.data
@@ -238,12 +248,13 @@ internal class DatabaseViewModel(
                         executionTimeMs = result.executionTimeMs,
                         rowsAffected = result.rowsAffected,
                     )
-                    if (!result.success) {
-                        error.value = result.errorMessage
-                    }
+                    // Always assigned, so a success after a failure clears the old message. The
+                    // fallback covers a repository that reports failure without saying why.
+                    queryError.value = if (result.success) null else result.errorMessage ?: "Query failed"
+
                 }
             } catch (e: Exception) {
-                error.value = "Query execution failed: ${e.message}"
+                queryError.value = "Query execution failed: ${e.message}"
                 queryStatus.value = QueryStatus(
                     success = false,
                     executionTimeMs = 0,

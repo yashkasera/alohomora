@@ -41,6 +41,7 @@ import io.github.yashkasera.alohomora.common.DatabaseInfo
 import io.github.yashkasera.alohomora.common.TableData
 import io.github.yashkasera.alohomora.common.TableSchema
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilledButton
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraHorizontalDivider
@@ -116,6 +117,16 @@ internal fun DatabaseScreen(
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
 
+            // Above the tabs rather than inside one: a failure to list databases or tables leaves
+            // every tab empty, and on its own the empty state reads as "this table has no rows".
+            state.error?.let { message ->
+                ErrorMessage(
+                    message = message,
+                    modifier = Modifier.testTag(AlohomoraTestTags.Database.LOAD_ERROR),
+                )
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.md))
+            }
+
             TabsWithContent(
                 currentTab = state.currentTab,
                 onTabSelected = { viewModel.selectTab(it) },
@@ -124,6 +135,7 @@ internal fun DatabaseScreen(
                 onRunQuery = { viewModel.executeQuery() },
                 queryResults = state.queryResults,
                 queryStatus = state.queryStatus,
+                queryError = state.queryError,
                 tableData = state.tableData,
                 tableSchema = state.tableSchema,
             )
@@ -245,6 +257,7 @@ private fun TabsWithContent(
     onRunQuery: () -> Unit,
     queryResults: TableData?,
     queryStatus: QueryStatus?,
+    queryError: String?,
     tableData: TableData?,
     tableSchema: TableSchema?,
 ) {
@@ -302,6 +315,7 @@ private fun TabsWithContent(
                     onRunQuery = onRunQuery,
                     queryResults = queryResults,
                     queryStatus = queryStatus,
+                    queryError = queryError,
                 )
 
                 2 -> SchemaTabContent(tableSchema = tableSchema)
@@ -340,6 +354,7 @@ private fun QueryTabContent(
     onRunQuery: () -> Unit,
     queryResults: TableData?,
     queryStatus: QueryStatus?,
+    queryError: String?,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Query editor
@@ -411,7 +426,14 @@ private fun QueryTabContent(
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.margin.sm))
 
-            if (queryResults != null) {
+            // The error replaces the result rather than sitting above it: a failed query publishes an
+            // empty table, and "No columns" under SQLite's message adds nothing but doubt.
+            if (queryError != null) {
+                ErrorMessage(
+                    message = queryError,
+                    modifier = Modifier.testTag(AlohomoraTestTags.Database.QUERY_ERROR),
+                )
+            } else if (queryResults != null) {
                 DataTableViewer(tableData = queryResults)
             } else {
                 Box(
@@ -427,6 +449,20 @@ private fun QueryTabContent(
             }
         }
     }
+}
+
+/**
+ * A failure message the user can select and copy — a SQLite error is usually pasted somewhere next.
+ * The code block's accent border is what marks it as an error; the text keeps the on-surface colour
+ * so a long message stays readable.
+ */
+@Composable
+private fun ErrorMessage(message: String, modifier: Modifier = Modifier) {
+    AlohomoraCodeBlock(
+        content = message,
+        modifier = modifier,
+        accentBorder = true,
+    )
 }
 
 @Composable

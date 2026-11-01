@@ -7,7 +7,8 @@
 
 Real-time observability for debug builds of Android and iOS apps. Traffic, traces, events,
 database state, errors, cache, and feature flags — captured automatically, browsable in an in-app
-console and a Compose Desktop companion. Full observability in debug. Zero overhead in release.
+console and a Compose Desktop companion. Full observability in debug. Zero overhead in Android
+release builds.
 
 <p>
   <a href="https://yashkasera.github.io/alohomora/">Documentation</a> &middot;
@@ -18,9 +19,11 @@ console and a Compose Desktop companion. Full observability in debug. Zero overh
 ## Quick Start
 
 ```kotlin
+val alohomoraVersion = "1.4.0" // latest: see the Release badge above
+
 dependencies {
-    debugImplementation("io.github.yashkasera:alohomora:1.0.0")
-    releaseImplementation("io.github.yashkasera:alohomora-noop:1.0.0")
+    debugImplementation("io.github.yashkasera:alohomora:$alohomoraVersion")
+    releaseImplementation("io.github.yashkasera:alohomora-noop:$alohomoraVersion")
 }
 ```
 

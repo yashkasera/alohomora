@@ -3,9 +3,12 @@ package io.github.yashkasera.alohomora.device
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import io.github.yashkasera.alohomora.device.Seed.seedTraffic
 import io.github.yashkasera.alohomora.device.Seed.traffic
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
@@ -57,6 +60,25 @@ class TrafficScreenTest {
         compose.launchConsole(Routes.Traffic)
 
         compose.onNodeWithTag(Chrome.TOP_BAR_SUBTITLE).assertTextContains("3 REQUESTS")
+    }
+
+    @Test
+    fun scrollingPastTheFirstPageLoadsTheRest() {
+        // 45 rows: past two 20-row pages, and not a multiple of the page size, so the last window
+        // comes back short. The oldest row (index 0) sorts last, so reaching it means every page
+        // loaded. The subtitle reports the table's count, not the window's.
+        console.seedTraffic(*Array(45) { i -> traffic(id = "row-$i", index = i) })
+
+        compose.launchConsole(Routes.Traffic)
+        compose.onNodeWithTag(Chrome.TOP_BAR_SUBTITLE).assertTextContains("45 REQUESTS")
+
+        // Swipe-and-poll rather than performScrollToNode: each page arrives from a Room query off
+        // the main thread, which the scroll search does not wait for, so it would give up at the
+        // end of the first window.
+        compose.waitUntil(timeoutMillis = 10_000) {
+            compose.onNodeWithTag(Traffic.LIST).performTouchInput { swipeUp() }
+            compose.onAllNodesWithTag(Traffic.item("row-0")).fetchSemanticsNodes().isNotEmpty()
+        }
     }
 
     @Test

@@ -22,4 +22,6 @@ internal interface TrafficRepository : Repository<TrafficEntry, String> {
     fun observeUnviewedFailed(limit: Int = 50): Flow<List<TrafficEntry>>
 
     fun count(): Flow<Long>
+
+    fun count(query: String, method: String): Flow<Long>
 }

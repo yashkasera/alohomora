@@ -4,24 +4,25 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.yashkasera.alohomora.common.Event
-import io.github.yashkasera.alohomora.data.paging.EventsPagingSource
 import io.github.yashkasera.alohomora.domain.repository.EventsRepository
-import io.github.yashkasera.alohomora.utils.paging.FlowPager
-import io.github.yashkasera.alohomora.utils.paging.LoadState
-import io.github.yashkasera.alohomora.utils.paging.PagingConfig
-import io.github.yashkasera.alohomora.utils.paging.PagingData
+import io.github.yashkasera.alohomora.utils.paging.LiveWindow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+private const val PAGE_SIZE = 20
+
 @Immutable
 internal data class EventsState(
+    /** The loaded window, newest first. Grows as the list scrolls; see [EventsViewModel.loadMore]. */
     val events: List<Event> = emptyList(),
-    val isLoadingMore: Boolean = false,
-    val error: String? = null,
+    /** Every event matching the search, loaded or not — what the subtitle reports. */
+    val totalCount: Long = 0,
     val searchQuery: String = "",
     val showProperties: Boolean = true,
     val selectedEvent: Event? = null,
@@ -40,18 +41,18 @@ internal class EventsViewModel(
     private val showSlackSheet = MutableStateFlow(false)
     private val showClearConfirmation = MutableStateFlow(false)
     private val isClearing = MutableStateFlow(false)
-    private val pageSize = 20
 
-    private val pager = FlowPager(
-        config = PagingConfig(pageSize = pageSize),
-        initialKey = 0,
-        getNextKey = { it + 1 },
-        pagingSourceFactory = { EventsPagingSource(eventsRepository, searchQuery.value) },
-    ).cachedIn(viewModelScope)
+    private val window = LiveWindow("", PAGE_SIZE) { query, limit ->
+        eventsRepository.list(query = query, pageSize = limit)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val totalCount = searchQuery.flatMapLatest { eventsRepository.count(it) }
 
     @Suppress("UNCHECKED_CAST")
     val state: StateFlow<EventsState> = combine(
-        pager.pagingData,
+        window.items,
+        totalCount,
         searchQuery,
         showProperties,
         selectedEvent,
@@ -59,17 +60,17 @@ internal class EventsViewModel(
         showClearConfirmation,
         isClearing,
     ) { flows: Array<*> ->
-        val pagingData = flows[0] as PagingData<Event>
-        val query = flows[1] as String
-        val showProps = flows[2] as Boolean
-        val selected = flows[3] as Event?
-        val showSlack = flows[4] as Boolean
-        val showClear = flows[5] as Boolean
-        val clearing = flows[6] as Boolean
+        val events = flows[0] as List<Event>
+        val total = flows[1] as Long
+        val query = flows[2] as String
+        val showProps = flows[3] as Boolean
+        val selected = flows[4] as Event?
+        val showSlack = flows[5] as Boolean
+        val showClear = flows[6] as Boolean
+        val clearing = flows[7] as Boolean
         EventsState(
-            events = pagingData.items,
-            isLoadingMore = pagingData.loadState is LoadState.Loading,
-            error = (pagingData.loadState as? LoadState.Error)?.error?.message,
+            events = events,
+            totalCount = total,
             searchQuery = query,
             showProperties = showProps,
             selectedEvent = selected,
@@ -83,17 +84,14 @@ internal class EventsViewModel(
         initialValue = EventsState(),
     )
 
-    init {
-        loadNextItems()
-    }
-
-    fun loadNextItems() {
-        pager.loadNextPage()
+    /** Called as the list nears its end. Safe to call repeatedly — see [LiveWindow.loadMore]. */
+    fun loadMore() {
+        window.loadMore()
     }
 
     fun onSearchQueryChange(query: String) {
         searchQuery.value = query
-        pager.refresh()
+        window.setFilter(query)
     }
 
     fun toggleShowProperties() {
@@ -129,8 +127,8 @@ internal class EventsViewModel(
         viewModelScope.launch {
             isClearing.value = true
             try {
+                // No refresh: the window is a live query, and Room re-emits it on the delete.
                 eventsRepository.clearAll()
-                pager.refresh()
             } catch (_: Exception) {
             } finally {
                 isClearing.value = false

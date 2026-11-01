@@ -2,7 +2,13 @@ package io.github.yashkasera.alohomora.desktop.data.adb
 
 interface AdbDataSource {
     suspend fun listDevices(): List<AdbDevice>
-    suspend fun forwardDevToolsPort(deviceId: String, hostPort: Int, devicePort: Int)
+
+    /**
+     * `adb forward tcp:[hostPort] tcp:[devicePort]`. With [rebind] false the forward carries
+     * `--no-rebind`, so adb refuses a host port that is already forwarded — for any device, by
+     * any process — instead of silently moving it to [deviceId].
+     */
+    suspend fun forwardDevToolsPort(deviceId: String, hostPort: Int, devicePort: Int, rebind: Boolean)
     suspend fun removeForward(deviceId: String, hostPort: Int)
     suspend fun enableTcpMode(deviceId: String, tcpPort: Int)
     suspend fun connect(host: String, port: Int): AdbCommandResult

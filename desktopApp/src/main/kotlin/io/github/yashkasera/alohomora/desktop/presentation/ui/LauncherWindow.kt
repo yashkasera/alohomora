@@ -45,6 +45,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -70,12 +71,15 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
 import io.github.yashkasera.alohomora.desktop.app.DesktopAppComposition
 import io.github.yashkasera.alohomora.desktop.app.DesktopBuildConfig
+import io.github.yashkasera.alohomora.desktop.app.DeviceWindowSession
+import io.github.yashkasera.alohomora.desktop.app.isLoopbackHost
 import io.github.yashkasera.alohomora.desktop.app.MacTitleBarHeight
 import io.github.yashkasera.alohomora.desktop.app.applyMacTitleBar
 import io.github.yashkasera.alohomora.desktop.app.isMacOs
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsConnection
 import io.github.yashkasera.alohomora.desktop.domain.model.DevToolsTarget
 import io.github.yashkasera.alohomora.desktop.domain.model.DevicePlatform
+import io.github.yashkasera.alohomora.desktop.data.adb.HostPortAllocator
 import io.github.yashkasera.alohomora.desktop.data.adb.WirelessQr
 import io.github.yashkasera.alohomora.desktop.domain.model.DeviceState
 import io.github.yashkasera.alohomora.desktop.domain.model.WirelessDiscovery
@@ -112,20 +116,14 @@ import io.github.yashkasera.alohomora.ui.theme.dimens
 import java.awt.Dimension
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 
 private const val DEFAULT_HOST = "127.0.0.1"
 private const val DEFAULT_PORT = "53999"
-
-private data class PendingSession(
-    val deviceId: String,
-    val host: String,
-    val hostPort: Int,
-    val devicePort: Int,
-    val composition: DesktopAppComposition,
-)
 
 private enum class LauncherState { DEVICE_SELECT, CONNECTING, AUTH_OTP }
 
@@ -140,7 +138,13 @@ fun LauncherWindow(
     onShowSettings: () -> Unit,
     onShowAbout: () -> Unit,
     appOverlays: @Composable () -> Unit,
-    onOpenDeviceWindow: (deviceId: String, host: String, hostPort: Int, devicePort: Int, composition: DesktopAppComposition) -> Unit,
+    /** Device windows already open; a device accepts one desktop client at a time. */
+    openSessions: () -> List<DeviceWindowSession>,
+    /** Brings an already-open device window forward instead of connecting to it again. */
+    onFocusSession: (DeviceWindowSession) -> Unit,
+    /** Releases a session that never got a window: cancelled, failed, or launcher closed. */
+    onDiscardSession: (DeviceWindowSession) -> Unit,
+    onOpenDeviceWindow: (DeviceWindowSession) -> Unit,
     onClose: () -> Unit,
     onExit: () -> Unit,
 ) {
@@ -178,6 +182,9 @@ fun LauncherWindow(
                 LauncherContent(
                     modifier = Modifier.weight(1f),
                     sharedDevicesComposition = sharedComposition,
+                    openSessions = openSessions,
+                    onFocusSession = onFocusSession,
+                    onDiscardSession = onDiscardSession,
                     onOpenDeviceWindow = onOpenDeviceWindow,
                 )
 
@@ -199,18 +206,23 @@ fun LauncherWindow(
 private fun LauncherContent(
     modifier: Modifier = Modifier,
     sharedDevicesComposition: DesktopAppComposition,
-    onOpenDeviceWindow: (deviceId: String, host: String, hostPort: Int, devicePort: Int, composition: DesktopAppComposition) -> Unit,
+    openSessions: () -> List<DeviceWindowSession>,
+    onFocusSession: (DeviceWindowSession) -> Unit,
+    onDiscardSession: (DeviceWindowSession) -> Unit,
+    onOpenDeviceWindow: (DeviceWindowSession) -> Unit,
 ) {
     val devicesViewModel = sharedDevicesComposition.devicesViewModel
     val devices by devicesViewModel.devices.collectAsState()
 
     var selectedDeviceId by remember { mutableStateOf<String?>(null) }
     var host by remember { mutableStateOf(DEFAULT_HOST) }
-    var hostPort by remember { mutableStateOf(DEFAULT_PORT) }
+    // Blank means "pick a free one". A fixed default gave every device host port 53999, so the
+    // second device's forward silently took over the first one's tunnel.
+    var hostPort by remember { mutableStateOf("") }
     var devicePort by remember { mutableStateOf(DEFAULT_PORT) }
     var actionError by remember { mutableStateOf<String?>(null) }
 
-    var pendingSession by remember { mutableStateOf<PendingSession?>(null) }
+    var pendingSession by remember { mutableStateOf<DeviceWindowSession?>(null) }
     var pendingConnectionState by remember { mutableStateOf<DevToolsConnection>(DevToolsConnection.Disconnected) }
     var otpInput by remember { mutableStateOf("") }
     var showPairingDialog by remember { mutableStateOf(false) }
@@ -233,27 +245,30 @@ private fun LauncherContent(
         }
     }
 
+    // A pending session owns a composition and possibly an adb forward until a window takes it
+    // over. Closing the launcher mid-connect used to drop both on the floor.
+    DisposableEffect(Unit) {
+        onDispose { pendingSession?.let(onDiscardSession) }
+    }
+
     LaunchedEffect(pendingSession) {
         val session = pendingSession ?: return@LaunchedEffect
         session.composition.devToolsViewModel.uiState.collect { uiState ->
             pendingConnectionState = uiState.connection
             when (val conn = uiState.connection) {
                 is DevToolsConnection.Connected -> {
-                    onOpenDeviceWindow(
-                        session.deviceId,
-                        session.host,
-                        session.hostPort,
-                        session.devicePort,
-                        session.composition,
-                    )
+                    // Cleared before the hand-off: opening the window hides the launcher, and its
+                    // dispose must not release a session that now belongs to the window.
                     pendingSession = null
                     otpInput = ""
+                    onOpenDeviceWindow(session)
                 }
 
                 is DevToolsConnection.Failed -> {
                     actionError = conn.reason
                     pendingSession = null
                     otpInput = ""
+                    onDiscardSession(session)
                 }
 
                 else -> {}
@@ -306,24 +321,38 @@ private fun LauncherContent(
                                 actionError = "Select an online device first"
                                 return@DeviceSelectContent
                             }
-                            val numericHostPort = hostPort.toIntOrNull() ?: DEFAULT_PORT.toInt()
+                            // The device serves one desktop client at a time and drops the rest,
+                            // which the retry loop reads as a transient failure — so a second
+                            // connection sat on "Connecting" forever with nothing to say why.
+                            openSessions().firstOrNull { it.deviceId == selectedDevice.id }?.let {
+                                actionError = null
+                                onFocusSession(it)
+                                return@DeviceSelectContent
+                            }
+                            val enteredHostPort = hostPort.toIntOrNull()
                             val numericDevicePort = devicePort.toIntOrNull() ?: DEFAULT_PORT.toInt()
-                            val isLocalHost = host == "127.0.0.1" || host == "localhost"
+                            val isLocalHost = isLoopbackHost(host)
 
-                            val composition =
-                                DesktopAppComposition(
+                            // Built only once there is a session to own it; every early return
+                            // below used to leak one, with its Ktor client and scopes.
+                            fun openSession(
+                                target1: DeviceUi,
+                                tunnel: DevToolsTarget,
+                                sessionHostPort: Int,
+                                forwardsAdbPort: Boolean,
+                            ) {
+                                val composition = DesktopAppComposition(
                                     sharedDevicesViewModel = devicesViewModel,
                                     sharedConfigRepoManager = sharedDevicesComposition.configRepoManager,
                                 )
-
-                            fun openSession(target1: DeviceUi, tunnel: DevToolsTarget) {
                                 composition.devToolsViewModel.switchDevice(tunnel, target1.id)
-                                pendingSession = PendingSession(
-                                    target1.id,
-                                    tunnel.displayHost,
-                                    numericHostPort,
-                                    numericDevicePort,
-                                    composition,
+                                pendingSession = DeviceWindowSession(
+                                    deviceId = target1.id,
+                                    host = tunnel.displayHost,
+                                    hostPort = sessionHostPort,
+                                    devicePort = numericDevicePort,
+                                    composition = composition,
+                                    forwardsAdbPort = forwardsAdbPort,
                                 )
                                 actionError = null
                             }
@@ -339,6 +368,8 @@ private fun LauncherContent(
                                             openSession(
                                                 selectedDevice,
                                                 DevToolsTarget.Usbmux(usbmuxId, numericDevicePort),
+                                                sessionHostPort = numericDevicePort,
+                                                forwardsAdbPort = false,
                                             )
                                         }
                                     }
@@ -347,12 +378,29 @@ private fun LauncherContent(
                                         openSession(
                                             selectedDevice,
                                             DevToolsTarget.Tcp("127.0.0.1", numericDevicePort),
+                                            sessionHostPort = numericDevicePort,
+                                            forwardsAdbPort = false,
                                         )
 
                                     DevicePlatform.ANDROID -> {
+                                        // A remote host is dialled on this same port, so it
+                                        // has to match the device side; only a local forward
+                                        // is free to pick its own.
+                                        val numericHostPort = when {
+                                            enteredHostPort != null -> enteredHostPort
+                                            !isLocalHost -> numericDevicePort
+                                            else -> allocateHostPort(openSessions())
+                                        }
+                                        if (numericHostPort == null) {
+                                            actionError = "No free host port in " +
+                                                "${HostPortAllocator.DEFAULT_PORT}–" +
+                                                "${HostPortAllocator.DEFAULT_PORT + HostPortAllocator.SEARCH_SPAN - 1}. " +
+                                                "Enter one in Host Port."
+                                            return@launch
+                                        }
                                         if (!isLocalHost) {
                                             val connectError = suspendConnectOverTcp(
-                                                composition.devicesViewModel,
+                                                devicesViewModel,
                                                 selectedDevice.id, host, numericDevicePort,
                                             )
                                             if (connectError != null) {
@@ -361,7 +409,7 @@ private fun LauncherContent(
                                             }
                                         }
                                         val selectError = suspendSelectDevice(
-                                            composition.devicesViewModel,
+                                            devicesViewModel,
                                             selectedDevice.id, numericHostPort, numericDevicePort,
                                         )
                                         if (selectError != null) {
@@ -370,6 +418,8 @@ private fun LauncherContent(
                                             openSession(
                                                 selectedDevice,
                                                 DevToolsTarget.Tcp(host, numericHostPort),
+                                                sessionHostPort = numericHostPort,
+                                                forwardsAdbPort = true,
                                             )
                                         }
                                     }
@@ -381,7 +431,7 @@ private fun LauncherContent(
                     LauncherState.CONNECTING -> ConnectingContent(
                         connectionState = pendingConnectionState,
                         onCancel = {
-                            pendingSession?.composition?.devToolsViewModel?.disconnect()
+                            pendingSession?.let(onDiscardSession)
                             pendingSession = null
                         },
                     )
@@ -396,7 +446,7 @@ private fun LauncherContent(
                             otpInput = ""
                         },
                         onCancel = {
-                            pendingSession?.composition?.devToolsViewModel?.disconnect()
+                            pendingSession?.let(onDiscardSession)
                             pendingSession = null
                             otpInput = ""
                         },
@@ -525,6 +575,7 @@ private fun DeviceSelectContent(
                             value = hostPort,
                             onValueChange = onHostPortChange,
                             label = "Host Port",
+                            placeholder = "Auto",
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                         )
@@ -1036,6 +1087,15 @@ private suspend fun suspendConnectOverTcp(
     port: Int,
 ): String? = suspendCancellableCoroutine { continuation ->
     viewModel.connectOverTcp(deviceId, host, port) { error -> continuation.resume(error) }
+}
+
+/**
+ * A free host port for a new local forward, skipping the ones open sessions already hold. The
+ * bind probe is blocking socket I/O, hence the dispatcher hop off the UI thread.
+ */
+private suspend fun allocateHostPort(openSessions: List<DeviceWindowSession>): Int? {
+    val reserved = openSessions.filter { it.forwardsAdbPort }.map { it.hostPort }.toSet()
+    return withContext(Dispatchers.IO) { HostPortAllocator.allocate(reserved) }
 }
 
 private suspend fun suspendSelectDevice(

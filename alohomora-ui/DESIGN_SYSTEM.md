@@ -232,7 +232,8 @@ AlohomoraPrimaryTabRow(selectedTabIndex = index) {
 - `AlohomoraSingleChoiceToggleGroup` — spaced single-select toggle group (`AlohomoraToggleItem`).
   Note: this renders *spaced* items, not a connected segmented bar. For a connected bar with
   per-item corner shaping, raw M3 `SingleChoiceSegmentedButtonRow` is still the tool.
-- `AlohomoraPrimaryTabRow` / `AlohomoraScrollableTabRow` + `AlohomoraTab` — tab bars.
+- `AlohomoraPrimaryTabRow` + `AlohomoraTab` — tab bars. There is no scrollable variant; use raw M3
+  `ScrollableTabRow` if a row genuinely cannot fit.
 
 ### Dividers — `AlohomoraDividers.kt`
 
@@ -309,16 +310,15 @@ AlohomoraDropdownMenu(expanded = open, onDismissRequest = ::close) {
 }
 ```
 
-### Top bars — `AlohomoraTopBar.kt`, `AlohomoraAppBars.kt`
+### Top bars — `AlohomoraTopBar.kt`
 
 ```kotlin
 AlohomoraTopBar(title = "Traffic", subtitle = "42 requests", layout = TopBarLayout.START_ALIGNED)
 ```
 
 - `AlohomoraTopBar` — the shared bar. `TopBarLayout.{CENTER_ALIGNED, START_ALIGNED}`, optional
-  `subtitle`, `showDivider`, `navigationIcon`, `actions`.
-- `AlohomoraLargeTopAppBar` — large collapsible bar with `scrollBehavior`
-  (`AlohomoraTopAppBarDefaults`).
+  `subtitle`, `showDivider`, `navigationIcon`, `actions`. It is the only top bar; there is no large
+  or collapsing variant.
 
 ### Floating action buttons — `AlohomoraFloatingActionButton.kt`
 

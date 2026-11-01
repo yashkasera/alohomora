@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.desktop.data.adb
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
@@ -20,16 +21,27 @@ class AdbRepositoryImplTest {
         private val devices: List<AdbDevice>,
     ) : AdbDataSource {
         val forwards = mutableListOf<Pair<String, Int>>()
+        var failRemovals = false
         val removals = mutableListOf<Pair<String, Int>>()
+
+        /** The `rebind` flag of each forward, parallel to [forwards]. */
+        val rebinds = mutableListOf<Boolean>()
 
         override suspend fun listDevices(): List<AdbDevice> = devices
 
-        override suspend fun forwardDevToolsPort(deviceId: String, hostPort: Int, devicePort: Int) {
+        override suspend fun forwardDevToolsPort(
+            deviceId: String,
+            hostPort: Int,
+            devicePort: Int,
+            rebind: Boolean,
+        ) {
             forwards += deviceId to hostPort
+            rebinds += rebind
         }
 
         override suspend fun removeForward(deviceId: String, hostPort: Int) {
             removals += deviceId to hostPort
+            if (failRemovals) throw IllegalStateException("error: device '$deviceId' not found")
         }
 
         override suspend fun enableTcpMode(deviceId: String, tcpPort: Int) = Unit
@@ -127,5 +139,57 @@ class AdbRepositoryImplTest {
 
         assertEquals("Device not found", error)
         assertTrue(fake.forwards.isEmpty())
+    }
+
+    @Test
+    fun `a host port forwarded to one device is refused for another`() = runTest {
+        val fake = FakeAdbDataSource(listOf(device("deviceA"), device("deviceB")))
+        val repo = repoWith(fake)
+        repo.activateDevice("deviceA", hostPort = 53999, devicePort = 53999)
+
+        // The old launcher sent every device to 53999, and a plain `adb forward` moved A's
+        // tunnel to B without complaint.
+        val error = repo.activateDevice("deviceB", hostPort = 53999, devicePort = 53999)
+
+        assertNotNull(error)
+        assertTrue("deviceA" in error, "the refusal should name the owner, was: $error")
+        assertEquals(listOf("deviceA" to 53999), fake.forwards)
+        assertTrue(fake.removals.isEmpty())
+    }
+
+    @Test
+    fun `a released host port can be taken by another device`() = runTest {
+        val fake = FakeAdbDataSource(listOf(device("deviceA"), device("deviceB")))
+        val repo = repoWith(fake)
+        repo.activateDevice("deviceA", hostPort = 53999, devicePort = 53999)
+        repo.deactivateDevice("deviceA", hostPort = 53999)
+
+        assertNull(repo.activateDevice("deviceB", hostPort = 53999, devicePort = 53999))
+        assertEquals("deviceB" to 53999, fake.forwards.last())
+    }
+
+    @Test
+    fun `a new forward refuses to rebind and only a device's own re-forward may`() = runTest {
+        val fake = FakeAdbDataSource(listOf(device("deviceA")))
+        val repo = repoWith(fake)
+
+        repo.activateDevice("deviceA", hostPort = 54000, devicePort = 53999)
+        // A device window re-forwards the same port when its device comes back online.
+        repo.activateDevice("deviceA", hostPort = 54000, devicePort = 53999)
+        repo.activateDevice("deviceA", hostPort = 54001, devicePort = 53999)
+
+        assertEquals(listOf(false, true, false), fake.rebinds)
+    }
+
+    @Test
+    fun `an unplugged device's port is freed even though adb cannot remove its forward`() = runTest {
+        val fake = FakeAdbDataSource(listOf(device("deviceA"), device("deviceB")))
+        val repo = repoWith(fake)
+        repo.activateDevice("deviceA", hostPort = 53999, devicePort = 53999)
+
+        fake.failRemovals = true
+        assertNotNull(repo.deactivateDevice("deviceA", hostPort = 53999))
+
+        assertNull(repo.activateDevice("deviceB", hostPort = 53999, devicePort = 53999))
     }
 }

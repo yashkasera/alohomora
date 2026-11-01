@@ -38,4 +38,7 @@ internal class TrafficRepositoryImpl(private val dao: TrafficDao) : TrafficRepos
         dao.observeUnviewedFailed(limit)
 
     override fun count(): Flow<Long> = dao.count()
+
+    override fun count(query: String, method: String): Flow<Long> =
+        dao.countMatching(query = query, method = method)
 }

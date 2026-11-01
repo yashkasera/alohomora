@@ -9,14 +9,22 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsControllerCompat
+import io.github.yashkasera.alohomora.presentation.navigation.DestinationRequest
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.presentation.ui.AlohomoraApp
 import io.github.yashkasera.alohomora.traffic.TrafficNotificationHelper
 
 class DevToolsActivity : ComponentActivity() {
-    private var startDestination: Routes = Routes.Overview
+    // Compose state, not a plain field. The activity is `singleTask` and the notification adds
+    // SINGLE_TOP, so a tap while the console is open arrives through onNewIntent — after setContent
+    // has already composed. Only a snapshot write reaches that composition; a plain field was read
+    // once and every later tap did nothing.
+    private var destination by mutableStateOf(DestinationRequest.Root)
 
     companion object {
         private const val EXTRA_TRACE_ID = "extra_trace_id"
@@ -34,11 +42,13 @@ class DevToolsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        updateStartDestination(intent)
+        // On recreation the NavController restores its own back stack. Replaying the launch intent
+        // over it would push the original destination back on top of wherever the user had gone.
+        if (savedInstanceState == null) requestDestination(intent)
         enableEdgeToEdge()
         setContent {
             AlohomoraApp(
-                startDestination = startDestination,
+                destination = destination,
                 onThemeChanged = { ThemeChanged(it) },
             )
         }
@@ -46,17 +56,19 @@ class DevToolsActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        updateStartDestination(intent)
+        setIntent(intent)
+        requestDestination(intent)
     }
 
-    private fun updateStartDestination(intent: Intent?) {
-        val destination = intent?.getStringExtra(TrafficNotificationHelper.EXTRA_START_DESTINATION)
+    private fun requestDestination(intent: Intent?) {
+        val extra = intent?.getStringExtra(TrafficNotificationHelper.EXTRA_START_DESTINATION)
         val traceId = intent?.getStringExtra(EXTRA_TRACE_ID)
-        startDestination = when {
+        val route = when {
             traceId != null -> Routes.TrafficDetails(traceId)
-            destination == TrafficNotificationHelper.DESTINATION_TRACE -> Routes.Traffic
+            extra == TrafficNotificationHelper.DESTINATION_TRACE -> Routes.Traffic
             else -> Routes.Overview
         }
+        destination = DestinationRequest(route)
     }
 }
 

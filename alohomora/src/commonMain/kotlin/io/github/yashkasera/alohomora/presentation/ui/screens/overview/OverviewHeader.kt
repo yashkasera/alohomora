@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.presentation.ui.screens.overview
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -13,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -20,8 +22,11 @@ import io.github.yashkasera.alohomora.AlohomoraImpl
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
 import io.github.yashkasera.alohomora.data.model.GitHistoryCommit
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
+import io.github.yashkasera.alohomora.ui.components.AlohomoraIconButton
 import io.github.yashkasera.alohomora.ui.icons.AlohomoraFull
 import io.github.yashkasera.alohomora.ui.icons.Icons
+import io.github.yashkasera.alohomora.ui.icons.X
+import io.github.yashkasera.alohomora.ui.testing.AlohomoraTestTags
 import io.github.yashkasera.alohomora.ui.theme.AppTheme
 import io.github.yashkasera.alohomora.ui.theme.dimens
 import kotlin.time.Clock
@@ -32,22 +37,41 @@ import kotlin.time.Clock
  *
  * [AlohomoraImpl.config] stays null-safe: the Gradle plugin is not applied to `:alohomora` itself,
  * so config is null in the library's own device tests.
+ *
+ * [onClose] is null wherever the host already has a way out (Android's system back), and the close
+ * button is rendered only when it is not. It lives here, on the root screen, because that is the one
+ * place every path through the console returns to.
  */
 @Composable
 internal fun OverviewHeader(
     modifier: Modifier = Modifier,
     config: AlohomoraConfig? = null,
+    onClose: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(top = MaterialTheme.dimens.margin.xl),
     ) {
-        Icon(
-            imageVector = Icons.AlohomoraFull,
-            modifier = Modifier.width(180.dp),
-            contentDescription = null,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.AlohomoraFull,
+                modifier = Modifier.width(180.dp),
+                contentDescription = null,
+            )
+            if (onClose != null) {
+                Spacer(Modifier.weight(1f))
+                AlohomoraIconButton(
+                    onClick = onClose,
+                    modifier = Modifier.testTag(AlohomoraTestTags.Overview.CLOSE),
+                ) {
+                    Icon(imageVector = Icons.X, contentDescription = "Close Alohomora")
+                }
+            }
+        }
         config?.let { config ->
             Row(
                 modifier = Modifier

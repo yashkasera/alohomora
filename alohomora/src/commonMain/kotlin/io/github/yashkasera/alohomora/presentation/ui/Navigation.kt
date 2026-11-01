@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import io.github.yashkasera.alohomora.plugin.PluginRegistry
+import io.github.yashkasera.alohomora.presentation.navigation.DestinationRequest
 import io.github.yashkasera.alohomora.presentation.navigation.Routes
 import io.github.yashkasera.alohomora.presentation.ui.screens.cache.CacheScreen
 import io.github.yashkasera.alohomora.presentation.ui.screens.config.ConfigScreen
@@ -34,13 +35,19 @@ import io.github.yashkasera.alohomora.ui.icons.Icons
 
 @Composable
 internal fun AlohomoraNavHost(
-    startDestination: Routes = Routes.Overview,
+    destination: DestinationRequest = DestinationRequest.Root,
+    onClose: (() -> Unit)? = null,
 ) {
     val navController = rememberNavController()
 
-    LaunchedEffect(startDestination) {
-        if (startDestination != Routes.Overview) {
-            navController.navigate(startDestination) {
+    // Keyed on the request, not its route, so a repeat of the same request still navigates (see
+    // DestinationRequest). Popping to Overview first gives every request the same back stack — Back
+    // from the target lands on the root — whether the console was cold or already deep in a screen.
+    LaunchedEffect(destination) {
+        val route = destination.route
+        if (route != Routes.Overview) {
+            navController.navigate(route) {
+                popUpTo(Routes.Overview)
                 launchSingleTop = true
             }
         }
@@ -48,7 +55,7 @@ internal fun AlohomoraNavHost(
 
     NavHost(navController = navController, startDestination = Routes.Overview) {
         composable<Routes.Overview> {
-            OverviewScreen(onNavigate = navController::navigate)
+            OverviewScreen(onNavigate = navController::navigate, onClose = onClose)
         }
 
         composable<Routes.Traffic> {

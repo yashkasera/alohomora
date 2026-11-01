@@ -9,8 +9,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -32,17 +34,16 @@ import io.github.yashkasera.alohomora.desktop.presentation.ui.LauncherWindow
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.AboutDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.McpConfirmationDialog
 import io.github.yashkasera.alohomora.desktop.presentation.ui.components.SettingsDialog
-import java.util.UUID
+import java.awt.Desktop
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
-data class DeviceWindowSession(
-    val id: String = UUID.randomUUID().toString(),
-    val deviceId: String,
-    val host: String,
-    val hostPort: Int,
-    val devicePort: Int,
-    val composition: DesktopAppComposition,
-)
+/** Upper bound on releasing every session at exit, so a wedged adb cannot hold quit hostage. */
+private val EXIT_TEARDOWN_TIMEOUT = 5.seconds
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
@@ -79,6 +80,52 @@ fun main() {
         var updateDismissed by remember { mutableStateOf(false) }
         var showAbout by remember { mutableStateOf(false) }
         var showSettings by remember { mutableStateOf(false) }
+
+        // Session teardown outlives the window it belongs to — the window leaves composition the
+        // moment its session is removed — so it runs here, on the application's own scope.
+        val appScope = rememberCoroutineScope()
+        // Bumped to bring an existing device window forward; keyed by session id.
+        val focusRequests = remember { mutableStateMapOf<String, Int>() }
+        var exiting by remember { mutableStateOf(false) }
+
+        val closeSession: (DeviceWindowSession) -> Unit = { session ->
+            sessions.removeAll { it.id == session.id }
+            focusRequests.remove(session.id)
+            appScope.launch { session.release() }
+            if (sessions.isEmpty()) launcherVisible = true
+        }
+        val focusSession: (DeviceWindowSession) -> Unit = { session ->
+            focusRequests[session.id] = (focusRequests[session.id] ?: 0) + 1
+        }
+        // Every exit path goes through here: the Exit menu items and the macOS quit handler.
+        // exitApplication on its own disposed the windows without releasing a single session.
+        val shutDown: (finish: () -> Unit) -> Unit = { finish ->
+            if (!exiting) {
+                exiting = true
+                launcherVisible = false
+                val open = sessions.toList()
+                appScope.launch {
+                    withTimeoutOrNull(EXIT_TEARDOWN_TIMEOUT) {
+                        open.map { async { it.release() } }.awaitAll()
+                    }
+                    finish()
+                }
+            }
+        }
+        val exit = { shutDown(::exitApplication) }
+
+        // Cmd+Q and Dock > Quit do not call exitApplication: AWT's default quit strategy is a
+        // bare System.exit, which skipped teardown entirely. The response is completed only once
+        // the sessions are released, rather than cancelled, so a logout or shutdown that asked
+        // the app to quit still proceeds.
+        DisposableEffect(Unit) {
+            val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop() else null
+            val handlesQuit = desktop?.isSupported(Desktop.Action.APP_QUIT_HANDLER) == true
+            if (handlesQuit) {
+                desktop.setQuitHandler { _, response -> shutDown { response.performQuit() } }
+            }
+            onDispose { if (handlesQuit) desktop.setQuitHandler(null) }
+        }
 
         LaunchedEffect(Unit) {
             val info = UpdateChecker.check(DesktopBuildConfig.version)
@@ -245,31 +292,38 @@ fun main() {
                 onShowSettings = { showSettings = true },
                 onShowAbout = { showAbout = true },
                 appOverlays = appOverlays,
-                onOpenDeviceWindow = { deviceId, host, hostPort, devicePort, composition ->
-                    val duplicate = sessions.any { it.deviceId == deviceId }
-                    if (!duplicate) {
-                        sessions += DeviceWindowSession(
-                            deviceId = deviceId,
-                            host = host,
-                            hostPort = hostPort,
-                            devicePort = devicePort,
-                            composition = composition,
-                        )
+                openSessions = { sessions.toList() },
+                onFocusSession = { session ->
+                    focusSession(session)
+                    launcherVisible = false
+                },
+                onDiscardSession = { session -> appScope.launch { session.release() } },
+                onOpenDeviceWindow = { session ->
+                    val existing = sessions.firstOrNull { it.deviceId == session.deviceId }
+                    if (existing == null) {
+                        sessions += session
+                    } else {
+                        // The launcher checks for an open window before connecting, so this is
+                        // a backstop. The duplicate must still be released, not just dropped:
+                        // it carries its own Ktor client and view-model scopes.
+                        appScope.launch { session.release() }
+                        focusSession(existing)
                     }
                     launcherVisible = false
                 },
                 onClose = {
                     launcherVisible = false
-                    if (sessions.isEmpty()) exitApplication()
+                    if (sessions.isEmpty()) exit()
                 },
-                onExit = ::exitApplication,
+                onExit = exit,
             )
         }
 
-        sessions.toList().forEach { session ->
+        if (!exiting) sessions.toList().forEach { session ->
             key(session.id) {
                 DeviceWindow(
                     session = session,
+                    focusRequest = focusRequests[session.id] ?: 0,
                     isDarkState = sharedIsDark,
                     isDark = effectiveIsDark,
                     themeId = themeId,
@@ -280,11 +334,8 @@ fun main() {
                     onShowAbout = { showAbout = true },
                     appOverlays = appOverlays,
                     onOpenLauncher = { launcherVisible = true },
-                    onExit = ::exitApplication,
-                    onSessionClosed = {
-                        sessions.removeAll { it.id == session.id }
-                        if (sessions.isEmpty()) launcherVisible = true
-                    },
+                    onExit = exit,
+                    onClose = { closeSession(session) },
                     screenshotDir = screenshotDir,
                     screenshotShowToast = screenshotShowToast,
                 )

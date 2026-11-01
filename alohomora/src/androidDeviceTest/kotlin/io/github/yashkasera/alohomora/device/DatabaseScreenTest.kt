@@ -107,9 +107,9 @@ class DatabaseScreenTest {
 
         compose.awaitTag(Database.QUERY_STATUS)
         // The status chip carries only an elapsed time and an untitled icon, so success is read
-        // off the result body: a failed query publishes an empty `TableData`, which renders as
-        // "No columns" instead of the row.
+        // off the result body: a failed query renders SQLite's message instead of the row.
         compose.awaitText(FIRST_ROW)
+        compose.onNodeWithTag(Database.QUERY_ERROR).assertDoesNotExist()
     }
 
     @Test
@@ -118,7 +118,9 @@ class DatabaseScreenTest {
         runQuery("SELECT * FROM no_such_table")
 
         compose.awaitTag(Database.QUERY_STATUS)
-        compose.awaitText("No columns")
+        // SQLite's own wording, not a generic failure: the message is the point of the panel.
+        compose.awaitTag(Database.QUERY_ERROR)
+        compose.awaitText("no such table")
     }
 
     @Test

@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.presentation.ui.components.LoadMoreNearEnd
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraFilterChip
@@ -84,6 +85,7 @@ internal fun TrafficScreen(
         } else {
             val listState = rememberLazyListState()
             FollowNewest(listState, state.calls.size)
+            LoadMoreNearEnd(listState, onLoadMore = viewModel::loadMore)
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 LazyColumn(
                     state = listState,
@@ -131,7 +133,7 @@ private fun TrafficTopBar(
     Column {
         AlohomoraTopBar(
             title = "Traffic",
-            subtitle = if (state.calls.isEmpty()) null else "${state.calls.size} REQUESTS",
+            subtitle = if (state.calls.isEmpty()) null else "${state.totalCount} REQUESTS",
             navigationIcon = {
                 AlohomoraIconButton(
                     onClick = onBackClick,

@@ -16,26 +16,38 @@ import kotlinx.cinterop.ObjCClass
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.usePinned
+import platform.CoreFoundation.CFRelease
+import platform.CoreFoundation.CFRunLoopGetCurrent
+import platform.CoreFoundation.CFRunLoopPerformBlock
+import platform.CoreFoundation.CFRunLoopWakeUp
+import platform.Foundation.CFBridgingRetain
 import platform.Foundation.HTTPBody
 import platform.Foundation.HTTPBodyStream
 import platform.Foundation.HTTPMethod
 import platform.Foundation.NSCachedURLResponse
+import platform.Foundation.NSCocoaErrorDomain
 import platform.Foundation.NSData
+import platform.Foundation.NSDefaultRunLoopMode
 import platform.Foundation.NSError
 import platform.Foundation.NSHTTPURLResponse
 import platform.Foundation.NSInputStream
 import platform.Foundation.NSMutableData
 import platform.Foundation.NSMutableURLRequest
+import platform.Foundation.NSRunLoop
 import platform.Foundation.NSString
 import platform.Foundation.NSStringFromClass
 import platform.Foundation.NSURL
+import platform.Foundation.NSURLAuthenticationChallenge
+import platform.Foundation.NSURLAuthenticationChallengeSenderProtocol
 import platform.Foundation.NSURLCacheStoragePolicy
+import platform.Foundation.NSURLCredential
 import platform.Foundation.NSURLProtocol
 import platform.Foundation.NSURLProtocolClientProtocol
 import platform.Foundation.NSURLProtocolMeta
 import platform.Foundation.NSURLRequest
 import platform.Foundation.NSURLResponse
 import platform.Foundation.NSURLSession
+import platform.Foundation.NSURLSessionAuthChallengeDisposition
 import platform.Foundation.NSURLSessionConfiguration
 import platform.Foundation.NSURLSessionDataDelegateProtocol
 import platform.Foundation.NSURLSessionDataTask
@@ -44,23 +56,28 @@ import platform.Foundation.NSURLSessionTask
 import platform.Foundation.NSURLErrorDomain
 import platform.Foundation.NSURLErrorRequestBodyStreamExhausted
 import platform.Foundation.NSUTF8StringEncoding
+import platform.Foundation.NSUserCancelledError
 import platform.Foundation.allHTTPHeaderFields
 import platform.Foundation.appendData
 import platform.Foundation.create
 import platform.Foundation.setAllHTTPHeaderFields
 import platform.Foundation.setHTTPBody
 import platform.Foundation.valueForHTTPHeaderField
+import platform.darwin.DISPATCH_QUEUE_PRIORITY_DEFAULT
+import platform.darwin.NSObject
 import platform.darwin.DISPATCH_TIME_NOW
 import platform.darwin.dispatch_after
-import platform.darwin.dispatch_get_main_queue
+import platform.darwin.dispatch_get_global_queue
 import platform.darwin.dispatch_time
+import platform.posix.memcpy
 
 private const val HANDLED_KEY = "AlohomoraHandled"
 
 /**
- * Upper bound on a captured request body, in bytes, matching the OkHttp interceptor's
- * `MAX_BODY_BYTES` and the Ktor plugin's `MAX_BODY_CHARS`. Only the stored copy is bounded —
- * the full body is always forwarded to the server (see [AlohomoraURLProtocol.startLoading]).
+ * Upper bound on a captured request or response body, in bytes, matching the OkHttp interceptor's
+ * `MAX_BODY_BYTES` and the Ktor plugin's `MAX_BODY_CHARS`. Only the stored copy is bounded: the full
+ * request reaches the server (see [AlohomoraURLProtocol.startLoading]) and the full response reaches
+ * the app.
  */
 private const val MAX_BODY_BYTES = 1_000_000L
 
@@ -90,6 +107,15 @@ private const val MAX_BODY_BYTES = 1_000_000L
  * ```
  *
  * Limitations: does not intercept URLSession background upload/download tasks or WebSocket frames.
+ *
+ * ## Forwarding must be invisible
+ *
+ * Governing rule, as on the OkHttp and Ktor paths: **instrumentation must never change the outcome
+ * of the host app's request.** The request is re-issued on a private forwarding session, so anything
+ * that session would otherwise decide on its own is handed back to the app's session instead:
+ * authentication challenges (SSL pinning, self-signed staging certificates, client certificates)
+ * and redirects. Client callbacks are delivered on the thread `startLoading` ran on, as the loading
+ * system requires, and never after `stopLoading`.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 @Suppress("unused")
@@ -131,11 +157,28 @@ class AlohomoraURLProtocol :
 
     private var session: NSURLSession? = null
     private var dataTask: NSURLSessionDataTask? = null
-    private val accumulator = NSMutableData()
     private var httpResponse: NSHTTPURLResponse? = null
     private var startTime = 0L
     private var traceId = ""
     private var replayOf: String? = null
+
+    // Only the first MAX_BODY_BYTES + 1 bytes are kept for capture. The whole response used to be
+    // buffered and decoded to a String, so a large download was held twice over just for display.
+    private val responseCapture = CappedBodyCapture(MAX_BODY_BYTES.toInt())
+
+    // The run loop of the thread startLoading ran on, and the modes it was running in. Every
+    // client callback has to be delivered there. Held as the NSRunLoop, not a bare CFRunLoopRef,
+    // because the Kotlin reference keeps the run loop retained for as long as a block may target it.
+    private var clientRunLoop: NSRunLoop? = null
+    private var clientModes: List<String> = listOfNotNull(NSDefaultRunLoopMode)
+
+    private val gate = ClientCallbackGate()
+    private val challengeSender = ForwardedChallengeSender()
+
+    // One trace per load. A redirect records its 3xx leg itself, and the cancellation that follows
+    // must not record it a second time as a failure. Read and written only on the forwarding
+    // session's serial delegate queue, or in startLoading before that session exists.
+    private var persisted = false
 
     // Captured at startLoading, read at persist time. The request body must be drained from the
     // body stream before the forwarding task consumes it (a stream is one-shot), so it cannot be
@@ -148,6 +191,7 @@ class AlohomoraURLProtocol :
     override fun startLoading() {
         traceId = Uuid.random().toString()
         startTime = Clock.System.now().toEpochMilliseconds()
+        captureClientThread()
         // Out-of-band property first, wire header as the fallback — see AlohomoraReplayKeys.
         replayOf = replayOfFor(request)
 
@@ -184,7 +228,9 @@ class AlohomoraURLProtocol :
                         code = NSURLErrorRequestBodyStreamExhausted,
                         userInfo = null,
                     )
-                    client?.URLProtocol(this, didFailWithError = error)
+                    onClientThread {
+                        if (gate.claimTerminal()) client?.URLProtocol(this, didFailWithError = error)
+                    }
                     persistTrace(error)
                     return
                 }
@@ -230,8 +276,49 @@ class AlohomoraURLProtocol :
     }
 
     override fun stopLoading() {
+        // Before the cancel: the cancelled task still reports didCompleteWithError(-999), and the
+        // loading system must hear nothing more from this instance once it has stopped it.
+        gate.stop()
         dataTask?.cancel()
         session?.invalidateAndCancel()
+        challengeSender.cancelAll()
+    }
+
+    /**
+     * Records where client callbacks must go. Called first thing in [startLoading], on the client
+     * thread. The loader may run that thread's run loop in a private mode, so the current mode is
+     * kept alongside the default one; a block queued for the default mode alone could wait there
+     * until the load times out.
+     */
+    private fun captureClientThread() {
+        val runLoop = NSRunLoop.currentRunLoop
+        clientRunLoop = runLoop
+        clientModes = listOfNotNull(NSDefaultRunLoopMode, runLoop.currentMode).distinct()
+    }
+
+    /**
+     * Runs [block] on the client thread: inline when already there (startLoading's synchronous
+     * paths), otherwise queued on its run loop.
+     *
+     * The forwarding session calls its delegate on its own queue, and the throttle timer fires on a
+     * global queue; Apple requires every client callback on the thread startLoading ran on.
+     * `CFRunLoopPerformBlock` is used rather than `performSelector:onThread:`, which in Kotlin/Native
+     * would need an `@ObjCAction` trampoline plus a hand-rolled queue of pending callbacks. CF run
+     * loop functions are thread-safe, blocks run in the order queued, and `CFRunLoopWakeUp` is
+     * needed because a sleeping run loop does not notice a newly queued block on its own.
+     */
+    private fun onClientThread(block: () -> Unit) {
+        val runLoop = clientRunLoop?.getCFRunLoop() ?: return
+        if (CFRunLoopGetCurrent() == runLoop) {
+            block()
+            return
+        }
+        // CFRunLoopPerformBlock copies the modes into a set of its own, so this reference is ours
+        // to release straight away.
+        val modes = CFBridgingRetain(clientModes)
+        CFRunLoopPerformBlock(runLoop, modes, block)
+        CFRelease(modes)
+        CFRunLoopWakeUp(runLoop)
     }
 
     /**
@@ -302,27 +389,37 @@ class AlohomoraURLProtocol :
         completionHandler: (Long) -> Unit,
     ) {
         httpResponse = didReceiveResponse as? NSHTTPURLResponse
-        val throttle = NetworkRuleEngine.throttle
-        if (throttle.latencyMs > 0) {
-            val delta = throttle.latencyMs * 1_000_000L
-            dispatch_after(
-                dispatch_time(DISPATCH_TIME_NOW, delta),
-                dispatch_get_main_queue(),
-            ) {
-                this.client?.URLProtocol(
-                    this,
-                    didReceiveResponse = didReceiveResponse,
-                    cacheStoragePolicy = NSURLCacheStoragePolicy.NSURLCacheStorageNotAllowed,
-                )
-                completionHandler(NSURLSessionResponseAllow)
+        // Decided once, before any data arrives: an event stream would otherwise be retained until it
+        // ends, and a binary body only ever decodes to the placeholder anyway.
+        runCatching {
+            CappedBodyCapture.placeholderFor(didReceiveResponse.MIMEType)?.let(responseCapture::skip)
+        }
+
+        // The client hears about the response before the task is allowed to continue, so its data
+        // callbacks, queued after this one on the same run loop, cannot overtake it.
+        val deliver = {
+            onClientThread {
+                if (gate.isOpen) {
+                    client?.URLProtocol(
+                        this,
+                        didReceiveResponse = didReceiveResponse,
+                        cacheStoragePolicy = NSURLCacheStoragePolicy.NSURLCacheStorageNotAllowed,
+                    )
+                }
             }
-        } else {
-            client?.URLProtocol(
-                this,
-                didReceiveResponse = didReceiveResponse,
-                cacheStoragePolicy = NSURLCacheStoragePolicy.NSURLCacheStorageNotAllowed,
-            )
             completionHandler(NSURLSessionResponseAllow)
+        }
+        val latencyMs = runCatching { NetworkRuleEngine.throttle.latencyMs }.getOrDefault(0L)
+        if (latencyMs > 0) {
+            // A global queue, not main: the delay must not occupy the app's main thread, and the
+            // client callback is routed to the client thread by onClientThread either way.
+            dispatch_after(
+                dispatch_time(DISPATCH_TIME_NOW, latencyMs * 1_000_000L),
+                dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u),
+                deliver,
+            )
+        } else {
+            deliver()
         }
     }
 
@@ -331,8 +428,10 @@ class AlohomoraURLProtocol :
         dataTask: NSURLSessionDataTask,
         didReceiveData: NSData,
     ) {
-        accumulator.appendData(didReceiveData)
-        client?.URLProtocol(this, didLoadData = didReceiveData)
+        runCatching { retainForCapture(didReceiveData) }
+        onClientThread {
+            if (gate.isOpen) client?.URLProtocol(this, didLoadData = didReceiveData)
+        }
     }
 
     override fun URLSession(
@@ -340,16 +439,106 @@ class AlohomoraURLProtocol :
         task: NSURLSessionTask,
         didCompleteWithError: NSError?,
     ) {
-        if (didCompleteWithError != null) {
-            client?.URLProtocol(this, didFailWithError = didCompleteWithError)
-        } else {
-            client?.URLProtocolDidFinishLoading(this)
+        onClientThread {
+            if (gate.claimTerminal()) {
+                if (didCompleteWithError != null) {
+                    client?.URLProtocol(this, didFailWithError = didCompleteWithError)
+                } else {
+                    client?.URLProtocolDidFinishLoading(this)
+                }
+            }
         }
         session.finishTasksAndInvalidate()
         persistTrace(error = didCompleteWithError)
     }
 
+    /**
+     * Reports a redirect to the client instead of following it here.
+     *
+     * Followed silently, the app's own `willPerformHTTPRedirection` never ran, so a redirect policy
+     * (refusing cross-host hops, stripping a header before one) was bypassed whenever Alohomora was
+     * installed. This is Apple's CustomHTTPProtocol pattern: hand the client the new request with
+     * our recursion flag removed, so the load the system issues for it re-enters this protocol and
+     * is captured on its own; then cancel this task and fail with `NSUserCancelledError`, which the
+     * loading system treats as this instance stepping aside rather than as a failed request.
+     */
+    override fun URLSession(
+        session: NSURLSession,
+        task: NSURLSessionTask,
+        willPerformHTTPRedirection: NSHTTPURLResponse,
+        newRequest: NSURLRequest,
+        completionHandler: (NSURLRequest?) -> Unit,
+    ) {
+        val redirect = (newRequest.mutableCopy() as NSMutableURLRequest).also {
+            NSURLProtocol.removePropertyForKey(HANDLED_KEY, inRequest = it)
+        }
+        onClientThread {
+            if (gate.claimTerminal()) {
+                client?.URLProtocol(this, wasRedirectedToRequest = redirect, redirectResponse = willPerformHTTPRedirection)
+                // The loader may stop this instance from inside the call above, once it has started
+                // the new load; after that it must not hear from us again.
+                if (!gate.isStopped) {
+                    client?.URLProtocol(
+                        this,
+                        didFailWithError = NSError.errorWithDomain(NSCocoaErrorDomain, NSUserCancelledError, null),
+                    )
+                }
+            }
+        }
+        task.cancel()
+        // Answered so the forwarding session is not left waiting; with the task already cancelled,
+        // declining the redirect only lets it finish.
+        completionHandler(null)
+
+        // The 3xx leg is a trace of its own, as it would be in any proxy. The cancellation reported
+        // next by didCompleteWithError is ours, not the app's, and is not recorded.
+        httpResponse = willPerformHTTPRedirection
+        persistTrace(error = null)
+    }
+
+    /**
+     * Hands an authentication challenge to the client, so the host app's session delegate decides.
+     *
+     * Without this the forwarding session applied system default handling to every challenge: SSL
+     * pinning stopped rejecting anything, and self-signed staging certificates and client
+     * certificates stopped working, but only in builds with Alohomora installed. The challenge is
+     * rewrapped with [ForwardedChallengeSender] as its sender; whichever sender method the client calls completes
+     * the forwarding session's handler with the matching disposition. An app with no challenge
+     * delegate is answered with default handling by the loading system, which is what happened before.
+     *
+     * Only the task-level method is implemented: URLSession routes session-level challenges (server
+     * trust, client certificates) to it when the session-level one is absent.
+     */
+    override fun URLSession(
+        session: NSURLSession,
+        task: NSURLSessionTask,
+        didReceiveChallenge: NSURLAuthenticationChallenge,
+        completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Unit,
+    ) {
+        val forwarded = challengeSender.forward(didReceiveChallenge, completionHandler)
+        onClientThread {
+            val client = client
+            when {
+                !gate.isOpen -> challengeSender.answer(forwarded, ChallengeReply.CANCEL)
+                client == null -> challengeSender.answer(forwarded, ChallengeReply.PERFORM_DEFAULT_HANDLING)
+                else -> client.URLProtocol(this, didReceiveAuthenticationChallenge = forwarded)
+            }
+        }
+    }
+
     // endregion
+
+    /** Copies only the leading bytes the capture still wants; the rest of the chunk is never copied. */
+    private fun retainForCapture(data: NSData) {
+        val length = data.length.toLong()
+        val wanted = minOf(responseCapture.bytesWanted().toLong(), length).toInt()
+        val prefix = ByteArray(wanted)
+        val source = data.bytes
+        if (wanted > 0 && source != null) {
+            prefix.usePinned { memcpy(it.addressOf(0), source, wanted.toULong()) }
+        }
+        responseCapture.append(if (source == null) ByteArray(0) else prefix, length)
+    }
 
     @OptIn(BetaInteropApi::class, ExperimentalForeignApi::class)
     private fun deliverMockResponse(mockRule: MockRule) {
@@ -373,13 +562,18 @@ class AlohomoraURLProtocol :
             mapOf("Content-Type" to mockRule.contentType),
         )
 
-        client?.URLProtocol(
-            this,
-            didReceiveResponse = response,
-            cacheStoragePolicy = NSURLCacheStoragePolicy.NSURLCacheStorageNotAllowed,
-        )
-        client?.URLProtocol(this, didLoadData = bodyData)
-        client?.URLProtocolDidFinishLoading(this)
+        // Inline: this runs inside startLoading, on the client thread, before any stop is possible.
+        onClientThread {
+            if (gate.claimTerminal()) {
+                client?.URLProtocol(
+                    this,
+                    didReceiveResponse = response,
+                    cacheStoragePolicy = NSURLCacheStoragePolicy.NSURLCacheStorageNotAllowed,
+                )
+                client?.URLProtocol(this, didLoadData = bodyData)
+                client?.URLProtocolDidFinishLoading(this)
+            }
+        }
 
         runCatching { recordMock(url, mockRule) }
     }
@@ -429,6 +623,8 @@ class AlohomoraURLProtocol :
      * capture failure is dropped here instead of terminating the app.
      */
     private fun persistTrace(error: NSError?) {
+        if (persisted) return
+        persisted = true
         runCatching { buildAndPersistTrace(error) }
     }
 
@@ -457,6 +653,13 @@ class AlohomoraURLProtocol :
                 .toMap(),
         ).orEmpty()
 
+        val outcome = trafficOutcome(
+            httpStatusCode = httpResponse?.statusCode?.toInt(),
+            httpStatusText = httpResponse?.let { NSHTTPURLResponse.localizedStringForStatusCode(it.statusCode) },
+            transportError = error?.localizedDescription,
+        )
+        val responseBody = responseCapture.result()
+
         AlohomoraImpl.persistTrafficEntry(
             TrafficEntry(
                 id = traceId,
@@ -472,21 +675,70 @@ class AlohomoraURLProtocol :
                 requestContentType = requestHeaders["Content-Type"]?.firstOrNull(),
                 requestSize = capturedRequestSize,
                 time = startTime,
-                status = httpResponse?.statusCode?.toInt() ?: error?.code?.toInt(),
-                message = httpResponse?.let {
-                    NSHTTPURLResponse.localizedStringForStatusCode(it.statusCode)
-                } ?: error?.localizedDescription,
-                responseBody = NSString.create(
-                    data = accumulator,
-                    encoding = NSUTF8StringEncoding,
-                )?.toString(),
+                status = outcome.status,
+                message = outcome.message,
+                // No body at all when no response arrived, rather than an empty one.
+                responseBody = responseBody.text.takeIf { httpResponse != null },
+                responseBodyTruncated = responseBody.truncated,
                 responseHeaders = responseHeaders,
                 responseContentType = responseHeaders["Content-Type"]?.firstOrNull(),
-                responseSize = accumulator.length.toLong(),
+                responseSize = responseCapture.totalBytes,
                 duration = endTime - startTime,
                 replayOf = replayOf,
             ),
         )
+    }
+}
+
+/**
+ * The sender of every challenge [AlohomoraURLProtocol] forwards to its client: the client answers by
+ * calling one of these methods, and the answer completes the forwarding session's handler.
+ *
+ * A separate internal object rather than the protocol itself, so the sender methods and the
+ * `NSURLAuthenticationChallengeSender` conformance stay out of the public class's API.
+ */
+@OptIn(ExperimentalForeignApi::class)
+internal class ForwardedChallengeSender : NSObject(), NSURLAuthenticationChallengeSenderProtocol {
+
+    private val pending =
+        PendingChallenges<NSURLAuthenticationChallenge, (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Unit>()
+
+    /** Wraps [challenge] with this object as its sender and holds [completionHandler] until it is answered. */
+    fun forward(
+        challenge: NSURLAuthenticationChallenge,
+        completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Unit,
+    ): NSURLAuthenticationChallenge =
+        NSURLAuthenticationChallenge(authenticationChallenge = challenge, sender = this).also {
+            pending.add(it, completionHandler)
+        }
+
+    fun answer(challenge: NSURLAuthenticationChallenge, reply: ChallengeReply, credential: NSURLCredential? = null) {
+        pending.take(challenge)?.invoke(reply.disposition(), credential)
+    }
+
+    /** For `stopLoading`: an unanswered challenge holds the forwarding task open, and the client will never answer it now. */
+    fun cancelAll() {
+        pending.drain().forEach { it(ChallengeReply.CANCEL.disposition(), null) }
+    }
+
+    override fun useCredential(credential: NSURLCredential, forAuthenticationChallenge: NSURLAuthenticationChallenge) {
+        answer(forAuthenticationChallenge, ChallengeReply.USE_CREDENTIAL, credential)
+    }
+
+    override fun continueWithoutCredentialForAuthenticationChallenge(challenge: NSURLAuthenticationChallenge) {
+        answer(challenge, ChallengeReply.CONTINUE_WITHOUT_CREDENTIAL)
+    }
+
+    override fun cancelAuthenticationChallenge(challenge: NSURLAuthenticationChallenge) {
+        answer(challenge, ChallengeReply.CANCEL)
+    }
+
+    override fun performDefaultHandlingForAuthenticationChallenge(challenge: NSURLAuthenticationChallenge) {
+        answer(challenge, ChallengeReply.PERFORM_DEFAULT_HANDLING)
+    }
+
+    override fun rejectProtectionSpaceAndContinueWithChallenge(challenge: NSURLAuthenticationChallenge) {
+        answer(challenge, ChallengeReply.REJECT_PROTECTION_SPACE)
     }
 }
 

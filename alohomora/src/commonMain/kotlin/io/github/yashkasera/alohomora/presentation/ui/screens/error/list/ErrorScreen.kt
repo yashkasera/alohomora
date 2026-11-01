@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yashkasera.alohomora.common.DateUtils
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.exceptionTypeName
+import io.github.yashkasera.alohomora.presentation.ui.components.LoadMoreNearEnd
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
@@ -64,7 +65,7 @@ internal fun ErrorScreen(
         topBar = {
             AlohomoraTopBar(
                 title = "Errors",
-                subtitle = if (state.errors.isEmpty()) null else "${state.errors.size} OCCURRENCES",
+                subtitle = if (state.errors.isEmpty()) null else "${state.totalCount} OCCURRENCES",
                 navigationIcon = {
                     AlohomoraIconButton(
                         onClick = onBackClick,
@@ -133,6 +134,7 @@ internal fun ErrorScreen(
                 )
             } else {
                 val listState = rememberLazyListState()
+                LoadMoreNearEnd(listState, onLoadMore = viewModel::loadMore)
                 Box(modifier = Modifier.fillMaxSize()) {
                     LazyColumn(
                         state = listState,

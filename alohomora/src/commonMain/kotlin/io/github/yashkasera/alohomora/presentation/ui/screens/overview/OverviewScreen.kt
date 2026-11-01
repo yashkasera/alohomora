@@ -187,6 +187,7 @@ internal fun OverviewState.countFor(route: Routes): Long? = when (route) {
 @Composable
 internal fun OverviewScreen(
     onNavigate: (Routes) -> Unit,
+    onClose: (() -> Unit)? = null,
 ) {
     val viewModel = koinViewModel<OverviewViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -214,7 +215,7 @@ internal fun OverviewScreen(
             state = lazyGridState,
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                OverviewHeader(config = AlohomoraImpl.config)
+                OverviewHeader(config = AlohomoraImpl.config, onClose = onClose)
             }
             item(span = { GridItemSpan(maxLineSpan) }) {
                 SectionHeader("SERVER STATUS")
