@@ -18,8 +18,10 @@ import io.github.yashkasera.alohomora.common.normalizeSpanId
 import io.github.yashkasera.alohomora.common.spanAttributesToJson
 import io.github.yashkasera.alohomora.data.datasource.local.TrafficDao
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
+import io.github.yashkasera.alohomora.data.model.discoverHostDebuggable
 import io.github.yashkasera.alohomora.data.model.discoverPlatformBuildConfig
 import io.github.yashkasera.alohomora.devtools.DebugConfigStore
+import io.github.yashkasera.alohomora.devtools.DevToolsActivation
 import io.github.yashkasera.alohomora.devtools.DevToolsActionHandler
 import io.github.yashkasera.alohomora.devtools.DevToolsActionRegistry
 import io.github.yashkasera.alohomora.devtools.DevToolsDatabaseOverrides
@@ -76,12 +78,24 @@ internal object AlohomoraImpl {
      * `null`, matching [koinApplication] above.
      *
      * The setter is not `private` for `androidDeviceTest` alone: the Gradle plugin is not applied
-     * to the library, so no generated config ever enables DevTools there, and `DevToolsServerTest`
-     * installs one itself. With a private setter the device-test sources stop compiling, and with
+     * to the library, so no generated config opts DevTools in there, and `DevToolsServerTest`
+     * installs one itself rather than rely on the test APK being debuggable. With a private setter the device-test sources stop compiling, and with
      * them the root `check`.
      */
     @Volatile
     internal var config: AlohomoraConfig? = null
+
+    /**
+     * Whether the host app itself is a debug build: `FLAG_DEBUGGABLE` on Android, a
+     * development-signed (or simulator) build on iOS. Only consulted when the build made no explicit
+     * DevTools decision; see [DevToolsActivation]. Written once on the initializing call, like
+     * [config].
+     */
+    @Volatile
+    private var hostDebuggable: Boolean = false
+
+    /** The one answer to "is DevTools on in this build". Every entry point into it asks here. */
+    internal fun isDevToolsEnabled(): Boolean = DevToolsActivation.isEnabled(config, hostDebuggable)
 
     internal val identifier by lazy {
         config?.let {
@@ -91,7 +105,10 @@ internal object AlohomoraImpl {
 
     fun init() {
         try {
-            initInternal(config = discoverPlatformBuildConfig())
+            initInternal(
+                config = discoverPlatformBuildConfig(),
+                hostDebuggable = discoverHostDebuggable(),
+            )
         } catch (e: Throwable) {
             println("[Alohomora] init failed: ${e.message}")
         }
@@ -105,11 +122,13 @@ internal object AlohomoraImpl {
      */
     internal fun initInternal(
         config: AlohomoraConfig? = null,
+        hostDebuggable: Boolean = false,
         appDeclaration: KoinAppDeclaration = {},
     ) {
         initLock.withLock {
             if (koinApplication != null) return
             this.config = config
+            this.hostDebuggable = hostDebuggable
             koinApplication = initKoin(appDeclaration)
             installCrashHandler()
             installShakeToOpen()

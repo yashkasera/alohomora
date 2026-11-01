@@ -15,9 +15,10 @@ interface AlohomoraConfig {
     val slackWebhookUrl: String?
     val commits: List<GitHistoryCommit>
 
-    // The one gate on the DevTools server. The consumer's build config decides it — the Gradle
-    // plugin stamps it true for enabled variants, iOS reads it from Info.plist — so enabling a
-    // non-debuggable variant (e.g. beta) deliberately runs the server there. Defaults off so a
-    // config that predates this, or a release with no generated config, stays closed.
+    // An explicit opt-in to the DevTools server: the Gradle plugin stamps it true for enabled
+    // variants, so enabling a non-debuggable variant (e.g. beta) deliberately runs the server there.
+    // `false` — the default, and what every config from plugin 1.2.0 or earlier inherits — means "no
+    // opinion", not "off": the host app's debuggability then decides, so a debug build works with no
+    // plugin and a release build stays closed. Read it only through DevToolsActivation.
     val devToolsEnabled: Boolean get() = false
 }

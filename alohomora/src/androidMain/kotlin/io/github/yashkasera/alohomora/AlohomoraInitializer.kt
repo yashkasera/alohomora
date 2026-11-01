@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora
 
 import android.app.Application
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import androidx.startup.Initializer
 import io.github.yashkasera.alohomora.data.model.AlohomoraConfig
 import io.github.yashkasera.alohomora.presentation.ui.screens.navigation.NavigationPlugin
@@ -12,7 +13,7 @@ import org.koin.android.ext.koin.androidLogger
 class AlohomoraInitializer : Initializer<Unit> {
     override fun create(context: Context) {
         val config = discoverConfig(context)
-        AlohomoraImpl.initInternal(config) {
+        AlohomoraImpl.initInternal(config, hostDebuggable = context.isDebuggable()) {
             androidLogger()
             androidContext(context)
         }
@@ -29,6 +30,11 @@ class AlohomoraInitializer : Initializer<Unit> {
         )
         return loader.firstOrNull()
     }
+
+    // The *host app's* flag, not this library's: Alohomora arrives as a release AAR, so its own
+    // BuildConfig says nothing about whether the app it is embedded in is a debug build.
+    private fun Context.isDebuggable(): Boolean =
+        (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
     override fun dependencies(): List<Class<out Initializer<*>?>?> = emptyList()
 }
