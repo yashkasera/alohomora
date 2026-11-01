@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.data.repository
 
+import io.github.yashkasera.alohomora.devtools.ALOHOMORA_DEFAULTS_KEY_PREFIX
 import io.github.yashkasera.alohomora.domain.model.CacheEntry
 import io.github.yashkasera.alohomora.domain.model.CacheSource
 import io.github.yashkasera.alohomora.domain.model.CacheStore
@@ -67,7 +68,7 @@ internal class CacheRepositoryImpl : CacheRepository {
     }
 
     private fun getEntryCount(): Int {
-        return defaults.dictionaryRepresentation().size
+        return defaults.dictionaryRepresentation().keys.count { !isInternalKey(it.toString()) }
     }
 
     override suspend fun updateEntry(
@@ -76,6 +77,7 @@ internal class CacheRepositoryImpl : CacheRepository {
         value: String?,
         type: String,
     ): Boolean = withContext(Dispatchers.Default) {
+        if (isInternalKey(key)) return@withContext false
         try {
             when (type) {
                 "STRING" -> defaults.setObject(value, forKey = key)
@@ -95,6 +97,7 @@ internal class CacheRepositoryImpl : CacheRepository {
 
     override suspend fun deleteEntry(storeName: String, key: String): Boolean =
         withContext(Dispatchers.Default) {
+            if (isInternalKey(key)) return@withContext false
             try {
                 defaults.removeObjectForKey(key)
                 defaults.synchronize()
@@ -109,12 +112,21 @@ internal class CacheRepositoryImpl : CacheRepository {
         cachedPreferences = emptyList()
     }
 
+    /**
+     * Alohomora's own state, kept under [ALOHOMORA_DEFAULTS_KEY_PREFIX] in the same defaults as the
+     * host app. Hidden from the listing and refused for writes: it holds the desktop trust tokens,
+     * which this inspector otherwise served to every paired desktop, and which a one-off session
+     * could have written a token of its own into.
+     */
+    private fun isInternalKey(key: String): Boolean = key.startsWith(ALOHOMORA_DEFAULTS_KEY_PREFIX)
+
     private suspend fun scanAllPreferences(): List<CacheEntry> = withContext(Dispatchers.Default) {
         val entries = mutableListOf<CacheEntry>()
         val dict = defaults.dictionaryRepresentation()
 
         dict.forEach { (key, value) ->
             val keyString = key.toString()
+            if (isInternalKey(keyString)) return@forEach
 
             val stringValue = when (value) {
                 null -> "null"
