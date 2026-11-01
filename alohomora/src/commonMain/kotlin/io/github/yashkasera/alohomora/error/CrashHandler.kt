@@ -5,7 +5,7 @@ package io.github.yashkasera.alohomora.error
  *
  * Called once from `Alohomora.initInternal`, under the init lock, so both platforms get it from
  * their own entry point (AndroidX Startup on Android, `Alohomora.init()` on iOS) and it cannot
- * install twice.
+ * install twice. Skipped when DevTools is off, where nothing could read what it records.
  *
  * **Every implementation must chain to the handler it replaced.** Alohomora is a debugging aid
  * installed via `debugImplementation`; swallowing the exception would silently disable Crashlytics,
