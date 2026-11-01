@@ -22,6 +22,16 @@ jobs:
     name: Validate release input
     runs-on: ubuntu-latest
     steps:
+      # create-release rebases onto main and pushes, so a run dispatched from any other branch would
+      # publish that branch's code and then land it on main unreviewed. Failed loudly rather than
+      # skipped with a job-level `if`, which would end the run green with nothing published.
+      - name: Require main
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Releases run from main only (dispatched from $GITHUB_REF)."
+            exit 1
+          fi
+
       - name: Validate version format
         run: |
           VERSION='${{ github.event.inputs.version }}'
@@ -32,13 +42,50 @@ jobs:
 
       # Maven Central refuses to overwrite an existing version, so a duplicate would waste a full build
       # then fail at publish. Fail before anything runs.
+      #
+      # Queried by URL: this job has no checkout, so the old `git ls-remote ... origin` had no `origin`,
+      # failed, and its failure read as "tag not found" — the check could never trip. Exit codes are
+      # told apart for the same reason: 0 means the tag exists, 2 means it does not, and anything else
+      # means the check itself failed, which must not pass for "safe to release".
       - name: Ensure tag does not already exist
         run: |
           VERSION='${{ github.event.inputs.version }}'
-          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
-            echo "::error::Tag v$VERSION already exists. Bump the version."
-            exit 1
-          fi
+          set +e
+          git ls-remote --exit-code --tags "https://github.com/${GITHUB_REPOSITORY}.git" "refs/tags/v$VERSION" >/dev/null
+          rc=$?
+          set -e
+          case "$rc" in
+            0) echo "::error::Tag v$VERSION already exists. Bump the version."; exit 1 ;;
+            2) echo "Tag v$VERSION is free." ;;
+            *) echo "::error::Could not check for an existing tag (git ls-remote exited $rc)."; exit 1 ;;
+          esac
+
+  # The same gates every change is held to, run against exactly what is about to ship. Nothing
+  # publishes unless they pass: a green release used to mean only "it compiled". macOS, because the
+  # iOS unit tests need it.
+  verify:
+    name: Verify before publishing
+    needs: preflight
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: API, parity and tests
+        run: >-
+          ./gradlew apiCheck consumerParity
+          :alohomora-common:jvmTest
+          :alohomora:testAndroidHostTest
+          :alohomora:iosSimulatorArm64Test
+          :alohomora:assembleAndroidDeviceTest
+          :desktopApp:test
+          --continue
 
   package-macos:
     name: Build macOS installers
@@ -99,7 +146,7 @@ jobs:
 
   publish-library:
     name: Publish to Maven Central
-    needs: [ package-macos, build-xcframework ]
+    needs: [ verify, package-macos, build-xcframework ]
     environment: release
     runs-on: ubuntu-latest
     steps:
