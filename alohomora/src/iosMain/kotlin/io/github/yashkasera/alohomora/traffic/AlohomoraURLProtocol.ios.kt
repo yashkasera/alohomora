@@ -40,12 +40,15 @@ import platform.Foundation.NSURLSessionDataDelegateProtocol
 import platform.Foundation.NSURLSessionDataTask
 import platform.Foundation.NSURLSessionResponseAllow
 import platform.Foundation.NSURLSessionTask
+import platform.Foundation.NSURLErrorDomain
+import platform.Foundation.NSURLErrorRequestBodyStreamExhausted
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.allHTTPHeaderFields
 import platform.Foundation.appendData
 import platform.Foundation.create
 import platform.Foundation.setAllHTTPHeaderFields
 import platform.Foundation.setHTTPBody
+import platform.Foundation.valueForHTTPHeaderField
 import platform.darwin.DISPATCH_TIME_NOW
 import platform.darwin.dispatch_after
 import platform.darwin.dispatch_get_main_queue
@@ -155,9 +158,40 @@ class AlohomoraURLProtocol :
         // the drained bytes are re-attached to the forwarded request below — otherwise the real
         // request would go out empty. GET and other bodyless requests leave this null.
         val existingBody = request.HTTPBody
-        val drainedFromStream = existingBody == null && request.HTTPBodyStream != null
-        val bodyData: NSData? = existingBody ?: request.HTTPBodyStream?.drain()
-        captureRequestBody(bodyData)
+        val bodyStream = if (existingBody == null) request.HTTPBodyStream else null
+        val declaredLength = request.valueForHTTPHeaderField("Content-Length")?.toLongOrNull()
+        var drained: NSData? = null
+        when {
+            existingBody != null -> captureRequestBody(existingBody)
+            bodyStream == null -> Unit
+
+            // Not drained. A body over the cap is stored truncated, which replay refuses anyway, so
+            // buffering it would cost a full in-memory copy of the upload for a display placeholder.
+            // The untouched stream is forwarded as-is. Only a declared length can decide this up
+            // front; a chunked upload of unknown size is still drained in full.
+            declaredLength != null && declaredLength > MAX_BODY_BYTES -> {
+                capturedRequestSize = declaredLength
+                capturedRequestBody = "Streamed body of $declaredLength bytes, not captured: over the capture limit."
+                capturedRequestBodyTruncated = true
+            }
+
+            else -> {
+                drained = bodyStream.drain()
+                if (drained == null) {
+                    // A partial body must never be forwarded, nor recorded as complete. Fail the load
+                    // the way URLSession itself does when a body stream breaks.
+                    val error = bodyStream.streamError ?: NSError.errorWithDomain(
+                        domain = NSURLErrorDomain,
+                        code = NSURLErrorRequestBodyStreamExhausted,
+                        userInfo = null,
+                    )
+                    client?.URLProtocol(this, didFailWithError = error)
+                    persistTrace(error)
+                    return
+                }
+                captureRequestBody(drained)
+            }
+        }
 
         val mockRule = NetworkRuleEngine.findMatch(
             request.URL?.absoluteString ?: "",
@@ -182,9 +216,7 @@ class AlohomoraURLProtocol :
             // Re-attach the body we drained from the one-shot stream. Setting HTTPBody clears
             // HTTPBodyStream, which is exactly right: the stream is already spent. The byte count
             // is unchanged, so any Content-Length the app set still matches.
-            if (drainedFromStream && bodyData != null) {
-                it.setHTTPBody(bodyData)
-            }
+            drained?.let(it::setHTTPBody)
         }
 
         session = NSURLSession.sessionWithConfiguration(
@@ -226,14 +258,16 @@ class AlohomoraURLProtocol :
     }
 
     /**
-     * Reads this one-shot input stream to the end and returns the bytes.
+     * Reads this one-shot input stream to the end and returns the bytes, or null if it fails.
      *
      * Reads the whole stream, not a bounded prefix: the bytes are re-attached to the forwarded
      * request, so a truncated read would send a corrupt request. The capture-side cap is applied
-     * later, to the stored string only ([captureRequestBody]).
+     * later, to the stored string only ([captureRequestBody]). A read error returns null rather
+     * than what was read so far: treating -1 like end-of-stream forwarded a partial body and
+     * recorded it as complete.
      */
     @OptIn(ExperimentalForeignApi::class)
-    private fun NSInputStream.drain(): NSData {
+    private fun NSInputStream.drain(): NSData? {
         val out = NSMutableData()
         val bufferSize = 64 * 1024
         val buffer = ByteArray(bufferSize)
@@ -242,10 +276,11 @@ class AlohomoraURLProtocol :
             buffer.usePinned { pinned ->
                 while (true) {
                     val bytesRead = read(pinned.addressOf(0).reinterpret(), bufferSize.toULong())
-                    if (bytesRead <= 0) break
+                    if (bytesRead == 0L) break
+                    if (bytesRead < 0L) return null
                     out.appendData(
                         NSData.create(bytes = pinned.addressOf(0), length = bytesRead.toULong())
-                            ?: break,
+                            ?: return null,
                     )
                 }
             }
