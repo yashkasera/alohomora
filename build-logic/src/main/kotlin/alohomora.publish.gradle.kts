@@ -5,7 +5,12 @@ plugins {
 }
 
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    // automaticRelease: without it the Central Portal holds every upload as a validated but
+    // unreleased deployment until someone clicks Publish. release.yml never did, so 1.1.0 and 1.3.0
+    // went green in CI and never reached Maven Central, while the Gradle Plugin Portal (which has
+    // no such step) did get them. Plugin 1.3.0 then generated code against a library that only
+    // existed as 1.2.0 on Central, and consumers pairing the two failed to compile.
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
     signAllPublications()
 
     pom {
