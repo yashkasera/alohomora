@@ -8,6 +8,7 @@ import io.github.yashkasera.alohomora.devtools.MOCK_ID_HEADER
 import io.github.yashkasera.alohomora.devtools.NetworkRuleEngine
 import io.github.yashkasera.alohomora.replay.ReplayMarker
 import io.ktor.client.plugins.api.createClientPlugin
+import io.ktor.client.plugins.isSaved
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.contentLength
 import io.ktor.http.contentType
@@ -19,7 +20,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.delay
 
-private val AlohomoraRequestKey = AttributeKey<TrafficEntry>("AlohomoraRequest")
+internal val AlohomoraRequestKey = AttributeKey<TrafficEntry>("AlohomoraRequest")
 
 /**
  * Marks a Ktor call as the replay of the trace whose id this holds.
@@ -126,18 +127,31 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
             entity.duration = (endTime - startTime).takeUnless { it <= 0 }
             entity.responseSize = response.contentLength()
             entity.responseContentType = response.contentType().toString()
+            val contentType = response.contentType()?.toString()
             entity.responseBody = try {
-                // Images, protobuf and the like are not read. Decoded as text they were corrupted
-                // and, once JSON-escaped, inflated enough to push a snapshot past the frame cap.
-                if (CapturedBody.isKnownBinary(response.contentType()?.toString())) {
-                    TrafficEntry.UNABLE_PARSE_MESSAGE
-                } else {
-                    val raw = response.bodyAsText()
-                    if (raw.looksDecodedFromBinary()) {
-                        TrafficEntry.UNABLE_PARSE_MESSAGE
-                    } else {
-                        entity.responseBodyTruncated = raw.wasTruncatedForCapture()
-                        raw.truncateForCapture()
+                when {
+                    // Images, protobuf and the like are not read. Decoded as text they were corrupted
+                    // and, once JSON-escaped, inflated enough to push a snapshot past the frame cap.
+                    CapturedBody.isKnownBinary(contentType) -> TrafficEntry.UNABLE_PARSE_MESSAGE
+
+                    // An event stream never ends, so reading it here suspended the app's call for
+                    // as long as the server kept the stream open.
+                    CapturedBody.isEventStream(contentType) -> CapturedBody.STREAMED_PLACEHOLDER
+
+                    // Only a saved body can be read twice. A streaming call
+                    // (`prepareGet().execute { it.bodyAsChannel() }`) is not saved, so reading it
+                    // here consumed the one read the app gets, and the app's own read then threw
+                    // DoubleReceiveException.
+                    !response.isSaved -> CapturedBody.STREAMED_PLACEHOLDER
+
+                    else -> {
+                        val raw = response.bodyAsText()
+                        if (raw.looksDecodedFromBinary()) {
+                            TrafficEntry.UNABLE_PARSE_MESSAGE
+                        } else {
+                            entity.responseBodyTruncated = raw.wasTruncatedForCapture()
+                            raw.truncateForCapture()
+                        }
                     }
                 }
             } catch (e: Exception) {

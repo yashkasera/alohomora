@@ -101,8 +101,14 @@ class TrafficInterceptor(
         runCatching {
             // Images, protobuf and the like are not read at all. Decoded as text they were corrupted
             // and, once JSON-escaped, inflated enough to push a snapshot past the frame cap.
-            if (CapturedBody.isKnownBinary(response.body.contentType()?.toString())) {
+            val contentType = response.body.contentType()?.toString()
+            if (CapturedBody.isKnownBinary(contentType)) {
                 trace.responseBody = TrafficEntry.UNABLE_PARSE_MESSAGE
+            } else if (CapturedBody.isEventStream(contentType)) {
+                // Not peeked. peekBody blocks until it has the requested bytes or the stream ends,
+                // and an event stream does neither, so an EventSource saw no event until 1 MB had
+                // arrived. HttpLoggingInterceptor skips this type for the same reason.
+                trace.responseBody = CapturedBody.STREAMED_PLACEHOLDER
             } else {
                 // One byte past the cap, so overflow is observed rather than inferred. Deriving it from
                 // contentLength() is wrong for the common case: this runs as an application interceptor,

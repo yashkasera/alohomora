@@ -45,6 +45,21 @@ object CapturedBody {
             type.startsWith("application/grpc")
     }
 
+    /**
+     * Stored in place of a response body that a capture path must not read: one that never ends
+     * (server-sent events) or that only the app may consume (a Ktor streaming call). Distinct from
+     * [TrafficEntry.UNABLE_PARSE_MESSAGE], because nothing was read, let alone failed to parse.
+     */
+    const val STREAMED_PLACEHOLDER = "Streamed body, not captured."
+
+    /**
+     * True for `text/event-stream`. Such a response stays open for as long as the server has
+     * events, so reading its body for capture blocks until the stream ends, which is never for a
+     * live feed. OkHttp's HttpLoggingInterceptor special-cases the same type for the same reason.
+     */
+    fun isEventStream(contentType: String?): Boolean =
+        contentType?.substringBefore(';')?.trim()?.equals("text/event-stream", ignoreCase = true) == true
+
     private val BINARY_TYPES = setOf(
         "application/octet-stream",
         "application/protobuf",
