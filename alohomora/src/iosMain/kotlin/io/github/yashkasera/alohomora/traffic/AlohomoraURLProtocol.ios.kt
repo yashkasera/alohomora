@@ -147,10 +147,8 @@ class AlohomoraURLProtocol :
     override fun startLoading() {
         traceId = Uuid.random().toString()
         startTime = Clock.System.now().toEpochMilliseconds()
-        replayOf = request.allHTTPHeaderFields
-            ?.entries
-            ?.firstOrNull { (k, _) -> (k as? String)?.equals(ReplayMarker.HEADER, true) == true }
-            ?.value as? String
+        // Out-of-band property first, wire header as the fallback — see AlohomoraReplayKeys.
+        replayOf = replayOfFor(request)
 
         // Drain the request body up front. NSURLProtocol delivers a POST/PUT body set as a stream
         // (URLSession/Ktor-Darwin uploads) with HTTPBody == nil, so reading HTTPBody alone captured
