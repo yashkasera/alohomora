@@ -141,6 +141,10 @@ internal class DevToolsRuntime(
     // slot is claimed with a single compareAndSet(null, …) and released with compareAndSet(this, …).
     private val activeConnection = AtomicReference<DevToolsConnection?>(null)
 
+    // Outlives every connection on purpose: each one draws a fresh code, so a limit kept per
+    // connection would reset on every reconnect. See PairingThrottle.
+    private val pairingThrottle = PairingThrottle()
+
     private val databaseInspector = DevToolsDatabaseInspector(database, appDatabaseProvider)
 
     @Volatile
@@ -343,8 +347,11 @@ internal class DevToolsRuntime(
         // collectors stay gated until close() cancels the scope — the same lifetime they already
         // had — rather than streaming a duplicate of the snapshot.
         private val initialSnapshotSeeded = CompletableDeferred<Unit>()
-        private val otp = (1000..9999).random().toString()
+        private val otp = generatePairingCode()
         private var isAuthenticated = false
+
+        // Set by the first rejected code. Read and written only on the reader coroutine.
+        private var pairingRejected = false
         private val liveness = DevToolsLiveness()
 
         // Guards startHeartbeat against re-entry: the client sends an AuthResponseMessage twice
@@ -457,7 +464,7 @@ internal class DevToolsRuntime(
                     }
                     liveness.recordSignOfLife()
                     if (!isAuthenticated) {
-                        if (message is AuthResponseMessage) handleAuthResponse(message)
+                        if (message is AuthResponseMessage && !pairingRejected) handleAuthResponse(message)
                         continue
                     }
                     try {
@@ -544,7 +551,20 @@ internal class DevToolsRuntime(
                     send(AuthOtpRequiredMessage(nextSequence()))
                 }
 
-                message.otp == this.otp -> {
+                else -> handlePairingCode(message.otp)
+            }
+        }
+
+        private fun handlePairingCode(code: String) {
+            val lockedFor = pairingThrottle.remainingLockoutMillis()
+            when {
+                // Refused unchecked, so a correct guess during the lockout is worth nothing.
+                lockedFor > 0 -> rejectPairing(
+                    "Too many incorrect codes. Try again in ${lockedFor.toWholeSeconds()}s.",
+                )
+
+                code == otp -> {
+                    pairingThrottle.recordSuccess()
                     // Mint a token only if the user asked for it. Without consent this stays a
                     // one-off session and the code is required again next time.
                     authenticate(
@@ -555,14 +575,34 @@ internal class DevToolsRuntime(
                 }
 
                 else -> {
-                    // No close() here: it would cancel the writer before it could flush this frame
-                    // (send() only queues). The writer treats AuthFailureMessage as terminal — it
-                    // writes the frame, then its finally runs close() — so the desktop is guaranteed
-                    // to receive the rejection before the socket is torn down.
-                    send(AuthFailureMessage(nextSequence(), "Invalid OTP"))
+                    val lockout = pairingThrottle.recordFailure()
+                    if (lockout > 0) {
+                        // Said on the device, not just to the desktop: the person holding the phone
+                        // is the only one who can tell a fumbled code from an app guessing.
+                        _serverState.value = _serverState.value.copy(
+                            lastError = "Pairing paused for ${lockout.toWholeSeconds()}s after " +
+                                "${PairingThrottle.FREE_ATTEMPTS} incorrect codes. If you did not " +
+                                "enter them, another app on this device may be trying to connect.",
+                        )
+                    }
+                    rejectPairing("Invalid OTP")
                 }
             }
         }
+
+        private fun rejectPairing(reason: String) {
+            // One code per connection. The writer closes the socket once it has flushed this
+            // frame, but codes already buffered behind it would otherwise be read and checked in
+            // the meantime: a batch of guesses for the price of one connection.
+            pairingRejected = true
+            // No close() here: it would cancel the writer before it could flush this frame
+            // (send() only queues). The writer treats AuthFailureMessage as terminal — it
+            // writes the frame, then its finally runs close() — so the desktop is guaranteed
+            // to receive the rejection before the socket is torn down.
+            send(AuthFailureMessage(nextSequence(), reason))
+        }
+
+        private fun Long.toWholeSeconds(): Long = (this + 999) / 1000
 
         /** Idempotent: only the first capable [AuthResponseMessage] starts the loop. */
         private fun startHeartbeat() {
