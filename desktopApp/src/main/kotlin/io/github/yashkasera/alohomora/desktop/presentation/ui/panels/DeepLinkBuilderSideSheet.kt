@@ -611,7 +611,7 @@ private fun parseUrl(raw: String): ParsedUrl {
     return ParsedUrl(scheme, customScheme, host, port, path, queryParams, fragment)
 }
 
-private fun buildUrl(
+internal fun buildUrl(
     scheme: String,
     host: String,
     port: String,
@@ -638,11 +638,54 @@ private fun buildUrl(
         val validParams = queryParams.filter { it.key.isNotBlank() }
         if (validParams.isNotEmpty()) {
             append('?')
-            append(validParams.joinToString("&") { "${it.key}=${it.value}" })
+            append(
+                validParams.joinToString("&") {
+                    encodeQueryComponent(it.key, keepEquals = false) + "=" +
+                        encodeQueryComponent(it.value, keepEquals = true)
+                },
+            )
         }
         if (fragment.isNotBlank()) {
             append('#')
             append(fragment)
         }
     }
+}
+
+/**
+ * Percent-encodes one query key or value so a typed `&`, `#` or space cannot split the URL.
+ *
+ * Idempotent on purpose: a row is filled either by typing or by [parseUrl] on a pasted link, which
+ * keeps the link's existing escapes, so a valid `%XX` passes through untouched rather than becoming
+ * `%25XX`. For the same reason `+` is left alone — in a pasted query it usually already means a
+ * space. `=` is kept in values (servers split on the first one) but encoded in keys.
+ */
+internal fun encodeQueryComponent(raw: String, keepEquals: Boolean): String = buildString {
+    val bytes = raw.encodeToByteArray()
+    var i = 0
+    while (i < bytes.size) {
+        val b = bytes[i].toInt() and 0xFF
+        val c = b.toChar()
+        val isEscape = c == '%' && i + 2 < bytes.size && isHex(bytes[i + 1]) && isHex(bytes[i + 2])
+        when {
+            isEscape -> append(c)
+            b < 0x80 && (c.isLetterOrDigit() || c in QUERY_SAFE || (keepEquals && c == '=')) ->
+                append(c)
+
+            else -> {
+                append('%')
+                append(HEX_DIGITS[b shr 4])
+                append(HEX_DIGITS[b and 0x0F])
+            }
+        }
+        i++
+    }
+}
+
+/** RFC 3986 unreserved, plus the sub-delims and pchars that are literal inside a query. */
+private const val QUERY_SAFE = "-._~!$'()*,;:@/?+"
+private const val HEX_DIGITS = "0123456789ABCDEF"
+
+private fun isHex(byte: Byte): Boolean = byte.toInt().toChar().let {
+    it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F'
 }

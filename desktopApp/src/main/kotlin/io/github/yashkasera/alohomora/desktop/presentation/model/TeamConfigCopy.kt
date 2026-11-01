@@ -18,6 +18,10 @@ object TeamConfigCopy {
     fun syncSummary(status: SyncStatus): String? = when (status) {
         SyncStatus.NotConnected -> null
         is SyncStatus.UpToDate -> "You're in sync with your team."
+        is SyncStatus.Diverged ->
+            "Your copy and your team's have both changed, so Sync can't bring in their " +
+                "${status.behind} ${plural(status.behind, "update")} automatically. Turn on Developer " +
+                "mode to see the details."
         is SyncStatus.Drift -> buildString {
             if (status.behind > 0) {
                 val it = if (status.behind == 1) "it" else "them"

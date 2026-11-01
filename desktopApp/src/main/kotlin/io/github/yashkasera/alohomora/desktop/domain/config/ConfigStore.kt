@@ -89,11 +89,18 @@ data class Proposal(
     val autoCreated: Boolean,
 )
 
-/** Outcome of a fetch-and-compare against the team's main line. */
+/** Outcome of a sync: fetch, bring in the team's main line when that is safe, then compare. */
 sealed interface SyncStatus {
     data object NotConnected : SyncStatus
     data class UpToDate(val checkedAt: Long) : SyncStatus
     data class Drift(val behind: Int, val ahead: Int) : SyncStatus
+
+    /**
+     * Both sides moved: the local main line has work the team's lacks *and* is missing [behind] of
+     * theirs, so it cannot be fast-forwarded. Reported rather than resolved, because the only
+     * automatic resolutions are a merge nobody reviewed or a reset that discards the local work.
+     */
+    data class Diverged(val behind: Int, val ahead: Int) : SyncStatus
 }
 
 /**
