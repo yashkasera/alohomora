@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.network
 
 import io.github.yashkasera.alohomora.AlohomoraImpl
+import io.github.yashkasera.alohomora.common.CapturedBody
 import io.github.yashkasera.alohomora.common.HeaderRedaction
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.devtools.MOCK_ID_HEADER
@@ -41,6 +42,12 @@ private fun String.truncateForCapture(): String =
 
 private fun String.wasTruncatedForCapture(): Boolean = length > MAX_BODY_CHARS
 
+/**
+ * True when lenient decoding has already mangled bytes that were not text. `bodyAsText` swaps
+ * invalid sequences for U+FFFD rather than failing, so this is the only trace left of them.
+ */
+private fun String.looksDecodedFromBinary(): Boolean = indexOf('�') >= 0 || indexOf('\u0000') >= 0
+
 @OptIn(ExperimentalUuidApi::class)
 val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
     onRequest { request, content ->
@@ -76,7 +83,9 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
 
             val rawRequestBody = when (content) {
                 is String -> content
-                is ByteArray -> content.decodeToString()
+                // Strict, like the other capture paths: a lenient decode corrupts a binary body,
+                // so its replay would send different bytes. Unparseable is refused by replay.
+                is ByteArray -> CapturedBody.decodeText(content) ?: TrafficEntry.UNABLE_PARSE_MESSAGE
                 else -> null
             }
             entity.requestBodyTruncated = rawRequestBody?.wasTruncatedForCapture() == true
@@ -118,9 +127,19 @@ val AlohomoraInspector = createClientPlugin("AlohomoraInspector") {
             entity.responseSize = response.contentLength()
             entity.responseContentType = response.contentType().toString()
             entity.responseBody = try {
-                val raw = response.bodyAsText()
-                entity.responseBodyTruncated = raw.wasTruncatedForCapture()
-                raw.truncateForCapture()
+                // Images, protobuf and the like are not read. Decoded as text they were corrupted
+                // and, once JSON-escaped, inflated enough to push a snapshot past the frame cap.
+                if (CapturedBody.isKnownBinary(response.contentType()?.toString())) {
+                    TrafficEntry.UNABLE_PARSE_MESSAGE
+                } else {
+                    val raw = response.bodyAsText()
+                    if (raw.looksDecodedFromBinary()) {
+                        TrafficEntry.UNABLE_PARSE_MESSAGE
+                    } else {
+                        entity.responseBodyTruncated = raw.wasTruncatedForCapture()
+                        raw.truncateForCapture()
+                    }
+                }
             } catch (e: Exception) {
                 "<binary or unreadable body: ${e.message}>"
             }

@@ -28,8 +28,15 @@ sealed interface EnvelopeRead {
      */
     data class VersionMismatch(val peerVersion: Int, val localVersion: Int) : EnvelopeRead
 
-    /** Bad magic, an impossible payload length, or undecodable JSON. */
+    /** Bad magic, a negative payload length, or undecodable JSON. */
     data class Malformed(val reason: String) : EnvelopeRead
+
+    /**
+     * The peer announced a payload over [DevToolsProtocol.MAX_PAYLOAD_BYTES]. Kept apart from
+     * [Malformed] because it is not transient: an app that builds an oversized snapshot builds the
+     * same one on every reconnect, so a caller that retries it loops forever.
+     */
+    data class Oversized(val length: Int) : EnvelopeRead
 }
 
 object DevToolsProtocol {
@@ -92,6 +99,16 @@ object DevToolsProtocol {
     }
 
     /**
+     * Encodes [message], or returns null when its payload would exceed [MAX_PAYLOAD_BYTES].
+     *
+     * The reader rejects such a frame outright, so sending it achieves nothing except a dropped
+     * connection on the far side. Senders call this rather than [encodeEnvelope] and decide what to
+     * shed or drop.
+     */
+    fun encodeEnvelopeWithinLimit(message: DevToolsMessage): ByteArray? =
+        encodeEnvelope(message).takeIf { it.size - HEADER_LENGTH <= MAX_PAYLOAD_BYTES }
+
+    /**
      * Decodes a payload, returning null rather than throwing on malformed input.
      *
      * Callers run this inside socket read loops; a thrown SerializationException used to
@@ -142,9 +159,10 @@ object DevToolsProtocol {
         val length = readInt(header, 5)
         // Both bounds matter: negative is a malformed/hostile header, and over-max would
         // otherwise become an unbounded ByteArray allocation. See MAX_PAYLOAD_BYTES.
-        if (length !in 0..MAX_PAYLOAD_BYTES) {
+        if (length < 0) {
             return EnvelopeRead.Malformed("payload length $length outside 0..$MAX_PAYLOAD_BYTES")
         }
+        if (length > MAX_PAYLOAD_BYTES) return EnvelopeRead.Oversized(length)
         val jsonBytes = socket.readExact(length) ?: return EnvelopeRead.EndOfStream
         // decodeEnvelope has already logged the specific serialization error.
         val message = decodeEnvelope(jsonBytes)

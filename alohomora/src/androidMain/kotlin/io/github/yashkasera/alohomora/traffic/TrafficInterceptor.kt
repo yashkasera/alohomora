@@ -1,5 +1,6 @@
 package io.github.yashkasera.alohomora.traffic
 
+import io.github.yashkasera.alohomora.common.CapturedBody
 import io.github.yashkasera.alohomora.common.HeaderRedaction
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.devtools.NetworkRuleEngine
@@ -98,16 +99,20 @@ class TrafficInterceptor(
         if (trace == null) return response
 
         runCatching {
-            // One byte past the cap, so overflow is observed rather than inferred. Deriving it from
-            // contentLength() is wrong for the common case: this runs as an application interceptor,
-            // where a gzipped body has already been decompressed and its Content-Length stripped, so
-            // any compressed response over the cap would be truncated and reported as complete.
-            val peeked = response.peekBody(MAX_BODY_BYTES + 1).bytes()
-            trace.responseBodyTruncated = peeked.size > MAX_BODY_BYTES
-            trace.responseBody = peeked.decodeToString(
-                startIndex = 0,
-                endIndex = minOf(peeked.size.toLong(), MAX_BODY_BYTES).toInt(),
-            )
+            // Images, protobuf and the like are not read at all. Decoded as text they were corrupted
+            // and, once JSON-escaped, inflated enough to push a snapshot past the frame cap.
+            if (CapturedBody.isKnownBinary(response.body.contentType()?.toString())) {
+                trace.responseBody = TrafficEntry.UNABLE_PARSE_MESSAGE
+            } else {
+                // One byte past the cap, so overflow is observed rather than inferred. Deriving it from
+                // contentLength() is wrong for the common case: this runs as an application interceptor,
+                // where a gzipped body has already been decompressed and its Content-Length stripped, so
+                // any compressed response over the cap would be truncated and reported as complete.
+                val peeked = response.peekBody(MAX_BODY_BYTES + 1).bytes()
+                val text = CapturedBody.decodeText(peeked, MAX_BODY_BYTES.toInt())
+                trace.responseBodyTruncated = text != null && peeked.size > MAX_BODY_BYTES
+                trace.responseBody = text ?: TrafficEntry.UNABLE_PARSE_MESSAGE
+            }
             trace.status = response.code
             trace.message = response.message
             trace.duration = response.receivedResponseAtMillis - response.sentRequestAtMillis
@@ -142,14 +147,22 @@ class TrafficInterceptor(
      */
     private fun RequestBody.snapshot(): BodySnapshot {
         if (isDuplex() || isOneShot()) return BodySnapshot(TrafficEntry.UNABLE_PARSE_MESSAGE)
+        // Checked before writeTo, so a large binary upload is never materialised just to be refused.
+        if (CapturedBody.isKnownBinary(contentType()?.toString())) {
+            return BodySnapshot(TrafficEntry.UNABLE_PARSE_MESSAGE)
+        }
         return try {
             val buffer = Buffer()
             writeTo(buffer)
             // Bounded read. The cap previously applied only to responses (via peekBody), so a
             // large multipart upload was materialised in full as a UTF-16 String and again as
-            // a SQLite row.
+            // a SQLite row. One byte past the cap lets decodeText cut on a character boundary.
             val size = buffer.size
-            val text = buffer.readUtf8(minOf(size, MAX_BODY_BYTES))
+            val bytes = buffer.readByteArray(minOf(size, MAX_BODY_BYTES + 1))
+            // Strict, unlike readUtf8: a lenient decode swapped invalid bytes for U+FFFD, so
+            // replaying a binary body sent different bytes. Unparseable is refused by replay.
+            val text = CapturedBody.decodeText(bytes, MAX_BODY_BYTES.toInt())
+                ?: return BodySnapshot(TrafficEntry.UNABLE_PARSE_MESSAGE)
             if (size > MAX_BODY_BYTES) {
                 BodySnapshot("$text\n…truncated ($size bytes total)", truncated = true)
             } else {

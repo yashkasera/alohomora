@@ -17,6 +17,7 @@ import io.github.yashkasera.alohomora.common.DevToolsLiveness
 import io.github.yashkasera.alohomora.common.DevToolsMessage
 import io.github.yashkasera.alohomora.common.DevToolsProtocol
 import io.github.yashkasera.alohomora.common.DeviceErrorMessage
+import io.github.yashkasera.alohomora.common.FrameBudget
 import io.github.yashkasera.alohomora.common.EnvelopeRead
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
@@ -404,7 +405,8 @@ internal class DevToolsRuntime(
                             stream.onReceiveCatching { it.getOrNull() }
                         }
                         ?: break
-                    socket.write(DevToolsProtocol.encodeEnvelope(message))
+                    val frame = encodeWithinFrameLimit(message) ?: continue
+                    socket.write(frame)
                     // A terminal frame is the last thing this connection ever sends. Break only
                     // *after* the write so the frame is on the wire before finally→close() tears the
                     // socket down. Two cases: ServerShuttingDownMessage (the desktop reads it and
@@ -432,6 +434,31 @@ internal class DevToolsRuntime(
             }
         }
 
+        /**
+         * Encodes [message] for the wire, or returns null when it cannot be made to fit.
+         *
+         * The desktop rejects a frame over [DevToolsProtocol.MAX_PAYLOAD_BYTES] outright, so writing
+         * one only drops the connection. Traffic bodies are shed first; a message with nothing left
+         * to shed is dropped and the desktop is told which one, rather than left to guess.
+         */
+        private fun encodeWithinFrameLimit(message: DevToolsMessage): ByteArray? {
+            DevToolsProtocol.encodeEnvelopeWithinLimit(message)?.let { return it }
+            FrameBudget.withoutBodies(message)
+                ?.let(DevToolsProtocol::encodeEnvelopeWithinLimit)
+                ?.let { return it }
+
+            val name = message::class.simpleName ?: "message"
+            println("[Alohomora] Dropping $name: over the ${DevToolsProtocol.MAX_PAYLOAD_BYTES}-byte frame limit")
+            send(
+                DeviceErrorMessage(
+                    sequence = nextSequence(),
+                    request = name,
+                    message = "The response was larger than the frame size limit and was not sent.",
+                ),
+            )
+            return null
+        }
+
         private suspend fun readerLoop() {
             try {
                 while (true) {
@@ -442,6 +469,10 @@ internal class DevToolsRuntime(
                         is EnvelopeRead.EndOfStream -> break
                         is EnvelopeRead.Malformed -> {
                             println("[Alohomora] DevTools dropping connection: ${read.reason}")
+                            break
+                        }
+                        is EnvelopeRead.Oversized -> {
+                            println("[Alohomora] DevTools dropping connection: ${read.length}-byte frame over the limit")
                             break
                         }
                         // Reported on the device too, not just to the desktop. The developer is
@@ -788,7 +819,10 @@ internal class DevToolsRuntime(
             val cacheStores = cacheInspector.getStores()
             val payload = InitialStatePayload(
                 events = events,
-                traffic = traffic,
+                // Bodies are budgeted, not the rows: 200 entries with 1 MB bodies each would be far
+                // past the frame cap. Newest keep theirs. The dedup signatures below are still seeded
+                // from the unstripped rows, so a stripped entry is not re-streamed as "changed".
+                traffic = FrameBudget.fitBodiesToBudget(traffic, FrameBudget.SNAPSHOT_BODY_BUDGET_CHARS),
                 errors = errors,
                 spans = spans,
                 databaseSchema = schema,
