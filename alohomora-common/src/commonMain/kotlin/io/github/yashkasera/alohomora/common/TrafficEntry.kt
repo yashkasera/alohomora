@@ -76,11 +76,24 @@ data class TrafficEntry(
 
             val contentType = requestContentType
 
+            // Only a body that is actually sent counts toward the default. Keyed on requestBody
+            // alone, a placeholder or binary body made POST the default, so `-X POST` was dropped
+            // and the command, carrying no --data, went out as a GET.
+            val data = requestBody?.takeIf { it.isNotBlank() && it != UNABLE_PARSE_MESSAGE }
+
             val defaultMethod =
                 when {
-                    requestBody != null -> "POST"
+                    data != null -> "POST"
                     else -> "GET"
                 }
+
+            // A shell comment, not the bytes: a binary body has no faithful form as a quoted shell
+            // argument, and this way the command says what it leaves out instead of looking whole.
+            requestBodyBase64?.let { base64 ->
+                append("# Binary request body (")
+                append(BinaryBodyPreview.formatSize(BinaryBodyPreview.decodedSize(base64)))
+                append(") not included.\n")
+            }
 
             append("curl ${url.toString().shellEscape()}")
 
@@ -103,7 +116,7 @@ data class TrafficEntry(
                 append(" \\\n  -H ${"Content-Type: $contentType".shellEscape()}")
             }
 
-            requestBody?.takeIf { it.isNotBlank() && it != UNABLE_PARSE_MESSAGE }?.let { body ->
+            data?.let { body ->
                 append(" --data '${body.shellEscape()}'")
             }
 

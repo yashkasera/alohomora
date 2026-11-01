@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.yashkasera.alohomora.common.BinaryBodyPreview
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.replay.ReplayBlockedReason
 import io.github.yashkasera.alohomora.replay.ReplayHeaderRow
@@ -57,6 +58,7 @@ import io.github.yashkasera.alohomora.replay.buildReplayHeaderMap
 import io.github.yashkasera.alohomora.replay.toReplayHeaderRows
 import io.github.yashkasera.alohomora.ui.components.AlohomoraButtonSize
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCard
+import io.github.yashkasera.alohomora.ui.components.AlohomoraCodeBlock
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCardDefaults
 import io.github.yashkasera.alohomora.ui.components.AlohomoraChip
 import io.github.yashkasera.alohomora.ui.components.AlohomoraCircularProgressIndicator
@@ -406,65 +408,92 @@ private fun EditorContent(
             enabled = !state.isReplaying,
             onHeadersChange = onHeadersChange,
         )
+        // The captured content type, not the edited header: the boundary that matters is the one
+        // the body's bytes were written with.
+        if (BinaryBodyPreview.hasMultipartBoundary(state.contentType)) {
+            Text(
+                text = BinaryBodyPreview.BOUNDARY_WARNING,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.alohomoraColors.warning,
+            )
+        }
 
         // Body section
         SectionHeader(title = "Body")
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            BodyMode.entries.forEachIndexed { index, mode ->
-                SegmentedButton(
-                    selected = bodyMode == mode,
-                    enabled = !state.isReplaying,
-                    onClick = {
-                        if (bodyMode != mode) {
-                            if (mode == BodyMode.JSON) jsonBodyState.setText(textBody)
-                            else textBody = jsonBodyState.text
-                            bodyMode = mode
-                            val currentText = when (mode) {
-                                BodyMode.JSON -> jsonBodyState.text
-                                BodyMode.TEXT -> textBody
+        val binaryBody = state.bodyBase64
+        if (binaryBody != null) {
+            // Shown, not edited: no text form of a binary body survives being edited, and the
+            // view model sends bodyBase64 untouched.
+            AlohomoraCodeBlock(
+                content = BinaryBodyPreview.describe(binaryBody, state.contentType),
+                isScrollable = false,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(AlohomoraTestTags.ReplaySheet.BODY),
+            )
+            Text(
+                text = BinaryBodyPreview.READ_ONLY_NOTE,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                BodyMode.entries.forEachIndexed { index, mode ->
+                    SegmentedButton(
+                        selected = bodyMode == mode,
+                        enabled = !state.isReplaying,
+                        onClick = {
+                            if (bodyMode != mode) {
+                                if (mode == BodyMode.JSON) jsonBodyState.setText(textBody)
+                                else textBody = jsonBodyState.text
+                                bodyMode = mode
+                                val currentText = when (mode) {
+                                    BodyMode.JSON -> jsonBodyState.text
+                                    BodyMode.TEXT -> textBody
+                                }
+                                onBodyChange(currentText)
                             }
-                            onBodyChange(currentText)
-                        }
-                    },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = BodyMode.entries.size,
-                        baseShape = MaterialTheme.shapes.small,
-                    ),
-                ) {
-                    Text(mode.label, style = MaterialTheme.typography.labelMedium)
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = BodyMode.entries.size,
+                            baseShape = MaterialTheme.shapes.small,
+                        ),
+                    ) {
+                        Text(mode.label, style = MaterialTheme.typography.labelMedium)
+                    }
                 }
             }
-        }
 
-        when (bodyMode) {
-            // Only one body editor composes at a time, so the shared BODY tag is unambiguous.
-            BodyMode.JSON -> JsonEditor(
-                state = jsonBodyState,
-                readOnly = state.isReplaying,
-                minLines = 8,
-                // Grows with content so the single outer scroll owns scrolling — no fixed box
-                // trapping a second scroll inside the page.
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 240.dp)
-                    .testTag(AlohomoraTestTags.ReplaySheet.BODY),
-            )
+            when (bodyMode) {
+                // Only one body editor composes at a time, so the shared BODY tag is unambiguous.
+                BodyMode.JSON -> JsonEditor(
+                    state = jsonBodyState,
+                    readOnly = state.isReplaying,
+                    minLines = 8,
+                    // Grows with content so the single outer scroll owns scrolling — no fixed box
+                    // trapping a second scroll inside the page.
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 240.dp)
+                        .testTag(AlohomoraTestTags.ReplaySheet.BODY),
+                )
 
-            BodyMode.TEXT -> AlohomoraTextField(
-                value = textBody,
-                onValueChange = {
-                    textBody = it
-                    onBodyChange(it)
-                },
-                placeholder = "Request body",
-                singleLine = false,
-                enabled = !state.isReplaying,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 160.dp)
-                    .testTag(AlohomoraTestTags.ReplaySheet.BODY),
-            )
+                BodyMode.TEXT -> AlohomoraTextField(
+                    value = textBody,
+                    onValueChange = {
+                        textBody = it
+                        onBodyChange(it)
+                    },
+                    placeholder = "Request body",
+                    singleLine = false,
+                    enabled = !state.isReplaying,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 160.dp)
+                        .testTag(AlohomoraTestTags.ReplaySheet.BODY),
+                )
+            }
         }
 
         // Error banner

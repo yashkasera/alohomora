@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.mcp
 
 import io.github.yashkasera.alohomora.common.AttentionItem
+import io.github.yashkasera.alohomora.common.BinaryBodyPreview
 import io.github.yashkasera.alohomora.common.Error
 import io.github.yashkasera.alohomora.common.Event
 import io.github.yashkasera.alohomora.common.FeatureFlag
@@ -119,16 +120,23 @@ fun registerAlohomoraTools(
     server.addTool(
         "get_traffic",
         "Full detail for one captured request by id: headers, bodies, timing, a ready-to-run curl command, " +
-            "and truncation flags. A truncated body is incomplete — the flags say so.",
+            "and truncation flags. A truncated body is incomplete — the flags say so. A binary request " +
+            "body is summarised (requestBodyBinaryBytes, requestBodyHexPreview); pass includeBinaryBody " +
+            "for the bytes themselves as entry.requestBodyBase64.",
         buildSchema {
             put("deviceId", stringProp("Target device; optional when only one is connected."))
             put("id", stringProp("The traffic entry id, from list_traffic."))
+            put(
+                "includeBinaryBody",
+                boolProp("Include a binary request body as base64 (up to ~1.3 MB). Default false."),
+            )
         },
     ) { request ->
         withRepo(registry, request) { repo ->
             val id =
                 request.str("id") ?: return@withRepo errorResult("Missing required argument: id")
-            AlohomoraMcpToolData.getTraffic(repo, id)?.let { result(it) }
+            val includeBinaryBody = request.bool("includeBinaryBody") ?: false
+            AlohomoraMcpToolData.getTraffic(repo, id, includeBinaryBody)?.let { result(it) }
                 ?: errorResult("No traffic entry with id $id")
         }
     }
@@ -464,14 +472,28 @@ internal object AlohomoraMcpToolData {
         return buildJsonArray { entries.forEach { add(it.toSummaryJson()) } }
     }
 
-    fun getTraffic(repo: DevToolsRepository, id: String): JsonElement? {
+    /**
+     * One entry in full, except a binary request body unless [includeBinaryBody] asks for it.
+     *
+     * Opt-in because the bytes are up to 1.3 MB of base64 that an agent can rarely use and that
+     * crowds out everything else in its context. Without them the entry still says how big the
+     * body is and how it starts, which is usually what the question was.
+     */
+    fun getTraffic(repo: DevToolsRepository, id: String, includeBinaryBody: Boolean = false): JsonElement? {
         val entry = repo.traffic.value.firstOrNull { it.id == id } ?: return null
+        val binary = entry.requestBodyBase64
+        val projected = if (includeBinaryBody) entry else entry.copy(requestBodyBase64 = null)
         return buildJsonObject {
-            put("entry", json.encodeToJsonElement(TrafficEntry.serializer(), entry))
+            put("entry", json.encodeToJsonElement(TrafficEntry.serializer(), projected))
             put("curl", entry.curlCommand())
             put("requestBodyTruncated", entry.requestBodyTruncated)
             put("responseBodyTruncated", entry.responseBodyTruncated)
-            entry.replayBlockedReason()?.let { put("replayBlockedReason", it.name) }
+            if (binary != null) {
+                put("requestBodyBinaryBytes", BinaryBodyPreview.decodedSize(binary))
+                put("requestBodyHexPreview", BinaryBodyPreview.hex(binary))
+            }
+            entry.replayBlockedReason(repo.replayState.value.binarySupported)
+                ?.let { put("replayBlockedReason", it.name) }
         }
     }
 

@@ -91,6 +91,46 @@ class AlohomoraMcpWriteDataTest {
     }
 
     @Test
+    fun `replay passes a binary body through as captured`() = runTest {
+        val repo = FakeDevToolsRepository().apply {
+            replayState.value = ReplayState(supported = true, binarySupported = true)
+            traffic.value = listOf(binaryEntry("1"))
+        }
+        val deferred = async { AlohomoraMcpWriteData.replay(repo, "1", null, null, null, null, null) }
+        runCurrent()
+
+        val sent = repo.replayedRequests.single()
+        assertEquals("AAE=", sent.bodyBase64)
+        assertEquals(null, sent.body)
+        repo.deliverReplaySuccess("1", entry("replayed").apply { replayOf = "1"; status = 200 })
+        assertTrue(deferred.await() is WriteResult.Ok)
+    }
+
+    @Test
+    fun `replay refuses a text override of a binary body`() = runTest {
+        val repo = FakeDevToolsRepository().apply {
+            replayState.value = ReplayState(supported = true, binarySupported = true)
+            traffic.value = listOf(binaryEntry("1"))
+        }
+
+        val result = AlohomoraMcpWriteData.replay(repo, "1", null, null, null, body = "{}", contentType = null)
+
+        assertTrue(result is WriteResult.Error)
+        assertTrue(repo.replayedRequests.isEmpty())
+    }
+
+    @Test
+    fun `replay refuses a binary body when the app cannot send one`() = runTest {
+        val repo = FakeDevToolsRepository().apply {
+            replayState.value = ReplayState(supported = true, binarySupported = false)
+            traffic.value = listOf(binaryEntry("1"))
+        }
+
+        assertTrue(AlohomoraMcpWriteData.replay(repo, "1", null, null, null, null, null) is WriteResult.Error)
+        assertTrue(repo.replayedRequests.isEmpty())
+    }
+
+    @Test
     fun `replay reports a device failure`() = runTest {
         val repo = FakeDevToolsRepository().apply {
             replayState.value = ReplayState(supported = true)
@@ -357,6 +397,13 @@ class AlohomoraMcpWriteDataTest {
         }
 
         override fun runDetached(args: List<String>): String? = null
+    }
+
+    private fun binaryEntry(id: String) = entry(id).apply {
+        method = "POST"
+        requestBody = TrafficEntry.UNABLE_PARSE_MESSAGE
+        requestBodyBase64 = "AAE="
+        requestContentType = "application/octet-stream"
     }
 
     private fun entry(id: String) = TrafficEntry(

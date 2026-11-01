@@ -5,12 +5,16 @@ package io.github.yashkasera.alohomora.desktop.domain.model
  *
  * @property supported whether the app registered a replay handler. False also covers devices
  *   running a build that predates replay, so the action is hidden rather than offered and ignored.
+ * @property binarySupported whether that handler can also send a binary body byte for byte. False
+ *   for a custom text-only handler and for any app that predates binary capture, so a binary
+ *   request's replay is refused here rather than by the device.
  * @property inFlight source trace ids with a replay currently out on the wire. Keyed by trace
  *   rather than a single Boolean so replaying one request does not lock the action on every other.
  * @property errors the last failure per source trace id, cleared when that trace is replayed again.
  */
 data class ReplayState(
     val supported: Boolean = false,
+    val binarySupported: Boolean = false,
     val inFlight: Set<String> = emptySet(),
     val errors: Map<String, String> = emptyMap(),
 ) {
