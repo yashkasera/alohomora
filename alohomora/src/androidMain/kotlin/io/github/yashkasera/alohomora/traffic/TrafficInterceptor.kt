@@ -6,7 +6,6 @@ import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.devtools.NetworkRuleEngine
 import io.github.yashkasera.alohomora.replay.ReplayMarker
 import io.github.yashkasera.alohomora.replay.ReplayTag
-import java.net.URLDecoder
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -45,15 +44,17 @@ class TrafficInterceptor(
             original.newBuilder().removeHeader(ReplayMarker.HEADER).build()
         }
 
-        // Capture is best-effort and fully isolated. Previously a malformed '%' escape in
-        // URLDecoder.decode, an OOM from the unbounded body buffer, or Koin not being started
-        // all surfaced to the caller as a failed HTTP request.
+        // Capture is best-effort and fully isolated. Previously an OOM from the unbounded body
+        // buffer, or Koin not being started, surfaced to the caller as a failed HTTP request.
         val trace = runCatching {
             val body = request.body?.snapshot()
             TrafficEntry(
                 id = Uuid.random().toString(),
-                url = runCatching { URLDecoder.decode(request.url.toString(), "UTF-8") }
-                    .getOrElse { request.url.toString() },
+                // Stored encoded, exactly as sent, because replay and curl send this string back
+                // as is. Decoded, `%2B` came back as `+` (a space to the server), `%26` split a
+                // parameter, `%2F` moved the path, and a signed or presigned URL stopped matching
+                // its signature. The Ktor and iOS paths already store the encoded form.
+                url = request.url.toString(),
                 method = request.method,
                 scheme = request.url.scheme,
                 host = request.url.host,
