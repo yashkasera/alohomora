@@ -90,6 +90,8 @@ object Alohomora {
 
     val isReplaySupported: Boolean get() = false
 
+    fun setReplayStrippedHeaders(vararg headerNames: String) = Unit
+
     fun redactHeaders(vararg headerNames: String) = Unit
 
     fun clearRedactedHeaders() = Unit

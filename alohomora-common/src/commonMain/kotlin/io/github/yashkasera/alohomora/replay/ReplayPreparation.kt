@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.replay
 
 import io.github.yashkasera.alohomora.common.HeaderRedaction
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import kotlin.concurrent.Volatile
 
 /**
  * Why a captured trace cannot be replayed.
@@ -54,6 +55,12 @@ object ReplayHeaders {
      * Forwarding the captured values instead is worse than useless: `Content-Length` from the
      * original body contradicts an edited one, and `Host` from the original URL contradicts an
      * edited URL. Both produce protocol-level errors that look nothing like their cause.
+     *
+     * The two encoding headers belong here for the same reason: the client negotiates them itself.
+     * An explicit captured `Accept-Encoding` switches off OkHttp's transparent gzip, so the app is
+     * handed compressed bytes it never asked to decode. On iOS CFNetwork manages both, and a
+     * forwarded `Content-Encoding` that disagrees with the body it actually sends surfaces as
+     * `NSURLErrorDataLengthExceedsMaximum` (-1103) rather than as anything about encoding.
      */
     val STRIPPED: Set<String> = setOf(
         "content-length",
@@ -64,17 +71,26 @@ object ReplayHeaders {
         "upgrade",
         "keep-alive",
         "proxy-connection",
+        "accept-encoding",
+        "content-encoding",
     )
 
     /**
      * Extra header names the host app wants dropped on replay, so its own interceptors put them
      * back.
      *
-     * Assign at startup. A signature or nonce header that is not *secret* is not redacted at
-     * capture time, so it survives into the trace and would be forwarded verbatim — leaving an
-     * interceptor that uses `addHeader` to append a second, correct value beside the stale one.
-     * Naming it here removes that ambiguity.
+     * Set through `Alohomora.setReplayStrippedHeaders(...)` at startup. A signature or nonce header
+     * that is not *secret* is not redacted at capture time, so it survives into the trace and would
+     * be forwarded verbatim — leaving an interceptor that uses `addHeader` to append a second,
+     * correct value beside the stale one. Naming it here removes that ambiguity.
+     *
+     * This list lives in the app process only. The desktop builds its replay with [sanitize] too,
+     * but it never sees this value, so the device re-applies [sanitize] before the request reaches
+     * the registered handler; that second pass is what actually enforces it for desktop replays.
+     *
+     * `@Volatile`: assigned on the configuring thread, read on whichever thread runs a replay.
      */
+    @Volatile
     var additionalStripList: Set<String> = emptySet()
 
     private fun isStripped(name: String): Boolean {

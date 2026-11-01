@@ -57,6 +57,7 @@ Traffic replay:
 - `Alohomora.registerReplayHandler(handler)`
 - `Alohomora.clearReplayHandler()`
 - `Alohomora.isReplaySupported` — always `false` in the no-op
+- `Alohomora.setReplayStrippedHeaders(vararg headerNames)`
 
 Custom screen plugins:
 
