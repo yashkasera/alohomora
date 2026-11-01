@@ -4,6 +4,7 @@ import io.github.yashkasera.alohomora.common.deeplink.DeepLinkDef
 import io.github.yashkasera.alohomora.common.deeplink.buildUri
 import io.github.yashkasera.alohomora.common.journey.JourneyDefinition
 import io.github.yashkasera.alohomora.desktop.data.adb.DefaultAdbCommandRunner
+import io.github.yashkasera.alohomora.desktop.data.adb.DeviceShell
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigKind
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigScope
 import io.github.yashkasera.alohomora.desktop.domain.config.ConfigStore
@@ -156,9 +157,7 @@ internal object AlohomoraJourneyMcpWriteData {
         val url = built.url
             ?: return WriteResult.Error("Invalid arguments: ${built.errors.joinToString("; ")}")
         val result = withContext(Dispatchers.IO) {
-            adbRunner.run(
-                listOf("-s", deviceId, "shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", url),
-            )
+            adbRunner.run(listOf("-s", deviceId) + DeviceShell.viewIntentArgs(url))
         }
         return WriteResult.Ok(
             buildJsonObject {

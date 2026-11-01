@@ -3,6 +3,7 @@ package io.github.yashkasera.alohomora.desktop.mcp
 import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.ThrottleProfile
 import io.github.yashkasera.alohomora.common.ThrottleProfiles
+import io.github.yashkasera.alohomora.desktop.data.adb.AdbCommandRunner
 import io.github.yashkasera.alohomora.desktop.data.adb.DefaultAdbCommandRunner
 import io.github.yashkasera.alohomora.desktop.data.local.toMockRule
 import io.github.yashkasera.alohomora.desktop.domain.repository.DevToolsRepository
@@ -42,9 +43,10 @@ import kotlinx.serialization.json.put
  * [NetworkRulesViewModel] (its `_mockRules`/`_throttleProfile` are the UI's source of truth — talking to
  * the repo directly would desync them). Each write gates on the device capability at call time.
  *
- * `clear_captured` is the only irreversible one, so it is confirmed through [McpConfirmationBroker]
- * before it runs. The rest are reversible (a mock/throttle can be cleared, a replay is just the app
- * re-sending a request through its own client).
+ * `clear_captured` is irreversible, so it is confirmed through [McpConfirmationBroker] before it
+ * runs, as are `run_adb_command`'s `pm` and `cmd` (they can clear app data or uninstall). The rest are
+ * reversible (a mock/throttle can be cleared, a replay is just the app re-sending a request through
+ * its own client).
  */
 
 /** Long enough for the device to run a replay and answer, short enough to fail rather than hang. */
@@ -235,9 +237,10 @@ fun registerAlohomoraWriteTools(
     server.addTool(
         "run_adb_command",
         "Run an ADB shell command on the connected device. Allowed: shell am/pm/dumpsys/settings/" +
-            "getprop/svc/input/screencap/monkey/wm/cmd, logcat. Not allowed: install, uninstall, " +
-            "push, pull, reboot, root, shell rm/su. Pass the command without the 'adb' or " +
-            "'-s <serial>' prefix.",
+            "getprop/svc wifi|data/input/screencap/monkey/wm/cmd, logcat. shell pm and shell cmd require " +
+            "the developer to confirm in the desktop app. Not allowed: install, uninstall, push, pull, " +
+            "reboot, root, shell rm/su, and shell metacharacters (; & | ` $ ( ) < > \\ quotes) — one " +
+            "command per call. Pass the command without the 'adb' or '-s <serial>' prefix.",
         buildSchema {
             put("deviceId", stringProp("Target device; optional when only one is connected."))
             put(
@@ -252,6 +255,7 @@ fun registerAlohomoraWriteTools(
             AlohomoraMcpWriteData.runAdbCommand(
                 deviceId = handle.deviceId,
                 command = command,
+                confirmation = confirmation,
             ).toCallResult()
         }
     }
@@ -413,16 +417,24 @@ internal object AlohomoraMcpWriteData {
     suspend fun runAdbCommand(
         deviceId: String,
         command: String,
+        confirmation: McpConfirmationBroker,
+        runner: AdbCommandRunner = adbRunner,
     ): WriteResult {
         val args = command.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
         if (args.isEmpty()) return WriteResult.Error("Empty command.")
-        if (!isAllowedAdbCommand(args)) {
-            return WriteResult.Error(
-                "Command not allowed. Permitted prefixes: ${ALLOWED_ADB_PREFIXES.joinToString(", ")}.",
-            )
+        when (val check = checkAdbCommand(args)) {
+            is AdbCommandCheck.Rejected -> return WriteResult.Error(check.reason)
+            AdbCommandCheck.NeedsConfirmation -> {
+                val approved = confirmation.confirm(
+                    title = "Run adb command?",
+                    message = "The agent wants to run on $deviceId:\n\nadb ${args.joinToString(" ")}",
+                )
+                if (!approved) return WriteResult.Error("Denied by the developer.")
+            }
+            AdbCommandCheck.Allowed -> Unit
         }
         val result = withContext(Dispatchers.IO) {
-            adbRunner.run(listOf("-s", deviceId) + args)
+            runner.run(listOf("-s", deviceId) + args)
         }
         return WriteResult.Ok(
             buildJsonObject {
@@ -444,25 +456,71 @@ internal object AlohomoraMcpWriteData {
 private val adbRunner = DefaultAdbCommandRunner()
 private const val MAX_ADB_OUTPUT_CHARS = 50_000
 
-private val ALLOWED_ADB_PREFIXES = listOf(
-    "shell am",
-    "shell pm",
-    "shell dumpsys",
-    "shell settings",
-    "shell getprop",
-    "shell svc wifi",
-    "shell svc data",
-    "shell input",
-    "shell screencap",
-    "shell monkey",
-    "shell wm",
-    "shell cmd",
-    "logcat",
+/** `adb shell <program>` programs an agent may run without asking. */
+private val SHELL_PROGRAMS = setOf(
+    "am",
+    "dumpsys",
+    "settings",
+    "getprop",
+    "input",
+    "screencap",
+    "monkey",
+    "wm",
 )
 
-internal fun isAllowedAdbCommand(args: List<String>): Boolean {
-    val joined = args.joinToString(" ")
-    return ALLOWED_ADB_PREFIXES.any { joined.startsWith(it, ignoreCase = true) }
+/** Programs that can clear app data or uninstall (`pm clear`, `cmd package uninstall`). */
+private val CONFIRMED_SHELL_PROGRAMS = setOf("pm", "cmd")
+
+/** `svc` toggles more than radios (`svc power`, `svc usb`), so only these subcommands pass. */
+private val SVC_SUBCOMMANDS = setOf("wifi", "data")
+
+/**
+ * Characters the device shell treats as syntax: separators, pipes, substitution, redirection,
+ * quoting and escapes. Globs (`*`, `?`) are left alone — they expand filenames but cannot start a
+ * command, and `?` turns up in every deep link.
+ */
+private val SHELL_METACHARACTERS = Regex("""[;&|`$()<>\\"'\n\r]""")
+
+internal sealed interface AdbCommandCheck {
+    data object Allowed : AdbCommandCheck
+    data object NeedsConfirmation : AdbCommandCheck
+    data class Rejected(val reason: String) : AdbCommandCheck
+}
+
+/**
+ * Validates per argument, never as a joined string. A `startsWith("shell am")` check passed
+ * `shell am; <anything>` and `shell amfoo`, and since adb hands `shell` arguments to the device's `sh`
+ * as one string, that was arbitrary command execution — reachable by prompt injection through any
+ * captured response body an agent reads.
+ *
+ * `logcat` is exempt from the metacharacter rule: adb escapes each `logcat` argument itself, and a
+ * filterspec like `*:E` is the normal way to call it.
+ */
+internal fun checkAdbCommand(args: List<String>): AdbCommandCheck {
+    val notAllowed = AdbCommandCheck.Rejected(
+        "Command not allowed. Permitted: shell ${(SHELL_PROGRAMS + CONFIRMED_SHELL_PROGRAMS).sorted()
+            .joinToString("/")}, shell svc wifi|data, logcat.",
+    )
+    return when (args.firstOrNull()) {
+        "logcat" -> AdbCommandCheck.Allowed
+        "shell" -> {
+            val program = args.getOrNull(1) ?: return notAllowed
+            if (args.any { SHELL_METACHARACTERS.containsMatchIn(it) }) {
+                return AdbCommandCheck.Rejected(
+                    "Shell metacharacters are not allowed (; & | ` \$ ( ) < > \\ quotes). Run one " +
+                        "command per call.",
+                )
+            }
+            when {
+                program in SHELL_PROGRAMS -> AdbCommandCheck.Allowed
+                program in CONFIRMED_SHELL_PROGRAMS -> AdbCommandCheck.NeedsConfirmation
+                program == "svc" && args.getOrNull(2) in SVC_SUBCOMMANDS -> AdbCommandCheck.Allowed
+                else -> notAllowed
+            }
+        }
+
+        else -> notAllowed
+    }
 }
 
 // --- adapters + parsing ------------------------------------------------------------------------

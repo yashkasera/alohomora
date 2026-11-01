@@ -1,6 +1,7 @@
 package io.github.yashkasera.alohomora.desktop.presentation.viewmodel
 
 import androidx.compose.material3.SnackbarHostState
+import io.github.yashkasera.alohomora.desktop.data.adb.DeviceShell
 import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkEntry
 import io.github.yashkasera.alohomora.desktop.data.local.DeepLinkHistoryStore
 import io.github.yashkasera.alohomora.desktop.domain.model.CommandResult
@@ -467,10 +468,7 @@ class DevicesViewModel(
             return
         }
         scope.launch {
-            runLoggedBlocking(
-                deviceId,
-                listOf("shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", url),
-            )
+            runLoggedBlocking(deviceId, DeviceShell.viewIntentArgs(url))
             deepLinkHistoryStore.add(url)
             _deepLinkHistory.value = deepLinkHistoryStore.load()
             setActionMessage("Deep link opened")

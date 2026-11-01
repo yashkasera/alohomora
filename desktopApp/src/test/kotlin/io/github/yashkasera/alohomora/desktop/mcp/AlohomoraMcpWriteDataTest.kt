@@ -3,6 +3,8 @@ package io.github.yashkasera.alohomora.desktop.mcp
 import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.TrafficEntry
 import io.github.yashkasera.alohomora.desktop.FakeDevToolsRepository
+import io.github.yashkasera.alohomora.desktop.data.adb.AdbCommandResult
+import io.github.yashkasera.alohomora.desktop.data.adb.AdbCommandRunner
 import io.github.yashkasera.alohomora.desktop.domain.model.ReplayState
 import io.github.yashkasera.alohomora.desktop.presentation.viewmodel.NetworkRulesViewModel
 import kotlin.test.Test
@@ -242,18 +244,119 @@ class AlohomoraMcpWriteDataTest {
 
     @Test
     fun `adb allowlist permits shell am and blocks install`() {
-        assertTrue(isAllowedAdbCommand(listOf("shell", "am", "force-stop", "com.example")))
-        assertTrue(isAllowedAdbCommand(listOf("shell", "dumpsys", "wifi")))
-        assertTrue(isAllowedAdbCommand(listOf("logcat", "-d")))
-        assertTrue(isAllowedAdbCommand(listOf("shell", "pm", "clear", "com.example")))
-        assertFalse(isAllowedAdbCommand(listOf("install", "-r", "app.apk")))
-        assertFalse(isAllowedAdbCommand(listOf("uninstall", "com.example")))
-        assertFalse(isAllowedAdbCommand(listOf("push", "local", "/sdcard/remote")))
-        assertFalse(isAllowedAdbCommand(listOf("pull", "/sdcard/remote", "local")))
-        assertFalse(isAllowedAdbCommand(listOf("reboot")))
-        assertFalse(isAllowedAdbCommand(listOf("root")))
-        assertFalse(isAllowedAdbCommand(listOf("shell", "rm", "-rf", "/")))
-        assertFalse(isAllowedAdbCommand(listOf("shell", "su")))
+        assertEquals(AdbCommandCheck.Allowed, check("shell am force-stop com.example"))
+        assertEquals(AdbCommandCheck.Allowed, check("shell dumpsys wifi"))
+        assertEquals(AdbCommandCheck.Allowed, check("shell svc wifi disable"))
+        assertEquals(AdbCommandCheck.Allowed, check("logcat -d"))
+        assertTrue(check("install -r app.apk") is AdbCommandCheck.Rejected)
+        assertTrue(check("uninstall com.example") is AdbCommandCheck.Rejected)
+        assertTrue(check("push local /sdcard/remote") is AdbCommandCheck.Rejected)
+        assertTrue(check("pull /sdcard/remote local") is AdbCommandCheck.Rejected)
+        assertTrue(check("reboot") is AdbCommandCheck.Rejected)
+        assertTrue(check("root") is AdbCommandCheck.Rejected)
+        assertTrue(check("shell rm -rf /") is AdbCommandCheck.Rejected)
+        assertTrue(check("shell su") is AdbCommandCheck.Rejected)
+        assertTrue(check("shell") is AdbCommandCheck.Rejected)
+    }
+
+    @Test
+    fun `adb allowlist matches whole arguments rather than a joined prefix`() {
+        assertTrue(check("shell amfoo") is AdbCommandCheck.Rejected)
+        assertTrue(check("shell svc power reboot") is AdbCommandCheck.Rejected)
+        assertTrue(check("shell -t am start") is AdbCommandCheck.Rejected)
+    }
+
+    @Test
+    fun `adb allowlist rejects shell metacharacters in any argument`() {
+        listOf(
+            "shell am; reboot",
+            "shell am start -d x;reboot",
+            "shell am start -d https://a.example/?a=1&b=2",
+            "shell dumpsys | sh",
+            "shell am start -d `reboot`",
+            "shell am start -d \$(reboot)",
+            "shell getprop > /sdcard/out",
+            "shell am start -d 'x'",
+            "shell am start -d \"x\"",
+            "shell input text a\\b",
+        ).forEach { command ->
+            assertTrue(check(command) is AdbCommandCheck.Rejected, "should reject: $command")
+        }
+    }
+
+    @Test
+    fun `logcat filterspecs keep their glob since adb escapes logcat args itself`() {
+        assertEquals(AdbCommandCheck.Allowed, check("logcat -d *:E"))
+    }
+
+    @Test
+    fun `adb pm and cmd need the developer to confirm`() {
+        assertEquals(AdbCommandCheck.NeedsConfirmation, check("shell pm clear com.example"))
+        assertEquals(AdbCommandCheck.NeedsConfirmation, check("shell cmd package uninstall com.example"))
+    }
+
+    @Test
+    fun `a denied pm command never reaches adb`() = runTest {
+        val runner = RecordingAdbRunner()
+        val broker = McpConfirmationBroker()
+        val deferred = async {
+            AlohomoraMcpWriteData.runAdbCommand("dev", "shell pm clear com.example", broker, runner)
+        }
+        runCurrent()
+        assertTrue(broker.pending.value!!.message.contains("shell pm clear com.example"))
+        broker.pending.value!!.resolve(false)
+        assertTrue(deferred.await() is WriteResult.Error)
+        assertTrue(runner.calls.isEmpty(), "a denied command must not run")
+    }
+
+    @Test
+    fun `an approved pm command runs against the session device`() = runTest {
+        val runner = RecordingAdbRunner()
+        val broker = McpConfirmationBroker()
+        val deferred = async {
+            AlohomoraMcpWriteData.runAdbCommand("dev", "shell pm clear com.example", broker, runner)
+        }
+        runCurrent()
+        broker.pending.value!!.resolve(true)
+        assertTrue(deferred.await() is WriteResult.Ok)
+        assertEquals(
+            listOf(listOf("-s", "dev", "shell", "pm", "clear", "com.example")),
+            runner.calls,
+        )
+    }
+
+    @Test
+    fun `an unconfirmed program runs without prompting`() = runTest {
+        val runner = RecordingAdbRunner()
+        val broker = McpConfirmationBroker()
+        val result =
+            AlohomoraMcpWriteData.runAdbCommand("dev", "shell am force-stop com.example", broker, runner)
+        assertTrue(result is WriteResult.Ok)
+        assertEquals(null, broker.pending.value)
+        assertEquals(1, runner.calls.size)
+    }
+
+    @Test
+    fun `a rejected command neither prompts nor runs`() = runTest {
+        val runner = RecordingAdbRunner()
+        val broker = McpConfirmationBroker()
+        val result = AlohomoraMcpWriteData.runAdbCommand("dev", "shell pm clear x;reboot", broker, runner)
+        assertTrue(result is WriteResult.Error)
+        assertEquals(null, broker.pending.value)
+        assertTrue(runner.calls.isEmpty())
+    }
+
+    private fun check(command: String) = checkAdbCommand(command.split(" "))
+
+    private class RecordingAdbRunner : AdbCommandRunner {
+        val calls = mutableListOf<List<String>>()
+
+        override fun run(args: List<String>): AdbCommandResult {
+            calls += args
+            return AdbCommandResult(0, "", "")
+        }
+
+        override fun runDetached(args: List<String>): String? = null
     }
 
     private fun entry(id: String) = TrafficEntry(
