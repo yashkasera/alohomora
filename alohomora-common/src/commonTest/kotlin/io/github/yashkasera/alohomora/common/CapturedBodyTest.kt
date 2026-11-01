@@ -61,4 +61,14 @@ class CapturedBodyTest {
         assertFalse(CapturedBody.isKnownBinary("multipart/form-data; boundary=x"))
         assertFalse(CapturedBody.isKnownBinary(null))
     }
+
+    @Test
+    fun `event streams are recognised with or without parameters`() {
+        assertTrue(CapturedBody.isEventStream("text/event-stream"))
+        assertTrue(CapturedBody.isEventStream("text/event-stream; charset=utf-8"))
+        assertTrue(CapturedBody.isEventStream("Text/Event-Stream"))
+        assertFalse(CapturedBody.isEventStream("text/plain"))
+        assertFalse(CapturedBody.isEventStream("application/json"))
+        assertFalse(CapturedBody.isEventStream(null))
+    }
 }
