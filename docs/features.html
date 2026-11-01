@@ -77,13 +77,16 @@
                 <p class="reveal">Capture is automatic for OkHttp and Ktor. On iOS, you need to use the provided session configuration. For anything else, record manually.</p>
 
                 <h4 class="reveal">Header redaction</h4>
-                <p class="reveal">Opt-in redaction strips sensitive header values <strong>at capture time</strong>, so secrets never reach the database or exports. Matching is case-insensitive.</p>
+                <p class="reveal">Redaction strips sensitive header values <strong>at capture time</strong>, so secrets never reach the database or exports. <code>Authorization</code>, <code>Proxy-Authorization</code>, <code>Cookie</code>, <code>Set-Cookie</code> and <code>X-Api-Key</code> are redacted by default; add your own on top. Matching is case-insensitive.</p>
                 <div class="code-block reveal">
                     <div class="code-header">Kotlin</div>
-                    <pre><span class="type">Alohomora</span>.<span class="fn">redactHeaders</span>(<span class="str">"Authorization"</span>, <span class="str">"X-Api-Key"</span>)
+                    <pre><span class="type">Alohomora</span>.<span class="fn">redactHeaders</span>(<span class="str">"X-Session-Token"</span>, <span class="str">"X-Signature"</span>)
 
-<span class="cmt">// Clear all redaction rules</span>
-<span class="type">Alohomora</span>.<span class="fn">clearRedactedHeaders</span>()</pre>
+<span class="cmt">// Clear your own names (the defaults stay on)</span>
+<span class="type">Alohomora</span>.<span class="fn">clearRedactedHeaders</span>()
+
+<span class="cmt">// See raw Authorization/Cookie values in the console</span>
+<span class="type">Alohomora</span>.<span class="fn">setDefaultHeaderRedactionEnabled</span>(<span class="kw">false</span>)</pre>
                 </div>
                 <p class="reveal">Redacted values show as <code>[REDACTED]</code> in the console, exports, and Slack shares. Replays strip redacted headers entirely so your interceptors regenerate them.</p>
 

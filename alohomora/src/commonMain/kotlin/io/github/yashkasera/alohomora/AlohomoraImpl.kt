@@ -134,6 +134,12 @@ internal object AlohomoraImpl {
         responseSize: Long?,
         mockedBy: String?,
     ) {
+        // Redacted here, like the OkHttp, Ktor and URLProtocol paths do, because this is the
+        // entry point for every client Alohomora cannot hook — a Swift or Flutter app recording
+        // manually would otherwise store Authorization and Cookie verbatim. Done before the
+        // launch so the policy in force is the one at call time, matching the interceptors.
+        val redactedRequestHeaders = HeaderRedaction.redact(requestHeaders)
+        val redactedResponseHeaders = HeaderRedaction.redact(responseHeaders)
         // Resolution happens inside the coroutine on purpose: building TrafficRepository
         // transitively opens AlohomoraDb, which runs a synchronous SQLite open plus
         // `PRAGMA quick_check`. Doing that eagerly would charge it to whichever thread
@@ -154,10 +160,10 @@ internal object AlohomoraImpl {
                 responseBody = responseBody,
                 time = time,
                 duration = duration,
-                requestHeaders = requestHeaders,
+                requestHeaders = redactedRequestHeaders,
                 requestContentType = requestContentType,
                 responseContentType = responseContentType,
-                responseHeaders = responseHeaders,
+                responseHeaders = redactedResponseHeaders,
                 requestSize = requestSize,
                 responseSize = responseSize,
                 mockedBy = mockedBy,
@@ -385,6 +391,10 @@ internal object AlohomoraImpl {
 
     fun clearRedactedHeaders() {
         HeaderRedaction.clearHeaders()
+    }
+
+    fun setDefaultHeaderRedactionEnabled(enabled: Boolean) {
+        HeaderRedaction.setDefaultsEnabled(enabled)
     }
 
     fun recordFeatureFlag(

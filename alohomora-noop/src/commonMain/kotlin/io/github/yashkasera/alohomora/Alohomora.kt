@@ -94,6 +94,8 @@ object Alohomora {
 
     fun clearRedactedHeaders() = Unit
 
+    fun setDefaultHeaderRedactionEnabled(enabled: Boolean) = Unit
+
     fun recordFeatureFlag(
         key: String,
         value: String,
