@@ -66,6 +66,7 @@ class TrafficInterceptor(
                 requestContentType = request.body?.contentType()?.toString(),
                 requestSize = request.body?.contentLength(),
                 requestBodyTruncated = body?.truncated == true,
+                requestBodyBase64 = body?.base64,
                 replayOf = replayOf,
             )
         }.onFailure { it.logCaptureFailure("request") }.getOrNull()
@@ -149,17 +150,23 @@ class TrafficInterceptor(
     }
 
     /**
-     * Reads a bounded snapshot of the request body for display.
+     * Reads a bounded snapshot of the request body for display and replay.
      *
      * One-shot and duplex bodies are skipped rather than read. `writeTo` consumes a one-shot
      * body, so tracing it meant the real request was sent empty or failed outright; and a
      * duplex body's `writeTo` blocks until the response is read, deadlocking the call. This
      * mirrors what OkHttp's own HttpLoggingInterceptor does.
+     *
+     * Every other body can be written again, `MultipartBody` included, so writing it here leaves
+     * what goes on the wire untouched. A body that is not text keeps its bytes for replay.
      */
     private fun RequestBody.snapshot(): BodySnapshot {
         if (isDuplex() || isOneShot()) return BodySnapshot(TrafficEntry.UNABLE_PARSE_MESSAGE)
-        // Checked before writeTo, so a large binary upload is never materialised just to be refused.
-        if (CapturedBody.isKnownBinary(contentType()?.toString())) {
+        val contentType = contentType()?.toString()
+        // A binary upload over the cap would only be refused, so it is never materialised to find
+        // that out. Content-Length is reliable here, unlike on a response: this is the body the
+        // app built, before any transport encoding. -1 (unknown) falls through and is read.
+        if (CapturedBody.isKnownBinary(contentType) && contentLength() > MAX_BODY_BYTES) {
             return BodySnapshot(TrafficEntry.UNABLE_PARSE_MESSAGE)
         }
         return try {
@@ -171,26 +178,25 @@ class TrafficInterceptor(
             val size = buffer.size
             val bytes = buffer.readByteArray(minOf(size, MAX_BODY_BYTES + 1))
             // Strict, unlike readUtf8: a lenient decode swapped invalid bytes for U+FFFD, so
-            // replaying a binary body sent different bytes. Unparseable is refused by replay.
-            val text = CapturedBody.decodeText(bytes, MAX_BODY_BYTES.toInt())
-                ?: return BodySnapshot(TrafficEntry.UNABLE_PARSE_MESSAGE)
-            if (size > MAX_BODY_BYTES) {
-                BodySnapshot("$text\n…truncated ($size bytes total)", truncated = true)
-            } else {
-                BodySnapshot(text)
-            }
+            // replaying a binary body sent different bytes. Binary is kept as base64 instead.
+            val captured = CapturedBody.requestBody(bytes, size, MAX_BODY_BYTES.toInt(), contentType)
+            BodySnapshot(captured.text, captured.truncated, captured.base64)
         } catch (e: Exception) {
             BodySnapshot(TrafficEntry.UNABLE_PARSE_MESSAGE)
         }
     }
 
     /**
-     * A captured body plus whether it is complete.
+     * A captured body plus whether it is complete, and its bytes when it is not text.
      *
      * Carried alongside the text rather than inferred from the `…truncated` suffix, because replay
      * has to refuse a partial body and a real body may contain that text.
      */
-    private data class BodySnapshot(val text: String, val truncated: Boolean = false)
+    private data class BodySnapshot(
+        val text: String,
+        val truncated: Boolean = false,
+        val base64: String? = null,
+    )
 
     private fun Throwable.logCaptureFailure(stage: String) {
         println("[Alohomora] Failed to capture $stage trace: $message")

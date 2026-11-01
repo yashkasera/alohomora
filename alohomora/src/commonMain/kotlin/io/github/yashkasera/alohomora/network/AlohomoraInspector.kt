@@ -68,19 +68,17 @@ private fun TrafficEntry.captureRequestBody(content: OutgoingContent) {
         is OutgoingContent.ByteArrayContent -> {
             val bytes = content.bytes()
             // Strict, like the other capture paths: a lenient decode corrupts a binary body, so its
-            // replay would send different bytes. Unparseable is refused by replay. Bounded, so only
-            // the stored prefix of a large upload is ever materialised as a String.
-            val text = if (CapturedBody.isKnownBinary(content.contentType?.toString())) {
-                null
-            } else {
-                CapturedBody.decodeText(bytes, MAX_BODY_CHARS)
-            }
-            requestBodyTruncated = text != null && bytes.size > MAX_BODY_CHARS
-            requestBody = when {
-                text == null -> TrafficEntry.UNABLE_PARSE_MESSAGE
-                requestBodyTruncated -> "$text\n…truncated (${bytes.size} bytes total)"
-                else -> text
-            }
+            // replay would send different bytes. A binary body is kept as base64 instead. Bounded,
+            // so only the stored prefix of a large upload is ever materialised as a String.
+            val captured = CapturedBody.requestBody(
+                bytes = bytes,
+                totalBytes = bytes.size.toLong(),
+                maxBytes = MAX_BODY_CHARS,
+                contentType = content.contentType?.toString(),
+            )
+            requestBody = captured.text
+            requestBodyTruncated = captured.truncated
+            requestBodyBase64 = captured.base64
         }
 
         // Null, not UNABLE_PARSE_MESSAGE: a GET has no body, and calling absence a parse failure
@@ -90,6 +88,13 @@ private fun TrafficEntry.captureRequestBody(content: OutgoingContent) {
         // Streaming, channel and multipart bodies can only be read by consuming them, which would
         // send the real request empty. Deliberately not content.toString(), which yields a bare
         // class name that reads like a captured body but is not one.
+        //
+        // MultiPartFormDataContent included, although its writeTo can run twice: each run calls the
+        // providers of its file and binary parts again, and those are the app's own lambdas. One
+        // that hands back an already-open channel or stream (`ChannelProvider { channel }`) yields
+        // nothing the second time, so whichever write came second would be empty. Its form-field
+        // parts are re-writable, but telling them apart needs Ktor's @InternalAPI `parts`, and a
+        // multipart body of form fields alone decodes as text anyway.
         else -> requestBody = if (content.contentLength == 0L) null else TrafficEntry.UNABLE_PARSE_MESSAGE
     }
 }

@@ -2,6 +2,7 @@ package io.github.yashkasera.alohomora.traffic
 
 import io.github.yashkasera.alohomora.Alohomora
 import io.github.yashkasera.alohomora.AlohomoraImpl
+import io.github.yashkasera.alohomora.common.CapturedRequestBody
 import io.github.yashkasera.alohomora.common.HeaderRedaction
 import io.github.yashkasera.alohomora.common.MockRule
 import io.github.yashkasera.alohomora.common.TrafficEntry
@@ -34,7 +35,6 @@ import platform.Foundation.NSInputStream
 import platform.Foundation.NSMutableData
 import platform.Foundation.NSMutableURLRequest
 import platform.Foundation.NSRunLoop
-import platform.Foundation.NSString
 import platform.Foundation.NSStringFromClass
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLAuthenticationChallenge
@@ -55,7 +55,6 @@ import platform.Foundation.NSURLSessionResponseAllow
 import platform.Foundation.NSURLSessionTask
 import platform.Foundation.NSURLErrorDomain
 import platform.Foundation.NSURLErrorRequestBodyStreamExhausted
-import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.NSUserCancelledError
 import platform.Foundation.allHTTPHeaderFields
 import platform.Foundation.appendData
@@ -186,6 +185,7 @@ class AlohomoraURLProtocol :
     private var capturedRequestBody: String? = null
     private var capturedRequestSize: Long? = null
     private var capturedRequestBodyTruncated = false
+    private var capturedRequestBodyBase64: String? = null
 
     @OptIn(ExperimentalUuidApi::class, BetaInteropApi::class)
     override fun startLoading() {
@@ -324,27 +324,24 @@ class AlohomoraURLProtocol :
     /**
      * Records [data] as the captured request body, mirroring the OkHttp and Ktor paths.
      *
-     * Decodes as UTF-8; a body that is not valid UTF-8 (protobuf, binary multipart parts) is stored
-     * as [TrafficEntry.UNABLE_PARSE_MESSAGE] rather than corrupted, so [replayBlockedReason] refuses
-     * the replay instead of putting mojibake on the wire. The stored string is capped at
-     * [MAX_BODY_BYTES]; the full body still reaches the server, only this display copy is bounded.
+     * Decoded strictly as UTF-8; a body that is not text (protobuf, binary multipart parts) keeps
+     * its bytes as base64 when it is within [MAX_BODY_BYTES], so replay can send it back unchanged,
+     * and the placeholder alone when it is not. Text is capped at [MAX_BODY_BYTES]; the full body
+     * still reaches the server, only this copy is bounded.
      */
-    @OptIn(BetaInteropApi::class)
     private fun captureRequestBody(data: NSData?) {
         if (data == null) return
         capturedRequestSize = data.length.toLong()
-        capturedRequestBody = runCatching {
-            val text = NSString.create(data = data, encoding = NSUTF8StringEncoding)?.toString()
-            when {
-                text == null -> TrafficEntry.UNABLE_PARSE_MESSAGE
-                text.length.toLong() > MAX_BODY_BYTES -> {
-                    capturedRequestBodyTruncated = true
-                    text.take(MAX_BODY_BYTES.toInt()) + "\n…truncated (${text.length} chars total)"
-                }
-
-                else -> text
-            }
-        }.getOrDefault(TrafficEntry.UNABLE_PARSE_MESSAGE)
+        val captured = runCatching {
+            capturedRequestBody(
+                data = data,
+                maxBytes = MAX_BODY_BYTES.toInt(),
+                contentType = request.valueForHTTPHeaderField("Content-Type"),
+            )
+        }.getOrDefault(CapturedRequestBody(TrafficEntry.UNABLE_PARSE_MESSAGE))
+        capturedRequestBody = captured.text
+        capturedRequestBodyTruncated = captured.truncated
+        capturedRequestBodyBase64 = captured.base64
     }
 
     /**
@@ -601,6 +598,7 @@ class AlohomoraURLProtocol :
                 query = url.query,
                 requestBody = capturedRequestBody,
                 requestBodyTruncated = capturedRequestBodyTruncated,
+                requestBodyBase64 = capturedRequestBodyBase64,
                 requestHeaders = requestHeaders,
                 requestContentType = requestHeaders["Content-Type"]?.firstOrNull(),
                 requestSize = capturedRequestSize,
@@ -671,6 +669,7 @@ class AlohomoraURLProtocol :
                 query = url?.query,
                 requestBody = capturedRequestBody,
                 requestBodyTruncated = capturedRequestBodyTruncated,
+                requestBodyBase64 = capturedRequestBodyBase64,
                 requestHeaders = requestHeaders,
                 requestContentType = requestHeaders["Content-Type"]?.firstOrNull(),
                 requestSize = capturedRequestSize,

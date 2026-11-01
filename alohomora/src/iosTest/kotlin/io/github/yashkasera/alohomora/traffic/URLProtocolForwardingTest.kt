@@ -2,14 +2,23 @@ package io.github.yashkasera.alohomora.traffic
 
 import io.github.yashkasera.alohomora.common.CapturedBody
 import io.github.yashkasera.alohomora.common.TrafficEntry
+import io.github.yashkasera.alohomora.common.CapturedRequestBody
+import kotlin.io.encoding.Base64
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
+import platform.Foundation.NSData
 import platform.Foundation.NSURLSessionAuthChallengeCancelAuthenticationChallenge
 import platform.Foundation.NSURLSessionAuthChallengePerformDefaultHandling
 import platform.Foundation.NSURLSessionAuthChallengeUseCredential
+import platform.Foundation.create
 
 /**
  * The pieces of [AlohomoraURLProtocol]'s forwarding that run without a loading system.
@@ -167,6 +176,37 @@ class URLProtocolForwardingTest {
         assertEquals(TrafficEntry.UNABLE_PARSE_MESSAGE, CappedBodyCapture.placeholderFor("image/png"))
         assertNull(CappedBodyCapture.placeholderFor("application/json"))
         assertNull(CappedBodyCapture.placeholderFor(null))
+    }
+
+    @Test
+    fun `a binary request body keeps its exact bytes`() {
+        val png = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0xFF.toByte())
+
+        val captured = capturedRequestBody(png.toNSData(), maxBytes = 64, contentType = null)
+
+        assertEquals(TrafficEntry.UNABLE_PARSE_MESSAGE, captured.text)
+        assertContentEquals(png, Base64.decode(captured.base64!!))
+    }
+
+    @Test
+    fun `a binary request body over the cap keeps only the placeholder`() {
+        val captured = capturedRequestBody(ByteArray(10) { 0xFF.toByte() }.toNSData(), maxBytes = 4, contentType = null)
+
+        assertEquals(CapturedRequestBody(TrafficEntry.UNABLE_PARSE_MESSAGE), captured)
+    }
+
+    @Test
+    fun `a text request body stays text and an empty one is empty`() {
+        assertEquals(
+            CapturedRequestBody("""{"a":1}"""),
+            capturedRequestBody("""{"a":1}""".encodeToByteArray().toNSData(), maxBytes = 64, contentType = "application/json"),
+        )
+        assertEquals(CapturedRequestBody(""), capturedRequestBody(NSData(), maxBytes = 64, contentType = null))
+    }
+
+    @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+    private fun ByteArray.toNSData(): NSData = usePinned {
+        NSData.create(bytes = it.addressOf(0), length = size.toULong())
     }
 
     /** Feeds [bytes] the way the protocol does: the whole chunk counted, only the wanted prefix copied. */

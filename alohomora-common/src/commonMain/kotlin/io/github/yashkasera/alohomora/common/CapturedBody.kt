@@ -1,5 +1,7 @@
 package io.github.yashkasera.alohomora.common
 
+import kotlin.io.encoding.Base64
+
 /**
  * Turns captured body bytes into the text a [TrafficEntry] stores, or decides they are not text.
  *
@@ -26,6 +28,37 @@ object CapturedBody {
             bytes.decodeToString(startIndex = 0, endIndex = end, throwOnInvalidSequence = true)
         } catch (_: CharacterCodingException) {
             null
+        }
+    }
+
+    /**
+     * What a capture path stores for a request body: text when it is text, otherwise the bytes.
+     *
+     * [bytes] is the body, or at least its first `maxBytes + 1` bytes; [totalBytes] is its full
+     * length, so a body over the cap is recognised without the caller materialising all of it.
+     *
+     * A body that is not text (strict decode fails, or [contentType] is known binary) is kept as
+     * base64 when it fits under [maxBytes] in full, so replay can send the same bytes back. Over
+     * the cap it gets the placeholder alone, as before: part of a binary body is no use to replay
+     * and only inflates the frame. Text over the cap is cut on a character boundary and flagged.
+     */
+    fun requestBody(
+        bytes: ByteArray,
+        totalBytes: Long,
+        maxBytes: Int,
+        contentType: String?,
+    ): CapturedRequestBody {
+        val complete = totalBytes <= maxBytes && bytes.size.toLong() == totalBytes
+        val text = if (isKnownBinary(contentType)) null else decodeText(bytes, maxBytes)
+        return when {
+            text == null && complete ->
+                CapturedRequestBody(TrafficEntry.UNABLE_PARSE_MESSAGE, base64 = Base64.encode(bytes))
+
+            text == null -> CapturedRequestBody(TrafficEntry.UNABLE_PARSE_MESSAGE)
+            totalBytes > maxBytes ->
+                CapturedRequestBody("$text\n…truncated ($totalBytes bytes total)", truncated = true)
+
+            else -> CapturedRequestBody(text)
         }
     }
 
@@ -82,3 +115,17 @@ object CapturedBody {
         return i
     }
 }
+
+/**
+ * A request body as [CapturedBody.requestBody] decided to store it.
+ *
+ * @property text what [TrafficEntry.requestBody] stores: the text, or the placeholder for a body
+ *   that is not text
+ * @property base64 the complete body for [TrafficEntry.requestBodyBase64], or null
+ * @property truncated true when [text] is only the leading part of the body
+ */
+data class CapturedRequestBody(
+    val text: String,
+    val base64: String? = null,
+    val truncated: Boolean = false,
+)
