@@ -14,13 +14,16 @@ import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCClass
 import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.usePinned
 import platform.Foundation.HTTPBody
+import platform.Foundation.HTTPBodyStream
 import platform.Foundation.HTTPMethod
 import platform.Foundation.NSCachedURLResponse
 import platform.Foundation.NSData
 import platform.Foundation.NSError
 import platform.Foundation.NSHTTPURLResponse
+import platform.Foundation.NSInputStream
 import platform.Foundation.NSMutableData
 import platform.Foundation.NSMutableURLRequest
 import platform.Foundation.NSString
@@ -42,12 +45,20 @@ import platform.Foundation.allHTTPHeaderFields
 import platform.Foundation.appendData
 import platform.Foundation.create
 import platform.Foundation.setAllHTTPHeaderFields
+import platform.Foundation.setHTTPBody
 import platform.darwin.DISPATCH_TIME_NOW
 import platform.darwin.dispatch_after
 import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_time
 
 private const val HANDLED_KEY = "AlohomoraHandled"
+
+/**
+ * Upper bound on a captured request body, in bytes, matching the OkHttp interceptor's
+ * `MAX_BODY_BYTES` and the Ktor plugin's `MAX_BODY_CHARS`. Only the stored copy is bounded —
+ * the full body is always forwarded to the server (see [AlohomoraURLProtocol.startLoading]).
+ */
+private const val MAX_BODY_BYTES = 1_000_000L
 
 /**
  * NSURLProtocol interceptor that captures HTTP/HTTPS traffic and forwards trace data to the
@@ -122,6 +133,13 @@ class AlohomoraURLProtocol :
     private var traceId = ""
     private var replayOf: String? = null
 
+    // Captured at startLoading, read at persist time. The request body must be drained from the
+    // body stream before the forwarding task consumes it (a stream is one-shot), so it cannot be
+    // re-read from `request` in persistTrace the way HTTPBody could be.
+    private var capturedRequestBody: String? = null
+    private var capturedRequestSize: Long? = null
+    private var capturedRequestBodyTruncated = false
+
     @OptIn(ExperimentalUuidApi::class, BetaInteropApi::class)
     override fun startLoading() {
         traceId = Uuid.random().toString()
@@ -130,6 +148,16 @@ class AlohomoraURLProtocol :
             ?.entries
             ?.firstOrNull { (k, _) -> (k as? String)?.equals(ReplayMarker.HEADER, true) == true }
             ?.value as? String
+
+        // Drain the request body up front. NSURLProtocol delivers a POST/PUT body set as a stream
+        // (URLSession/Ktor-Darwin uploads) with HTTPBody == nil, so reading HTTPBody alone captured
+        // nothing and left signed POST replays sending an empty body. A body stream is one-shot, so
+        // the drained bytes are re-attached to the forwarded request below — otherwise the real
+        // request would go out empty. GET and other bodyless requests leave this null.
+        val existingBody = request.HTTPBody
+        val drainedFromStream = existingBody == null && request.HTTPBodyStream != null
+        val bodyData: NSData? = existingBody ?: request.HTTPBodyStream?.drain()
+        captureRequestBody(bodyData)
 
         val mockRule = NetworkRuleEngine.findMatch(
             request.URL?.absoluteString ?: "",
@@ -151,6 +179,12 @@ class AlohomoraURLProtocol :
                     },
                 )
             }
+            // Re-attach the body we drained from the one-shot stream. Setting HTTPBody clears
+            // HTTPBodyStream, which is exactly right: the stream is already spent. The byte count
+            // is unchanged, so any Content-Length the app set still matches.
+            if (drainedFromStream && bodyData != null) {
+                it.setHTTPBody(bodyData)
+            }
         }
 
         session = NSURLSession.sessionWithConfiguration(
@@ -165,6 +199,60 @@ class AlohomoraURLProtocol :
     override fun stopLoading() {
         dataTask?.cancel()
         session?.invalidateAndCancel()
+    }
+
+    /**
+     * Records [data] as the captured request body, mirroring the OkHttp and Ktor paths.
+     *
+     * Decodes as UTF-8; a body that is not valid UTF-8 (protobuf, binary multipart parts) is stored
+     * as [TrafficEntry.UNABLE_PARSE_MESSAGE] rather than corrupted, so [replayBlockedReason] refuses
+     * the replay instead of putting mojibake on the wire. The stored string is capped at
+     * [MAX_BODY_BYTES]; the full body still reaches the server, only this display copy is bounded.
+     */
+    @OptIn(BetaInteropApi::class)
+    private fun captureRequestBody(data: NSData?) {
+        if (data == null) return
+        capturedRequestSize = data.length.toLong()
+        val text = NSString.create(data = data, encoding = NSUTF8StringEncoding)?.toString()
+        capturedRequestBody = when {
+            text == null -> TrafficEntry.UNABLE_PARSE_MESSAGE
+            text.length.toLong() > MAX_BODY_BYTES -> {
+                capturedRequestBodyTruncated = true
+                text.take(MAX_BODY_BYTES.toInt()) + "\n…truncated (${text.length} chars total)"
+            }
+
+            else -> text
+        }
+    }
+
+    /**
+     * Reads this one-shot input stream to the end and returns the bytes.
+     *
+     * Reads the whole stream, not a bounded prefix: the bytes are re-attached to the forwarded
+     * request, so a truncated read would send a corrupt request. The capture-side cap is applied
+     * later, to the stored string only ([captureRequestBody]).
+     */
+    @OptIn(ExperimentalForeignApi::class)
+    private fun NSInputStream.drain(): NSData {
+        val out = NSMutableData()
+        val bufferSize = 64 * 1024
+        val buffer = ByteArray(bufferSize)
+        open()
+        try {
+            buffer.usePinned { pinned ->
+                while (true) {
+                    val bytesRead = read(pinned.addressOf(0).reinterpret(), bufferSize.toULong())
+                    if (bytesRead <= 0) break
+                    out.appendData(
+                        NSData.create(bytes = pinned.addressOf(0), length = bytesRead.toULong())
+                            ?: break,
+                    )
+                }
+            }
+        } finally {
+            close()
+        }
+        return out
     }
 
     // region NSURLSessionDataDelegate
@@ -268,13 +356,11 @@ class AlohomoraURLProtocol :
                 host = url.host,
                 path = url.path,
                 query = url.query,
-                requestBody = req.HTTPBody?.let { body ->
-                    NSString.create(data = body, encoding = NSUTF8StringEncoding)?.toString()
-                        ?: TrafficEntry.UNABLE_PARSE_MESSAGE
-                },
+                requestBody = capturedRequestBody,
+                requestBodyTruncated = capturedRequestBodyTruncated,
                 requestHeaders = requestHeaders,
                 requestContentType = requestHeaders["Content-Type"]?.firstOrNull(),
-                requestSize = req.HTTPBody?.length?.toLong(),
+                requestSize = capturedRequestSize,
                 time = startTime,
                 status = mockRule.statusCode,
                 message = "Mocked",
@@ -322,13 +408,11 @@ class AlohomoraURLProtocol :
                 host = url?.host,
                 path = url?.path,
                 query = url?.query,
-                requestBody = req.HTTPBody?.let { body ->
-                    NSString.create(data = body, encoding = NSUTF8StringEncoding)?.toString()
-                        ?: TrafficEntry.UNABLE_PARSE_MESSAGE
-                },
+                requestBody = capturedRequestBody,
+                requestBodyTruncated = capturedRequestBodyTruncated,
                 requestHeaders = requestHeaders,
                 requestContentType = requestHeaders["Content-Type"]?.firstOrNull(),
-                requestSize = req.HTTPBody?.length?.toLong(),
+                requestSize = capturedRequestSize,
                 time = startTime,
                 status = httpResponse?.statusCode?.toInt() ?: error?.code?.toInt(),
                 message = httpResponse?.let {
