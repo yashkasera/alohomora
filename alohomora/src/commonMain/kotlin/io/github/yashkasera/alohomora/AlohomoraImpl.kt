@@ -73,10 +73,14 @@ internal object AlohomoraImpl {
      * from the [config] getter, the [identifier] lazy, and `DevToolsRuntime.sendInitialState`
      * on the IO pool. The barrier keeps a reader on another thread from observing a stale
      * `null`, matching [koinApplication] above.
+     *
+     * The setter is not `private` for `androidDeviceTest` alone: the Gradle plugin is not applied
+     * to the library, so no generated config ever enables DevTools there, and `DevToolsServerTest`
+     * installs one itself. With a private setter the device-test sources stop compiling, and with
+     * them the root `check`.
      */
     @Volatile
     internal var config: AlohomoraConfig? = null
-        private set
 
     internal val identifier by lazy {
         config?.let {
