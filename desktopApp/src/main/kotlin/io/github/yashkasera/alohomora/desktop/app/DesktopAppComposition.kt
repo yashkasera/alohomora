@@ -59,8 +59,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
-import java.security.cert.X509Certificate
-import javax.net.ssl.X509TrustManager
 import kotlinx.serialization.json.Json
 
 class DesktopAppComposition(
@@ -167,24 +165,10 @@ class DesktopAppComposition(
         val stopLogcatUseCase = StopLogcatUseCase()
         val clearLogcatUseCase = ClearLogcatUseCase(logcatRepository)
 
+        // Platform default trust, deliberately. This client carries the Slack webhook URL, which
+        // is itself the credential, plus shared cURL text that can hold tokens; a trust-all
+        // manager handed both to anyone able to present a certificate on the path.
         val slackHttpClient = HttpClient(CIO) {
-            engine {
-                https {
-                    trustManager = object : X509TrustManager {
-                        override fun checkClientTrusted(
-                            chain: Array<out X509Certificate>?,
-                            authType: String?,
-                        ) = Unit
-
-                        override fun checkServerTrusted(
-                            chain: Array<out X509Certificate>?,
-                            authType: String?,
-                        ) = Unit
-
-                        override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
-                    }
-                }
-            }
             install(ContentNegotiation) {
                 json(Json { ignoreUnknownKeys = true })
             }
